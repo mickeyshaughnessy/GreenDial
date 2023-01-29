@@ -21,7 +21,6 @@
 
 import json, redis
 from flask import Flask, jsonify, request
-from handlers import h_add_data, h_get_data, h_chat 
 import handlers
 redis = redis.StrictRedis()
 
@@ -32,29 +31,22 @@ def ping():
     return json.dumps({"message" : "ok"})
 
 @app.route("/get_data", methods=['POST'])
-def ():
+def get_data():
     req = request.get_json()
+    resp = handler.get_data(req)
+    return resp
 
-    # here fire off the ad campaign
-    # import geopy
-    # extract targeting criteria
-    
-    targeting = make_targeting(req)
-    res = run_demand(targeting)
-
-    print(req, req.keys())
-    return json.dumps({"message" : "ok"})
-
-@app.route("/configure", methods=['POST'])
-def configure():
+@app.route("/add_data", methods=['POST'])
+def add_data():
     req = request.get_json()
-    print(req.keys())
-    return json.dumps({"message" : "ok"})
+    resp = handlers.add_data(req)
+    return  resp
 
-@app.route("/report", methods=['GET'])
-def report():
+@app.route("/chat", methods=['POST'])
+def add_data():
     req = request.get_json()
-    return json.dumps({"report" : "report"})
+    resp = handlers.chat(req)
+    return  resp
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=8010)

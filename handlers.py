@@ -10,7 +10,7 @@ def add_data(request):
 
 def get_data(request):
     data = json.loads(redis.hget(config.REDHASH_USER_DATA, req.get("user_id")))
-    return data
+    return json.dumps(data)
 
 def chat(request):
     text = request.get("text")
@@ -27,4 +27,5 @@ def chat(request):
             "temperature": 0,
             "max_tokens": 2000}' % utils.chat_preamble % chat_history + text
     )
+    return json.dumps(resp)
         
