@@ -40,10 +40,10 @@ def get_data():
 def add_data():
     req = request.get_json()
     resp = handlers.add_data(req)
-    return  resp
+    return resp
 
 @app.route("/chat", methods=['POST'])
-def add_data():
+def chat():
     req = request.get_json()
     resp = handlers.chat(req)
     return  resp

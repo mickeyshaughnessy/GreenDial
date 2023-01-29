@@ -20,12 +20,12 @@ def chat(request):
         headers={
             "Content-Type: application/json", 
             "Authorization: Bearer %s" % config.openai_api_key
-        }
-        json='{
+        },
+        json='''{
             "model": "text-davinci-003",
             "prompt": "%s",
             "temperature": 0,
-            "max_tokens": 2000}' % utils.chat_preamble % chat_history + text
+            "max_tokens": 2000}''' % utils.chat_preamble % chat_history + text
     )
     return json.dumps(resp)
         
