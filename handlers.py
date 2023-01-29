@@ -1,6 +1,7 @@
-import redis, openai
+import redis, openai, utils, config
 
 redis = redis.StrictRedis()
+
 
 
 def add_data(request):
@@ -13,6 +14,7 @@ def get_data(request):
 
 def chat(request):
     text = request.get("text")
+    chat_history = request.get("chat_history")
     resp = requests.post(
         config.openai_url,
         headers={
@@ -23,4 +25,6 @@ def chat(request):
             "model": "text-davinci-003",
             "prompt": "%s",
             "temperature": 0,
-            "max_tokens": 2000}'
+            "max_tokens": 2000}' % utils.chat_preamble % chat_history + text
+    )
+        
