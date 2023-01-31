@@ -13,6 +13,7 @@ In the cases in which the <DQR> service call response contains the <FOLLOW> key,
 Transcript:
 %s
 
+User: %s
 HealthBot:
 """
 
