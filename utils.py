@@ -18,7 +18,7 @@ HealthBot:
 """
 
 DRQ_preamble = """
-Data Retrieval Query
+Data Retrieval Query <DRQ>
 The transcript below is bewtween a data-retrieval LLM API and a user.
 The user submits text queries about data they've previously entered into the API.
 The API responds with a concise, correct answer based on the data contained in the database query response given below:
@@ -29,7 +29,7 @@ LLM API response:
 """
 
 URD_premamble = """
-User Response Data
+User Response Data <URD>
 The input text below is a part of a conversation between a health assistant bot and a user.
 The input contains the bot's query and the user's response.
 This is an API service that takes the input and generates a well-formed json output string.
