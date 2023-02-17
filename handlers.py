@@ -33,7 +33,11 @@ def chat(request):
     chat_history = get_history(request) 
     data={
         "model": "text-davinci-003",
-        "prompt": utils.chat_preamble % (chat_history, in_text), 
+        "prompt": utils.chat_concierge_preamble % (
+            utils.URD_instructions,
+            utils.DRQ_instructions, 
+            chat_history,
+            in_text), 
         "temperature": 0,
         "max_tokens": 200
     }
@@ -43,9 +47,13 @@ def chat(request):
     headers = {"Authorization": "Bearer %s" % config.openai_api_key, "Content-Type" : "application/json"}
     resp = requests.post(config.openai_url, headers=headers, json=data)
     out_text = "Bot: " + resp.json().get("choices", [])[0].get('text')
-    #if '<DQR>' in out_text:
-    #    data["prompt"] = utils.DQR_preamble % (
-    #    out_text += requests.post(config.openai_url, headers=headers, json=data)
+    if '<URD>' in out_text:
+         out_text.replace('<URD>', '')
+         # call URD service with out_text
+    if '<DRQ>' in out_text:
+         out_text.replace('<DRQ>', '')
+         # call DRQ service with out_text
+
     update_history(request, in_text + '\n' + out_text) 
     return out_text 
         
