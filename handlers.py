@@ -1,4 +1,4 @@
-import redis, openai, utils, config, requests, json
+import redis, openai, prompts, config, requests, json
 
 redis = redis.StrictRedis()
 
@@ -33,9 +33,9 @@ def chat(request):
     chat_history = get_history(request) 
     data={
         "model": "text-davinci-003",
-        "prompt": utils.chat_concierge_preamble % (
-            utils.URD_instructions,
-            utils.DRQ_instructions, 
+        "prompt": prompts.chat_concierge_preamble % (
+            prompts.URD_instructions,
+            prompts.DRQ_instructions, 
             chat_history,
             in_text), 
         "temperature": 0,
