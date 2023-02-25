@@ -1,3 +1,4 @@
+from utils import completion
 import requests
 
 user_id = '123'
