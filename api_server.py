@@ -18,29 +18,20 @@
 #    "user_id" : <user_id>,
 #    "text" : <params_json>
 #    }
-
-import json, redis
+import json
+import redis
 from flask import Flask, jsonify, request
+from flask_cors import CORS
 import handlers
+
 redis = redis.StrictRedis()
 
 app = Flask(__name__)
+CORS(app)
 
 @app.route("/ping", methods=['GET'])
 def ping():
     return json.dumps({"message" : "ok"})
-
-@app.route("/get_data", methods=['POST'])
-def get_data():
-    req = request.get_json()
-    resp = handler.get_data(req)
-    return resp
-
-@app.route("/add_data", methods=['POST'])
-def add_data():
-    req = request.get_json()
-    resp = handlers.add_data(req)
-    return resp
 
 @app.route("/chat", methods=['POST'])
 def chat():
@@ -50,3 +41,4 @@ def chat():
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=8010)
+

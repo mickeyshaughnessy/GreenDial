@@ -29,7 +29,8 @@ def update_history(request, out_text):
     redis.hset(config.REDHASH_CHAT_HISTORY, user_id, json.dumps(res)) 
  
 def chat(request):
-    in_text = ("User_%s: " % request.get('user_id')) + request.get("text","")
+    #in_text = ("User_%s: " % request.get('user_id')) + request.get("text","")
+    in_text = ("Users: " + request.get("text",""))
     chat_history = get_history(request) 
     data={
         "model": "text-davinci-003",
@@ -55,6 +56,6 @@ def chat(request):
          out_text.replace('<DRQ>', '')
          # call DRQ service with out_text
 
-    update_history(request, in_text + '\n' + out_text) 
-    return out_text 
+    #update_history(request, in_text + '\n' + out_text) 
+    return json.dumps({"response" : out_text})
         
