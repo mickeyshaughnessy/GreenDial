@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Chat with Bot</title>
+    <style>
+      /* CSS styles for the chat window */
+      #chat-window {
+        width: 400px;
+        height: 400px;
+        border: 1px solid black;
+        overflow: auto;
+        padding: 10px;
+      }
+      
+      /* CSS styles for the input form */
+      #input-form {
+        display: flex;
+        margin-top: 10px;
+      }
+      
+      #input-form input[type="text"] {
+        flex: 1;
+        margin-right: 10px;
+      }
+      
+      #input-form input[type="submit"] {
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        padding: 10px;
+        cursor: pointer;
+      }
+      
+      #input-form input[type="submit"]:hover {
+        background-color: #3e8e41;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Chat with Bot</h1>
+    <div id="chat-window"></div>
+    <form id="input-form">
+      <input type="text" id="input-text" placeholder="Type your message here...">
+      <input type="submit" value="Send">
+    </form>
+    
+    <script>
+      // JavaScript code for the chat window
+      
+      // Get references to DOM elements
+      const chatWindow = document.getElementById("chat-window");
+      const inputForm = document.getElementById("input-form");
+      const inputText = document.getElementById("input-text");
+      
+      // Function to add a message to the chat window
+      function addMessageToChatWindow(message, sender) {
+        const messageElement = document.createElement("div");
+        messageElement.innerHTML = `<strong>${sender}:</strong> ${message}`;
+        chatWindow.appendChild(messageElement);
+      }
+      
+      // Event listener for form submission
+      inputForm.addEventListener("submit", function(event) {
+        event.preventDefault(); // Prevent the form from submitting normally
+        
+        // Get the user's message
+        const message = inputText.value;
+        
+        // Clear the input field
+        inputText.value = "";
+        
+        // Add the user's message to the chat window
+        addMessageToChatWindow(message, "User");
+        
+        // Send the user's message to the chat endpoint
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", "http://your-chat-endpoint-url-here");
+        xhr.setRequestHeader("Content-Type", "application/json");
+        xhr.onload = function() {
+          if (xhr.status === 200) {
+            // Get the bot's response
+            const response = JSON.parse(xhr.responseText).response;
+            
+            // Add the bot's response to the chat window
+            addMessageToChatWindow(response, "Bot");
+          } else {
+            console.error("Request failed. Status code:", xhr.status);
+          }
+        };
+        xhr.onerror = function() {
+          console.error("Request failed. Network error.");
+        };
+        xhr.send(JSON.stringify({ message: message }));
+      });
+    </script>
+  </body>
+</html>
