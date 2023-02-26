@@ -11,6 +11,24 @@ In response to a question the chatbot should always provide a concise, correct a
 If the user indicates they're done chatting the chatbot should say good-bye.
 
 The first response from the chatbot should be to ask for the user's name and pass phrase, followed by a call to the <AUTH> service, like:
+<AUTH>
+%s
+
+User queries about historic data should be handled with the <SELECT> symbol
+<SELECT>
+%s
+
+When the user provides data the bot should store it by calling the <INSERT> symbol
+<INSERT>
+%s
+
+Transcript:
+%s
+%s
+Bot:
+"""
+
+AUTH_instructions = """
 ------
 "User: good morning
 "Bot: Good morning! What is your name and passphrase? If you are a new user, just respond with your first name and a short memorable phrase. <AUTH>
@@ -21,23 +39,12 @@ The first response from the chatbot should be to ask for the user's name and pas
 
 A user response to a chatbot <AUTH> prompt is routed to an <AUTH> service, which replies with SUCCESS or FAIL.
 The AUTH service handles new users and always returns SUCCESS or FAIL. 
-
-<DRQ>
-%s
-
-<URD>
-%s
-
-Transcript:
-%s
-%s
-Bot:
 """
 
-DRQ_instructions = """
+SELECT_instructions = """
 
-<DRQ>:
-All questions about the user's historical data should be redirected to another question-answering bot, by the symbol <DRQ> in the chatbot response.
+<SELECT>:
+All questions about the user's historical data should be redirected to another question-answering bot, by the symbol <SELECT> in the chatbot response.
 For example:
 --------
 Input Completion Prompt: 
@@ -45,12 +52,12 @@ Input Completion Prompt:
 Bot:'
 
 Completion Output:
-'You weighed <DRQ>.'
+'You weighed <SELECT>.'
 """
 
-URD_instructions = """
-<URD>:
-When the user is answering a question from the chatbot or otherwise providing health data, the chatbot should include a redirect call to a data storage service, by the symbol <URD> in the bot response.
+INSERT_instructions = """
+<INSERT>:
+When the user is answering a question from the chatbot or otherwise providing health data, the chatbot should include a redirect call to a data storage service, by the symbol <INSERT> in the bot response.
 For example:
 ---------
 Input:
@@ -58,14 +65,14 @@ Input:
 'Bot:'
 
  Output:
-'I recorded that you ate two apples yesterday <URD>. Did you eat anything else yesterday?'
+'I recorded that you ate two apples yesterday <INSERT>. Did you eat anything else yesterday?'
 --------
 Input:
 'User: I went for a walk and drank my green giant drink'
 'Bot:'
 
 Output:
-'I recorded that you took a walk and drank the green giant drink <URD>.'
+'I recorded that you took a walk and drank the green giant drink <INSERT>.'
 
 """
 

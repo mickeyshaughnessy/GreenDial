@@ -34,8 +34,9 @@ def chat(request):
     data={
         "model": "text-davinci-003",
         "prompt": prompts.chat_concierge_preamble % (
-            prompts.URD_instructions,
-            prompts.DRQ_instructions, 
+            prompts.AUTH_instructions,
+            prompts.SELECT_instructions,
+            prompts.INSERT_instructions, 
             chat_history,
             in_text), 
         "temperature": 0,
