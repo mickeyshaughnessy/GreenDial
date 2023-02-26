@@ -60,6 +60,13 @@
         chatWindow.appendChild(messageElement);
       }
       
+      // Function to add a bot response to the chat window
+      function addBotResponseToChatWindow(response) {
+        const messageElement = document.createElement("div");
+        messageElement.innerHTML = `<strong>Bot:</strong> ${response}`;
+        chatWindow.appendChild(messageElement);
+      }
+      
       // Event listener for form submission
       inputForm.addEventListener("submit", function(event) {
         event.preventDefault(); // Prevent the form from submitting normally
@@ -83,7 +90,7 @@
             const response = JSON.parse(xhr.responseText).response;
             
             // Add the bot's response to the chat window
-            addMessageToChatWindow(response, "Bot");
+            addBotResponseToChatWindow(response);
           } else {
             console.error("Request failed. Status code:", xhr.status);
           }
@@ -96,3 +103,4 @@
     </script>
   </body>
 </html>
+
