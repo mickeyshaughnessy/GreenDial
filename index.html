@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="UTF-8">
-    <title>Chat with Bot</title>
+    <title>Chat with the Machine</title>
     <style>
       /* CSS styles for the chat window */
       #chat-window {
@@ -98,7 +98,7 @@
         xhr.onerror = function() {
           console.error("Request failed. Network error.");
         };
-        xhr.send(JSON.stringify({ message: message }));
+        xhr.send(JSON.stringify({ text: message }));
       });
     </script>
   </body>

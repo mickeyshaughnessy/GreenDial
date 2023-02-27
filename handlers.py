@@ -30,7 +30,7 @@ def update_history(request, out_text):
  
 def chat(request):
     #in_text = ("User_%s: " % request.get('user_id')) + request.get("text","")
-    in_text = ("Users: " + request.get("text",""))
+    in_text = ("User: " + request.get("text",""))
     chat_history = get_history(request) 
     data={
         "model": "text-davinci-003",
