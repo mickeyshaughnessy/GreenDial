@@ -82,7 +82,8 @@
         
         // Send the user's message to the chat endpoint
         const xhr = new XMLHttpRequest();
-        xhr.open("POST", "http://127.0.0.1:8010/chat");
+        // xhr.open("POST", "http://127.0.0.1:8011/chat");
+        xhr.open("POST", "http://3.89.10.143:8011/chat");
         xhr.setRequestHeader("Content-Type", "application/json");
         xhr.onload = function() {
           if (xhr.status === 200) {
