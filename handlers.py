@@ -48,7 +48,7 @@ def chat(request):
 
     headers = {"Authorization": "Bearer %s" % config.openai_api_key, "Content-Type" : "application/json"}
     resp = requests.post(config.openai_url, headers=headers, json=data)
-    out_text = "Bot: " + resp.json().get("choices", [])[0].get('text')
+    out_text = resp.json().get("choices", [])[0].get('text')
     if '<URD>' in out_text:
          out_text.replace('<URD>', '')
          # call URD service with out_text
