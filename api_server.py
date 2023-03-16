@@ -21,13 +21,11 @@
 import json
 import redis
 from flask import Flask, jsonify, request
-from flask_cors import CORS
 import handlers
 
 redis = redis.StrictRedis()
 
 app = Flask(__name__)
-CORS(app)
 
 @app.route("/ping", methods=['GET'])
 def ping():
@@ -40,5 +38,5 @@ def chat():
     return resp
 
 if __name__ == '__main__':
-    app.run(ssl_context='adhoc', debug=True, host='0.0.0.0', port=8011)
+    app.run(debug=True, host='0.0.0.0', port=8012)
 
