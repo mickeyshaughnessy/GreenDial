@@ -16,7 +16,7 @@ def ping():
 @app.route("/chat", methods=['POST'])
 def chat():
     req = request.get_json()
-    resp = handlers.chat(req)
+    resp = handlers.handle_chat(req)
     return resp
 
 if __name__ == '__main__':
