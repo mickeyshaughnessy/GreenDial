@@ -1,5 +1,5 @@
 import redis, openai, config, requests, json
-from prompts import auth, chat, memory, config, external 
+from prompts import auth, chat, memory, settings, external 
 
 redis = redis.StrictRedis()
 
