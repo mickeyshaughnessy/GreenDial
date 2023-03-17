@@ -1,14 +1,7 @@
-import redis, openai, prompts, config, requests, json
+import redis, openai, config, requests, json
+from prompts import auth, chat, memory, config, external 
 
 redis = redis.StrictRedis()
-
-#def add_data(request):
-#    redis.hset(config.REDHASH_USER_DATA, req.get("user_id"), req.get("event_data"))
-#    return json.dumps({"message" : "ok"})
-#
-#def get_data(request):
-#    data = json.loads(redis.hget(config.REDHASH_USER_DATA, req.get("user_id")))
-#    return json.dumps(data)
 
 def get_history(request, user={}):
     user_id = request.get("user_id")
