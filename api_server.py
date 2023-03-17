@@ -1,23 +1,5 @@
 # This is the GreenDial api server
-# It has a user REST API:
 
-# POST /add_data
-# request = {
-#    "user_id" : <user_id>,
-#    "event_data" : <event_data_json>
-#    }
-#
-# POST /get_data
-# request = {
-#    "user_id" : <user_id>,
-#    "data_params" : <params_json>
-#    }
-#
-# POST /chat
-# request = {
-#    "user_id" : <user_id>,
-#    "text" : <params_json>
-#    }
 import json
 import redis
 from flask import Flask, jsonify, request
