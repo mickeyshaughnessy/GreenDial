@@ -44,52 +44,56 @@
       <input type="text" id="input-text" placeholder="Type your message here...">
       <input type="submit" value="Send">
     </form>
-    
+
     <script>
       // JavaScript code for the chat window
-      
+
       // Get references to DOM elements
       const chatWindow = document.getElementById("chat-window");
       const inputForm = document.getElementById("input-form");
       const inputText = document.getElementById("input-text");
-      
+
+      let username = null; // Initialize the username as null
+
       // Function to add a message to the chat window
       function addMessageToChatWindow(message, sender) {
         const messageElement = document.createElement("div");
         messageElement.innerHTML = `<strong>${sender}:</strong> ${message}`;
         chatWindow.appendChild(messageElement);
       }
-      
+
       // Function to add a bot response to the chat window
       function addBotResponseToChatWindow(response) {
         const messageElement = document.createElement("div");
-        messageElement.innerHTML = `<strong>Bot:</strong> ${response}`; 
+        messageElement.innerHTML = `<strong>Bot:</strong> ${response}`;
         chatWindow.appendChild(messageElement);
       }
-      
+
       // Event listener for form submission
       inputForm.addEventListener("submit", function(event) {
         event.preventDefault(); // Prevent the form from submitting normally
-        
+
         // Get the user's message
         const message = inputText.value;
-        
+
         // Clear the input field
         inputText.value = "";
-        
+
         // Add the user's message to the chat window
-        addMessageToChatWindow(message, "User");
-        
+        const senderName = username ? username : "User";
+        addMessageToChatWindow(message, senderName);
+
         // Send the user's message to the chat endpoint
         const xhr = new XMLHttpRequest();
-        //xhr.open("POST", "https://www.greendial.org/chat");
         xhr.open("POST", window.location.origin + "/chat");
         xhr.setRequestHeader("Content-Type", "application/json");
         xhr.onload = function() {
           if (xhr.status === 200) {
-            // Get the bot's response
-            const response = JSON.parse(xhr.responseText).response;
-            
+            // Get the bot's response and username
+            const data = JSON.parse(xhr.responseText);
+            const response = data.response;
+            username = data.username; // Update the username
+
             // Add the bot's response to the chat window
             addBotResponseToChatWindow(response);
           } else {
@@ -99,9 +103,8 @@
         xhr.onerror = function() {
           console.error("Request failed. Network error.");
         };
-        xhr.send(JSON.stringify({ text: message }));
+        xhr.send(JSON.stringify({ text: message, username: username }));
       });
     </script>
   </body>
 </html>
-
