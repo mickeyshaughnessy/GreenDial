@@ -20,17 +20,13 @@ For example:
 ---------
 Input:
 'User: I ate two apples yesterday.'
-'Bot:'
-
- Output:
-'I recorded that you ate two apples yesterday <INSERT>. Did you eat anything else yesterday?'
+'Doc: I recorded that you ate two apples yesterday <INSERT>. Did you eat anything else yesterday?'
 --------
 Input:
 'User: I went for a walk and drank my green giant drink'
-'Bot:'
+'Doc: I recorded that you took a walk and drank the green giant drink <INSERT>.'
+---------
 
-Output:
-'I recorded that you took a walk and drank the green giant drink <INSERT>.'
-
+The <INSERT> symbol is used to trigger an external database update service.
 """
 
