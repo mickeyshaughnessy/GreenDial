@@ -30,3 +30,11 @@ Input:
 The <INSERT> symbol is used to trigger an external database update service.
 """
 
+"""You are a program that takes unstructured input data and writes JSON output like:
+    Example:
+      Input: "I ate a pear"
+      Output : {"food_eaten" : "pear"}
+
+    Input: %s
+    Ouput:"""
+
