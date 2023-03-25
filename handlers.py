@@ -24,9 +24,8 @@ def update_history(request, out_text):
 def parse_resp(response):
     # handle and remove all **SYMBOLS**
     # for symbols in symbols:
-        #data = symbol.call(response)
-        #response.replace(symbol, data)
-        
+    # data = symbol.call(response)
+    # response.replace(symbol, data)
     # filter for alignment
     return response
 
