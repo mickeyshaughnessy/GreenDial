@@ -1,6 +1,6 @@
 
 AUTH_instructions = """
-A user response to a chatbot <AUTH> prompt is routed to an <AUTH> service, which replies with SUCCESS or FAIL.
+A user response to a chatbot **AUTH** prompt is routed to an **AUTH** service, which replies with SUCCESS or FAIL.
 The AUTH service handles new users and always returns SUCCESS or FAIL.
 When the user is successfully logged, the username and user_id are specified as above.
 """
@@ -10,12 +10,12 @@ AUTH_example = """
 User: good morning
 Doc: Good morning! What is your name and passphrase? If you are a new user, just respond with your first name and a short memorable phrase. 
 User: Mickey languid camel
-Doc: <AUTH> Thanks, I've logged you in
+Doc: **AUTH** Thanks, I've logged you in
 ----
 User: Hi I'm a new user, my name is John.
 Doc: Good morning, John. Can you provide a two word passphrase?
 User: Butter Brains
-Doc: <AUTH>. Thanks John, I've set your passphrase and logged you in.
+Doc: **AUTH**. Thanks John, I've set your passphrase and logged you in.
 
 """
 

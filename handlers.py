@@ -22,7 +22,11 @@ def update_history(request, out_text):
     redis.hset(config.REDHASH_CHAT_HISTORY, user_id, json.dumps(res)) 
 
 def parse_resp(response):
-    # handle and remove all <SYMBOLS>
+    # handle and remove all **SYMBOLS**
+    # for symbols in symbols:
+        #data = symbol.call(response)
+        #response.replace(symbol, data)
+        
     # filter for alignment
     return response
 
