@@ -19,8 +19,9 @@ Once the user is logged in, the bot should make sure to ask specific questions t
 The bot should offer to help the user review and revise their goals and reconfigure their settings.
 
 
-The logged in user's name is: %s 
+The logged in user's name is: {user_name} 
 
+Service
 The first response from the chatbot should be to ask for the user's name and pass phrase (login), followed by a call to the **AUTH** service, like:
 **AUTH**
 %s

@@ -13,7 +13,7 @@ app = Flask(__name__)
 def ping():
     return json.dumps({"message" : "ok"})
 
-@app.route("/chat", methods=['POST'])
+@app.route("/chat", methods=['POST','GET'])
 def chat():
     req = request.get_json()
     resp = handlers.handle_chat(req)

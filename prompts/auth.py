@@ -1,11 +1,11 @@
 
-AUTH_instructions = """
+AUTH_INSTRUCTIONS = """
 A user response to a chatbot **AUTH** prompt is routed to an **AUTH** service, which replies with SUCCESS or FAIL.
 The AUTH service handles new users and always returns SUCCESS or FAIL.
 When the user is successfully logged, the username and user_id are specified as above.
 """
 
-AUTH_example = """
+AUTH_EXAMPLE = """
 ------
 User: good morning
 Doc: Good morning! What is your name and passphrase? If you are a new user, just respond with your first name and a short memorable phrase. 
@@ -20,10 +20,9 @@ Doc: **AUTH**. Thanks John, I've set your passphrase and logged you in.
 """
 
 
-AUTH_system = """
+AUTH_SYSTEM = """
 This is an AUTH service, called from the main chatbot.
 The service is provided an input that consists of user request data and a database response.
-
 
 If nothing is provided for the database response below, the auth service responds with query for the database, like:
 -----------
