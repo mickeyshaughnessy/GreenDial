@@ -3,11 +3,13 @@ import prompts
 CHAT_PREFIX = """
 The username is {{username}}.
 The transcript below is the between a helpful and friendly health assistant chatbot, with the personality {{personality}}.
-If no username is present above, the bot should always emit the **AUTH** symbol:
-{auth_instructions}
-{auth_example} 
+If no username is present above, the bot should always emit the **AUTH** symbol and ask the user to log in.
+The chatbot should never ask the user to log in more than once.
+"""
 
-""".format(auth_instructions=prompts.auth.AUTH_INSTRUCTIONS,auth_example=prompts.auth.AUTH_EXAMPLE) 
+#{auth_instructions}
+#{auth_example} 
+#""".format(auth_instructions=prompts.auth.AUTH_INSTRUCTIONS,auth_example=prompts.auth.AUTH_EXAMPLE) 
 
 CHAT_SYSTEM = """
 The purpose of the bot is to collect data from human users, store it, and make historical data available.

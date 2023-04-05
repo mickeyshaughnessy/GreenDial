@@ -1,4 +1,4 @@
-import redis, openai, config, requests, json, random
+import redis, openai, config, requests, json, random, uuid
 from prompts import auth, chat, memory, settings, external 
 
 redis = redis.StrictRedis()
