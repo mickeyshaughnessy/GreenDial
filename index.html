@@ -4,97 +4,104 @@
     <meta charset="UTF-8">
     <title>Chat with the Machine</title>
     <style>
-      /* CSS styles for the chat window */
-      #chat-window {
+      /* CSS styles */
+      #chat-window, #directory-window {
         width: 400px;
         height: 400px;
         border: 1px solid black;
         overflow: auto;
         padding: 10px;
+        margin-bottom: 10px;
       }
-      
-      /* CSS styles for the input form */
-      #input-form {
+
+      #input-form, #login-form, #directory-form {
         display: flex;
-        margin-top: 10px;
+        margin-bottom: 10px;
       }
-      
-      #input-form input[type="text"] {
+
+      #input-form input[type="text"], #login-form input[type="text"], #directory-form select {
         flex: 1;
         margin-right: 10px;
       }
-      
-      #input-form input[type="submit"] {
+
+      input[type="submit"], button {
         background-color: #4CAF50;
         color: white;
         border: none;
         padding: 10px;
         cursor: pointer;
       }
-      
-      #input-form input[type="submit"]:hover {
+
+      input[type="submit"]:hover, button:hover {
         background-color: #3e8e41;
       }
     </style>
   </head>
   <body>
     <h1>Chat with Bot</h1>
+    <form id="login-form">
+      <input type="text" id="username" placeholder="Username">
+      <input type="password" id="password" placeholder="Password">
+      <input type="submit" value="Login">
+    </form>
+
     <div id="chat-window"></div>
     <form id="input-form">
       <input type="text" id="input-text" placeholder="Type your message here...">
       <input type="submit" value="Send">
     </form>
 
+    <div id="directory-window"></div>
+    <form id="directory-form">
+      <select id="conversation-select">
+      </select>
+      <button type="button" id="load-btn">Load</button>
+      <button type="button" id="create-btn">Create New</button>
+    </form>
+
     <script>
       // JavaScript code for the chat window
-
-      // Get references to DOM elements
       const chatWindow = document.getElementById("chat-window");
       const inputForm = document.getElementById("input-form");
       const inputText = document.getElementById("input-text");
+      const loginForm = document.getElementById("login-form");
+      const usernameInput = document.getElementById("username");
+      const passwordInput = document.getElementById("password");
+      const dirWindow = document.getElementById("directory-window");
+      const dirForm = document.getElementById("directory-form");
+      const convoSelect = document.getElementById("conversation-select");
+      const loadBtn = document.getElementById("load-btn");
+      const createBtn = document.getElementById("create-btn");
 
-      let username = null; // Initialize the username as null
+      let username = null; 
 
-      // Function to add a message to the chat window
       function addMessageToChatWindow(message, sender) {
         const messageElement = document.createElement("div");
         messageElement.innerHTML = `<strong>${sender}:</strong> ${message}`;
         chatWindow.appendChild(messageElement);
       }
 
-      // Function to add a bot response to the chat window
       function addBotResponseToChatWindow(response) {
         const messageElement = document.createElement("div");
         messageElement.innerHTML = `<strong>Bot:</strong> ${response}`;
         chatWindow.appendChild(messageElement);
       }
 
-      // Event listener for form submission
       inputForm.addEventListener("submit", function(event) {
-        event.preventDefault(); // Prevent the form from submitting normally
-
-        // Get the user's message
+        event.preventDefault(); 
         const message = inputText.value;
-
-        // Clear the input field
         inputText.value = "";
-
-        // Add the user's message to the chat window
         const senderName = username ? username : "User";
         addMessageToChatWindow(message, senderName);
 
-        // Send the user's message to the chat endpoint
         const xhr = new XMLHttpRequest();
         xhr.open("POST", window.location.origin + "/chat");
         xhr.setRequestHeader("Content-Type", "application/json");
         xhr.onload = function() {
           if (xhr.status === 200) {
-            // Get the bot's response and username
             const data = JSON.parse(xhr.responseText);
             const response = data.response;
-            username = data.username; // Update the username
-
-            // Add the bot's response to the chat window
+            username = data.username; 
             addBotResponseToChatWindow(response);
           } else {
             console.error("Request failed. Status code:", xhr.status);
@@ -105,6 +112,54 @@
         };
         xhr.send(JSON.stringify({ text: message, username: username }));
       });
+
+      loginForm.addEventListener("submit", function(event) {
+        event.preventDefault();
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", window.location.origin + "/auth");
+        xhr.setRequestHeader("Content-Type", "application/json");
+        xhr.send(JSON.stringify({
+          username: usernameInput.value,
+          password: passwordInput.value
+        }));
+        xhr.onload = function() {
+          if (xhr.status === 200) {
+            const data = JSON.parse(xhr.responseText);
+            username = data.username;
+          } else {
+            console.error("Request failed. Status code:", xhr.status);
+          }
+        };
+        xhr.onerror = function() {
+          console.error("Request failed. Network error.");
+        };
+      });
+
+      loadBtn.addEventListener('click', function() {
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", window.location.origin + "/conversations");
+        xhr.setRequestHeader("Content-Type", "application/json");
+        xhr.send(JSON.stringify({
+          conversationId: convoSelect.value
+        }));
+        xhr.onload = function() {
+          if (xhr.status === 200) {
+            const data = JSON.parse(xhr.responseText);
+            const conversation = data.conversation;
+            conversation.forEach(msg => addMessageToChatWindow(msg.message, msg.sender));
+          } else {
+            console.error("Request failed. Status code:", xhr.status);
+          }
+        };
+        xhr.onerror = function() {
+          console.error("Request failed. Network error.");
+        };
+      });
+
+      createBtn.addEventListener('click', function() {
+        chatWindow.innerHTML = "";
+      });
     </script>
   </body>
 </html>
+

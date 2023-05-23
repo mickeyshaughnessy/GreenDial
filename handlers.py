@@ -3,61 +3,47 @@ from prompts import auth, chat, memory, settings, external
 
 redis = redis.StrictRedis()
 
-def get_history(convo_id=""):
+def handle_conversations(req):
+    res = {}
+    return res
+
+def get_user_data(user_id=""):
     try:
-        res = json.loads(redis.hget(config.REDHASH_CONVERSATIONS, convo_id))
-        history = res.get('history',[]) 
+        res = json.loads(redis.hget(config.REDHASH_USER_DATA, user_id))
     except:
-        history = []    
-    return history
+        res = {}
+    return res 
 
-def update_history(request, out_text, convo_id=""):
+def update_history(user_id, in_text, out_text):
     try:
-        res = json.loads(redis.hget(config.REDHASH_CONVERSATIONS, convo_id))
-        res['transcript'].append(out_text)
+        res = json.loads(redis.hget(config.REDHASH_USER_DATA, user_id))
+        res['transcript'] += in_text + out_text
     except:
-        res = {'transcript' : [out_text]}
-    redis.hset(config.REDHASH_CONVERSATIONS, convo_id, json.dumps(res)) 
+        res = {'transcript' : in_text + out_text, 'user_id' : user_id, 'plugins' : ""}
+    redis.hset(config.REDHASH_USER_DATA, user_id, json.dumps(res)) 
 
-def get_user_data(username):
-    user_data = redis.hget(config.REDHASH_USER_DATA, username)
-    if user_data:
-        user_data = json.loads(user_data)
-    else:
-        user_data = {"username" : username, "plugins" : ""}
-    return user_data
-
-def update_user_data(username, update):
-    user_data = redis.hget(config.REDHASH_USER_DATA, username)
-    if user_data:
-        user_data = json.loads(user_data)
-    else:
-        user_data = {"username" : username, "plugins" : ""}
-    user_data.update(update)
-    redis.hset(config.REDHASH_USER_DATA, username, json.dumps(user_data))
-
-def parse_resp(username, convo_id, in_text, response):
+def parse_resp(user_id, in_text, response):
     # handle and remove all **SYMBOLS**
     # for symbols in symbols:
     # data = symbol.call(response)
     # response.replace(symbol, data)
     # filter for alignment
     # update history
-    update_history(in_text, response, convo_id)
     return response
 
-def handle_auth(in_text, convo_id):
-    query = utils.call_completion(auth.AUTH_BODY.format(in_text, convo_id))
-    red_hash = redis.hget(config.REDHASH_USER_DATA, query.get('name'))
-    if red_hash:
-        return hash(red_hash) == hash(query.get(passphrase))
-    else:
-        return False
+#def handle_auth(in_text, username):
+#    query = utils.call_completion(auth.AUTH_BODY.format(in_text, username))
+#    red_hash = redis.hget(config.REDHASH_USER_DATA, query.get('username'))
+#    if red_hash:
+#        return hash(red_hash) == hash(query.get('passphrase'))
+#    else:
+#        return False
 
-def make_prompt(username=None, convo_id="", _input=""):
-    user_data = get_user_data(username) 
-    transcript = "\n".join(get_history(convo_id))
- 
+def make_prompt(user_id=None, _input=""):
+    user_data = get_user_data(user_id)
+    transcript = user_data.get('history',"") 
+    username = user_data.get('username',"no username found") 
+
     p = "" 
     p += chat.CHAT_PREFIX.format(username=username, personality='Beth')
     p += chat.CHAT_SYSTEM.format(plugins=user_data.get('plugins',""))
@@ -73,16 +59,12 @@ def make_prompt(username=None, convo_id="", _input=""):
     #        in_text) 
 
 def handle_chat(request):
-    username = request.get('username') or ""
-    convo_id = request.get('convo_id', '')
-    print(request.keys())
-    if not convo_id:
-        convo_id = str(uuid.uuid4())
-    in_text = (username + ": " + request.get("text",""))
-    print(in_text)
-    
+    user_id = request.get('user_id')  
+    in_text = request.get("text","")
+ 
+
     data={
-        "prompt": make_prompt(username, convo_id, in_text),
+        "prompt": make_prompt(user_id, in_text),
         "n" : 1, # number of completions
         "model": "text-davinci-003",
         "temperature": 1.1,
@@ -93,16 +75,15 @@ def handle_chat(request):
     full_resp = requests.post(config.openai_url, headers=headers, json=data)
     _resp = full_resp.json().get("choices", [])[0].get('text')
     
-    out_text = parse_resp(username, convo_id, in_text, _resp)
+    #out_text, username = parse_resp(username, in_text, _resp)
+    #out_text = parse_resp(user_id, in_text, _resp)
+    update_history(user_id, in_text, _resp)
 
     print(out_text)
     
     return json.dumps(
         {
         "response" : out_text, 
-        #"username" : random.choice(["Frank", "Larry", "Angie"]),
-        "username" : username, 
-        "convo_id" : convo_id 
         }
     )
         
