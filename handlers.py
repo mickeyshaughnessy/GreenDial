@@ -27,7 +27,6 @@ def parse_resp(user_id, in_text, response):
     # for symbols in symbols:
     # data = symbol.call(response)
     # response.replace(symbol, data)
-    # filter for alignment
     # update history
     return response
 
