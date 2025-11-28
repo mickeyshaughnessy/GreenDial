@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GreenDial - Your Health Assistant</title>
-  <style id="theme-styles">
+  <style>
     :root {
       --primary: #10b981;
       --primary-dark: #059669;
@@ -15,24 +15,6 @@
       --border: #e2e8f0;
       --user-bubble: #10b981;
       --bot-bubble: #f1f5f9;
-    }
-    
-    [data-theme="blue"] {
-      --primary: #3b82f6;
-      --primary-dark: #2563eb;
-      --user-bubble: #3b82f6;
-    }
-    
-    [data-theme="purple"] {
-      --primary: #8b5cf6;
-      --primary-dark: #7c3aed;
-      --user-bubble: #8b5cf6;
-    }
-    
-    [data-theme="orange"] {
-      --primary: #f97316;
-      --primary-dark: #ea580c;
-      --user-bubble: #f97316;
     }
     
     [data-theme="dark"] {
@@ -52,24 +34,20 @@
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: var(--bg);
       color: var(--text);
-      min-height: 100vh;
+      height: 100vh;
+      overflow: hidden;
     }
 
     .hidden { display: none !important; }
 
-    .app-container {
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-    }
-
     .app-header {
       background: var(--card);
       border-bottom: 1px solid var(--border);
-      padding: 16px 24px;
+      padding: 12px 24px;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      height: 56px;
     }
 
     .app-header h1 {
@@ -82,8 +60,8 @@
 
     .app-header h1::before {
       content: "";
-      width: 28px;
-      height: 28px;
+      width: 24px;
+      height: 24px;
       background: var(--primary);
       border-radius: 50%;
     }
@@ -94,8 +72,6 @@
       gap: 12px;
     }
 
-    .user-info span { color: var(--text-muted); font-size: 14px; }
-
     .status-badge {
       padding: 4px 10px;
       border-radius: 12px;
@@ -103,90 +79,122 @@
       font-weight: 500;
     }
     
-    .status-badge.guest {
-      background: #fef3c7;
-      color: #92400e;
-    }
-    
-    .status-badge.logged-in {
-      background: #d1fae5;
-      color: #065f46;
-    }
+    .status-badge.guest { background: #fef3c7; color: #92400e; }
+    .status-badge.logged-in { background: #d1fae5; color: #065f46; }
 
     .logout-btn {
-      padding: 8px 16px;
+      padding: 6px 14px;
       background: transparent;
       border: 1px solid var(--border);
       border-radius: 6px;
       cursor: pointer;
-      font-size: 14px;
+      font-size: 13px;
       color: var(--text);
     }
 
-    .logout-btn:hover { background: var(--bg); }
-
-    .nav-tabs {
+    /* Main Layout */
+    .main-container {
       display: flex;
-      gap: 4px;
-      padding: 0 24px;
-      background: var(--card);
-      border-bottom: 1px solid var(--border);
-      overflow-x: auto;
+      height: calc(100vh - 56px);
+      padding: 16px;
+      gap: 16px;
     }
 
-    .nav-tab {
-      padding: 12px 20px;
-      background: none;
-      border: none;
-      font-size: 14px;
-      font-weight: 500;
-      color: var(--text-muted);
-      cursor: pointer;
-      border-bottom: 2px solid transparent;
-      margin-bottom: -1px;
-      white-space: nowrap;
+    /* Chat - Left Column */
+    .chat-column {
+      width: 45%;
+      min-width: 350px;
+      display: flex;
+      flex-direction: column;
     }
 
-    .nav-tab.active {
-      color: var(--primary);
-      border-bottom-color: var(--primary);
-    }
-
-    .nav-tab:hover { color: var(--text); }
-    
-    .nav-tab .badge {
-      background: var(--primary);
-      color: white;
-      padding: 2px 6px;
-      border-radius: 10px;
-      font-size: 11px;
-      margin-left: 6px;
-    }
-
-    /* Chat */
-    .chat-container {
+    /* Right Column - Widgets */
+    .widgets-column {
       flex: 1;
       display: flex;
       flex-direction: column;
-      max-width: 800px;
-      margin: 0 auto;
-      width: 100%;
-      padding: 0 16px;
+      gap: 16px;
+      overflow-y: auto;
+    }
+
+    .widgets-row {
+      display: flex;
+      gap: 16px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    /* Widget Base */
+    .widget {
+      background: var(--card);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      flex: 1;
+    }
+
+    .widget-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+      flex-shrink: 0;
+    }
+
+    .widget-header h2 {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .widget-body {
+      padding: 12px 16px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    /* Jiggle Animation */
+    @keyframes jiggle {
+      0% { transform: rotate(-0.5deg) scale(0.99); }
+      25% { transform: rotate(0.5deg) scale(1.005); }
+      50% { transform: rotate(-0.3deg) scale(1); }
+      75% { transform: rotate(0.3deg) scale(1); }
+      100% { transform: rotate(0deg) scale(1); }
+    }
+
+    .widget.jiggle { animation: jiggle 0.4s ease-out forwards; }
+    .widgets-row:nth-child(1) .widget { animation-delay: 0.1s; }
+    .widgets-row:nth-child(2) .widget:nth-child(1) { animation-delay: 0.2s; }
+    .widgets-row:nth-child(2) .widget:nth-child(2) { animation-delay: 0.3s; }
+
+    /* Chat Widget */
+    .chat-widget {
+      height: 100%;
+    }
+
+    .chat-widget .widget-body {
+      padding: 0;
+      display: flex;
+      flex-direction: column;
     }
 
     .chat-messages {
       flex: 1;
       overflow-y: auto;
-      padding: 24px 0;
+      padding: 16px;
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 12px;
     }
 
     .message {
       display: flex;
-      gap: 12px;
-      max-width: 80%;
+      gap: 10px;
+      max-width: 85%;
     }
 
     .message.user {
@@ -199,9 +207,14 @@
       max-width: 90%;
     }
 
+    .message.suggestion {
+      align-self: flex-start;
+      max-width: 90%;
+    }
+
     .message-avatar {
-      width: 36px;
-      height: 36px;
+      width: 32px;
+      height: 32px;
       border-radius: 50%;
       background: var(--primary);
       display: flex;
@@ -209,16 +222,17 @@
       justify-content: center;
       color: white;
       font-weight: 600;
-      font-size: 14px;
+      font-size: 12px;
       flex-shrink: 0;
     }
 
     .message.user .message-avatar { background: var(--text-muted); }
 
     .message-bubble {
-      padding: 12px 16px;
-      border-radius: 16px;
-      line-height: 1.5;
+      padding: 10px 14px;
+      border-radius: 14px;
+      line-height: 1.4;
+      font-size: 14px;
     }
 
     .message.bot .message-bubble {
@@ -236,21 +250,33 @@
       background: #d1fae5;
       color: #065f46;
       text-align: center;
-      font-size: 14px;
+      font-size: 13px;
+    }
+
+    .message.suggestion .message-bubble {
+      background: #fef3c7;
+      border: 1px solid #fcd34d;
+      border-bottom-left-radius: 4px;
+    }
+
+    .suggestion-actions {
+      display: flex;
+      gap: 6px;
+      margin-top: 8px;
     }
 
     .typing-indicator {
       display: flex;
       gap: 4px;
-      padding: 12px 16px;
+      padding: 10px 14px;
       background: var(--bot-bubble);
-      border-radius: 16px;
+      border-radius: 14px;
       width: fit-content;
     }
 
     .typing-indicator span {
-      width: 8px;
-      height: 8px;
+      width: 6px;
+      height: 6px;
       background: var(--text-muted);
       border-radius: 50%;
       animation: bounce 1.4s infinite;
@@ -261,34 +287,27 @@
 
     @keyframes bounce {
       0%, 60%, 100% { transform: translateY(0); }
-      30% { transform: translateY(-4px); }
+      30% { transform: translateY(-3px); }
     }
 
     .chat-input-container {
-      padding: 16px 0 24px;
+      padding: 12px 16px;
       border-top: 1px solid var(--border);
-    }
-    
-    .login-hint {
-      text-align: center;
-      padding: 8px;
-      font-size: 13px;
-      color: var(--text-muted);
-      margin-bottom: 8px;
+      background: var(--card);
     }
 
     .chat-input-form {
       display: flex;
-      gap: 12px;
+      gap: 10px;
     }
 
     .chat-input {
       flex: 1;
-      padding: 14px 18px;
+      padding: 12px 16px;
       border: 1px solid var(--border);
-      border-radius: 24px;
-      font-size: 16px;
-      background: var(--card);
+      border-radius: 20px;
+      font-size: 14px;
+      background: var(--bg);
       color: var(--text);
     }
 
@@ -298,8 +317,8 @@
     }
 
     .send-btn {
-      width: 48px;
-      height: 48px;
+      width: 40px;
+      height: 40px;
       border-radius: 50%;
       background: var(--primary);
       border: none;
@@ -310,377 +329,363 @@
     }
 
     .send-btn:hover { background: var(--primary-dark); }
-    .send-btn svg { width: 20px; height: 20px; fill: white; }
+    .send-btn svg { width: 18px; height: 18px; fill: white; }
 
-    /* Settings Tab */
-    .settings-content {
-      padding: 24px;
-      max-width: 800px;
-      margin: 0 auto;
-      overflow-y: auto;
-    }
-
-    .settings-section {
-      background: var(--card);
-      border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 20px;
-      border: 1px solid var(--border);
-    }
-
-    .settings-section h3 {
-      font-size: 16px;
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
       margin-bottom: 16px;
+    }
+
+    .stat-card {
+      background: var(--bg);
+      border-radius: 8px;
+      padding: 12px;
+      text-align: center;
+    }
+
+    .stat-card h3 {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-bottom: 2px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .stat-card .value {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    /* Goals in Dashboard */
+    .goals-section h4 {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+
+    .goal-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 10px;
+      background: var(--bg);
+      border-radius: 6px;
+      margin-bottom: 6px;
+      font-size: 13px;
+    }
+
+    .goal-text.completed { text-decoration: line-through; color: var(--text-muted); }
+
+    .add-goal-form {
+      display: flex;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .add-goal-form input {
+      flex: 1;
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 13px;
+      background: var(--bg);
       color: var(--text);
     }
 
+    /* Messages */
+    .message-item {
+      padding: 10px;
+      background: var(--bg);
+      border-radius: 8px;
+      margin-bottom: 8px;
+      border-left: 3px solid transparent;
+      font-size: 13px;
+    }
+
+    .message-item.unread { border-left-color: var(--primary); }
+
+    .message-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+
+    .message-from { font-weight: 600; color: var(--primary); font-size: 12px; }
+    .message-time { font-size: 10px; color: var(--text-muted); }
+
+    /* Profile JSON */
+    .profile-json {
+      background: var(--bg);
+      border-radius: 8px;
+      padding: 12px;
+      font-family: 'Monaco', 'Menlo', monospace;
+      font-size: 11px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-all;
+      color: var(--text);
+      max-height: 100%;
+      overflow-y: auto;
+    }
+
+    /* Settings */
     .setting-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 12px 0;
+      padding: 8px 0;
       border-bottom: 1px solid var(--border);
+      font-size: 13px;
     }
-    
+
     .setting-row:last-child { border-bottom: none; }
 
-    .setting-label {
-      font-size: 14px;
-      color: var(--text);
-    }
-
-    .setting-control select, .setting-control input[type="text"] {
-      padding: 8px 12px;
+    .setting-control select {
+      padding: 6px 10px;
       border: 1px solid var(--border);
-      border-radius: 6px;
-      font-size: 14px;
+      border-radius: 4px;
+      font-size: 12px;
       background: var(--bg);
       color: var(--text);
     }
-    
+
     .theme-picker {
       display: flex;
-      gap: 8px;
+      gap: 4px;
     }
-    
+
     .theme-btn {
-      width: 32px;
-      height: 32px;
+      width: 24px;
+      height: 24px;
       border-radius: 50%;
       border: 2px solid transparent;
       cursor: pointer;
     }
-    
+
     .theme-btn.active { border-color: var(--text); }
-    .theme-btn[data-theme="green"] { background: #10b981; }
-    .theme-btn[data-theme="blue"] { background: #3b82f6; }
-    .theme-btn[data-theme="purple"] { background: #8b5cf6; }
-    .theme-btn[data-theme="orange"] { background: #f97316; }
+    .theme-btn[data-theme="light"] { background: #f8fafc; border: 1px solid #e2e8f0; }
     .theme-btn[data-theme="dark"] { background: linear-gradient(135deg, #1e293b, #0f172a); }
-    
-    .profile-textarea {
-      width: 100%;
-      min-height: 150px;
-      padding: 12px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      font-family: monospace;
-      font-size: 13px;
-      background: var(--bg);
-      color: var(--text);
-      resize: vertical;
-    }
-    
+
+    /* Buttons */
     .btn {
-      padding: 10px 20px;
+      padding: 6px 12px;
       border: none;
-      border-radius: 8px;
-      font-size: 14px;
+      border-radius: 4px;
+      font-size: 12px;
       font-weight: 500;
       cursor: pointer;
     }
-    
-    .btn-primary {
-      background: var(--primary);
-      color: white;
-    }
-    
+
+    .btn-primary { background: var(--primary); color: white; }
     .btn-primary:hover { background: var(--primary-dark); }
+    .btn-sm { padding: 4px 8px; font-size: 11px; }
+    .btn-danger { background: #ef4444; color: white; }
+    .btn-muted { background: var(--text-muted); color: white; }
+    .btn-blue { background: #3b82f6; color: white; }
 
-    /* Dashboard */
-    .dashboard-content {
-      padding: 24px;
-      max-width: 1200px;
-      margin: 0 auto;
-      overflow-y: auto;
-    }
-
-    .dashboard-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 16px;
-      margin-bottom: 24px;
-    }
-
-    .dashboard-card {
-      background: var(--card);
-      border-radius: 12px;
-      padding: 20px;
-      border: 1px solid var(--border);
-    }
-
-    .dashboard-card h3 {
-      font-size: 13px;
-      color: var(--text-muted);
-      margin-bottom: 8px;
-    }
-
-    .dashboard-card .value {
-      font-size: 28px;
-      font-weight: 700;
-      color: var(--primary);
-    }
-    
-    /* Messages Tab */
-    .messages-content {
-      padding: 24px;
-      max-width: 800px;
-      margin: 0 auto;
-    }
-    
-    .message-item {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
+    .empty-state {
+      text-align: center;
       padding: 16px;
-      margin-bottom: 12px;
-    }
-    
-    .message-item.unread {
-      border-left: 3px solid var(--primary);
-    }
-    
-    .message-header {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 8px;
-    }
-    
-    .message-from {
-      font-weight: 600;
-      color: var(--primary);
-    }
-    
-    .message-time {
-      font-size: 12px;
       color: var(--text-muted);
-    }
-    
-    .message-text {
-      color: var(--text);
-      line-height: 1.5;
+      font-size: 13px;
     }
 
-    @media (max-width: 600px) {
-      .app-header { padding: 12px 16px; }
-      .nav-tabs { padding: 0 12px; }
-      .nav-tab { padding: 12px 14px; font-size: 13px; }
-      .message { max-width: 90%; }
-      .settings-content, .dashboard-content { padding: 16px; }
+    @media (max-width: 900px) {
+      .main-container {
+        flex-direction: column;
+        overflow-y: auto;
+      }
+      .chat-column {
+        width: 100%;
+        min-width: unset;
+        height: 50vh;
+      }
+      .widgets-column { overflow: visible; }
+      .widgets-row { flex-direction: column; }
     }
   </style>
 </head>
 <body>
-  <div id="app" class="app-container">
-    <header class="app-header">
-      <h1>GreenDial</h1>
-      <div class="user-info">
-        <span id="status-badge" class="status-badge guest">Guest</span>
-        <span id="display-username"></span>
-        <button id="logout-btn" class="logout-btn hidden" onclick="logout()">Sign Out</button>
-      </div>
-    </header>
+  <header class="app-header">
+    <h1>GreenDial</h1>
+    <div class="user-info">
+      <span id="status-badge" class="status-badge guest">Guest</span>
+      <span id="display-username" style="color: var(--text-muted); font-size: 14px;"></span>
+      <button id="logout-btn" class="logout-btn hidden" onclick="logout()">Sign Out</button>
+    </div>
+  </header>
 
-    <nav class="nav-tabs">
-      <button class="nav-tab active" data-tab="chat">Chat with Doc</button>
-      <button class="nav-tab" data-tab="dashboard">Dashboard</button>
-      <button class="nav-tab" data-tab="messages">Messages <span id="msg-badge" class="badge hidden">0</span></button>
-      <button class="nav-tab" data-tab="settings">Settings</button>
-    </nav>
-
-    <!-- Chat Tab -->
-    <main id="chat-tab" class="chat-container">
-      <div id="chat-messages" class="chat-messages">
-        <div class="message bot">
-          <div class="message-avatar">D</div>
-          <div class="message-bubble">Hello! I'm Doc, your personal health assistant. You can start chatting right away, or say "I'd like to sign up" to create an account and save your health data.</div>
+  <div class="main-container">
+    <!-- Left: Chat -->
+    <div class="chat-column">
+      <div class="widget chat-widget jiggle">
+        <div class="widget-header">
+          <h2>💬 Chat with Doc</h2>
         </div>
-      </div>
-      <div class="chat-input-container">
-        <div id="login-hint" class="login-hint">Chatting as guest. Say "sign up" or "login" to save your data.</div>
-        <form id="chat-form" class="chat-input-form">
-          <input type="text" id="chat-input" class="chat-input" placeholder="Type your message..." autocomplete="off">
-          <button type="submit" class="send-btn">
-            <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
-          </button>
-        </form>
-      </div>
-    </main>
-
-    <!-- Dashboard Tab -->
-    <main id="dashboard-tab" class="dashboard-content hidden">
-      <div class="dashboard-grid">
-        <div class="dashboard-card">
-          <h3>Sessions</h3>
-          <div class="value" id="stat-sessions">1</div>
-        </div>
-        <div class="dashboard-card">
-          <h3>Health Records</h3>
-          <div class="value" id="stat-records">0</div>
-        </div>
-        <div class="dashboard-card">
-          <h3>Active Goals</h3>
-          <div class="value" id="stat-goals">0</div>
-        </div>
-        <div class="dashboard-card">
-          <h3>Days Active</h3>
-          <div class="value" id="stat-days">1</div>
-        </div>
-      </div>
-      <div id="login-prompt" class="settings-section">
-        <h3>Create an Account</h3>
-        <p style="color: var(--text-muted); margin-bottom: 12px;">Sign up to save your health data, track progress, and get personalized recommendations.</p>
-        <p style="color: var(--text-muted);">Just tell Doc: "I'd like to sign up as [your name] with passphrase [your phrase]"</p>
-      </div>
-    </main>
-
-    <!-- Messages Tab -->
-    <main id="messages-tab" class="messages-content hidden">
-      <div class="settings-section">
-        <h3>Messages from Doc</h3>
-        <div id="doc-messages">
-          <p style="color: var(--text-muted);">No messages yet. Doc will send you health reminders and check-ins.</p>
-        </div>
-      </div>
-      <div class="settings-section">
-        <h3>User Messages</h3>
-        <div id="user-messages">
-          <p style="color: var(--text-muted);">No messages from other users.</p>
-        </div>
-      </div>
-    </main>
-
-    <!-- Settings Tab -->
-    <main id="settings-tab" class="settings-content hidden">
-      <div class="settings-section">
-        <h3>Doc's Style</h3>
-        <div class="setting-row">
-          <span class="setting-label">Conversation Style</span>
-          <div class="setting-control">
-            <select id="doc-style">
-              <option value="default">Balanced</option>
-              <option value="coach">Motivational Coach</option>
-              <option value="clinical">Clinical Professional</option>
-              <option value="friendly">Casual Friend</option>
-            </select>
+        <div class="widget-body">
+          <div id="chat-messages" class="chat-messages">
+            <div class="message bot">
+              <div class="message-avatar">D</div>
+              <div class="message-bubble">Hello! I'm Doc, your health assistant. Say "sign up" to create an account.</div>
+            </div>
+          </div>
+          <div class="chat-input-container">
+            <form id="chat-form" class="chat-input-form">
+              <input type="text" id="chat-input" class="chat-input" placeholder="Type a message..." autocomplete="off">
+              <button type="submit" class="send-btn">
+                <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+              </button>
+            </form>
           </div>
         </div>
       </div>
-      
-      <div class="settings-section">
-        <h3>Theme</h3>
-        <div class="setting-row">
-          <span class="setting-label">Color Theme</span>
-          <div class="theme-picker">
-            <button class="theme-btn active" data-theme="green" title="Green"></button>
-            <button class="theme-btn" data-theme="blue" title="Blue"></button>
-            <button class="theme-btn" data-theme="purple" title="Purple"></button>
-            <button class="theme-btn" data-theme="orange" title="Orange"></button>
-            <button class="theme-btn" data-theme="dark" title="Dark"></button>
+    </div>
+
+    <!-- Right: Widgets -->
+    <div class="widgets-column">
+      <div class="widgets-row">
+        <!-- Dashboard + Goals -->
+        <div class="widget jiggle" data-widget="dashboard">
+          <div class="widget-header">
+            <h2>📊 Dashboard</h2>
+          </div>
+          <div class="widget-body">
+            <div class="stats-grid">
+              <div class="stat-card">
+                <h3>Sessions</h3>
+                <div class="value" id="stat-sessions">1</div>
+              </div>
+              <div class="stat-card">
+                <h3>Records</h3>
+                <div class="value" id="stat-records">0</div>
+              </div>
+              <div class="stat-card">
+                <h3>Goals</h3>
+                <div class="value" id="stat-goals">0</div>
+              </div>
+              <div class="stat-card">
+                <h3>Days</h3>
+                <div class="value" id="stat-days">1</div>
+              </div>
+            </div>
+            <div class="goals-section">
+              <h4>🎯 Goals</h4>
+              <div id="goals-list"></div>
+              <div class="add-goal-form">
+                <input type="text" id="new-goal-input" placeholder="Add goal...">
+                <button class="btn btn-primary btn-sm" onclick="createGoal()">Add</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Messages -->
+        <div class="widget jiggle" data-widget="messages">
+          <div class="widget-header">
+            <h2>📬 Messages <span id="msg-badge" class="hidden" style="background: var(--primary); color: white; padding: 2px 6px; border-radius: 8px; font-size: 10px; margin-left: 4px;">0</span></h2>
+          </div>
+          <div class="widget-body">
+            <div id="messages-list">
+              <div class="empty-state">No messages yet.</div>
+            </div>
           </div>
         </div>
       </div>
-      
-      <div class="settings-section">
-        <h3>Your Profile</h3>
-        <p style="color: var(--text-muted); margin-bottom: 12px; font-size: 14px;">Edit your profile data (JSON format)</p>
-        <textarea id="profile-editor" class="profile-textarea" placeholder='{"name": "", "age": "", "goals": []}'></textarea>
-        <button class="btn btn-primary" style="margin-top: 12px;" onclick="saveProfile()">Save Profile</button>
-      </div>
-      
-      <div class="settings-section">
-        <h3>Basic Info</h3>
-        <div class="setting-row">
-          <span class="setting-label">Display Name</span>
-          <div class="setting-control">
-            <input type="text" id="setting-name" placeholder="Your name">
+
+      <div class="widgets-row">
+        <!-- Profile JSON -->
+        <div class="widget jiggle" data-widget="profile">
+          <div class="widget-header">
+            <h2>👤 Profile</h2>
+          </div>
+          <div class="widget-body" style="padding: 12px;">
+            <div id="profile-display" class="profile-json">{ "status": "Not logged in" }</div>
           </div>
         </div>
-        <div class="setting-row">
-          <span class="setting-label">Email (optional)</span>
-          <div class="setting-control">
-            <input type="text" id="setting-email" placeholder="your@email.com">
+
+        <!-- Settings -->
+        <div class="widget jiggle" data-widget="settings">
+          <div class="widget-header">
+            <h2>⚙️ Settings</h2>
+          </div>
+          <div class="widget-body">
+            <div class="setting-row">
+              <span>Doc's Style</span>
+              <select id="doc-style">
+                <option value="default">Balanced</option>
+                <option value="coach">Coach</option>
+                <option value="clinical">Clinical</option>
+                <option value="friendly">Friendly</option>
+              </select>
+            </div>
+            <div class="setting-row">
+              <span>Theme</span>
+              <div class="theme-picker">
+                <button class="theme-btn active" data-theme="light" title="Light"></button>
+                <button class="theme-btn" data-theme="dark" title="Dark"></button>
+              </div>
+            </div>
           </div>
         </div>
-        <button class="btn btn-primary" style="margin-top: 12px;" onclick="saveBasicInfo()">Save</button>
       </div>
-    </main>
+    </div>
   </div>
 
   <script>
     const API = window.location.origin;
     let currentUser = null;
     let sessionId = null;
-    let currentSettings = { doc_style: 'default', theme: 'green' };
 
-    // Initialize
     function init() {
-      // Check for stored session
       const stored = localStorage.getItem('greendial_user');
       if (stored) {
         try {
           currentUser = JSON.parse(stored);
           sessionId = currentUser.session_id;
           updateUI();
-          loadSettings();
-          loadStats();
-          loadMessages();
+          loadAllData();
         } catch(e) {
           localStorage.removeItem('greendial_user');
         }
       }
+      if (!sessionId) sessionId = 'anon_' + Date.now();
       
-      // Create anonymous session
-      if (!sessionId) {
-        sessionId = 'anon_' + Date.now();
-      }
-      
-      // Load theme
-      const savedTheme = localStorage.getItem('greendial_theme') || 'green';
+      const savedTheme = localStorage.getItem('greendial_theme') || 'light';
       setTheme(savedTheme);
+      
+      setTimeout(() => {
+        document.querySelectorAll('.widget').forEach(w => w.classList.add('jiggle'));
+      }, 100);
+    }
+
+    function loadAllData() {
+      loadStats();
+      loadGoals();
+      loadMessages();
+      loadProfile();
+      loadSuggestionsAsMessages();
     }
 
     function updateUI() {
       const badge = document.getElementById('status-badge');
       const username = document.getElementById('display-username');
       const logoutBtn = document.getElementById('logout-btn');
-      const loginHint = document.getElementById('login-hint');
-      const loginPrompt = document.getElementById('login-prompt');
       
-      if (currentUser && currentUser.user_id) {
+      if (currentUser?.user_id) {
         badge.textContent = 'Logged In';
         badge.className = 'status-badge logged-in';
         username.textContent = currentUser.username;
         logoutBtn.classList.remove('hidden');
-        loginHint.classList.add('hidden');
-        if (loginPrompt) loginPrompt.classList.add('hidden');
       } else {
         badge.textContent = 'Guest';
         badge.className = 'status-badge guest';
         username.textContent = '';
         logoutBtn.classList.add('hidden');
-        loginHint.classList.remove('hidden');
-        if (loginPrompt) loginPrompt.classList.remove('hidden');
       }
     }
 
@@ -689,65 +694,45 @@
       sessionId = 'anon_' + Date.now();
       localStorage.removeItem('greendial_user');
       updateUI();
-      
-      // Clear chat and show welcome
+      document.getElementById('profile-display').textContent = '{ "status": "Not logged in" }';
       document.getElementById('chat-messages').innerHTML = `
         <div class="message bot">
           <div class="message-avatar">D</div>
-          <div class="message-bubble">You've been signed out. Feel free to keep chatting, or say "login" to sign back in.</div>
+          <div class="message-bubble">Signed out. Say "login" to sign back in.</div>
         </div>
       `;
     }
 
     function setTheme(theme) {
-      document.body.setAttribute('data-theme', theme);
+      document.body.setAttribute('data-theme', theme === 'dark' ? 'dark' : '');
       localStorage.setItem('greendial_theme', theme);
-      
       document.querySelectorAll('.theme-btn').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.theme === theme);
       });
     }
 
-    // Tab navigation
-    document.querySelectorAll('.nav-tab').forEach(tab => {
-      tab.addEventListener('click', () => {
-        document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
-        const tabName = tab.dataset.tab;
-        
-        document.getElementById('chat-tab').classList.toggle('hidden', tabName !== 'chat');
-        document.getElementById('dashboard-tab').classList.toggle('hidden', tabName !== 'dashboard');
-        document.getElementById('messages-tab').classList.toggle('hidden', tabName !== 'messages');
-        document.getElementById('settings-tab').classList.toggle('hidden', tabName !== 'settings');
-        
-        if (tabName === 'dashboard' && currentUser) loadStats();
-        if (tabName === 'messages' && currentUser) loadMessages();
-        if (tabName === 'settings' && currentUser) loadSettings();
-      });
-    });
-
-    // Theme picker
-    document.querySelectorAll('.theme-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        setTheme(btn.dataset.theme);
-        if (currentUser) saveSettings();
-      });
-    });
-
-    // Doc style change
-    document.getElementById('doc-style').addEventListener('change', (e) => {
-      currentSettings.doc_style = e.target.value;
-      if (currentUser) saveSettings();
-    });
-
     // Chat
-    function addMessage(text, type = 'bot') {
+    function addMessage(text, type = 'bot', extra = null) {
       const messages = document.getElementById('chat-messages');
       const div = document.createElement('div');
       div.className = `message ${type}`;
       
       if (type === 'system') {
         div.innerHTML = `<div class="message-bubble">${text}</div>`;
+      } else if (type === 'suggestion') {
+        const suggestionId = extra?.id || '';
+        const isRseEligible = extra?.rse_eligible;
+        div.innerHTML = `
+          <div class="message-avatar">💡</div>
+          <div class="message-bubble">
+            <div style="font-size: 11px; color: #92400e; margin-bottom: 4px;">Suggestion from Doc</div>
+            ${text}
+            ${isRseEligible ? `<div class="suggestion-actions">
+              <button class="btn btn-sm btn-blue" onclick="submitToRse('${suggestionId}')">Get Service Bids</button>
+              <button class="btn btn-sm btn-muted" onclick="dismissSuggestion('${suggestionId}')">Dismiss</button>
+            </div>` : ''}
+          </div>
+        `;
       } else {
         const initials = type === 'user' ? (currentUser?.username?.[0]?.toUpperCase() || 'U') : 'D';
         div.innerHTML = `
@@ -774,8 +759,7 @@
     }
 
     function hideTyping() {
-      const typing = document.getElementById('typing');
-      if (typing) typing.remove();
+      document.getElementById('typing')?.remove();
     }
 
     document.getElementById('chat-form').addEventListener('submit', async (e) => {
@@ -792,210 +776,216 @@
         const resp = await fetch(`${API}/chat`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            text, 
-            user_id: currentUser?.user_id,
-            session_id: sessionId
-          })
+          body: JSON.stringify({ text, user_id: currentUser?.user_id, session_id: sessionId })
         });
         const data = await resp.json();
         hideTyping();
         
-        // Check for auth event
         if (data.auth) {
           currentUser = {
             user_id: data.auth.user_id,
             username: data.auth.username,
-            session_id: sessionId,
-            settings: data.auth.settings || {}
+            session_id: sessionId
           };
           localStorage.setItem('greendial_user', JSON.stringify(currentUser));
           updateUI();
-          
-          // Show system message
           addMessage(`Logged in as ${data.auth.username}`, 'system');
-          
-          // Start new private session
           sessionId = 'private_' + Date.now();
           currentUser.session_id = sessionId;
           localStorage.setItem('greendial_user', JSON.stringify(currentUser));
+          loadAllData();
         }
         
         addMessage(data.response, 'bot');
-        
       } catch (err) {
         hideTyping();
-        addMessage('Sorry, I had trouble connecting. Please try again.', 'bot');
+        addMessage('Connection error. Please try again.', 'bot');
       }
     });
 
-    // Settings
-    async function loadSettings() {
-      if (!currentUser) return;
+    // Goals
+    async function loadGoals() {
+      if (!currentUser) {
+        document.getElementById('goals-list').innerHTML = '<div class="empty-state">Log in to track goals</div>';
+        return;
+      }
       
       try {
-        const resp = await fetch(`${API}/settings/${currentUser.user_id}`);
-        const settings = await resp.json();
-        currentSettings = settings;
+        const resp = await fetch(`${API}/goals/${currentUser.user_id}`);
+        const data = await resp.json();
+        const goals = data.goals || [];
         
-        document.getElementById('doc-style').value = settings.doc_style || 'default';
-        if (settings.theme) setTheme(settings.theme);
-        
-        // Load profile
-        const userResp = await fetch(`${API}/user/${currentUser.user_id}`);
-        const userData = await userResp.json();
-        
-        if (userData.profile) {
-          document.getElementById('profile-editor').value = JSON.stringify(userData.profile, null, 2);
+        const container = document.getElementById('goals-list');
+        if (goals.length === 0) {
+          container.innerHTML = '<div class="empty-state">No goals yet</div>';
+          return;
         }
         
-        document.getElementById('setting-name').value = userData.username || '';
-        document.getElementById('setting-email').value = userData.profile?.email || '';
-        
-      } catch(e) {
-        console.error('Failed to load settings:', e);
-      }
+        container.innerHTML = goals.slice(0, 5).map(g => `
+          <div class="goal-item">
+            <span class="goal-text ${g.completed ? 'completed' : ''}">${g.text}</span>
+            <div style="display: flex; gap: 4px;">
+              <button onclick="toggleGoal('${g.id}', ${!g.completed})" class="btn btn-sm ${g.completed ? 'btn-muted' : 'btn-primary'}">${g.completed ? '↩' : '✓'}</button>
+              <button onclick="deleteGoal('${g.id}')" class="btn btn-sm btn-danger">×</button>
+            </div>
+          </div>
+        `).join('');
+      } catch(e) {}
     }
 
-    async function saveSettings() {
+    async function createGoal() {
+      if (!currentUser) { alert('Please log in.'); return; }
+      const input = document.getElementById('new-goal-input');
+      const text = input.value.trim();
+      if (!text) return;
+      
+      try {
+        await fetch(`${API}/goal/${currentUser.user_id}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text, type: 'health' })
+        });
+        input.value = '';
+        loadGoals();
+        loadStats();
+      } catch(e) {}
+    }
+
+    async function toggleGoal(goalId, completed) {
       if (!currentUser) return;
-      
-      currentSettings.theme = document.body.getAttribute('data-theme');
-      currentSettings.doc_style = document.getElementById('doc-style').value;
-      
-      try {
-        await fetch(`${API}/settings/${currentUser.user_id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(currentSettings)
-        });
-      } catch(e) {
-        console.error('Failed to save settings:', e);
-      }
+      await fetch(`${API}/goal/${currentUser.user_id}/${goalId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ completed, progress: completed ? 100 : 0 })
+      });
+      loadGoals();
     }
 
-    async function saveProfile() {
-      if (!currentUser) {
-        alert('Please log in to save your profile.');
-        return;
-      }
-      
-      try {
-        const profileText = document.getElementById('profile-editor').value;
-        const profile = JSON.parse(profileText);
-        
-        await fetch(`${API}/user/${currentUser.user_id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ profile })
-        });
-        
-        alert('Profile saved!');
-      } catch(e) {
-        alert('Invalid JSON format. Please check your profile data.');
-      }
-    }
-
-    async function saveBasicInfo() {
-      if (!currentUser) {
-        alert('Please log in to save your info.');
-        return;
-      }
-      
-      const name = document.getElementById('setting-name').value;
-      const email = document.getElementById('setting-email').value;
-      
-      try {
-        await fetch(`${API}/user/${currentUser.user_id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            username: name,
-            profile: { email }
-          })
-        });
-        
-        currentUser.username = name;
-        localStorage.setItem('greendial_user', JSON.stringify(currentUser));
-        updateUI();
-        
-        alert('Info saved!');
-      } catch(e) {
-        alert('Failed to save. Please try again.');
-      }
+    async function deleteGoal(goalId) {
+      if (!currentUser) return;
+      await fetch(`${API}/goal/${currentUser.user_id}/${goalId}`, { method: 'DELETE' });
+      loadGoals();
+      loadStats();
     }
 
     // Stats
     async function loadStats() {
       if (!currentUser) return;
-      
       try {
         const resp = await fetch(`${API}/stats/${currentUser.user_id}`);
         const stats = await resp.json();
-        
         document.getElementById('stat-sessions').textContent = stats.conversations || 1;
         document.getElementById('stat-records').textContent = stats.records || 0;
         document.getElementById('stat-goals').textContent = stats.goals || 0;
         document.getElementById('stat-days').textContent = stats.days_active || 1;
-      } catch(e) {
-        console.error('Failed to load stats:', e);
-      }
+      } catch(e) {}
     }
 
     // Messages
     async function loadMessages() {
-      if (!currentUser) return;
-      
+      if (!currentUser) {
+        document.getElementById('messages-list').innerHTML = '<div class="empty-state">Log in to see messages</div>';
+        return;
+      }
       try {
-        // Load Doc messages
-        const docResp = await fetch(`${API}/doc/messages/${currentUser.user_id}`);
-        const docData = await docResp.json();
+        const resp = await fetch(`${API}/doc/messages/${currentUser.user_id}`);
+        const data = await resp.json();
+        const messages = data.messages || [];
         
-        const docContainer = document.getElementById('doc-messages');
-        if (docData.messages && docData.messages.length > 0) {
-          docContainer.innerHTML = docData.messages.map(m => `
+        const container = document.getElementById('messages-list');
+        if (messages.length === 0) {
+          container.innerHTML = '<div class="empty-state">No messages yet</div>';
+        } else {
+          container.innerHTML = messages.slice(0, 10).map(m => `
             <div class="message-item ${m.read ? '' : 'unread'}">
               <div class="message-header">
                 <span class="message-from">Doc</span>
-                <span class="message-time">${new Date(m.timestamp).toLocaleString()}</span>
+                <span class="message-time">${new Date(m.timestamp).toLocaleDateString()}</span>
               </div>
-              <div class="message-text">${m.message}</div>
+              <div style="font-size: 13px;">${m.message}</div>
             </div>
           `).join('');
           
-          const unreadCount = docData.messages.filter(m => !m.read).length;
+          const unread = messages.filter(m => !m.read).length;
           const badge = document.getElementById('msg-badge');
-          if (unreadCount > 0) {
-            badge.textContent = unreadCount;
+          if (unread > 0) {
+            badge.textContent = unread;
             badge.classList.remove('hidden');
           } else {
             badge.classList.add('hidden');
           }
         }
-        
-        // Load user messages
-        const userResp = await fetch(`${API}/messages/${currentUser.user_id}`);
-        const userData = await userResp.json();
-        
-        const userContainer = document.getElementById('user-messages');
-        if (userData.inbox && userData.inbox.length > 0) {
-          userContainer.innerHTML = userData.inbox.map(m => `
-            <div class="message-item ${m.read ? '' : 'unread'}">
-              <div class="message-header">
-                <span class="message-from">${m.from}</span>
-                <span class="message-time">${new Date(m.timestamp).toLocaleString()}</span>
-              </div>
-              <div class="message-text">${m.message}</div>
-            </div>
-          `).join('');
-        }
-        
+      } catch(e) {}
+    }
+
+    // Profile
+    async function loadProfile() {
+      if (!currentUser) {
+        document.getElementById('profile-display').textContent = '{ "status": "Not logged in" }';
+        return;
+      }
+      try {
+        const resp = await fetch(`${API}/user/${currentUser.user_id}`);
+        const user = await resp.json();
+        const profile = user.profile || {};
+        document.getElementById('profile-display').textContent = JSON.stringify(profile, null, 2) || '{}';
       } catch(e) {
-        console.error('Failed to load messages:', e);
+        document.getElementById('profile-display').textContent = '{ "error": "Failed to load" }';
       }
     }
 
-    // Initialize
+    // Suggestions as chat messages
+    async function loadSuggestionsAsMessages() {
+      if (!currentUser) return;
+      try {
+        const resp = await fetch(`${API}/suggestions/${currentUser.user_id}`);
+        const data = await resp.json();
+        const suggestions = data.suggestions || [];
+        
+        suggestions.slice(0, 3).forEach(s => {
+          if (!s.dismissed) {
+            addMessage(s.text, 'suggestion', s);
+          }
+        });
+      } catch(e) {}
+    }
+
+    async function submitToRse(suggestionId) {
+      if (!currentUser) return;
+      try {
+        const resp = await fetch(`${API}/suggestion/${currentUser.user_id}/${suggestionId}/submit-rse`, { method: 'POST' });
+        const data = await resp.json();
+        if (data.success) {
+          addMessage('Service request submitted to RSE. Providers will bid on it!', 'system');
+        } else {
+          addMessage(data.error || 'Failed to submit', 'system');
+        }
+      } catch(e) {}
+    }
+    
+    async function dismissSuggestion(suggestionId) {
+      if (!currentUser) return;
+      await fetch(`${API}/suggestion/${currentUser.user_id}/${suggestionId}/dismiss`, { method: 'POST' });
+      // Remove from chat
+      document.querySelectorAll('.message.suggestion').forEach(el => {
+        if (el.innerHTML.includes(suggestionId)) el.remove();
+      });
+    }
+
+    // Settings
+    document.querySelectorAll('.theme-btn').forEach(btn => {
+      btn.addEventListener('click', () => setTheme(btn.dataset.theme));
+    });
+
+    document.getElementById('doc-style').addEventListener('change', async (e) => {
+      if (!currentUser) return;
+      await fetch(`${API}/settings/${currentUser.user_id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ doc_style: e.target.value })
+      });
+    });
+
     init();
   </script>
 </body>

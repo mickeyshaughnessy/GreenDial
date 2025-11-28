@@ -1,229 +1,190 @@
 """
 RSE Client - The Services Exchange API Integration
-Fetches service bids for diet, exercise, sleep, and entertainment
-API Documentation: https://theservicesexchange.com/api_docs.html
+Submits service requests and receives bids from providers
+
+RSE is an external marketplace where users can request services
+(food delivery, cleaning, landscaping, etc.) and providers bid on them.
+
+API: https://rse-api.com:5003/
+Docs: https://theservicesexchange.com/api_docs.html
 """
 import requests
 import json
 from datetime import datetime
 import config
 
-RSE_CATEGORIES = ['diet', 'exercise', 'sleep', 'entertainment']
+RSE_API_URL = getattr(config, 'RSE_API_URL', 'https://rse-api.com:5003')
 
-def get_bids(category=None, location=None, max_results=10):
+# Service categories that make sense for RSE bidding
+RSE_SERVICE_CATEGORIES = [
+    'food_delivery',
+    'meal_prep',
+    'cleaning',
+    'landscaping',
+    'personal_training',
+    'massage',
+    'grocery_delivery',
+    'pet_care',
+    'errands',
+    'home_maintenance'
+]
+
+def submit_bid_request(user_id, service_type, description, budget=None, location=None, deadline=None):
     """
-    Fetch service bids from RSE API
+    Submit a service request to RSE for providers to bid on
     
     Args:
-        category: One of diet, exercise, sleep, entertainment (or None for all)
-        location: User location for nearby services
-        max_results: Maximum number of results to return
+        user_id: GreenDial user ID
+        service_type: Type of service (food_delivery, cleaning, etc.)
+        description: What the user needs
+        budget: Optional budget limit
+        location: User's location
+        deadline: When service is needed
     
     Returns:
-        List of bid objects
+        dict with request_id if successful, error otherwise
     """
     try:
-        params = {
-            'limit': max_results
+        payload = {
+            'client_id': f'greendial_{user_id}',
+            'service_type': service_type,
+            'description': description,
+            'source': 'greendial',
+            'timestamp': datetime.utcnow().isoformat()
         }
         
-        if category and category in RSE_CATEGORIES:
-            params['category'] = category
-        
+        if budget:
+            payload['budget'] = budget
         if location:
-            params['location'] = location
+            payload['location'] = location
+        if deadline:
+            payload['deadline'] = deadline
         
-        response = requests.get(
-            f"{config.RSE_API_URL}/bids",
-            params=params,
+        response = requests.post(
+            f"{RSE_API_URL}/submit_bid",
+            json=payload,
             timeout=10
         )
         
         if response.status_code == 200:
             data = response.json()
-            return data.get('bids', [])
+            return {
+                'success': True,
+                'request_id': data.get('request_id'),
+                'message': data.get('message', 'Bid request submitted')
+            }
         else:
-            print(f"RSE API error: {response.status_code}")
-            return []
+            return {
+                'success': False,
+                'error': f"RSE API error: {response.status_code}"
+            }
             
     except requests.exceptions.RequestException as e:
         print(f"RSE API connection error: {e}")
-        return []
+        return {'success': False, 'error': str(e)}
     except Exception as e:
         print(f"RSE client error: {e}")
+        return {'success': False, 'error': str(e)}
+
+def get_bids_for_request(request_id):
+    """
+    Get bids received for a specific service request
+    
+    Args:
+        request_id: The RSE request ID
+    
+    Returns:
+        List of bids from providers
+    """
+    try:
+        response = requests.get(
+            f"{RSE_API_URL}/bids/{request_id}",
+            timeout=10
+        )
+        
+        if response.status_code == 200:
+            return response.json().get('bids', [])
+        return []
+        
+    except Exception as e:
+        print(f"Error fetching bids: {e}")
         return []
 
-def get_suggestions_for_user(user_profile, categories=None):
+def get_user_requests(user_id):
     """
-    Get personalized service suggestions based on user profile
+    Get all service requests for a user
     
     Args:
-        user_profile: User's profile data including goals, preferences
-        categories: List of categories to fetch (default: all)
+        user_id: GreenDial user ID
     
     Returns:
-        Dict with suggestions by category
+        List of request objects with their bids
     """
-    categories = categories or RSE_CATEGORIES
-    suggestions = {}
-    
-    location = user_profile.get('location', '')
-    
-    for category in categories:
-        bids = get_bids(category=category, location=location, max_results=5)
+    try:
+        response = requests.get(
+            f"{RSE_API_URL}/requests",
+            params={'client_id': f'greendial_{user_id}'},
+            timeout=10
+        )
         
-        # Score and rank bids based on user profile
-        scored_bids = []
-        for bid in bids:
-            score = calculate_relevance_score(bid, user_profile, category)
-            scored_bids.append({
-                **bid,
-                'relevance_score': score
-            })
+        if response.status_code == 200:
+            return response.json().get('requests', [])
+        return []
         
-        # Sort by relevance
-        scored_bids.sort(key=lambda x: x.get('relevance_score', 0), reverse=True)
-        suggestions[category] = scored_bids[:3]  # Top 3 per category
-    
-    return suggestions
+    except Exception as e:
+        print(f"Error fetching user requests: {e}")
+        return []
 
-def calculate_relevance_score(bid, user_profile, category):
+def is_rse_service(suggestion_text):
     """
-    Calculate how relevant a bid is for the user
+    Determine if a suggestion should be submitted to RSE
     
     Args:
-        bid: The service bid
-        user_profile: User's profile
-        category: The category of the bid
+        suggestion_text: The suggestion text from Doc
     
     Returns:
-        Score from 0-100
+        tuple of (bool, service_type) - whether it's an RSE service and what type
     """
-    score = 50  # Base score
+    text_lower = suggestion_text.lower()
     
-    goals = user_profile.get('goals', [])
-    preferences = user_profile.get('preferences', {})
-    
-    # Check if bid matches user goals
-    bid_description = bid.get('description', '').lower()
-    bid_title = bid.get('title', '').lower()
-    
-    for goal in goals:
-        goal_text = goal.get('text', '').lower() if isinstance(goal, dict) else str(goal).lower()
-        if any(word in bid_description or word in bid_title for word in goal_text.split()):
-            score += 15
-    
-    # Category-specific scoring
-    if category == 'diet':
-        if preferences.get('diet_type'):
-            if preferences['diet_type'].lower() in bid_description:
-                score += 20
-    
-    elif category == 'exercise':
-        if preferences.get('fitness_level'):
-            level = preferences['fitness_level'].lower()
-            if level in bid_description:
-                score += 20
-    
-    elif category == 'sleep':
-        if preferences.get('sleep_issues'):
-            for issue in preferences.get('sleep_issues', []):
-                if issue.lower() in bid_description:
-                    score += 10
-    
-    # Price consideration
-    budget = preferences.get('budget', 'medium')
-    bid_price = bid.get('price', 0)
-    
-    if budget == 'low' and bid_price < 50:
-        score += 10
-    elif budget == 'high' and bid_price > 100:
-        score += 5
-    
-    # Rating boost
-    rating = bid.get('rating', 0)
-    score += int(rating * 5)
-    
-    return min(100, max(0, score))
-
-def format_suggestion_message(suggestions):
-    """
-    Format suggestions into a human-readable message for Doc
-    
-    Args:
-        suggestions: Dict of suggestions by category
-    
-    Returns:
-        Formatted string for Doc to present
-    """
-    if not any(suggestions.values()):
-        return "I don't have any service suggestions available right now."
-    
-    lines = ["Here are some personalized service suggestions for you:\n"]
-    
-    category_labels = {
-        'diet': 'Nutrition & Diet',
-        'exercise': 'Fitness & Exercise', 
-        'sleep': 'Sleep & Recovery',
-        'entertainment': 'Wellness & Entertainment'
+    service_keywords = {
+        'food_delivery': ['food delivery', 'deliver food', 'order food', 'meal delivery', 'get food delivered'],
+        'meal_prep': ['meal prep', 'prepared meals', 'cook meals', 'meal preparation'],
+        'cleaning': ['cleaning service', 'house cleaning', 'clean your home', 'maid service', 'cleaning help'],
+        'landscaping': ['landscaping', 'lawn care', 'yard work', 'garden', 'mowing'],
+        'personal_training': ['personal trainer', 'fitness trainer', 'workout trainer', 'hire a trainer'],
+        'massage': ['massage', 'massage therapy', 'therapeutic massage'],
+        'grocery_delivery': ['grocery delivery', 'groceries delivered', 'deliver groceries'],
+        'pet_care': ['pet sitter', 'dog walker', 'pet care', 'pet sitting'],
+        'errands': ['run errands', 'errand service', 'help with errands'],
+        'home_maintenance': ['handyman', 'home repair', 'fix things', 'maintenance']
     }
     
-    for category, bids in suggestions.items():
-        if bids:
-            lines.append(f"\n**{category_labels.get(category, category)}:**")
-            for i, bid in enumerate(bids[:2], 1):
-                title = bid.get('title', 'Service')
-                price = bid.get('price', 'N/A')
-                rating = bid.get('rating', 'N/A')
-                lines.append(f"  {i}. {title} - ${price} (Rating: {rating}/5)")
+    for service_type, keywords in service_keywords.items():
+        if any(kw in text_lower for kw in keywords):
+            return True, service_type
     
-    lines.append("\nWould you like more details on any of these?")
+    return False, None
+
+def extract_service_details(suggestion_text, user_profile):
+    """
+    Extract service request details from a suggestion
     
-    return '\n'.join(lines)
-
-# Mock data for development/testing when RSE API is unavailable
-MOCK_BIDS = {
-    'diet': [
-        {'id': 'd1', 'title': 'Personalized Meal Planning', 'description': 'Custom meal plans based on your goals', 'price': 49, 'rating': 4.5, 'provider': 'NutriPlan'},
-        {'id': 'd2', 'title': 'Healthy Meal Delivery', 'description': 'Fresh prepared meals delivered daily', 'price': 199, 'rating': 4.2, 'provider': 'FreshBox'},
-        {'id': 'd3', 'title': 'Nutrition Coaching Session', 'description': '1-on-1 session with certified nutritionist', 'price': 75, 'rating': 4.8, 'provider': 'HealthFirst'},
-    ],
-    'exercise': [
-        {'id': 'e1', 'title': 'Personal Training Session', 'description': 'One hour with certified trainer', 'price': 60, 'rating': 4.7, 'provider': 'FitLife'},
-        {'id': 'e2', 'title': 'Monthly Gym Membership', 'description': 'Full access to equipment and classes', 'price': 45, 'rating': 4.3, 'provider': 'PowerGym'},
-        {'id': 'e3', 'title': 'Online Fitness Program', 'description': '12-week guided workout program', 'price': 99, 'rating': 4.4, 'provider': 'HomeGains'},
-    ],
-    'sleep': [
-        {'id': 's1', 'title': 'Sleep Consultation', 'description': 'Assessment with sleep specialist', 'price': 120, 'rating': 4.6, 'provider': 'RestWell'},
-        {'id': 's2', 'title': 'Meditation App Premium', 'description': 'Guided sleep meditations', 'price': 12, 'rating': 4.5, 'provider': 'CalmMind'},
-        {'id': 's3', 'title': 'Sleep Tracking Device', 'description': 'Advanced sleep monitoring', 'price': 149, 'rating': 4.1, 'provider': 'SleepTech'},
-    ],
-    'entertainment': [
-        {'id': 'n1', 'title': 'Wellness Retreat Day Pass', 'description': 'Spa, yoga, and relaxation', 'price': 85, 'rating': 4.8, 'provider': 'ZenSpace'},
-        {'id': 'n2', 'title': 'Outdoor Adventure Tour', 'description': 'Hiking and nature experience', 'price': 55, 'rating': 4.6, 'provider': 'TrailBlazers'},
-        {'id': 'n3', 'title': 'Cooking Class', 'description': 'Learn healthy cooking techniques', 'price': 45, 'rating': 4.4, 'provider': 'ChefSkills'},
-    ]
-}
-
-def get_mock_bids(category=None):
-    """Return mock bids for testing"""
-    if category and category in MOCK_BIDS:
-        return MOCK_BIDS[category]
+    Args:
+        suggestion_text: The suggestion from Doc
+        user_profile: User's profile for location/budget
     
-    all_bids = []
-    for cat_bids in MOCK_BIDS.values():
-        all_bids.extend(cat_bids)
-    return all_bids
-
-def get_suggestions_mock(user_profile):
-    """Get mock suggestions for testing"""
-    suggestions = {}
-    for category in RSE_CATEGORIES:
-        bids = MOCK_BIDS.get(category, [])
-        scored_bids = []
-        for bid in bids:
-            score = calculate_relevance_score(bid, user_profile, category)
-            scored_bids.append({**bid, 'relevance_score': score})
-        scored_bids.sort(key=lambda x: x['relevance_score'], reverse=True)
-        suggestions[category] = scored_bids
-    return suggestions
+    Returns:
+        dict with service details
+    """
+    is_service, service_type = is_rse_service(suggestion_text)
+    
+    if not is_service:
+        return None
+    
+    return {
+        'service_type': service_type,
+        'description': suggestion_text,
+        'location': user_profile.get('location'),
+        'budget': user_profile.get('budget')
+    }

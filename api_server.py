@@ -191,6 +191,71 @@ def get_stats(user_id):
     result = handlers.handle_get_stats(user_id)
     return Response(result, mimetype='application/json')
 
+# Dashboard data (enhanced)
+@app.route("/dashboard/<user_id>", methods=['GET', 'OPTIONS'])
+def get_dashboard(user_id):
+    if request.method == 'OPTIONS':
+        return Response('', status=200)
+    result = handlers.handle_get_dashboard_data(user_id)
+    return Response(result, mimetype='application/json')
+
+# Suggestions (Doc-generated, with RSE integration)
+@app.route("/suggestions/<user_id>", methods=['GET', 'OPTIONS'])
+def get_suggestions(user_id):
+    if request.method == 'OPTIONS':
+        return Response('', status=200)
+    category = request.args.get('category')
+    result = handlers.handle_get_suggestions(user_id, category)
+    return Response(result, mimetype='application/json')
+
+@app.route("/suggestion/<user_id>/<suggestion_id>/submit-rse", methods=['POST', 'OPTIONS'])
+def submit_to_rse(user_id, suggestion_id):
+    if request.method == 'OPTIONS':
+        return Response('', status=200)
+    result = handlers.handle_submit_to_rse(user_id, suggestion_id)
+    if isinstance(result, tuple):
+        return Response(result[0], status=result[1], mimetype='application/json')
+    return Response(result, mimetype='application/json')
+
+@app.route("/suggestion/<user_id>/<suggestion_id>/dismiss", methods=['POST', 'OPTIONS'])
+def dismiss_suggestion(user_id, suggestion_id):
+    if request.method == 'OPTIONS':
+        return Response('', status=200)
+    result = handlers.handle_dismiss_suggestion(user_id, suggestion_id)
+    if isinstance(result, tuple):
+        return Response(result[0], status=result[1], mimetype='application/json')
+    return Response(result, mimetype='application/json')
+
+# Goal CRUD
+@app.route("/goal/<user_id>", methods=['POST', 'OPTIONS'])
+def create_goal(user_id):
+    if request.method == 'OPTIONS':
+        return Response('', status=200)
+    req = request.get_json() or {}
+    result = handlers.handle_create_goal(user_id, req)
+    if isinstance(result, tuple):
+        return Response(result[0], status=result[1], mimetype='application/json')
+    return Response(result, mimetype='application/json')
+
+@app.route("/goal/<user_id>/<goal_id>", methods=['PUT', 'OPTIONS'])
+def update_goal(user_id, goal_id):
+    if request.method == 'OPTIONS':
+        return Response('', status=200)
+    req = request.get_json() or {}
+    result = handlers.handle_update_goal(user_id, goal_id, req)
+    if isinstance(result, tuple):
+        return Response(result[0], status=result[1], mimetype='application/json')
+    return Response(result, mimetype='application/json')
+
+@app.route("/goal/<user_id>/<goal_id>", methods=['DELETE', 'OPTIONS'])
+def delete_goal(user_id, goal_id):
+    if request.method == 'OPTIONS':
+        return Response('', status=200)
+    result = handlers.handle_delete_goal(user_id, goal_id)
+    if isinstance(result, tuple):
+        return Response(result[0], status=result[1], mimetype='application/json')
+    return Response(result, mimetype='application/json')
+
 if __name__ == '__main__':
     print(f"Starting GreenDial API on http://{config.FLASK_HOST}:{config.FLASK_PORT}")
     app.run(debug=config.DEBUG, host=config.FLASK_HOST, port=config.FLASK_PORT)

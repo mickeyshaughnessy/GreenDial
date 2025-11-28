@@ -339,8 +339,17 @@ def handle_chat(request):
             if auth_result["type"] == "signup":
                 response_data["response"] = f"Welcome to GreenDial, {auth_data.get('username')}! I've created your account. Your health journey starts now. How are you feeling today?"
             else:
+                # Load user profile on login
+                user_data = get_user_data(auth_data.get("user_id"))
+                profile = user_data.get('profile', {})
+                if profile:
+                    response_data["profile"] = profile
                 response_data["response"] = f"Welcome back, {auth_data.get('username')}! Great to see you again. What would you like to focus on today?"
     else:
+        # Parse symbols and update profile from Doc's response
+        final_user_id = response_data.get("user_id") or user_id
+        if final_user_id:
+            out_text = parse_and_execute_symbols(final_user_id, in_text, out_text)
         response_data["response"] = out_text
     
     update_history(response_data.get("user_id"), in_text, response_data["response"], session_id)
@@ -619,3 +628,431 @@ def handle_get_stats(user_id):
         pass
     
     return json.dumps(stats)
+
+# ============ DOC SUGGESTIONS & RSE ============
+
+def handle_get_suggestions(user_id, category=None):
+    """Get Doc-generated suggestions for a user"""
+    import rse_client
+    
+    # Get Doc-generated suggestions from S3
+    suggestions = []
+    try:
+        key = f"suggestions/{user_id}.json"
+        data = s3_storage.s3_client.get_object(
+            Bucket=config.S3_BUCKET,
+            Key=f"{config.S3_PREFIX}{key}"
+        )
+        sug_data = json.loads(data['Body'].read().decode('utf-8'))
+        suggestions = sug_data.get('suggestions', [])
+        
+        # Filter by category if specified
+        if category:
+            suggestions = [s for s in suggestions if s.get('service_type') == category]
+        
+        # Only show non-dismissed suggestions
+        suggestions = [s for s in suggestions if not s.get('dismissed', False)]
+        
+    except Exception as e:
+        # No suggestions yet - that's OK
+        pass
+    
+    # Also get any RSE bids for pending requests
+    rse_bids = []
+    for sug in suggestions:
+        if sug.get('rse_request_id'):
+            bids = rse_client.get_bids_for_request(sug['rse_request_id'])
+            if bids:
+                sug['bids'] = bids
+    
+    return json.dumps({
+        "suggestions": suggestions,
+        "timestamp": datetime.utcnow().isoformat()
+    })
+
+def handle_submit_to_rse(user_id, suggestion_id):
+    """Submit a suggestion to RSE for bidding"""
+    import rse_client
+    
+    user_data = get_user_data(user_id)
+    profile = user_data.get('profile', {})
+    
+    # Get the suggestion
+    try:
+        key = f"suggestions/{user_id}.json"
+        data = s3_storage.s3_client.get_object(
+            Bucket=config.S3_BUCKET,
+            Key=f"{config.S3_PREFIX}{key}"
+        )
+        sug_data = json.loads(data['Body'].read().decode('utf-8'))
+        suggestions = sug_data.get('suggestions', [])
+        
+        # Find the suggestion
+        suggestion = next((s for s in suggestions if s.get('id') == suggestion_id), None)
+        if not suggestion:
+            return json.dumps({"error": "Suggestion not found"}), 404
+        
+        if not suggestion.get('rse_eligible'):
+            return json.dumps({"error": "This suggestion is not eligible for RSE"}), 400
+        
+        if suggestion.get('rse_request_id'):
+            return json.dumps({"error": "Already submitted to RSE"}), 400
+        
+        # Submit to RSE
+        result = rse_client.submit_bid_request(
+            user_id=user_id,
+            service_type=suggestion.get('service_type'),
+            description=suggestion.get('text'),
+            location=profile.get('location'),
+            budget=profile.get('budget')
+        )
+        
+        if result.get('success'):
+            # Update suggestion with RSE request ID
+            suggestion['rse_request_id'] = result.get('request_id')
+            suggestion['rse_submitted'] = datetime.utcnow().isoformat()
+            
+            # Save back
+            s3_storage.s3_client.put_object(
+                Bucket=config.S3_BUCKET,
+                Key=f"{config.S3_PREFIX}{key}",
+                Body=json.dumps(sug_data),
+                ContentType='application/json'
+            )
+            
+            return json.dumps({
+                "success": True,
+                "request_id": result.get('request_id'),
+                "message": "Service request submitted to RSE"
+            })
+        else:
+            return json.dumps({"error": result.get('error', 'RSE submission failed')}), 500
+            
+    except Exception as e:
+        return json.dumps({"error": str(e)}), 500
+
+def handle_dismiss_suggestion(user_id, suggestion_id):
+    """Dismiss a suggestion"""
+    try:
+        key = f"suggestions/{user_id}.json"
+        data = s3_storage.s3_client.get_object(
+            Bucket=config.S3_BUCKET,
+            Key=f"{config.S3_PREFIX}{key}"
+        )
+        sug_data = json.loads(data['Body'].read().decode('utf-8'))
+        
+        for sug in sug_data.get('suggestions', []):
+            if sug.get('id') == suggestion_id:
+                sug['dismissed'] = True
+                break
+        
+        s3_storage.s3_client.put_object(
+            Bucket=config.S3_BUCKET,
+            Key=f"{config.S3_PREFIX}{key}",
+            Body=json.dumps(sug_data),
+            ContentType='application/json'
+        )
+        
+        return json.dumps({"success": True})
+    except Exception as e:
+        return json.dumps({"error": str(e)}), 500
+
+# ============ ENHANCED GOALS ============
+
+def handle_create_goal(user_id, data):
+    """Create a new goal"""
+    goal_text = data.get('text', '').strip()
+    goal_type = data.get('type', 'general')
+    target_date = data.get('target_date')
+    
+    if not goal_text:
+        return json.dumps({"error": "Goal text required"}), 400
+    
+    goal = {
+        "id": str(uuid.uuid4()),
+        "text": goal_text,
+        "type": goal_type,
+        "target_date": target_date,
+        "created": datetime.utcnow().isoformat(),
+        "completed": False,
+        "progress": 0
+    }
+    
+    try:
+        goals_data = s3_storage.get_goals(user_id)
+    except:
+        goals_data = {"goals": []}
+    
+    goals_data.setdefault("goals", []).append(goal)
+    
+    try:
+        s3_storage.save_goals(user_id, goals_data)
+        return json.dumps({"success": True, "goal": goal})
+    except Exception as e:
+        return json.dumps({"error": str(e)}), 500
+
+def handle_update_goal(user_id, goal_id, data):
+    """Update an existing goal"""
+    try:
+        goals_data = s3_storage.get_goals(user_id)
+    except:
+        return json.dumps({"error": "No goals found"}), 404
+    
+    for goal in goals_data.get("goals", []):
+        if goal.get("id") == goal_id:
+            if "text" in data:
+                goal["text"] = data["text"]
+            if "progress" in data:
+                goal["progress"] = data["progress"]
+            if "completed" in data:
+                goal["completed"] = data["completed"]
+                if data["completed"]:
+                    goal["completed_at"] = datetime.utcnow().isoformat()
+            
+            s3_storage.save_goals(user_id, goals_data)
+            return json.dumps({"success": True, "goal": goal})
+    
+    return json.dumps({"error": "Goal not found"}), 404
+
+def handle_delete_goal(user_id, goal_id):
+    """Delete a goal"""
+    try:
+        goals_data = s3_storage.get_goals(user_id)
+    except:
+        return json.dumps({"error": "No goals found"}), 404
+    
+    original_count = len(goals_data.get("goals", []))
+    goals_data["goals"] = [g for g in goals_data.get("goals", []) if g.get("id") != goal_id]
+    
+    if len(goals_data["goals"]) == original_count:
+        return json.dumps({"error": "Goal not found"}), 404
+    
+    try:
+        s3_storage.save_goals(user_id, goals_data)
+        return json.dumps({"success": True})
+    except Exception as e:
+        return json.dumps({"error": str(e)}), 500
+
+# ============ SYMBOL PARSING ============
+
+def parse_and_execute_symbols(user_id, user_input, response):
+    """
+    Parse **SYMBOL** commands in Doc's response and execute them
+    Returns the modified response with symbols replaced by data
+    """
+    modified_response = response
+    
+    # Handle **SELECT** - Query health data
+    select_pattern = r'\*\*SELECT(?:\s*:\s*([^*]+))?\*\*'
+    select_matches = re.finditer(select_pattern, response)
+    
+    for match in select_matches:
+        query_hint = match.group(1) or ""
+        data = execute_select(user_id, query_hint, user_input)
+        modified_response = modified_response.replace(match.group(0), data)
+    
+    # Handle **INSERT** - Store health data
+    insert_pattern = r'\*\*INSERT(?:\s*:\s*([^*]+))?\*\*'
+    insert_matches = re.finditer(insert_pattern, response)
+    
+    for match in insert_matches:
+        data_hint = match.group(1) or ""
+        execute_insert(user_id, data_hint, user_input)
+        modified_response = modified_response.replace(match.group(0), "[recorded]")
+    
+    # Handle **GOAL** - Create a goal
+    goal_pattern = r'\*\*GOAL\s*:\s*([^*]+)\*\*'
+    goal_matches = re.finditer(goal_pattern, response)
+    
+    for match in goal_matches:
+        goal_text = match.group(1).strip()
+        handle_create_goal(user_id, {"text": goal_text, "type": "health"})
+        modified_response = modified_response.replace(match.group(0), f"[Goal set: {goal_text}]")
+    
+    # Handle **SUGGEST** - Get suggestions
+    suggest_pattern = r'\*\*SUGGEST(?:\s*:\s*([^*]+))?\*\*'
+    suggest_matches = re.finditer(suggest_pattern, response)
+    
+    for match in suggest_matches:
+        category = match.group(1).strip() if match.group(1) else None
+        suggestions = get_formatted_suggestions(user_id, category)
+        modified_response = modified_response.replace(match.group(0), suggestions)
+    
+    # Handle **PROFILE_UPDATE** - Update user profile
+    profile_pattern = r'\*\*PROFILE_UPDATE\*\*\s*(\{[^}]+\})'
+    profile_matches = re.finditer(profile_pattern, response, re.DOTALL)
+    
+    for match in profile_matches:
+        try:
+            profile_data = json.loads(match.group(1))
+            execute_profile_update(user_id, profile_data)
+            modified_response = modified_response.replace(match.group(0), "")
+        except json.JSONDecodeError:
+            print(f"Failed to parse profile update: {match.group(1)}")
+            modified_response = modified_response.replace(match.group(0), "")
+    
+    # Clean up any remaining markers
+    modified_response = re.sub(r'\*\*(LOGIN|SIGNUP)_DETECTED\*\*.*?(?=\n\n|\Z)', '', modified_response, flags=re.DOTALL)
+    
+    return modified_response.strip()
+
+def execute_profile_update(user_id, profile_data):
+    """Update user profile with extracted data"""
+    if not user_id or not profile_data:
+        return
+    
+    try:
+        user = get_user_data(user_id)
+        if not user:
+            return
+        
+        # Initialize profile if needed
+        user.setdefault('profile', {})
+        
+        # Update profile fields
+        for key, value in profile_data.items():
+            if value is not None and value != "":
+                user['profile'][key] = value
+        
+        user['profile']['last_updated'] = datetime.utcnow().isoformat()
+        user['last_updated'] = datetime.utcnow().isoformat()
+        
+        # Save to cache and S3
+        _cache_set("users", user_id, json.dumps(user))
+        try:
+            s3_storage.save_user(user_id, user)
+        except:
+            pass
+        
+        print(f"Profile updated for {user_id}: {profile_data}")
+        
+    except Exception as e:
+        print(f"Profile update error: {e}")
+
+def execute_select(user_id, query_hint, user_input):
+    """Execute a SELECT query on health records"""
+    try:
+        query_lower = (query_hint + " " + user_input).lower()
+        
+        record_type = None
+        if any(w in query_lower for w in ['weight', 'weigh']):
+            record_type = 'weight'
+        elif any(w in query_lower for w in ['sleep', 'slept']):
+            record_type = 'sleep'
+        elif any(w in query_lower for w in ['eat', 'ate', 'food', 'meal', 'diet']):
+            record_type = 'diet'
+        elif any(w in query_lower for w in ['exercise', 'workout', 'walk', 'run', 'steps']):
+            record_type = 'exercise'
+        elif any(w in query_lower for w in ['mood', 'feel', 'feeling']):
+            record_type = 'mood'
+        
+        records = s3_storage.query_health_records(user_id, record_type)
+        
+        if not records:
+            return "no data recorded yet"
+        
+        latest = records[-1] if records else {}
+        data = latest.get('data', {})
+        
+        if record_type == 'weight':
+            return f"{data.get('value', 'unknown')} {data.get('unit', 'lbs')}"
+        elif record_type == 'sleep':
+            return f"{data.get('hours', 'unknown')} hours"
+        else:
+            return json.dumps(data) if data else "no specific data found"
+            
+    except Exception as e:
+        print(f"SELECT error: {e}")
+        return "unable to retrieve data"
+
+def execute_insert(user_id, data_hint, user_input):
+    """Execute an INSERT to store health data"""
+    try:
+        input_lower = user_input.lower()
+        
+        record_type = 'general'
+        data = {"raw": user_input}
+        
+        # Weight detection
+        weight_match = re.search(r'(\d+(?:\.\d+)?)\s*(?:lbs?|pounds?|kg|kilos?)', input_lower)
+        if weight_match:
+            record_type = 'weight'
+            data = {"value": float(weight_match.group(1)), "unit": "lbs" if "lb" in input_lower or "pound" in input_lower else "kg"}
+        
+        # Sleep detection
+        sleep_match = re.search(r'(\d+(?:\.\d+)?)\s*hours?\s*(?:of\s*)?sleep', input_lower)
+        if sleep_match:
+            record_type = 'sleep'
+            data = {"hours": float(sleep_match.group(1))}
+        
+        # Steps detection
+        steps_match = re.search(r'(\d+(?:,\d+)?)\s*steps?', input_lower)
+        if steps_match:
+            record_type = 'exercise'
+            data = {"type": "steps", "count": int(steps_match.group(1).replace(',', ''))}
+        
+        # Food detection
+        if any(w in input_lower for w in ['ate', 'eaten', 'had', 'drank', 'drink']):
+            record_type = 'diet'
+            data = {"description": user_input}
+        
+        # Mood detection
+        if any(w in input_lower for w in ['feeling', 'feel', 'mood']):
+            record_type = 'mood'
+            data = {"description": user_input}
+        
+        timestamp = datetime.utcnow().isoformat()
+        s3_storage.save_health_record(user_id, record_type, timestamp, data)
+        
+    except Exception as e:
+        print(f"INSERT error: {e}")
+
+def get_formatted_suggestions(user_id, category=None):
+    """Get formatted suggestions for embedding in response"""
+    import rse_client
+    
+    user_data = get_user_data(user_id)
+    profile = user_data.get('profile', {})
+    
+    try:
+        suggestions = rse_client.get_suggestions_mock(profile)
+        return rse_client.format_suggestion_message(suggestions)
+    except:
+        return "I don't have suggestions available right now."
+
+# ============ ENHANCED DASHBOARD ============
+
+def handle_get_dashboard_data(user_id):
+    """Get comprehensive dashboard data"""
+    dashboard = {
+        "stats": json.loads(handle_get_stats(user_id)),
+        "recent_records": [],
+        "goals": [],
+        "trends": {}
+    }
+    
+    try:
+        records = s3_storage.query_health_records(user_id)
+        dashboard["recent_records"] = records[-10:] if records else []
+    except:
+        pass
+    
+    try:
+        goals_data = s3_storage.get_goals(user_id)
+        dashboard["goals"] = goals_data.get("goals", [])
+    except:
+        pass
+    
+    try:
+        records = s3_storage.query_health_records(user_id)
+        type_counts = {}
+        for r in records:
+            t = r.get('type', 'general')
+            type_counts[t] = type_counts.get(t, 0) + 1
+        
+        dashboard["trends"]["record_counts"] = type_counts
+        dashboard["trends"]["total_records"] = len(records)
+    except:
+        pass
+    
+    return json.dumps(dashboard)
