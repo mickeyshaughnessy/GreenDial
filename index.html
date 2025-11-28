@@ -1,165 +1,1002 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="UTF-8">
-    <title>Chat with the Machine</title>
-    <style>
-      /* CSS styles */
-      #chat-window, #directory-window {
-        width: 400px;
-        height: 400px;
-        border: 1px solid black;
-        overflow: auto;
-        padding: 10px;
-        margin-bottom: 10px;
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GreenDial - Your Health Assistant</title>
+  <style id="theme-styles">
+    :root {
+      --primary: #10b981;
+      --primary-dark: #059669;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --user-bubble: #10b981;
+      --bot-bubble: #f1f5f9;
+    }
+    
+    [data-theme="blue"] {
+      --primary: #3b82f6;
+      --primary-dark: #2563eb;
+      --user-bubble: #3b82f6;
+    }
+    
+    [data-theme="purple"] {
+      --primary: #8b5cf6;
+      --primary-dark: #7c3aed;
+      --user-bubble: #8b5cf6;
+    }
+    
+    [data-theme="orange"] {
+      --primary: #f97316;
+      --primary-dark: #ea580c;
+      --user-bubble: #f97316;
+    }
+    
+    [data-theme="dark"] {
+      --primary: #10b981;
+      --primary-dark: #059669;
+      --bg: #0f172a;
+      --card: #1e293b;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --border: #334155;
+      --bot-bubble: #334155;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .hidden { display: none !important; }
+
+    .app-container {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    .app-header {
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .app-header h1 {
+      color: var(--primary);
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .app-header h1::before {
+      content: "";
+      width: 28px;
+      height: 28px;
+      background: var(--primary);
+      border-radius: 50%;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .user-info span { color: var(--text-muted); font-size: 14px; }
+
+    .status-badge {
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    
+    .status-badge.guest {
+      background: #fef3c7;
+      color: #92400e;
+    }
+    
+    .status-badge.logged-in {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .logout-btn {
+      padding: 8px 16px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      color: var(--text);
+    }
+
+    .logout-btn:hover { background: var(--bg); }
+
+    .nav-tabs {
+      display: flex;
+      gap: 4px;
+      padding: 0 24px;
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto;
+    }
+
+    .nav-tab {
+      padding: 12px 20px;
+      background: none;
+      border: none;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      white-space: nowrap;
+    }
+
+    .nav-tab.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+    }
+
+    .nav-tab:hover { color: var(--text); }
+    
+    .nav-tab .badge {
+      background: var(--primary);
+      color: white;
+      padding: 2px 6px;
+      border-radius: 10px;
+      font-size: 11px;
+      margin-left: 6px;
+    }
+
+    /* Chat */
+    .chat-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      max-width: 800px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 0 16px;
+    }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .message {
+      display: flex;
+      gap: 12px;
+      max-width: 80%;
+    }
+
+    .message.user {
+      align-self: flex-end;
+      flex-direction: row-reverse;
+    }
+    
+    .message.system {
+      align-self: center;
+      max-width: 90%;
+    }
+
+    .message-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 600;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    .message.user .message-avatar { background: var(--text-muted); }
+
+    .message-bubble {
+      padding: 12px 16px;
+      border-radius: 16px;
+      line-height: 1.5;
+    }
+
+    .message.bot .message-bubble {
+      background: var(--bot-bubble);
+      border-bottom-left-radius: 4px;
+    }
+
+    .message.user .message-bubble {
+      background: var(--user-bubble);
+      color: white;
+      border-bottom-right-radius: 4px;
+    }
+    
+    .message.system .message-bubble {
+      background: #d1fae5;
+      color: #065f46;
+      text-align: center;
+      font-size: 14px;
+    }
+
+    .typing-indicator {
+      display: flex;
+      gap: 4px;
+      padding: 12px 16px;
+      background: var(--bot-bubble);
+      border-radius: 16px;
+      width: fit-content;
+    }
+
+    .typing-indicator span {
+      width: 8px;
+      height: 8px;
+      background: var(--text-muted);
+      border-radius: 50%;
+      animation: bounce 1.4s infinite;
+    }
+
+    .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes bounce {
+      0%, 60%, 100% { transform: translateY(0); }
+      30% { transform: translateY(-4px); }
+    }
+
+    .chat-input-container {
+      padding: 16px 0 24px;
+      border-top: 1px solid var(--border);
+    }
+    
+    .login-hint {
+      text-align: center;
+      padding: 8px;
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .chat-input-form {
+      display: flex;
+      gap: 12px;
+    }
+
+    .chat-input {
+      flex: 1;
+      padding: 14px 18px;
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      font-size: 16px;
+      background: var(--card);
+      color: var(--text);
+    }
+
+    .chat-input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .send-btn {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--primary);
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .send-btn:hover { background: var(--primary-dark); }
+    .send-btn svg { width: 20px; height: 20px; fill: white; }
+
+    /* Settings Tab */
+    .settings-content {
+      padding: 24px;
+      max-width: 800px;
+      margin: 0 auto;
+      overflow-y: auto;
+    }
+
+    .settings-section {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      border: 1px solid var(--border);
+    }
+
+    .settings-section h3 {
+      font-size: 16px;
+      margin-bottom: 16px;
+      color: var(--text);
+    }
+
+    .setting-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .setting-row:last-child { border-bottom: none; }
+
+    .setting-label {
+      font-size: 14px;
+      color: var(--text);
+    }
+
+    .setting-control select, .setting-control input[type="text"] {
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 14px;
+      background: var(--bg);
+      color: var(--text);
+    }
+    
+    .theme-picker {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .theme-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      cursor: pointer;
+    }
+    
+    .theme-btn.active { border-color: var(--text); }
+    .theme-btn[data-theme="green"] { background: #10b981; }
+    .theme-btn[data-theme="blue"] { background: #3b82f6; }
+    .theme-btn[data-theme="purple"] { background: #8b5cf6; }
+    .theme-btn[data-theme="orange"] { background: #f97316; }
+    .theme-btn[data-theme="dark"] { background: linear-gradient(135deg, #1e293b, #0f172a); }
+    
+    .profile-textarea {
+      width: 100%;
+      min-height: 150px;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-family: monospace;
+      font-size: 13px;
+      background: var(--bg);
+      color: var(--text);
+      resize: vertical;
+    }
+    
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+    
+    .btn-primary:hover { background: var(--primary-dark); }
+
+    /* Dashboard */
+    .dashboard-content {
+      padding: 24px;
+      max-width: 1200px;
+      margin: 0 auto;
+      overflow-y: auto;
+    }
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .dashboard-card {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 20px;
+      border: 1px solid var(--border);
+    }
+
+    .dashboard-card h3 {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .dashboard-card .value {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+    
+    /* Messages Tab */
+    .messages-content {
+      padding: 24px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    
+    .message-item {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+    
+    .message-item.unread {
+      border-left: 3px solid var(--primary);
+    }
+    
+    .message-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    
+    .message-from {
+      font-weight: 600;
+      color: var(--primary);
+    }
+    
+    .message-time {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    
+    .message-text {
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    @media (max-width: 600px) {
+      .app-header { padding: 12px 16px; }
+      .nav-tabs { padding: 0 12px; }
+      .nav-tab { padding: 12px 14px; font-size: 13px; }
+      .message { max-width: 90%; }
+      .settings-content, .dashboard-content { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app" class="app-container">
+    <header class="app-header">
+      <h1>GreenDial</h1>
+      <div class="user-info">
+        <span id="status-badge" class="status-badge guest">Guest</span>
+        <span id="display-username"></span>
+        <button id="logout-btn" class="logout-btn hidden" onclick="logout()">Sign Out</button>
+      </div>
+    </header>
+
+    <nav class="nav-tabs">
+      <button class="nav-tab active" data-tab="chat">Chat with Doc</button>
+      <button class="nav-tab" data-tab="dashboard">Dashboard</button>
+      <button class="nav-tab" data-tab="messages">Messages <span id="msg-badge" class="badge hidden">0</span></button>
+      <button class="nav-tab" data-tab="settings">Settings</button>
+    </nav>
+
+    <!-- Chat Tab -->
+    <main id="chat-tab" class="chat-container">
+      <div id="chat-messages" class="chat-messages">
+        <div class="message bot">
+          <div class="message-avatar">D</div>
+          <div class="message-bubble">Hello! I'm Doc, your personal health assistant. You can start chatting right away, or say "I'd like to sign up" to create an account and save your health data.</div>
+        </div>
+      </div>
+      <div class="chat-input-container">
+        <div id="login-hint" class="login-hint">Chatting as guest. Say "sign up" or "login" to save your data.</div>
+        <form id="chat-form" class="chat-input-form">
+          <input type="text" id="chat-input" class="chat-input" placeholder="Type your message..." autocomplete="off">
+          <button type="submit" class="send-btn">
+            <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+          </button>
+        </form>
+      </div>
+    </main>
+
+    <!-- Dashboard Tab -->
+    <main id="dashboard-tab" class="dashboard-content hidden">
+      <div class="dashboard-grid">
+        <div class="dashboard-card">
+          <h3>Sessions</h3>
+          <div class="value" id="stat-sessions">1</div>
+        </div>
+        <div class="dashboard-card">
+          <h3>Health Records</h3>
+          <div class="value" id="stat-records">0</div>
+        </div>
+        <div class="dashboard-card">
+          <h3>Active Goals</h3>
+          <div class="value" id="stat-goals">0</div>
+        </div>
+        <div class="dashboard-card">
+          <h3>Days Active</h3>
+          <div class="value" id="stat-days">1</div>
+        </div>
+      </div>
+      <div id="login-prompt" class="settings-section">
+        <h3>Create an Account</h3>
+        <p style="color: var(--text-muted); margin-bottom: 12px;">Sign up to save your health data, track progress, and get personalized recommendations.</p>
+        <p style="color: var(--text-muted);">Just tell Doc: "I'd like to sign up as [your name] with passphrase [your phrase]"</p>
+      </div>
+    </main>
+
+    <!-- Messages Tab -->
+    <main id="messages-tab" class="messages-content hidden">
+      <div class="settings-section">
+        <h3>Messages from Doc</h3>
+        <div id="doc-messages">
+          <p style="color: var(--text-muted);">No messages yet. Doc will send you health reminders and check-ins.</p>
+        </div>
+      </div>
+      <div class="settings-section">
+        <h3>User Messages</h3>
+        <div id="user-messages">
+          <p style="color: var(--text-muted);">No messages from other users.</p>
+        </div>
+      </div>
+    </main>
+
+    <!-- Settings Tab -->
+    <main id="settings-tab" class="settings-content hidden">
+      <div class="settings-section">
+        <h3>Doc's Style</h3>
+        <div class="setting-row">
+          <span class="setting-label">Conversation Style</span>
+          <div class="setting-control">
+            <select id="doc-style">
+              <option value="default">Balanced</option>
+              <option value="coach">Motivational Coach</option>
+              <option value="clinical">Clinical Professional</option>
+              <option value="friendly">Casual Friend</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      
+      <div class="settings-section">
+        <h3>Theme</h3>
+        <div class="setting-row">
+          <span class="setting-label">Color Theme</span>
+          <div class="theme-picker">
+            <button class="theme-btn active" data-theme="green" title="Green"></button>
+            <button class="theme-btn" data-theme="blue" title="Blue"></button>
+            <button class="theme-btn" data-theme="purple" title="Purple"></button>
+            <button class="theme-btn" data-theme="orange" title="Orange"></button>
+            <button class="theme-btn" data-theme="dark" title="Dark"></button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="settings-section">
+        <h3>Your Profile</h3>
+        <p style="color: var(--text-muted); margin-bottom: 12px; font-size: 14px;">Edit your profile data (JSON format)</p>
+        <textarea id="profile-editor" class="profile-textarea" placeholder='{"name": "", "age": "", "goals": []}'></textarea>
+        <button class="btn btn-primary" style="margin-top: 12px;" onclick="saveProfile()">Save Profile</button>
+      </div>
+      
+      <div class="settings-section">
+        <h3>Basic Info</h3>
+        <div class="setting-row">
+          <span class="setting-label">Display Name</span>
+          <div class="setting-control">
+            <input type="text" id="setting-name" placeholder="Your name">
+          </div>
+        </div>
+        <div class="setting-row">
+          <span class="setting-label">Email (optional)</span>
+          <div class="setting-control">
+            <input type="text" id="setting-email" placeholder="your@email.com">
+          </div>
+        </div>
+        <button class="btn btn-primary" style="margin-top: 12px;" onclick="saveBasicInfo()">Save</button>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const API = window.location.origin;
+    let currentUser = null;
+    let sessionId = null;
+    let currentSettings = { doc_style: 'default', theme: 'green' };
+
+    // Initialize
+    function init() {
+      // Check for stored session
+      const stored = localStorage.getItem('greendial_user');
+      if (stored) {
+        try {
+          currentUser = JSON.parse(stored);
+          sessionId = currentUser.session_id;
+          updateUI();
+          loadSettings();
+          loadStats();
+          loadMessages();
+        } catch(e) {
+          localStorage.removeItem('greendial_user');
+        }
       }
-
-      #input-form, #login-form, #directory-form {
-        display: flex;
-        margin-bottom: 10px;
+      
+      // Create anonymous session
+      if (!sessionId) {
+        sessionId = 'anon_' + Date.now();
       }
+      
+      // Load theme
+      const savedTheme = localStorage.getItem('greendial_theme') || 'green';
+      setTheme(savedTheme);
+    }
 
-      #input-form input[type="text"], #login-form input[type="text"], #directory-form select {
-        flex: 1;
-        margin-right: 10px;
+    function updateUI() {
+      const badge = document.getElementById('status-badge');
+      const username = document.getElementById('display-username');
+      const logoutBtn = document.getElementById('logout-btn');
+      const loginHint = document.getElementById('login-hint');
+      const loginPrompt = document.getElementById('login-prompt');
+      
+      if (currentUser && currentUser.user_id) {
+        badge.textContent = 'Logged In';
+        badge.className = 'status-badge logged-in';
+        username.textContent = currentUser.username;
+        logoutBtn.classList.remove('hidden');
+        loginHint.classList.add('hidden');
+        if (loginPrompt) loginPrompt.classList.add('hidden');
+      } else {
+        badge.textContent = 'Guest';
+        badge.className = 'status-badge guest';
+        username.textContent = '';
+        logoutBtn.classList.add('hidden');
+        loginHint.classList.remove('hidden');
+        if (loginPrompt) loginPrompt.classList.remove('hidden');
       }
+    }
 
-      input[type="submit"], button {
-        background-color: #4CAF50;
-        color: white;
-        border: none;
-        padding: 10px;
-        cursor: pointer;
+    function logout() {
+      currentUser = null;
+      sessionId = 'anon_' + Date.now();
+      localStorage.removeItem('greendial_user');
+      updateUI();
+      
+      // Clear chat and show welcome
+      document.getElementById('chat-messages').innerHTML = `
+        <div class="message bot">
+          <div class="message-avatar">D</div>
+          <div class="message-bubble">You've been signed out. Feel free to keep chatting, or say "login" to sign back in.</div>
+        </div>
+      `;
+    }
+
+    function setTheme(theme) {
+      document.body.setAttribute('data-theme', theme);
+      localStorage.setItem('greendial_theme', theme);
+      
+      document.querySelectorAll('.theme-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.theme === theme);
+      });
+    }
+
+    // Tab navigation
+    document.querySelectorAll('.nav-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        const tabName = tab.dataset.tab;
+        
+        document.getElementById('chat-tab').classList.toggle('hidden', tabName !== 'chat');
+        document.getElementById('dashboard-tab').classList.toggle('hidden', tabName !== 'dashboard');
+        document.getElementById('messages-tab').classList.toggle('hidden', tabName !== 'messages');
+        document.getElementById('settings-tab').classList.toggle('hidden', tabName !== 'settings');
+        
+        if (tabName === 'dashboard' && currentUser) loadStats();
+        if (tabName === 'messages' && currentUser) loadMessages();
+        if (tabName === 'settings' && currentUser) loadSettings();
+      });
+    });
+
+    // Theme picker
+    document.querySelectorAll('.theme-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        setTheme(btn.dataset.theme);
+        if (currentUser) saveSettings();
+      });
+    });
+
+    // Doc style change
+    document.getElementById('doc-style').addEventListener('change', (e) => {
+      currentSettings.doc_style = e.target.value;
+      if (currentUser) saveSettings();
+    });
+
+    // Chat
+    function addMessage(text, type = 'bot') {
+      const messages = document.getElementById('chat-messages');
+      const div = document.createElement('div');
+      div.className = `message ${type}`;
+      
+      if (type === 'system') {
+        div.innerHTML = `<div class="message-bubble">${text}</div>`;
+      } else {
+        const initials = type === 'user' ? (currentUser?.username?.[0]?.toUpperCase() || 'U') : 'D';
+        div.innerHTML = `
+          <div class="message-avatar">${initials}</div>
+          <div class="message-bubble">${text}</div>
+        `;
       }
+      
+      messages.appendChild(div);
+      messages.scrollTop = messages.scrollHeight;
+    }
 
-      input[type="submit"]:hover, button:hover {
-        background-color: #3e8e41;
+    function showTyping() {
+      const messages = document.getElementById('chat-messages');
+      const div = document.createElement('div');
+      div.id = 'typing';
+      div.className = 'message bot';
+      div.innerHTML = `
+        <div class="message-avatar">D</div>
+        <div class="typing-indicator"><span></span><span></span><span></span></div>
+      `;
+      messages.appendChild(div);
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    function hideTyping() {
+      const typing = document.getElementById('typing');
+      if (typing) typing.remove();
+    }
+
+    document.getElementById('chat-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const input = document.getElementById('chat-input');
+      const text = input.value.trim();
+      if (!text) return;
+
+      input.value = '';
+      addMessage(text, 'user');
+      showTyping();
+
+      try {
+        const resp = await fetch(`${API}/chat`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            text, 
+            user_id: currentUser?.user_id,
+            session_id: sessionId
+          })
+        });
+        const data = await resp.json();
+        hideTyping();
+        
+        // Check for auth event
+        if (data.auth) {
+          currentUser = {
+            user_id: data.auth.user_id,
+            username: data.auth.username,
+            session_id: sessionId,
+            settings: data.auth.settings || {}
+          };
+          localStorage.setItem('greendial_user', JSON.stringify(currentUser));
+          updateUI();
+          
+          // Show system message
+          addMessage(`Logged in as ${data.auth.username}`, 'system');
+          
+          // Start new private session
+          sessionId = 'private_' + Date.now();
+          currentUser.session_id = sessionId;
+          localStorage.setItem('greendial_user', JSON.stringify(currentUser));
+        }
+        
+        addMessage(data.response, 'bot');
+        
+      } catch (err) {
+        hideTyping();
+        addMessage('Sorry, I had trouble connecting. Please try again.', 'bot');
       }
-    </style>
-  </head>
-  <body>
-    <h1>Chat with Bot</h1>
-    <form id="login-form">
-      <input type="text" id="username" placeholder="Username">
-      <input type="password" id="password" placeholder="Password">
-      <input type="submit" value="Login">
-    </form>
+    });
 
-    <div id="chat-window"></div>
-    <form id="input-form">
-      <input type="text" id="input-text" placeholder="Type your message here...">
-      <input type="submit" value="Send">
-    </form>
-
-    <div id="directory-window"></div>
-    <form id="directory-form">
-      <select id="conversation-select">
-      </select>
-      <button type="button" id="load-btn">Load</button>
-      <button type="button" id="create-btn">Create New</button>
-    </form>
-
-    <script>
-      // JavaScript code for the chat window
-      const chatWindow = document.getElementById("chat-window");
-      const inputForm = document.getElementById("input-form");
-      const inputText = document.getElementById("input-text");
-      const loginForm = document.getElementById("login-form");
-      const usernameInput = document.getElementById("username");
-      const passwordInput = document.getElementById("password");
-      const dirWindow = document.getElementById("directory-window");
-      const dirForm = document.getElementById("directory-form");
-      const convoSelect = document.getElementById("conversation-select");
-      const loadBtn = document.getElementById("load-btn");
-      const createBtn = document.getElementById("create-btn");
-
-      let username = null; 
-
-      function addMessageToChatWindow(message, sender) {
-        const messageElement = document.createElement("div");
-        messageElement.innerHTML = `<strong>${sender}:</strong> ${message}`;
-        chatWindow.appendChild(messageElement);
+    // Settings
+    async function loadSettings() {
+      if (!currentUser) return;
+      
+      try {
+        const resp = await fetch(`${API}/settings/${currentUser.user_id}`);
+        const settings = await resp.json();
+        currentSettings = settings;
+        
+        document.getElementById('doc-style').value = settings.doc_style || 'default';
+        if (settings.theme) setTheme(settings.theme);
+        
+        // Load profile
+        const userResp = await fetch(`${API}/user/${currentUser.user_id}`);
+        const userData = await userResp.json();
+        
+        if (userData.profile) {
+          document.getElementById('profile-editor').value = JSON.stringify(userData.profile, null, 2);
+        }
+        
+        document.getElementById('setting-name').value = userData.username || '';
+        document.getElementById('setting-email').value = userData.profile?.email || '';
+        
+      } catch(e) {
+        console.error('Failed to load settings:', e);
       }
+    }
 
-      function addBotResponseToChatWindow(response) {
-        const messageElement = document.createElement("div");
-        messageElement.innerHTML = `<strong>Bot:</strong> ${response}`;
-        chatWindow.appendChild(messageElement);
+    async function saveSettings() {
+      if (!currentUser) return;
+      
+      currentSettings.theme = document.body.getAttribute('data-theme');
+      currentSettings.doc_style = document.getElementById('doc-style').value;
+      
+      try {
+        await fetch(`${API}/settings/${currentUser.user_id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(currentSettings)
+        });
+      } catch(e) {
+        console.error('Failed to save settings:', e);
       }
+    }
 
-      inputForm.addEventListener("submit", function(event) {
-        event.preventDefault(); 
-        const message = inputText.value;
-        inputText.value = "";
-        const senderName = username ? username : "User";
-        addMessageToChatWindow(message, senderName);
+    async function saveProfile() {
+      if (!currentUser) {
+        alert('Please log in to save your profile.');
+        return;
+      }
+      
+      try {
+        const profileText = document.getElementById('profile-editor').value;
+        const profile = JSON.parse(profileText);
+        
+        await fetch(`${API}/user/${currentUser.user_id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ profile })
+        });
+        
+        alert('Profile saved!');
+      } catch(e) {
+        alert('Invalid JSON format. Please check your profile data.');
+      }
+    }
 
-        const xhr = new XMLHttpRequest();
-        xhr.open("POST", window.location.origin + "/chat");
-        xhr.setRequestHeader("Content-Type", "application/json");
-        xhr.onload = function() {
-          if (xhr.status === 200) {
-            const data = JSON.parse(xhr.responseText);
-            const response = data.response;
-            username = data.username; 
-            addBotResponseToChatWindow(response);
+    async function saveBasicInfo() {
+      if (!currentUser) {
+        alert('Please log in to save your info.');
+        return;
+      }
+      
+      const name = document.getElementById('setting-name').value;
+      const email = document.getElementById('setting-email').value;
+      
+      try {
+        await fetch(`${API}/user/${currentUser.user_id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            username: name,
+            profile: { email }
+          })
+        });
+        
+        currentUser.username = name;
+        localStorage.setItem('greendial_user', JSON.stringify(currentUser));
+        updateUI();
+        
+        alert('Info saved!');
+      } catch(e) {
+        alert('Failed to save. Please try again.');
+      }
+    }
+
+    // Stats
+    async function loadStats() {
+      if (!currentUser) return;
+      
+      try {
+        const resp = await fetch(`${API}/stats/${currentUser.user_id}`);
+        const stats = await resp.json();
+        
+        document.getElementById('stat-sessions').textContent = stats.conversations || 1;
+        document.getElementById('stat-records').textContent = stats.records || 0;
+        document.getElementById('stat-goals').textContent = stats.goals || 0;
+        document.getElementById('stat-days').textContent = stats.days_active || 1;
+      } catch(e) {
+        console.error('Failed to load stats:', e);
+      }
+    }
+
+    // Messages
+    async function loadMessages() {
+      if (!currentUser) return;
+      
+      try {
+        // Load Doc messages
+        const docResp = await fetch(`${API}/doc/messages/${currentUser.user_id}`);
+        const docData = await docResp.json();
+        
+        const docContainer = document.getElementById('doc-messages');
+        if (docData.messages && docData.messages.length > 0) {
+          docContainer.innerHTML = docData.messages.map(m => `
+            <div class="message-item ${m.read ? '' : 'unread'}">
+              <div class="message-header">
+                <span class="message-from">Doc</span>
+                <span class="message-time">${new Date(m.timestamp).toLocaleString()}</span>
+              </div>
+              <div class="message-text">${m.message}</div>
+            </div>
+          `).join('');
+          
+          const unreadCount = docData.messages.filter(m => !m.read).length;
+          const badge = document.getElementById('msg-badge');
+          if (unreadCount > 0) {
+            badge.textContent = unreadCount;
+            badge.classList.remove('hidden');
           } else {
-            console.error("Request failed. Status code:", xhr.status);
+            badge.classList.add('hidden');
           }
-        };
-        xhr.onerror = function() {
-          console.error("Request failed. Network error.");
-        };
-        xhr.send(JSON.stringify({ text: message, username: username }));
-      });
+        }
+        
+        // Load user messages
+        const userResp = await fetch(`${API}/messages/${currentUser.user_id}`);
+        const userData = await userResp.json();
+        
+        const userContainer = document.getElementById('user-messages');
+        if (userData.inbox && userData.inbox.length > 0) {
+          userContainer.innerHTML = userData.inbox.map(m => `
+            <div class="message-item ${m.read ? '' : 'unread'}">
+              <div class="message-header">
+                <span class="message-from">${m.from}</span>
+                <span class="message-time">${new Date(m.timestamp).toLocaleString()}</span>
+              </div>
+              <div class="message-text">${m.message}</div>
+            </div>
+          `).join('');
+        }
+        
+      } catch(e) {
+        console.error('Failed to load messages:', e);
+      }
+    }
 
-      loginForm.addEventListener("submit", function(event) {
-        event.preventDefault();
-        const xhr = new XMLHttpRequest();
-        xhr.open("POST", window.location.origin + "/auth");
-        xhr.setRequestHeader("Content-Type", "application/json");
-        xhr.send(JSON.stringify({
-          username: usernameInput.value,
-          password: passwordInput.value
-        }));
-        xhr.onload = function() {
-          if (xhr.status === 200) {
-            const data = JSON.parse(xhr.responseText);
-            username = data.username;
-          } else {
-            console.error("Request failed. Status code:", xhr.status);
-          }
-        };
-        xhr.onerror = function() {
-          console.error("Request failed. Network error.");
-        };
-      });
-
-      loadBtn.addEventListener('click', function() {
-        const xhr = new XMLHttpRequest();
-        xhr.open("POST", window.location.origin + "/conversations");
-        xhr.setRequestHeader("Content-Type", "application/json");
-        xhr.send(JSON.stringify({
-          conversationId: convoSelect.value
-        }));
-        xhr.onload = function() {
-          if (xhr.status === 200) {
-            const data = JSON.parse(xhr.responseText);
-            const conversation = data.conversation;
-            conversation.forEach(msg => addMessageToChatWindow(msg.message, msg.sender));
-          } else {
-            console.error("Request failed. Status code:", xhr.status);
-          }
-        };
-        xhr.onerror = function() {
-          console.error("Request failed. Network error.");
-        };
-      });
-
-      createBtn.addEventListener('click', function() {
-        chatWindow.innerHTML = "";
-      });
-    </script>
-  </body>
+    // Initialize
+    init();
+  </script>
+</body>
 </html>
-
