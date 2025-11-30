@@ -384,22 +384,88 @@ def handle_api_profile_get(auth_header):
 def _parse_profile_updates(response):
     """Extract profile updates from Doc's response"""
     updates = {}
-    pattern = r'\*\*PROFILE_UPDATE\*\*\s*(\{[^}]+\})'
-    matches = re.finditer(pattern, response, re.DOTALL)
+    
+    # Match both **PROFILE_UPDATE** and **PROFILE UPDATE** (with space or underscore)
+    pattern = r'\*\*PROFILE[_ ]UPDATE\*\*\s*(\{[^{}]*\})'
+    matches = re.finditer(pattern, response, re.DOTALL | re.IGNORECASE)
     
     for match in matches:
+        json_str = match.group(1).strip()
         try:
-            data = json.loads(match.group(1))
+            data = json.loads(json_str)
             updates.update(data)
-        except json.JSONDecodeError:
-            print(f"[Chat] Failed to parse profile update: {match.group(1)}")
+            print(f"[Chat] Parsed profile update: {data}")
+        except json.JSONDecodeError as e:
+            print(f"[Chat] Failed to parse profile update: {json_str} - {e}")
+    
+    # Fallback: try more flexible matching if nothing found
+    if not updates:
+        alt_pattern = r'\*\*PROFILE[_ ]UPDATE\*\*\s*\n?\s*(\{[\s\S]*?\})'
+        alt_matches = re.finditer(alt_pattern, response, re.IGNORECASE)
+        for match in alt_matches:
+            json_str = match.group(1).strip()
+            json_str = re.sub(r'\s+', ' ', json_str)
+            try:
+                data = json.loads(json_str)
+                updates.update(data)
+                print(f"[Chat] Parsed profile update (alt): {data}")
+            except json.JSONDecodeError as e:
+                print(f"[Chat] Failed alt parse: {json_str} - {e}")
     
     return updates
 
 
+def _apply_profile_updates(profile, updates):
+    """
+    Apply updates to profile with support for:
+    - Setting fields: {"field": "value"}
+    - Deleting fields: {"field": null}
+    - Appending to fields: {"field": "+additional value"}
+    - Nested objects: {"field": {"subfield": "value"}}
+    """
+    for key, value in updates.items():
+        # Delete field if value is null/None
+        if value is None:
+            if key in profile:
+                del profile[key]
+                print(f"[Chat] Deleted profile field: {key}")
+        
+        # Append if value starts with "+"
+        elif isinstance(value, str) and value.startswith('+'):
+            append_value = value[1:].strip()
+            if key in profile and profile[key]:
+                existing = profile[key]
+                if isinstance(existing, list):
+                    profile[key].append(append_value)
+                else:
+                    profile[key] = f"{existing}, {append_value}"
+            else:
+                profile[key] = append_value
+            print(f"[Chat] Appended to profile field {key}: {append_value}")
+        
+        # Merge nested objects
+        elif isinstance(value, dict):
+            if key not in profile or not isinstance(profile[key], dict):
+                profile[key] = {}
+            profile[key].update(value)
+            print(f"[Chat] Updated nested profile field {key}: {value}")
+        
+        # Set field normally
+        else:
+            profile[key] = value
+            print(f"[Chat] Set profile field {key}: {value}")
+    
+    return profile
+
+
 def _clean_profile_markers(response):
     """Remove profile update markers from response"""
-    return re.sub(r'\*\*PROFILE_UPDATE\*\*\s*\{[^}]+\}', '', response).strip()
+    # Remove both **PROFILE_UPDATE** and **PROFILE UPDATE** variants
+    cleaned = re.sub(r'\*\*PROFILE[_ ]UPDATE\*\*\s*\{[^{}]*\}', '', response, flags=re.IGNORECASE)
+    cleaned = re.sub(r'\*\*PROFILE[_ ]UPDATE\*\*\s*\n?\s*\{[\s\S]*?\}', '', cleaned, flags=re.IGNORECASE)
+    # Also clean any leftover markers without JSON
+    cleaned = re.sub(r'\*\*PROFILE[_ ]UPDATE\*\*\s*', '', cleaned, flags=re.IGNORECASE)
+    return cleaned.strip()
 
 
 def _update_transcript(user_id, user_input, doc_response, session_id=None):
@@ -430,35 +496,51 @@ def _update_transcript(user_id, user_input, doc_response, session_id=None):
         _sessions[session_id]['last_updated'] = timestamp
 
 
+def _get_recent_transcript(transcript, max_lines=10):
+    """Get recent portion of transcript"""
+    if not transcript:
+        return ""
+    lines = transcript.strip().split('\n')
+    return '\n'.join(lines[-max_lines:])
+
+
+def _get_summary(transcript, max_chars=2000):
+    """Get summary of older conversation (placeholder - could use LLM)"""
+    if not transcript or len(transcript) < 3000:
+        return ""
+    # For now, just truncate older content
+    # Future: Use LLM to summarize older conversations
+    older = transcript[:-2000]
+    if len(older) > max_chars:
+        older = older[-max_chars:]
+    return f"[Earlier conversation covered various health topics]"
+
+
 def _build_prompt(user_id=None, session_id=None, user_input=""):
-    """Build Doc's prompt with context"""
+    """Build Doc's prompt dynamically using modular components"""
     user = get_user_data(user_id) if user_id else {}
     session = _sessions.get(session_id, {})
     
+    # Get transcript
     transcript = user.get('transcript', '') or session.get('transcript', '')
-    transcript = transcript[-4000:]
     
+    # Split into recent and summary
+    recent_transcript = _get_recent_transcript(transcript, max_lines=8)
+    summary = _get_summary(transcript)
+    
+    # Get user info
     username = user.get('username', 'Guest')
-    is_logged_in = bool(user_id and user.get('username'))
-    
     profile = user.get('profile', {})
-    profile_str = json.dumps(profile, indent=2) if profile else "{}"
-    
-    session_type = "private (logged in)" if is_logged_in else "anonymous"
-    
-    # Get style from settings
     settings = user.get('settings', {})
-    style_key = settings.get('doc_style', doc.DEFAULT_STYLE)
-    style_instructions = doc.DOC_STYLES.get(style_key, doc.DOC_STYLES[doc.DEFAULT_STYLE])
     
-    return doc.DOC_SYSTEM.format(
-        style_instructions=style_instructions,
+    # Use the new modular prompt builder
+    return doc.build_prompt(
+        user_input=user_input,
         username=username,
-        is_logged_in=str(is_logged_in),
-        session_type=session_type,
-        user_profile=profile_str,
-        transcript=transcript,
-        user_input=user_input
+        profile=profile,
+        recent_transcript=recent_transcript,
+        summary=summary,
+        settings=settings
     )
 
 
@@ -498,7 +580,8 @@ def handle_chat(request):
     if profile_updates and user_id:
         user = get_user_data(user_id)
         if user:
-            user.setdefault('profile', {}).update(profile_updates)
+            user.setdefault('profile', {})
+            _apply_profile_updates(user['profile'], profile_updates)
             user['last_updated'] = datetime.utcnow().isoformat()
             _cache_user(user_id, user)
             try:
