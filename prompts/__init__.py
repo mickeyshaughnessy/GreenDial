@@ -1,2 +1,2 @@
-"this"
-
+# Prompts module
+from . import doc

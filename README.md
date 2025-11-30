@@ -1,173 +1,115 @@
-# GreenDial
+# GreenDial Health Assistant
 
-GreenDial is an AI applications harness for personal health data assistants. Users waive HIPAA rights during signup, enabling open data sharing for health optimization.
+A HIPAA-waived personal health assistant with AI chat interface, user profile management, and third-party API integration.
 
-**Live:** [greendial.org](https://www.greendial.org)
+## Features
 
-## Overview
+- **Chat with Doc**: AI-powered health assistant conversations
+- **User Profiles**: Store health data, goals, and preferences  
+- **Authentication**: Username/passphrase login via conversation
+- **Third-Party API**: External services can update user profiles
+- **S3 Storage**: All data persisted to AWS S3
+- **LLM Fallback**: Configurable API with Ollama fallback
 
-GreenDial Doc is the premier tier health and lifestyle optimizing assistant - a concierge chatbot that:
-- Transforms unstructured user input into structured health records
-- Engages in autonomous health-related conversations
-- Activates external services on behalf of the user
-- Provides periodic bid suggestions via The Services Exchange API
+## Quick Start
+
+### 1. Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### 2. Configure Environment
+
+Copy `.env.example` to `.env` and configure:
+
+```bash
+cp .env.example .env
+```
+
+Required settings:
+- `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` - S3 credentials
+- `S3_BUCKET` - Your S3 bucket name
+- `LLM_API_KEY` - OpenRouter/OpenAI API key (or use Ollama)
+
+### 3. Run the Server
+
+```bash
+python3 api_server.py
+```
+
+Open http://localhost:8012 in your browser.
+
+### 4. (Optional) Run with Ollama Only
+
+If you don't have an LLM API key, install [Ollama](https://ollama.ai) and run:
+
+```bash
+ollama pull llama3.2
+python3 api_server.py
+```
+
+The app will automatically use Ollama when no API key is configured.
+
+## API Endpoints
+
+### Internal (Frontend)
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/` | GET | Serve web interface |
+| `/ping` | GET | Health check |
+| `/auth` | POST | Login/signup |
+| `/chat` | POST | Chat with Doc |
+| `/user/<user_id>` | GET/PUT | User profile |
+| `/conversations/<user_id>` | GET | List conversations |
+
+### Third-Party API
+
+External services can read/update user profiles using Basic Auth:
+
+```bash
+# Get profile
+curl -u "username:passphrase" http://localhost:8012/api/v1/profile
+
+# Update profile
+curl -u "username:passphrase" -X POST http://localhost:8012/api/v1/profile \
+  -H "Content-Type: application/json" \
+  -d '{"profile": {"weight": "175 lbs", "blood_pressure": "120/80"}}'
+```
 
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                         index.html                               │
-│                    (Web App + HIPAA Waiver)                      │
-└─────────────────────────┬───────────────────────────────────────┘
-                          │
-┌─────────────────────────▼───────────────────────────────────────┐
-│                      api_server.py (Flask)                       │
-│                    localhost:8012 / nginx                        │
-└─────────────────────────┬───────────────────────────────────────┘
-                          │
-        ┌─────────────────┼─────────────────┐
-        ▼                 ▼                 ▼
-┌───────────────┐ ┌───────────────┐ ┌───────────────┐
-│   handlers.py │ │   agents.py   │ │   prompts/    │
-│  (Routing)    │ │   (Droids)    │ │  (Templates)  │
-└───────┬───────┘ └───────────────┘ └───────────────┘
-        │
-        ├──────────────────┬──────────────────┐
-        ▼                  ▼                  ▼
-┌───────────────┐  ┌───────────────┐  ┌───────────────┐
-│  OpenRouter   │  │   Amazon S3   │  │  RSE API      │
-│  /completion  │  │   (Storage)   │  │  (Services)   │
-└───────────────┘  └───────────────┘  └───────────────┘
+Frontend (index.html)
+    │
+    ▼
+API Server (Flask)
+    │
+    ├── handlers.py (request processing)
+    ├── utils.py (LLM completion)
+    └── s3_storage.py (persistence)
 ```
 
-## Droid Architecture
+## Environment Variables
 
-GreenDial uses a modular "Droid" system for development. Each droid is a specialized AI agent invoked via JSON:
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `LLM_API_URL` | OpenRouter | LLM completion endpoint |
+| `LLM_API_KEY` | - | API key for LLM |
+| `LLM_MODEL` | llama-3.2-3b | Model to use |
+| `OLLAMA_ENABLED` | true | Enable Ollama fallback |
+| `OLLAMA_URL` | localhost:11434 | Ollama server URL |
+| `AWS_ACCESS_KEY_ID` | - | AWS credentials |
+| `AWS_SECRET_ACCESS_KEY` | - | AWS credentials |
+| `S3_BUCKET` | - | S3 bucket name |
+| `S3_PREFIX` | greendial/ | S3 key prefix |
+| `FLASK_PORT` | 8012 | Server port |
 
-```json
-{
-  "droidprompt": "<detailed instruction text>",
-  "droidname": "<type> droid"
-}
-```
+## Development
 
-**Available Droid Types:**
-| Droid | Purpose |
-|-------|---------|
-| `writer droid` | Content and documentation generation |
-| `oracle droid` | Data retrieval and analysis |
-| `hashing droid` | Authentication and security |
-| `benefits droid` | Health benefits optimization |
-| `sensor droid` | Data collection and monitoring |
-| `communications droid` | Notifications and messaging |
-| `janitor droid` | Cleanup and maintenance |
-| `supervisor droid` | Orchestration and oversight |
-| `worker droid` | General task execution |
-| `droidprompt droid` | Writing droid prompts |
-
-See [DROIDS.md](./DROIDS.md) for detailed droid development guide.
-
-## Core Services
-
-| Service | Description |
-|---------|-------------|
-| **Authentication** | Login with HIPAA waiver acknowledgment |
-| **Long-term Memory** | S3-backed conversation and data storage |
-| **Personalization** | User settings and preferences |
-| **Reminders/Goals** | Health goal tracking and notifications |
-| **Suggestions** | RSE API integration for service bids |
-| **Data Analysis** | Historical health data queries |
-| **LLM Chat** | OpenRouter completion API |
-
-## Quick Start
-
-### Local Development
-
-```bash
-# Install dependencies
-pip install flask redis requests
-
-# Start the API server
-python api_server.py
-
-# Open in browser
-open http://localhost:8012
-```
-
-### Production Deployment
-
-```bash
-# Push to production VM
-git push origin main
-
-# SSH and deploy
-ssh user@production-vm
-cd /path/to/GreenDial
-git pull origin main
-sudo systemctl restart greendial
-```
-
-## External Integrations
-
-- **OpenRouter API**: `/completion` endpoint for LLM inference
-- **Amazon S3**: All memory and persistent storage
-- **The Services Exchange API**: `https://rse-api.com:5003/`
-  - [API Documentation](https://theservicesexchange.com/api_docs.html)
-  - Periodic bid suggestions for diet, exercise, sleep, entertainment
-
-## Crontab (RCL - Unprompted Speech)
-
-Health-related proactive conversations are scheduled via crontab:
-
-```cron
-# Example: Daily health check-in at 9am
-0 9 * * * /path/to/greendial/scripts/rcl_health_checkin.py
-```
-
-## File Structure
-
-```
-GreenDial/
-├── api_server.py      # Flask HTTP server
-├── handlers.py        # Request routing and processing
-├── agents.py          # Droid agent definitions
-├── utils.py           # Shared utilities (completion API)
-├── index.html         # Web frontend with login/chat
-├── prompts/           # LLM prompt templates
-│   ├── auth.py        # Authentication prompts
-│   ├── chat.py        # Chat system prompts
-│   ├── memory.py      # SELECT/INSERT data prompts
-│   ├── settings.py    # User settings prompts
-│   ├── external.py    # External service prompts
-│   ├── coach.py       # Health coaching prompts
-│   └── reviewer.py    # Review/analysis prompts
-└── nginx.conf         # Production nginx config
-```
-
-## Symbol System
-
-The chat system uses **SYMBOL** notation to route to specialized services:
-
-| Symbol | Purpose |
-|--------|---------|
-| `**AUTH**` | User authentication |
-| `**SELECT**` | Query historical data |
-| `**INSERT**` | Store new health data |
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Invoke appropriate droid for your task type
-4. Submit a pull request
-
-## Documentation
-
-- [DROIDS.md](./DROIDS.md) - Droid development and invocation
-- [ARCHITECTURE.md](./ARCHITECTURE.md) - Technical architecture details
-- [API.md](./API.md) - API endpoint reference
-- [DEPLOYMENT.md](./DEPLOYMENT.md) - Deployment procedures
+See `SPEC.md` for detailed technical specification and implementation phases.
 
 ## License
 
-Open source - contributions welcome.
+MIT

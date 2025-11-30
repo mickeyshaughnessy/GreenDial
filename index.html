@@ -3,989 +3,1043 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GreenDial - Your Health Assistant</title>
+  <title>GreenDial - Health Assistant</title>
   <style>
-    :root {
-      --primary: #10b981;
-      --primary-dark: #059669;
-      --bg: #f8fafc;
-      --card: #ffffff;
-      --text: #1e293b;
-      --text-muted: #64748b;
-      --border: #e2e8f0;
-      --user-bubble: #10b981;
-      --bot-bubble: #f1f5f9;
-    }
-    
-    [data-theme="dark"] {
-      --primary: #10b981;
-      --primary-dark: #059669;
-      --bg: #0f172a;
-      --card: #1e293b;
-      --text: #f1f5f9;
-      --text-muted: #94a3b8;
-      --border: #334155;
-      --bot-bubble: #334155;
-    }
-
     * { box-sizing: border-box; margin: 0; padding: 0; }
-
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      height: 100vh;
-      overflow: hidden;
+      background: #1a1a2e;
+      color: #eee;
+      min-height: 100vh;
     }
-
-    .hidden { display: none !important; }
-
-    .app-header {
-      background: var(--card);
-      border-bottom: 1px solid var(--border);
+    
+    .header {
+      background: linear-gradient(135deg, rgba(16,185,129,0.15), rgba(26,26,46,0.95));
       padding: 12px 24px;
       display: flex;
-      align-items: center;
       justify-content: space-between;
-      height: 56px;
+      align-items: center;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      position: sticky;
+      top: 0;
+      z-index: 50;
     }
-
-    .app-header h1 {
-      color: var(--primary);
-      font-size: 20px;
+    .logo {
+      font-size: 22px;
+      font-weight: 700;
+      color: #10b981;
       display: flex;
       align-items: center;
       gap: 8px;
     }
-
-    .app-header h1::before {
-      content: "";
-      width: 24px;
-      height: 24px;
-      background: var(--primary);
-      border-radius: 50%;
-    }
-
-    .user-info {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .status-badge {
-      padding: 4px 10px;
-      border-radius: 12px;
-      font-size: 12px;
-      font-weight: 500;
-    }
-    
-    .status-badge.guest { background: #fef3c7; color: #92400e; }
-    .status-badge.logged-in { background: #d1fae5; color: #065f46; }
-
-    .logout-btn {
-      padding: 6px 14px;
+    .nav-tabs { display: flex; gap: 4px; }
+    .nav-tab {
+      padding: 8px 16px;
       background: transparent;
-      border: 1px solid var(--border);
-      border-radius: 6px;
+      border: none;
+      color: rgba(255,255,255,0.6);
+      font-size: 13px;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: all 0.2s;
+    }
+    .nav-tab:hover { background: rgba(255,255,255,0.1); color: white; }
+    .nav-tab.active { background: rgba(16,185,129,0.2); color: #10b981; }
+    .user-area { display: flex; align-items: center; gap: 12px; }
+    .user-badge {
+      padding: 6px 14px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 16px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .user-badge:hover { background: rgba(255,255,255,0.2); }
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 20px;
       cursor: pointer;
       font-size: 13px;
-      color: var(--text);
+      transition: all 0.2s;
     }
-
-    /* Main Layout */
-    .main-container {
+    .btn-primary { background: #10b981; color: white; }
+    .btn-primary:hover { background: #059669; }
+    .btn-secondary { background: rgba(255,255,255,0.1); color: white; }
+    .btn-secondary:hover { background: rgba(255,255,255,0.2); }
+    .btn-danger { background: #ef4444; color: white; }
+    .btn-danger:hover { background: #dc2626; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+    
+    .notification-bell {
+      position: relative;
+      background: none;
+      border: none;
+      color: rgba(255,255,255,0.7);
+      font-size: 20px;
+      cursor: pointer;
+      padding: 8px;
+    }
+    .notification-bell:hover { color: white; }
+    .notification-badge {
+      position: absolute;
+      top: 4px; right: 4px;
+      background: #ef4444;
+      color: white;
+      font-size: 10px;
+      width: 16px; height: 16px;
+      border-radius: 50%;
       display: flex;
-      height: calc(100vh - 56px);
-      padding: 16px;
-      gap: 16px;
+      align-items: center;
+      justify-content: center;
     }
-
-    /* Chat - Left Column */
-    .chat-column {
-      width: 45%;
-      min-width: 350px;
-      display: flex;
-      flex-direction: column;
-    }
-
-    /* Right Column - Widgets */
-    .widgets-column {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      overflow-y: auto;
-    }
-
-    .widgets-row {
-      display: flex;
-      gap: 16px;
-      flex: 1;
-      min-height: 0;
-    }
-
-    /* Widget Base */
-    .widget {
-      background: var(--card);
+    .notification-dropdown {
+      position: absolute;
+      top: 100%; right: 0;
+      width: 320px;
+      background: #2a2a4e;
       border-radius: 12px;
-      border: 1px solid var(--border);
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+      display: none;
+      z-index: 100;
+      overflow: hidden;
+    }
+    .notification-dropdown.show { display: block; }
+    .notification-header {
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      font-weight: 600;
+      font-size: 14px;
+    }
+    .notification-list { max-height: 300px; overflow-y: auto; }
+    .notification-item {
+      padding: 12px 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      cursor: pointer;
+    }
+    .notification-item:hover { background: rgba(255,255,255,0.05); }
+    .notification-icon { font-size: 20px; }
+    .notification-content { flex: 1; }
+    .notification-message { font-size: 13px; line-height: 1.4; }
+    .notification-time { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 4px; }
+    .notification-dismiss {
+      background: none;
+      border: none;
+      color: rgba(255,255,255,0.4);
+      cursor: pointer;
+      font-size: 16px;
+    }
+    .notification-dismiss:hover { color: #ef4444; }
+    .notification-empty {
+      padding: 24px;
+      text-align: center;
+      color: rgba(255,255,255,0.4);
+      font-size: 13px;
+    }
+    
+    .main {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 20px;
+      padding: 20px;
+      max-width: 1400px;
+      margin: 0 auto;
+      min-height: calc(100vh - 60px);
+    }
+    @media (max-width: 1000px) {
+      .main { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+    }
+    
+    .view { display: none; }
+    .view.active { display: flex; flex-direction: column; }
+    
+    .chat-container {
+      background: rgba(255,255,255,0.05);
+      border-radius: 16px;
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      flex: 1;
+      height: calc(100vh - 100px);
     }
-
-    .widget-header {
-      padding: 12px 16px;
-      border-bottom: 1px solid var(--border);
-      background: var(--bg);
-      flex-shrink: 0;
-    }
-
-    .widget-header h2 {
-      font-size: 14px;
+    .chat-header {
+      padding: 14px 20px;
+      background: rgba(0,0,0,0.2);
+      border-bottom: 1px solid rgba(255,255,255,0.1);
       font-weight: 600;
-      color: var(--text);
-      display: flex;
-      align-items: center;
-      gap: 6px;
+      font-size: 14px;
     }
-
-    .widget-body {
-      padding: 12px 16px;
-      overflow-y: auto;
-      flex: 1;
-    }
-
-    /* Jiggle Animation */
-    @keyframes jiggle {
-      0% { transform: rotate(-0.5deg) scale(0.99); }
-      25% { transform: rotate(0.5deg) scale(1.005); }
-      50% { transform: rotate(-0.3deg) scale(1); }
-      75% { transform: rotate(0.3deg) scale(1); }
-      100% { transform: rotate(0deg) scale(1); }
-    }
-
-    .widget.jiggle { animation: jiggle 0.4s ease-out forwards; }
-    .widgets-row:nth-child(1) .widget { animation-delay: 0.1s; }
-    .widgets-row:nth-child(2) .widget:nth-child(1) { animation-delay: 0.2s; }
-    .widgets-row:nth-child(2) .widget:nth-child(2) { animation-delay: 0.3s; }
-
-    /* Chat Widget */
-    .chat-widget {
-      height: 100%;
-    }
-
-    .chat-widget .widget-body {
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-    }
-
     .chat-messages {
       flex: 1;
       overflow-y: auto;
-      padding: 16px;
+      padding: 20px;
       display: flex;
       flex-direction: column;
       gap: 12px;
     }
-
-    .message {
-      display: flex;
-      gap: 10px;
+    .msg {
       max-width: 85%;
-    }
-
-    .message.user {
-      align-self: flex-end;
-      flex-direction: row-reverse;
-    }
-    
-    .message.system {
-      align-self: center;
-      max-width: 90%;
-    }
-
-    .message.suggestion {
-      align-self: flex-start;
-      max-width: 90%;
-    }
-
-    .message-avatar {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      background: var(--primary);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-weight: 600;
-      font-size: 12px;
-      flex-shrink: 0;
-    }
-
-    .message.user .message-avatar { background: var(--text-muted); }
-
-    .message-bubble {
-      padding: 10px 14px;
-      border-radius: 14px;
-      line-height: 1.4;
-      font-size: 14px;
-    }
-
-    .message.bot .message-bubble {
-      background: var(--bot-bubble);
-      border-bottom-left-radius: 4px;
-    }
-
-    .message.user .message-bubble {
-      background: var(--user-bubble);
-      color: white;
-      border-bottom-right-radius: 4px;
-    }
-    
-    .message.system .message-bubble {
-      background: #d1fae5;
-      color: #065f46;
-      text-align: center;
-      font-size: 13px;
-    }
-
-    .message.suggestion .message-bubble {
-      background: #fef3c7;
-      border: 1px solid #fcd34d;
-      border-bottom-left-radius: 4px;
-    }
-
-    .suggestion-actions {
-      display: flex;
-      gap: 6px;
-      margin-top: 8px;
-    }
-
-    .typing-indicator {
-      display: flex;
-      gap: 4px;
-      padding: 10px 14px;
-      background: var(--bot-bubble);
-      border-radius: 14px;
-      width: fit-content;
-    }
-
-    .typing-indicator span {
-      width: 6px;
-      height: 6px;
-      background: var(--text-muted);
-      border-radius: 50%;
-      animation: bounce 1.4s infinite;
-    }
-
-    .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
-    .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
-
-    @keyframes bounce {
-      0%, 60%, 100% { transform: translateY(0); }
-      30% { transform: translateY(-3px); }
-    }
-
-    .chat-input-container {
       padding: 12px 16px;
-      border-top: 1px solid var(--border);
-      background: var(--card);
+      border-radius: 16px;
+      font-size: 14px;
+      line-height: 1.5;
     }
-
-    .chat-input-form {
+    .msg.user { background: #10b981; align-self: flex-end; border-bottom-right-radius: 4px; }
+    .msg.doc { background: rgba(255,255,255,0.1); align-self: flex-start; border-bottom-left-radius: 4px; }
+    .msg.system { background: rgba(255,193,7,0.15); color: #ffc107; align-self: center; font-size: 12px; padding: 8px 16px; }
+    .msg.loading { color: rgba(255,255,255,0.5); font-style: italic; }
+    .chat-input-area {
+      padding: 16px;
+      background: rgba(0,0,0,0.2);
+      border-top: 1px solid rgba(255,255,255,0.1);
       display: flex;
-      gap: 10px;
+      gap: 12px;
     }
-
-    .chat-input {
+    .chat-input-area input {
       flex: 1;
       padding: 12px 16px;
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      font-size: 14px;
-      background: var(--bg);
-      color: var(--text);
-    }
-
-    .chat-input:focus {
-      outline: none;
-      border-color: var(--primary);
-    }
-
-    .send-btn {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background: var(--primary);
       border: none;
-      cursor: pointer;
+      border-radius: 24px;
+      background: rgba(255,255,255,0.1);
+      color: white;
+      font-size: 14px;
+    }
+    .chat-input-area input::placeholder { color: rgba(255,255,255,0.4); }
+    .chat-input-area input:focus { outline: none; background: rgba(255,255,255,0.15); }
+    
+    .sidebar {
       display: flex;
-      align-items: center;
-      justify-content: center;
+      flex-direction: column;
+      gap: 16px;
+      height: calc(100vh - 100px);
+      overflow-y: auto;
     }
-
-    .send-btn:hover { background: var(--primary-dark); }
-    .send-btn svg { width: 18px; height: 18px; fill: white; }
-
-    /* Stats Grid */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 10px;
-      margin-bottom: 16px;
+    .panel {
+      background: rgba(255,255,255,0.05);
+      border-radius: 12px;
+      overflow: hidden;
     }
-
-    .stat-card {
-      background: var(--bg);
-      border-radius: 8px;
-      padding: 12px;
-      text-align: center;
-    }
-
-    .stat-card h3 {
-      font-size: 10px;
-      color: var(--text-muted);
-      margin-bottom: 2px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .stat-card .value {
-      font-size: 20px;
-      font-weight: 700;
-      color: var(--primary);
-    }
-
-    /* Goals in Dashboard */
-    .goals-section h4 {
-      font-size: 12px;
-      color: var(--text-muted);
-      margin-bottom: 8px;
-      text-transform: uppercase;
-    }
-
-    .goal-item {
+    .panel-header {
+      padding: 12px 16px;
+      background: rgba(0,0,0,0.2);
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      font-weight: 600;
+      font-size: 13px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 8px 10px;
-      background: var(--bg);
-      border-radius: 6px;
-      margin-bottom: 6px;
-      font-size: 13px;
     }
-
-    .goal-text.completed { text-decoration: line-through; color: var(--text-muted); }
-
-    .add-goal-form {
-      display: flex;
-      gap: 6px;
-      margin-top: 8px;
-    }
-
-    .add-goal-form input {
-      flex: 1;
-      padding: 8px 12px;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      font-size: 13px;
-      background: var(--bg);
-      color: var(--text);
-    }
-
-    /* Messages */
-    .message-item {
-      padding: 10px;
-      background: var(--bg);
-      border-radius: 8px;
+    .panel-content { padding: 16px; }
+    
+    .profile-section { margin-bottom: 16px; }
+    .profile-section-title {
+      font-size: 11px;
+      color: rgba(255,255,255,0.4);
+      text-transform: uppercase;
       margin-bottom: 8px;
-      border-left: 3px solid transparent;
-      font-size: 13px;
     }
-
-    .message-item.unread { border-left-color: var(--primary); }
-
-    .message-header {
+    .profile-field {
       display: flex;
       justify-content: space-between;
-      margin-bottom: 4px;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      font-size: 13px;
     }
-
-    .message-from { font-weight: 600; color: var(--primary); font-size: 12px; }
-    .message-time { font-size: 10px; color: var(--text-muted); }
-
-    /* Profile JSON */
-    .profile-json {
-      background: var(--bg);
+    .profile-field:last-child { border-bottom: none; }
+    .profile-field .label { color: rgba(255,255,255,0.6); }
+    .profile-field .value { color: white; text-align: right; max-width: 60%; word-break: break-word; }
+    .profile-empty { color: rgba(255,255,255,0.4); font-size: 13px; text-align: center; padding: 20px; }
+    
+    .json-view {
+      background: rgba(0,0,0,0.3);
       border-radius: 8px;
-      padding: 12px;
+      padding: 16px;
       font-family: 'Monaco', 'Menlo', monospace;
       font-size: 11px;
       line-height: 1.5;
+      overflow-x: auto;
       white-space: pre-wrap;
-      word-break: break-all;
-      color: var(--text);
-      max-height: 100%;
+      color: #a5d6ff;
+      max-height: 300px;
       overflow-y: auto;
     }
-
-    /* Settings */
-    .setting-row {
+    
+    .transcript-view {
+      background: rgba(0,0,0,0.2);
+      border-radius: 8px;
+      padding: 16px;
+      font-size: 13px;
+      line-height: 1.6;
+      max-height: 500px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
+    .transcript-view .user-line { color: #10b981; }
+    .transcript-view .doc-line { color: #a5d6ff; }
+    
+    .settings-group { margin-bottom: 24px; }
+    .settings-group-title { font-size: 12px; color: rgba(255,255,255,0.5); text-transform: uppercase; margin-bottom: 12px; }
+    .settings-item {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 8px 0;
-      border-bottom: 1px solid var(--border);
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .settings-item:last-child { border-bottom: none; }
+    .settings-label { font-size: 14px; }
+    .settings-desc { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 4px; }
+    .settings-select {
+      padding: 8px 12px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      color: white;
       font-size: 13px;
     }
-
-    .setting-row:last-child { border-bottom: none; }
-
-    .setting-control select {
-      padding: 6px 10px;
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      font-size: 12px;
-      background: var(--bg);
-      color: var(--text);
+    .settings-toggle {
+      width: 44px; height: 24px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 12px;
+      position: relative;
+      cursor: pointer;
     }
-
-    .theme-picker {
-      display: flex;
-      gap: 4px;
-    }
-
-    .theme-btn {
-      width: 24px;
-      height: 24px;
+    .settings-toggle.on { background: #10b981; }
+    .settings-toggle::after {
+      content: '';
+      position: absolute;
+      width: 20px; height: 20px;
+      background: white;
       border-radius: 50%;
-      border: 2px solid transparent;
-      cursor: pointer;
+      top: 2px; left: 2px;
+      transition: left 0.2s;
     }
-
-    .theme-btn.active { border-color: var(--text); }
-    .theme-btn[data-theme="light"] { background: #f8fafc; border: 1px solid #e2e8f0; }
-    .theme-btn[data-theme="dark"] { background: linear-gradient(135deg, #1e293b, #0f172a); }
-
-    /* Buttons */
-    .btn {
-      padding: 6px 12px;
+    .settings-toggle.on::after { left: 22px; }
+    
+    .popup-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.7);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+    .popup-overlay.show { display: flex; }
+    .popup {
+      background: #2a2a4e;
+      border-radius: 16px;
+      padding: 24px;
+      max-width: 420px;
+      width: 90%;
+    }
+    .popup h3 { margin-bottom: 16px; }
+    .popup-buttons { display: flex; gap: 12px; margin-top: 20px; }
+    .popup-buttons .btn { flex: 1; }
+    
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 12px; color: rgba(255,255,255,0.6); margin-bottom: 6px; text-transform: uppercase; }
+    .form-group input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      background: rgba(255,255,255,0.05);
+      color: white;
+      font-size: 14px;
+    }
+    .form-group input:focus { outline: none; border-color: #10b981; }
+    .form-group input::placeholder { color: rgba(255,255,255,0.3); }
+    .form-error { color: #ef4444; font-size: 13px; margin-top: 8px; }
+    .form-tabs { display: flex; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .form-tab {
+      flex: 1;
+      padding: 12px;
+      background: none;
       border: none;
-      border-radius: 4px;
-      font-size: 12px;
-      font-weight: 500;
+      color: rgba(255,255,255,0.5);
+      font-size: 14px;
       cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
     }
-
-    .btn-primary { background: var(--primary); color: white; }
-    .btn-primary:hover { background: var(--primary-dark); }
-    .btn-sm { padding: 4px 8px; font-size: 11px; }
-    .btn-danger { background: #ef4444; color: white; }
-    .btn-muted { background: var(--text-muted); color: white; }
-    .btn-blue { background: #3b82f6; color: white; }
-
-    .empty-state {
-      text-align: center;
-      padding: 16px;
-      color: var(--text-muted);
-      font-size: 13px;
+    .form-tab.active { color: #10b981; border-bottom-color: #10b981; }
+    .hipaa-notice {
+      background: rgba(255,193,7,0.1);
+      border: 1px solid rgba(255,193,7,0.3);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 16px;
+      font-size: 12px;
     }
-
-    @media (max-width: 900px) {
-      .main-container {
-        flex-direction: column;
-        overflow-y: auto;
-      }
-      .chat-column {
-        width: 100%;
-        min-width: unset;
-        height: 50vh;
-      }
-      .widgets-column { overflow: visible; }
-      .widgets-row { flex-direction: column; }
-    }
+    .hipaa-notice strong { color: #ffc107; }
+    .checkbox-group { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 16px; }
+    .checkbox-group input[type="checkbox"] { width: 18px; height: 18px; margin-top: 2px; accent-color: #10b981; }
+    .checkbox-group label { font-size: 13px; color: rgba(255,255,255,0.7); cursor: pointer; }
   </style>
 </head>
 <body>
-  <header class="app-header">
-    <h1>GreenDial</h1>
-    <div class="user-info">
-      <span id="status-badge" class="status-badge guest">Guest</span>
-      <span id="display-username" style="color: var(--text-muted); font-size: 14px;"></span>
-      <button id="logout-btn" class="logout-btn hidden" onclick="logout()">Sign Out</button>
+  <div class="header">
+    <div class="logo"><span>🌿</span><span>GreenDial</span></div>
+    <div class="nav-tabs">
+      <button class="nav-tab active" onclick="switchView('chat')">💬 Chat</button>
+      <button class="nav-tab" onclick="switchView('profile')">📋 Profile</button>
+      <button class="nav-tab" onclick="switchView('history')">📜 History</button>
+      <button class="nav-tab" onclick="switchView('settings')">⚙️ Settings</button>
     </div>
-  </header>
-
-  <div class="main-container">
-    <!-- Left: Chat -->
-    <div class="chat-column">
-      <div class="widget chat-widget jiggle">
-        <div class="widget-header">
-          <h2>💬 Chat with Doc</h2>
+    <div class="user-area" id="user-area">
+      <div style="position:relative">
+        <button class="notification-bell" onclick="toggleNotifications()">🔔<span class="notification-badge" id="notif-badge" style="display:none">0</span></button>
+        <div class="notification-dropdown" id="notif-dropdown">
+          <div class="notification-header">Notifications from Doc</div>
+          <div class="notification-list" id="notif-list"><div class="notification-empty">No notifications</div></div>
         </div>
-        <div class="widget-body">
-          <div id="chat-messages" class="chat-messages">
-            <div class="message bot">
-              <div class="message-avatar">D</div>
-              <div class="message-bubble">Hello! I'm Doc, your health assistant. Say "sign up" to create an account.</div>
-            </div>
-          </div>
-          <div class="chat-input-container">
-            <form id="chat-form" class="chat-input-form">
-              <input type="text" id="chat-input" class="chat-input" placeholder="Type a message..." autocomplete="off">
-              <button type="submit" class="send-btn">
-                <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
-              </button>
-            </form>
-          </div>
+      </div>
+      <span class="user-badge">Guest</span>
+      <button class="btn btn-primary btn-sm" onclick="showAuthPopup()">Sign In</button>
+    </div>
+  </div>
+  
+  <div class="main">
+    <div class="view active" id="view-chat">
+      <div class="chat-container">
+        <div class="chat-header">💬 Chat with Doc</div>
+        <div class="chat-messages" id="chat-messages"></div>
+        <div class="chat-input-area">
+          <input type="text" id="chat-input" placeholder="Type a message..." onkeypress="if(event.key==='Enter')sendMessage()">
+          <button class="btn btn-primary" onclick="sendMessage()">Send</button>
         </div>
       </div>
     </div>
-
-    <!-- Right: Widgets -->
-    <div class="widgets-column">
-      <div class="widgets-row">
-        <!-- Dashboard + Goals -->
-        <div class="widget jiggle" data-widget="dashboard">
-          <div class="widget-header">
-            <h2>📊 Dashboard</h2>
-          </div>
-          <div class="widget-body">
-            <div class="stats-grid">
-              <div class="stat-card">
-                <h3>Sessions</h3>
-                <div class="value" id="stat-sessions">1</div>
-              </div>
-              <div class="stat-card">
-                <h3>Records</h3>
-                <div class="value" id="stat-records">0</div>
-              </div>
-              <div class="stat-card">
-                <h3>Goals</h3>
-                <div class="value" id="stat-goals">0</div>
-              </div>
-              <div class="stat-card">
-                <h3>Days</h3>
-                <div class="value" id="stat-days">1</div>
-              </div>
-            </div>
-            <div class="goals-section">
-              <h4>🎯 Goals</h4>
-              <div id="goals-list"></div>
-              <div class="add-goal-form">
-                <input type="text" id="new-goal-input" placeholder="Add goal...">
-                <button class="btn btn-primary btn-sm" onclick="createGoal()">Add</button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Messages -->
-        <div class="widget jiggle" data-widget="messages">
-          <div class="widget-header">
-            <h2>📬 Messages <span id="msg-badge" class="hidden" style="background: var(--primary); color: white; padding: 2px 6px; border-radius: 8px; font-size: 10px; margin-left: 4px;">0</span></h2>
-          </div>
-          <div class="widget-body">
-            <div id="messages-list">
-              <div class="empty-state">No messages yet.</div>
-            </div>
-          </div>
-        </div>
+    
+    <div class="view" id="view-profile">
+      <div class="panel" style="flex:1">
+        <div class="panel-header"><span>📋 Health Profile</span><button class="btn btn-secondary btn-sm" onclick="refreshProfile()">Refresh</button></div>
+        <div class="panel-content" id="full-profile-panel"><div class="profile-empty">Sign in to view your health profile</div></div>
       </div>
-
-      <div class="widgets-row">
-        <!-- Profile JSON -->
-        <div class="widget jiggle" data-widget="profile">
-          <div class="widget-header">
-            <h2>👤 Profile</h2>
-          </div>
-          <div class="widget-body" style="padding: 12px;">
-            <div id="profile-display" class="profile-json">{ "status": "Not logged in" }</div>
-          </div>
-        </div>
-
-        <!-- Settings -->
-        <div class="widget jiggle" data-widget="settings">
-          <div class="widget-header">
-            <h2>⚙️ Settings</h2>
-          </div>
-          <div class="widget-body">
-            <div class="setting-row">
-              <span>Doc's Style</span>
-              <select id="doc-style">
-                <option value="default">Balanced</option>
-                <option value="coach">Coach</option>
-                <option value="clinical">Clinical</option>
-                <option value="friendly">Friendly</option>
-              </select>
-            </div>
-            <div class="setting-row">
-              <span>Theme</span>
-              <div class="theme-picker">
-                <button class="theme-btn active" data-theme="light" title="Light"></button>
-                <button class="theme-btn" data-theme="dark" title="Dark"></button>
-              </div>
-            </div>
-          </div>
-        </div>
+    </div>
+    
+    <div class="view" id="view-history">
+      <div class="panel" style="flex:1">
+        <div class="panel-header"><span>📜 Conversation History</span><button class="btn btn-danger btn-sm" onclick="clearHistory()">Clear</button></div>
+        <div class="panel-content"><div class="transcript-view" id="transcript-view"><div class="profile-empty">No conversation history yet</div></div></div>
       </div>
+    </div>
+    
+    <div class="view" id="view-settings">
+      <div class="panel" style="flex:1">
+        <div class="panel-header">⚙️ Settings</div>
+        <div class="panel-content" id="settings-panel"><div class="profile-empty">Sign in to manage settings</div></div>
+      </div>
+    </div>
+    
+    <div class="sidebar">
+      <div class="panel">
+        <div class="panel-header">👤 Quick Profile</div>
+        <div class="panel-content" id="sidebar-profile"><div class="profile-empty">Sign in to see profile</div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-header">📊 Profile JSON</div>
+        <div class="panel-content"><div class="json-view" id="json-profile">{}</div></div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="popup-overlay" id="auth-popup">
+    <div class="popup">
+      <div class="form-tabs">
+        <button class="form-tab active" onclick="switchAuthTab('login')">Sign In</button>
+        <button class="form-tab" onclick="switchAuthTab('signup')">Create Account</button>
+      </div>
+      <form id="login-form" onsubmit="handleLogin(event)">
+        <div class="form-group"><label>Username</label><input type="text" id="login-username" placeholder="Enter your username" required></div>
+        <div class="form-group"><label>Passphrase</label><input type="password" id="login-password" placeholder="Enter your passphrase" required></div>
+        <div class="form-error" id="login-error"></div>
+        <div class="popup-buttons">
+          <button type="button" class="btn btn-secondary" onclick="hideAuthPopup()">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="login-btn">Sign In</button>
+        </div>
+      </form>
+      <form id="signup-form" style="display:none" onsubmit="handleSignup(event)">
+        <div class="hipaa-notice"><strong>HIPAA Waiver:</strong> GreenDial is not HIPAA-compliant. Your health data is stored but not protected under HIPAA regulations.</div>
+        <div class="form-group"><label>Username</label><input type="text" id="signup-username" placeholder="Choose a username" required></div>
+        <div class="form-group"><label>Passphrase</label><input type="password" id="signup-password" placeholder="Create a passphrase" required></div>
+        <div class="checkbox-group">
+          <input type="checkbox" id="signup-hipaa" required>
+          <label for="signup-hipaa">I understand this service is not HIPAA-compliant</label>
+        </div>
+        <div class="form-error" id="signup-error"></div>
+        <div class="popup-buttons">
+          <button type="button" class="btn btn-secondary" onclick="hideAuthPopup()">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="signup-btn">Create Account</button>
+        </div>
+      </form>
     </div>
   </div>
 
   <script>
     const API = window.location.origin;
+    
     let currentUser = null;
     let sessionId = null;
-
+    let chatHistory = [];
+    let userProfile = {};
+    let userSettings = { doc_style: 'questioning', notifications_enabled: true };
+    let notifications = [];
+    let isLoading = false;
+    let currentView = 'chat';
+    
+    // Start fresh chat session
+    function startFreshChat(welcomeMessage) {
+      sessionId = 'session_' + Math.random().toString(36).substr(2, 9);
+      chatHistory = [];
+      if (welcomeMessage) {
+        chatHistory.push({ role: 'doc', text: welcomeMessage });
+      }
+      renderMessages();
+    }
+    
     function init() {
-      const stored = localStorage.getItem('greendial_user');
-      if (stored) {
-        try {
-          currentUser = JSON.parse(stored);
-          sessionId = currentUser.session_id;
-          updateUI();
-          loadAllData();
-        } catch(e) {
-          localStorage.removeItem('greendial_user');
+      startFreshChat("Hi! I'm Doc. I'll help you build your health profile. What brings you here today?");
+      document.getElementById('chat-input').focus();
+      updateAllProfileDisplays();
+    }
+    
+    function switchView(view) {
+      currentView = view;
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+      document.getElementById(`view-${view}`).classList.add('active');
+      document.querySelector(`.nav-tab[onclick="switchView('${view}')"]`).classList.add('active');
+      
+      if (view === 'profile') refreshProfile();
+      if (view === 'history') refreshHistory();
+      if (view === 'settings') refreshSettings();
+    }
+    
+    function goToSettings() {
+      if (currentUser) switchView('settings');
+    }
+    
+    function addMessage(role, text) {
+      chatHistory.push({ role, text });
+      renderMessages();
+    }
+    
+    function renderMessages() {
+      const container = document.getElementById('chat-messages');
+      container.innerHTML = chatHistory.map(m => 
+        `<div class="msg ${m.role}">${escapeHtml(m.text)}</div>`
+      ).join('');
+      if (isLoading) {
+        container.innerHTML += '<div class="msg doc loading">Doc is typing...</div>';
+      }
+      container.scrollTop = container.scrollHeight;
+    }
+    
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+    
+    async function sendMessage(prefillText) {
+      const input = document.getElementById('chat-input');
+      const text = prefillText || input.value.trim();
+      if (!text || isLoading) return;
+      
+      addMessage('user', text);
+      input.value = '';
+      isLoading = true;
+      renderMessages();
+      
+      try {
+        const response = await fetch(`${API}/chat`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            text: text,
+            user_id: currentUser?.user_id || null,
+            session_id: sessionId
+          })
+        });
+        
+        const data = await response.json();
+        sessionId = data.session_id || sessionId;
+        
+        if (data.response) {
+          addMessage('doc', data.response);
+        }
+        
+        if (data.profile_updated && data.profile) {
+          userProfile = data.profile;
+          updateAllProfileDisplays();
+        }
+        
+      } catch (error) {
+        console.error('Chat error:', error);
+        addMessage('doc', "Connection issue. Try again.");
+      }
+      
+      isLoading = false;
+      renderMessages();
+      input.focus();
+    }
+    
+    function updateAllProfileDisplays() {
+      updateSidebarProfile();
+      updateJsonProfile();
+      if (currentView === 'profile') renderFullProfile();
+    }
+    
+    function updateSidebarProfile() {
+      const panel = document.getElementById('sidebar-profile');
+      if (!currentUser) {
+        panel.innerHTML = '<div class="profile-empty">Sign in to see profile</div>';
+        return;
+      }
+      
+      const p = userProfile || {};
+      const fieldMap = {
+        'primary_concern': 'Focus', 'age': 'Age', 'location': 'Location', 'weight': 'Weight',
+        'height': 'Height', 'health_conditions': 'Conditions', 'medications': 'Medications',
+        'allergies': 'Allergies', 'goals': 'Goals', 'diet_type': 'Diet',
+        'exercise_frequency': 'Exercise', 'sleep_hours': 'Sleep', 'stress_level': 'Stress'
+      };
+      
+      let html = '';
+      for (const [key, label] of Object.entries(fieldMap)) {
+        if (p[key]) {
+          let value = Array.isArray(p[key]) ? p[key].join(', ') : String(p[key]);
+          html += `<div class="profile-field"><span class="label">${label}</span><span class="value">${escapeHtml(value)}</span></div>`;
         }
       }
-      if (!sessionId) sessionId = 'anon_' + Date.now();
       
-      const savedTheme = localStorage.getItem('greendial_theme') || 'light';
-      setTheme(savedTheme);
-      
-      setTimeout(() => {
-        document.querySelectorAll('.widget').forEach(w => w.classList.add('jiggle'));
-      }, 100);
+      panel.innerHTML = html || '<div class="profile-empty">Chat with Doc to build your profile</div>';
     }
-
-    function loadAllData() {
-      loadStats();
-      loadGoals();
-      loadMessages();
-      loadProfile();
-      loadSuggestionsAsMessages();
+    
+    function updateJsonProfile() {
+      const el = document.getElementById('json-profile');
+      el.textContent = Object.keys(userProfile || {}).length ? JSON.stringify(userProfile, null, 2) : '{}';
     }
-
-    function updateUI() {
-      const badge = document.getElementById('status-badge');
-      const username = document.getElementById('display-username');
-      const logoutBtn = document.getElementById('logout-btn');
+    
+    async function refreshProfile() {
+      if (!currentUser) {
+        document.getElementById('full-profile-panel').innerHTML = '<div class="profile-empty">Sign in to view your health profile</div>';
+        return;
+      }
       
-      if (currentUser?.user_id) {
-        badge.textContent = 'Logged In';
-        badge.className = 'status-badge logged-in';
-        username.textContent = currentUser.username;
-        logoutBtn.classList.remove('hidden');
-      } else {
-        badge.textContent = 'Guest';
-        badge.className = 'status-badge guest';
-        username.textContent = '';
-        logoutBtn.classList.add('hidden');
+      try {
+        const response = await fetch(`${API}/user/${currentUser.user_id}`);
+        const data = await response.json();
+        if (data.profile) userProfile = data.profile;
+      } catch (e) {
+        console.error('Profile fetch error:', e);
+      }
+      
+      renderFullProfile();
+      updateJsonProfile();
+      updateSidebarProfile();
+    }
+    
+    function renderFullProfile() {
+      const panel = document.getElementById('full-profile-panel');
+      const p = userProfile || {};
+      
+      if (!Object.keys(p).length) {
+        panel.innerHTML = '<div class="profile-empty">Your profile is empty. Chat with Doc to start building it!</div>';
+        return;
+      }
+      
+      const sections = {
+        'Core Information': ['primary_concern', 'age', 'location', 'goals'],
+        'Health Status': ['health_conditions', 'medications', 'allergies'],
+        'Lifestyle': ['diet_type', 'exercise_frequency', 'exercise_type', 'sleep_hours', 'sleep_quality', 'stress_level'],
+        'Measurements': ['weight', 'height'],
+        'Other': ['notes']
+      };
+      
+      const fieldLabels = {
+        primary_concern: 'Primary Health Focus', health_conditions: 'Health Conditions',
+        diet_type: 'Diet Type', exercise_frequency: 'Exercise Frequency',
+        exercise_type: 'Exercise Type', sleep_hours: 'Sleep (hours)',
+        sleep_quality: 'Sleep Quality', stress_level: 'Stress Level'
+      };
+      
+      let html = '';
+      for (const [section, fields] of Object.entries(sections)) {
+        const sectionFields = fields.filter(f => p[f]);
+        if (!sectionFields.length) continue;
+        
+        html += `<div class="profile-section"><div class="profile-section-title">${section}</div>`;
+        for (const field of sectionFields) {
+          const label = fieldLabels[field] || field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+          let value = Array.isArray(p[field]) ? p[field].join(', ') : String(p[field]);
+          html += `<div class="profile-field"><span class="label">${label}</span><span class="value">${escapeHtml(value)}</span></div>`;
+        }
+        html += '</div>';
+      }
+      
+      const allFields = Object.values(sections).flat();
+      const otherFields = Object.keys(p).filter(k => !allFields.includes(k));
+      if (otherFields.length) {
+        html += '<div class="profile-section"><div class="profile-section-title">Additional</div>';
+        for (const field of otherFields) {
+          let value = Array.isArray(p[field]) ? p[field].join(', ') : String(p[field]);
+          html += `<div class="profile-field"><span class="label">${field.replace(/_/g, ' ')}</span><span class="value">${escapeHtml(value)}</span></div>`;
+        }
+        html += '</div>';
+      }
+      
+      panel.innerHTML = html || '<div class="profile-empty">No profile data yet</div>';
+    }
+    
+    async function refreshHistory() {
+      if (!currentUser) {
+        document.getElementById('transcript-view').innerHTML = '<div class="profile-empty">Sign in to view history</div>';
+        return;
+      }
+      
+      try {
+        const response = await fetch(`${API}/conversations/${currentUser.user_id}`);
+        const data = await response.json();
+        renderTranscript(data.transcript || '');
+      } catch (e) {
+        console.error('History fetch error:', e);
       }
     }
-
-    function logout() {
-      currentUser = null;
-      sessionId = 'anon_' + Date.now();
-      localStorage.removeItem('greendial_user');
-      updateUI();
-      document.getElementById('profile-display').textContent = '{ "status": "Not logged in" }';
-      document.getElementById('chat-messages').innerHTML = `
-        <div class="message bot">
-          <div class="message-avatar">D</div>
-          <div class="message-bubble">Signed out. Say "login" to sign back in.</div>
+    
+    function renderTranscript(transcript) {
+      const view = document.getElementById('transcript-view');
+      if (!transcript) {
+        view.innerHTML = '<div class="profile-empty">No conversation history yet</div>';
+        return;
+      }
+      
+      const lines = transcript.split('\n').filter(l => l.trim());
+      view.innerHTML = lines.map(line => {
+        if (line.includes('User:')) return `<div class="user-line">${escapeHtml(line)}</div>`;
+        if (line.includes('Doc:')) return `<div class="doc-line">${escapeHtml(line)}</div>`;
+        return `<div>${escapeHtml(line)}</div>`;
+      }).join('');
+    }
+    
+    async function clearHistory() {
+      if (!currentUser || !confirm('Clear all conversation history?')) return;
+      
+      try {
+        await fetch(`${API}/conversations/${currentUser.user_id}`, { method: 'DELETE' });
+        // Clear local chat history too
+        startFreshChat("History cleared. Let's continue building your profile. What would you like to discuss?");
+        refreshHistory();
+      } catch (e) {
+        console.error('Clear history error:', e);
+      }
+    }
+    
+    async function refreshSettings() {
+      const panel = document.getElementById('settings-panel');
+      if (!currentUser) {
+        panel.innerHTML = '<div class="profile-empty">Sign in to manage settings</div>';
+        return;
+      }
+      
+      try {
+        const response = await fetch(`${API}/settings/${currentUser.user_id}`);
+        const data = await response.json();
+        userSettings = data.settings || userSettings;
+      } catch (e) {}
+      
+      panel.innerHTML = `
+        <div class="settings-group">
+          <div class="settings-group-title">Doc's Communication Style</div>
+          <div class="settings-item">
+            <div><div class="settings-label">Conversation Tone</div><div class="settings-desc">How Doc interacts with you</div></div>
+            <select class="settings-select" onchange="updateSetting('doc_style', this.value)">
+              <option value="questioning" ${userSettings.doc_style === 'questioning' ? 'selected' : ''}>Questioning</option>
+              <option value="professional" ${userSettings.doc_style === 'professional' ? 'selected' : ''}>Professional</option>
+              <option value="friendly" ${userSettings.doc_style === 'friendly' ? 'selected' : ''}>Friendly</option>
+            </select>
+          </div>
+        </div>
+        <div class="settings-group">
+          <div class="settings-group-title">Notifications</div>
+          <div class="settings-item">
+            <div><div class="settings-label">Enable Notifications</div><div class="settings-desc">Receive tips and reminders</div></div>
+            <div class="settings-toggle ${userSettings.notifications_enabled ? 'on' : ''}" onclick="toggleNotificationSetting()"></div>
+          </div>
+        </div>
+        <div class="settings-group">
+          <div class="settings-group-title">Account</div>
+          <div class="settings-item"><div><div class="settings-label">Username</div><div class="settings-desc">${escapeHtml(currentUser.username)}</div></div></div>
+          <div class="settings-item"><div><div class="settings-label">Sign Out</div></div><button class="btn btn-danger btn-sm" onclick="logout()">Sign Out</button></div>
         </div>
       `;
     }
-
-    function setTheme(theme) {
-      document.body.setAttribute('data-theme', theme === 'dark' ? 'dark' : '');
-      localStorage.setItem('greendial_theme', theme);
-      document.querySelectorAll('.theme-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.theme === theme);
-      });
-    }
-
-    // Chat
-    function addMessage(text, type = 'bot', extra = null) {
-      const messages = document.getElementById('chat-messages');
-      const div = document.createElement('div');
-      div.className = `message ${type}`;
-      
-      if (type === 'system') {
-        div.innerHTML = `<div class="message-bubble">${text}</div>`;
-      } else if (type === 'suggestion') {
-        const suggestionId = extra?.id || '';
-        const isRseEligible = extra?.rse_eligible;
-        div.innerHTML = `
-          <div class="message-avatar">💡</div>
-          <div class="message-bubble">
-            <div style="font-size: 11px; color: #92400e; margin-bottom: 4px;">Suggestion from Doc</div>
-            ${text}
-            ${isRseEligible ? `<div class="suggestion-actions">
-              <button class="btn btn-sm btn-blue" onclick="submitToRse('${suggestionId}')">Get Service Bids</button>
-              <button class="btn btn-sm btn-muted" onclick="dismissSuggestion('${suggestionId}')">Dismiss</button>
-            </div>` : ''}
-          </div>
-        `;
-      } else {
-        const initials = type === 'user' ? (currentUser?.username?.[0]?.toUpperCase() || 'U') : 'D';
-        div.innerHTML = `
-          <div class="message-avatar">${initials}</div>
-          <div class="message-bubble">${text}</div>
-        `;
-      }
-      
-      messages.appendChild(div);
-      messages.scrollTop = messages.scrollHeight;
-    }
-
-    function showTyping() {
-      const messages = document.getElementById('chat-messages');
-      const div = document.createElement('div');
-      div.id = 'typing';
-      div.className = 'message bot';
-      div.innerHTML = `
-        <div class="message-avatar">D</div>
-        <div class="typing-indicator"><span></span><span></span><span></span></div>
-      `;
-      messages.appendChild(div);
-      messages.scrollTop = messages.scrollHeight;
-    }
-
-    function hideTyping() {
-      document.getElementById('typing')?.remove();
-    }
-
-    document.getElementById('chat-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const input = document.getElementById('chat-input');
-      const text = input.value.trim();
-      if (!text) return;
-
-      input.value = '';
-      addMessage(text, 'user');
-      showTyping();
-
+    
+    async function updateSetting(key, value) {
+      if (!currentUser) return;
+      userSettings[key] = value;
       try {
-        const resp = await fetch(`${API}/chat`, {
-          method: 'POST',
+        await fetch(`${API}/settings/${currentUser.user_id}`, {
+          method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text, user_id: currentUser?.user_id, session_id: sessionId })
+          body: JSON.stringify({ [key]: value })
         });
-        const data = await resp.json();
-        hideTyping();
-        
-        if (data.auth) {
-          currentUser = {
-            user_id: data.auth.user_id,
-            username: data.auth.username,
-            session_id: sessionId
-          };
-          localStorage.setItem('greendial_user', JSON.stringify(currentUser));
-          updateUI();
-          addMessage(`Logged in as ${data.auth.username}`, 'system');
-          sessionId = 'private_' + Date.now();
-          currentUser.session_id = sessionId;
-          localStorage.setItem('greendial_user', JSON.stringify(currentUser));
-          loadAllData();
-        }
-        
-        addMessage(data.response, 'bot');
-      } catch (err) {
-        hideTyping();
-        addMessage('Connection error. Please try again.', 'bot');
-      }
-    });
-
-    // Goals
-    async function loadGoals() {
-      if (!currentUser) {
-        document.getElementById('goals-list').innerHTML = '<div class="empty-state">Log in to track goals</div>';
-        return;
-      }
-      
-      try {
-        const resp = await fetch(`${API}/goals/${currentUser.user_id}`);
-        const data = await resp.json();
-        const goals = data.goals || [];
-        
-        const container = document.getElementById('goals-list');
-        if (goals.length === 0) {
-          container.innerHTML = '<div class="empty-state">No goals yet</div>';
-          return;
-        }
-        
-        container.innerHTML = goals.slice(0, 5).map(g => `
-          <div class="goal-item">
-            <span class="goal-text ${g.completed ? 'completed' : ''}">${g.text}</span>
-            <div style="display: flex; gap: 4px;">
-              <button onclick="toggleGoal('${g.id}', ${!g.completed})" class="btn btn-sm ${g.completed ? 'btn-muted' : 'btn-primary'}">${g.completed ? '↩' : '✓'}</button>
-              <button onclick="deleteGoal('${g.id}')" class="btn btn-sm btn-danger">×</button>
-            </div>
-          </div>
-        `).join('');
-      } catch(e) {}
-    }
-
-    async function createGoal() {
-      if (!currentUser) { alert('Please log in.'); return; }
-      const input = document.getElementById('new-goal-input');
-      const text = input.value.trim();
-      if (!text) return;
-      
-      try {
-        await fetch(`${API}/goal/${currentUser.user_id}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text, type: 'health' })
-        });
-        input.value = '';
-        loadGoals();
-        loadStats();
-      } catch(e) {}
-    }
-
-    async function toggleGoal(goalId, completed) {
-      if (!currentUser) return;
-      await fetch(`${API}/goal/${currentUser.user_id}/${goalId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ completed, progress: completed ? 100 : 0 })
-      });
-      loadGoals();
-    }
-
-    async function deleteGoal(goalId) {
-      if (!currentUser) return;
-      await fetch(`${API}/goal/${currentUser.user_id}/${goalId}`, { method: 'DELETE' });
-      loadGoals();
-      loadStats();
-    }
-
-    // Stats
-    async function loadStats() {
-      if (!currentUser) return;
-      try {
-        const resp = await fetch(`${API}/stats/${currentUser.user_id}`);
-        const stats = await resp.json();
-        document.getElementById('stat-sessions').textContent = stats.conversations || 1;
-        document.getElementById('stat-records').textContent = stats.records || 0;
-        document.getElementById('stat-goals').textContent = stats.goals || 0;
-        document.getElementById('stat-days').textContent = stats.days_active || 1;
-      } catch(e) {}
-    }
-
-    // Messages
-    async function loadMessages() {
-      if (!currentUser) {
-        document.getElementById('messages-list').innerHTML = '<div class="empty-state">Log in to see messages</div>';
-        return;
-      }
-      try {
-        const resp = await fetch(`${API}/doc/messages/${currentUser.user_id}`);
-        const data = await resp.json();
-        const messages = data.messages || [];
-        
-        const container = document.getElementById('messages-list');
-        if (messages.length === 0) {
-          container.innerHTML = '<div class="empty-state">No messages yet</div>';
-        } else {
-          container.innerHTML = messages.slice(0, 10).map(m => `
-            <div class="message-item ${m.read ? '' : 'unread'}">
-              <div class="message-header">
-                <span class="message-from">Doc</span>
-                <span class="message-time">${new Date(m.timestamp).toLocaleDateString()}</span>
-              </div>
-              <div style="font-size: 13px;">${m.message}</div>
-            </div>
-          `).join('');
-          
-          const unread = messages.filter(m => !m.read).length;
-          const badge = document.getElementById('msg-badge');
-          if (unread > 0) {
-            badge.textContent = unread;
-            badge.classList.remove('hidden');
-          } else {
-            badge.classList.add('hidden');
-          }
-        }
-      } catch(e) {}
-    }
-
-    // Profile
-    async function loadProfile() {
-      if (!currentUser) {
-        document.getElementById('profile-display').textContent = '{ "status": "Not logged in" }';
-        return;
-      }
-      try {
-        const resp = await fetch(`${API}/user/${currentUser.user_id}`);
-        const user = await resp.json();
-        const profile = user.profile || {};
-        document.getElementById('profile-display').textContent = JSON.stringify(profile, null, 2) || '{}';
-      } catch(e) {
-        document.getElementById('profile-display').textContent = '{ "error": "Failed to load" }';
-      }
-    }
-
-    // Suggestions as chat messages
-    async function loadSuggestionsAsMessages() {
-      if (!currentUser) return;
-      try {
-        const resp = await fetch(`${API}/suggestions/${currentUser.user_id}`);
-        const data = await resp.json();
-        const suggestions = data.suggestions || [];
-        
-        suggestions.slice(0, 3).forEach(s => {
-          if (!s.dismissed) {
-            addMessage(s.text, 'suggestion', s);
-          }
-        });
-      } catch(e) {}
-    }
-
-    async function submitToRse(suggestionId) {
-      if (!currentUser) return;
-      try {
-        const resp = await fetch(`${API}/suggestion/${currentUser.user_id}/${suggestionId}/submit-rse`, { method: 'POST' });
-        const data = await resp.json();
-        if (data.success) {
-          addMessage('Service request submitted to RSE. Providers will bid on it!', 'system');
-        } else {
-          addMessage(data.error || 'Failed to submit', 'system');
-        }
-      } catch(e) {}
+      } catch (e) {}
     }
     
-    async function dismissSuggestion(suggestionId) {
-      if (!currentUser) return;
-      await fetch(`${API}/suggestion/${currentUser.user_id}/${suggestionId}/dismiss`, { method: 'POST' });
-      // Remove from chat
-      document.querySelectorAll('.message.suggestion').forEach(el => {
-        if (el.innerHTML.includes(suggestionId)) el.remove();
-      });
+    function toggleNotificationSetting() {
+      userSettings.notifications_enabled = !userSettings.notifications_enabled;
+      updateSetting('notifications_enabled', userSettings.notifications_enabled);
+      refreshSettings();
     }
-
-    // Settings
-    document.querySelectorAll('.theme-btn').forEach(btn => {
-      btn.addEventListener('click', () => setTheme(btn.dataset.theme));
-    });
-
-    document.getElementById('doc-style').addEventListener('change', async (e) => {
+    
+    function toggleNotifications() {
+      const dropdown = document.getElementById('notif-dropdown');
+      dropdown.classList.toggle('show');
+      if (dropdown.classList.contains('show')) fetchNotifications();
+    }
+    
+    async function fetchNotifications() {
+      if (!currentUser) { renderNotifications([]); return; }
+      try {
+        const response = await fetch(`${API}/notifications/${currentUser.user_id}`);
+        const data = await response.json();
+        notifications = data.notifications || [];
+        renderNotifications(notifications);
+      } catch (e) {}
+    }
+    
+    function renderNotifications(notifs) {
+      const list = document.getElementById('notif-list');
+      const badge = document.getElementById('notif-badge');
+      if (!list || !badge) return;
+      
+      if (!notifs.length) {
+        list.innerHTML = '<div class="notification-empty">No notifications</div>';
+        badge.style.display = 'none';
+        return;
+      }
+      
+      badge.textContent = notifs.length;
+      badge.style.display = 'flex';
+      
+      const icons = { tip: '💡', goal_reminder: '🎯', profile_incomplete: '📋', encouragement: '🌟' };
+      
+      list.innerHTML = notifs.map(n => `
+        <div class="notification-item" onclick="openNotificationInChat('${n.id}', '${escapeHtml(n.message).replace(/'/g, "\\'")}')">
+          <span class="notification-icon">${icons[n.type] || '📬'}</span>
+          <div class="notification-content">
+            <div class="notification-message">${escapeHtml(n.message)}</div>
+            <div class="notification-time">${formatTime(n.created)}</div>
+          </div>
+          <button class="notification-dismiss" onclick="event.stopPropagation(); dismissNotification('${n.id}')">&times;</button>
+        </div>
+      `).join('');
+    }
+    
+    function openNotificationInChat(notifId, message) {
+      // Close dropdown
+      document.getElementById('notif-dropdown').classList.remove('show');
+      
+      // Switch to chat view
+      switchView('chat');
+      
+      // Put notification message in input and send it
+      const input = document.getElementById('chat-input');
+      input.value = message;
+      input.focus();
+      
+      // Dismiss the notification
+      dismissNotification(notifId);
+    }
+    
+    async function dismissNotification(id) {
       if (!currentUser) return;
-      await fetch(`${API}/settings/${currentUser.user_id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ doc_style: e.target.value })
-      });
+      try {
+        await fetch(`${API}/notifications/${currentUser.user_id}/${id}`, { method: 'DELETE' });
+        notifications = notifications.filter(n => n.id !== id);
+        renderNotifications(notifications);
+      } catch (e) {}
+    }
+    
+    function formatTime(isoString) {
+      if (!isoString) return '';
+      const date = new Date(isoString);
+      const diffMins = Math.floor((new Date() - date) / 60000);
+      if (diffMins < 60) return `${diffMins}m ago`;
+      const diffHours = Math.floor(diffMins / 60);
+      if (diffHours < 24) return `${diffHours}h ago`;
+      return date.toLocaleDateString();
+    }
+    
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.notification-bell') && !e.target.closest('.notification-dropdown')) {
+        const dropdown = document.getElementById('notif-dropdown');
+        if (dropdown) dropdown.classList.remove('show');
+      }
     });
-
+    
+    function showAuthPopup() {
+      document.getElementById('auth-popup').classList.add('show');
+      document.getElementById('login-username').focus();
+    }
+    
+    function hideAuthPopup() {
+      document.getElementById('auth-popup').classList.remove('show');
+      document.getElementById('login-error').textContent = '';
+      document.getElementById('signup-error').textContent = '';
+      document.getElementById('login-form').reset();
+      document.getElementById('signup-form').reset();
+    }
+    
+    function switchAuthTab(tab) {
+      document.querySelectorAll('.form-tab').forEach(t => t.classList.remove('active'));
+      event.target.classList.add('active');
+      document.getElementById('login-form').style.display = tab === 'login' ? 'block' : 'none';
+      document.getElementById('signup-form').style.display = tab === 'signup' ? 'block' : 'none';
+    }
+    
+    async function handleLogin(e) {
+      e.preventDefault();
+      const username = document.getElementById('login-username').value.trim();
+      const password = document.getElementById('login-password').value;
+      const errorEl = document.getElementById('login-error');
+      const btn = document.getElementById('login-btn');
+      
+      btn.disabled = true;
+      btn.textContent = 'Signing in...';
+      
+      try {
+        const response = await fetch(`${API}/auth`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        
+        const data = await response.json();
+        
+        if (data.error) {
+          errorEl.textContent = data.error;
+        } else {
+          // Clear chat for new/different user
+          const previousUserId = currentUser?.user_id;
+          currentUser = { user_id: data.user_id, username: data.username };
+          userProfile = data.profile || {};
+          userSettings = data.settings || userSettings;
+          
+          hideAuthPopup();
+          updateUserUI();
+          updateAllProfileDisplays();
+          
+          // Start fresh chat for this user
+          startFreshChat(`Welcome back, ${data.username}! Let's continue building your health profile.`);
+          
+          fetchNotifications();
+        }
+      } catch (error) {
+        errorEl.textContent = 'Connection error.';
+      }
+      
+      btn.disabled = false;
+      btn.textContent = 'Sign In';
+    }
+    
+    async function handleSignup(e) {
+      e.preventDefault();
+      const username = document.getElementById('signup-username').value.trim();
+      const password = document.getElementById('signup-password').value;
+      const hipaaAccepted = document.getElementById('signup-hipaa').checked;
+      const errorEl = document.getElementById('signup-error');
+      const btn = document.getElementById('signup-btn');
+      
+      if (!hipaaAccepted) {
+        errorEl.textContent = 'Please accept the HIPAA waiver';
+        return;
+      }
+      
+      btn.disabled = true;
+      btn.textContent = 'Creating...';
+      
+      try {
+        const response = await fetch(`${API}/auth`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password, create_new: true, hipaa_waiver_accepted: true, profile: {} })
+        });
+        
+        const data = await response.json();
+        
+        if (data.error) {
+          errorEl.textContent = data.error;
+        } else {
+          currentUser = { user_id: data.user_id, username: data.username };
+          userProfile = {};
+          
+          hideAuthPopup();
+          updateUserUI();
+          updateAllProfileDisplays();
+          
+          // Start fresh chat for new user
+          startFreshChat(`Welcome, ${data.username}! I'm Doc. I'll help you build your health profile. What's your main health focus right now?`);
+        }
+      } catch (error) {
+        errorEl.textContent = 'Connection error.';
+      }
+      
+      btn.disabled = false;
+      btn.textContent = 'Create Account';
+    }
+    
+    function logout() {
+      currentUser = null;
+      userProfile = {};
+      notifications = [];
+      
+      updateUserUI();
+      updateAllProfileDisplays();
+      
+      // Clear chat completely on logout
+      startFreshChat("Signed out. Sign in to save your health profile.");
+      
+      switchView('chat');
+    }
+    
+    function updateUserUI() {
+      const userArea = document.getElementById('user-area');
+      if (currentUser) {
+        userArea.innerHTML = `
+          <div style="position:relative">
+            <button class="notification-bell" onclick="toggleNotifications()">🔔<span class="notification-badge" id="notif-badge" style="display:none">0</span></button>
+            <div class="notification-dropdown" id="notif-dropdown">
+              <div class="notification-header">Notifications from Doc</div>
+              <div class="notification-list" id="notif-list"><div class="notification-empty">No notifications</div></div>
+            </div>
+          </div>
+          <span class="user-badge" onclick="goToSettings()">👤 ${escapeHtml(currentUser.username)}</span>
+          <button class="btn btn-secondary btn-sm" onclick="logout()">Sign Out</button>
+        `;
+        fetchNotifications();
+      } else {
+        userArea.innerHTML = `
+          <div style="position:relative">
+            <button class="notification-bell" onclick="toggleNotifications()">🔔</button>
+            <div class="notification-dropdown" id="notif-dropdown">
+              <div class="notification-header">Notifications</div>
+              <div class="notification-list" id="notif-list"><div class="notification-empty">Sign in for notifications</div></div>
+            </div>
+          </div>
+          <span class="user-badge">Guest</span>
+          <button class="btn btn-primary btn-sm" onclick="showAuthPopup()">Sign In</button>
+        `;
+      }
+    }
+    
     init();
   </script>
 </body>

@@ -1,46 +1,75 @@
 """
-S3 Storage Module - Worker Droid Implementation
-Handles all persistent storage for GreenDial at s3://mithrilmedia/greendial/
+S3 Storage Module
+Handles all persistent storage for GreenDial
 """
 import json
 import boto3
-from botocore.exceptions import ClientError
+from botocore.exceptions import ClientError, NoCredentialsError
 import config
 
-s3_client = boto3.client(
-    's3',
-    region_name=config.AWS_REGION,
-    aws_access_key_id=config.AWS_ACCESS_KEY_ID,
-    aws_secret_access_key=config.AWS_SECRET_ACCESS_KEY
-)
+# Initialize S3 client
+try:
+    if config.AWS_ACCESS_KEY_ID and config.AWS_SECRET_ACCESS_KEY:
+        s3_client = boto3.client(
+            's3',
+            region_name=config.AWS_REGION,
+            aws_access_key_id=config.AWS_ACCESS_KEY_ID,
+            aws_secret_access_key=config.AWS_SECRET_ACCESS_KEY
+        )
+    else:
+        # Use default credentials (IAM role, env vars, etc.)
+        s3_client = boto3.client('s3', region_name=config.AWS_REGION)
+except Exception as e:
+    print(f"[S3] Warning: Could not initialize S3 client: {e}")
+    s3_client = None
+
 
 def _key(path):
     """Build full S3 key with prefix"""
     return f"{config.S3_PREFIX}{path}"
 
-# User Data
+
+def _check_client():
+    """Check if S3 client is available"""
+    if s3_client is None:
+        raise RuntimeError("S3 client not initialized. Check AWS credentials.")
+
+
+# ============ USER DATA ============
+
 def get_user(user_id):
     """Retrieve user data from S3"""
+    _check_client()
     try:
-        resp = s3_client.get_object(Bucket=config.S3_BUCKET, Key=_key(f"users/{user_id}.json"))
+        resp = s3_client.get_object(
+            Bucket=config.S3_BUCKET,
+            Key=_key(f"users/{user_id}.json")
+        )
         return json.loads(resp['Body'].read().decode('utf-8'))
     except ClientError as e:
         if e.response['Error']['Code'] == 'NoSuchKey':
             return None
         raise
 
+
 def save_user(user_id, data):
     """Save user data to S3"""
+    _check_client()
     s3_client.put_object(
         Bucket=config.S3_BUCKET,
         Key=_key(f"users/{user_id}.json"),
-        Body=json.dumps(data),
+        Body=json.dumps(data, indent=2),
         ContentType='application/json'
     )
 
+
 def list_users():
     """List all user IDs"""
-    resp = s3_client.list_objects_v2(Bucket=config.S3_BUCKET, Prefix=_key("users/"))
+    _check_client()
+    resp = s3_client.list_objects_v2(
+        Bucket=config.S3_BUCKET,
+        Prefix=_key("users/")
+    )
     users = []
     for obj in resp.get('Contents', []):
         key = obj['Key']
@@ -49,12 +78,15 @@ def list_users():
             users.append(user_id)
     return users
 
-# Conversations
+
+# ============ CONVERSATIONS ============
+
 def get_conversation(user_id, conversation_id):
     """Retrieve a conversation"""
+    _check_client()
     try:
         resp = s3_client.get_object(
-            Bucket=config.S3_BUCKET, 
+            Bucket=config.S3_BUCKET,
             Key=_key(f"conversations/{user_id}/{conversation_id}.json")
         )
         return json.loads(resp['Body'].read().decode('utf-8'))
@@ -63,19 +95,23 @@ def get_conversation(user_id, conversation_id):
             return None
         raise
 
+
 def save_conversation(user_id, conversation_id, data):
     """Save a conversation"""
+    _check_client()
     s3_client.put_object(
         Bucket=config.S3_BUCKET,
         Key=_key(f"conversations/{user_id}/{conversation_id}.json"),
-        Body=json.dumps(data),
+        Body=json.dumps(data, indent=2),
         ContentType='application/json'
     )
 
+
 def list_conversations(user_id):
     """List all conversations for a user"""
+    _check_client()
     resp = s3_client.list_objects_v2(
-        Bucket=config.S3_BUCKET, 
+        Bucket=config.S3_BUCKET,
         Prefix=_key(f"conversations/{user_id}/")
     )
     conversations = []
@@ -83,79 +119,8 @@ def list_conversations(user_id):
         key = obj['Key']
         if key.endswith('.json'):
             conv_id = key.split('/')[-1].replace('.json', '')
-            conversations.append(conv_id)
+            conversations.append({
+                "id": conv_id,
+                "last_modified": obj.get('LastModified', '').isoformat() if obj.get('LastModified') else None
+            })
     return conversations
-
-# Health Records
-def save_health_record(user_id, record_type, timestamp, data):
-    """Save a health data record (INSERT symbol handler)"""
-    record = {
-        "type": record_type,
-        "timestamp": timestamp,
-        "data": data
-    }
-    s3_client.put_object(
-        Bucket=config.S3_BUCKET,
-        Key=_key(f"health/{user_id}/{record_type}/{timestamp}.json"),
-        Body=json.dumps(record),
-        ContentType='application/json'
-    )
-
-def query_health_records(user_id, record_type=None, start_date=None, end_date=None):
-    """Query health records (SELECT symbol handler)"""
-    prefix = _key(f"health/{user_id}/")
-    if record_type:
-        prefix += f"{record_type}/"
-    
-    resp = s3_client.list_objects_v2(Bucket=config.S3_BUCKET, Prefix=prefix)
-    records = []
-    
-    for obj in resp.get('Contents', []):
-        try:
-            record_resp = s3_client.get_object(Bucket=config.S3_BUCKET, Key=obj['Key'])
-            record = json.loads(record_resp['Body'].read().decode('utf-8'))
-            records.append(record)
-        except:
-            continue
-    
-    return records
-
-# Goals
-def get_goals(user_id):
-    """Get user goals"""
-    try:
-        resp = s3_client.get_object(Bucket=config.S3_BUCKET, Key=_key(f"goals/{user_id}.json"))
-        return json.loads(resp['Body'].read().decode('utf-8'))
-    except ClientError as e:
-        if e.response['Error']['Code'] == 'NoSuchKey':
-            return {"goals": []}
-        raise
-
-def save_goals(user_id, goals):
-    """Save user goals"""
-    s3_client.put_object(
-        Bucket=config.S3_BUCKET,
-        Key=_key(f"goals/{user_id}.json"),
-        Body=json.dumps(goals),
-        ContentType='application/json'
-    )
-
-# Settings
-def get_settings(user_id):
-    """Get user settings"""
-    try:
-        resp = s3_client.get_object(Bucket=config.S3_BUCKET, Key=_key(f"settings/{user_id}.json"))
-        return json.loads(resp['Body'].read().decode('utf-8'))
-    except ClientError as e:
-        if e.response['Error']['Code'] == 'NoSuchKey':
-            return {}
-        raise
-
-def save_settings(user_id, settings):
-    """Save user settings"""
-    s3_client.put_object(
-        Bucket=config.S3_BUCKET,
-        Key=_key(f"settings/{user_id}.json"),
-        Body=json.dumps(settings),
-        ContentType='application/json'
-    )
