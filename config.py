@@ -20,7 +20,7 @@ S3_PREFIX = os.environ.get('S3_PREFIX', 'greendial/')
 # LLM Configuration (configurable /completion endpoint)
 LLM_API_URL = os.environ.get('LLM_API_URL', 'https://openrouter.ai/api/v1/chat/completions')
 LLM_API_KEY = os.environ.get('LLM_API_KEY', '')
-LLM_MODEL = os.environ.get('LLM_MODEL', 'meta-llama/llama-3.2-3b-instruct:free')
+LLM_MODEL = os.environ.get('LLM_MODEL', 'x-ai/grok-4.1-fast:free')
 LLM_TEMPERATURE = float(os.environ.get('LLM_TEMPERATURE', '0.7'))
 LLM_MAX_TOKENS = int(os.environ.get('LLM_MAX_TOKENS', '800'))
 
