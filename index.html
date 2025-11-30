@@ -380,6 +380,27 @@
     .checkbox-group { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 16px; }
     .checkbox-group input[type="checkbox"] { width: 18px; height: 18px; margin-top: 2px; accent-color: #10b981; }
     .checkbox-group label { font-size: 13px; color: rgba(255,255,255,0.7); cursor: pointer; }
+    
+    .waiver-link { color: #10b981; text-decoration: underline; cursor: pointer; }
+    .waiver-link:hover { color: #059669; }
+    .waiver-popup {
+      background: #2a2a4e;
+      border-radius: 16px;
+      padding: 24px;
+      max-width: 600px;
+      width: 95%;
+      max-height: 85vh;
+      overflow-y: auto;
+    }
+    .waiver-popup h3 { color: #ffc107; margin-bottom: 16px; font-size: 18px; }
+    .waiver-popup h4 { color: #10b981; margin: 20px 0 10px 0; font-size: 14px; }
+    .waiver-popup p { color: rgba(255,255,255,0.8); font-size: 13px; line-height: 1.7; margin-bottom: 12px; }
+    .waiver-popup ul { color: rgba(255,255,255,0.8); font-size: 13px; line-height: 1.7; margin: 0 0 12px 20px; }
+    .waiver-popup li { margin-bottom: 6px; }
+    .waiver-popup .waiver-section { margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .waiver-popup .waiver-section:last-of-type { border-bottom: none; }
+    .waiver-popup .highlight { background: rgba(255,193,7,0.15); padding: 12px; border-radius: 8px; border-left: 3px solid #ffc107; }
+    .waiver-popup .highlight p { margin-bottom: 0; }
   </style>
 </head>
 <body>
@@ -465,12 +486,12 @@
         </div>
       </form>
       <form id="signup-form" style="display:none" onsubmit="handleSignup(event)">
-        <div class="hipaa-notice"><strong>HIPAA Waiver:</strong> GreenDial is not HIPAA-compliant. Your health data is stored but not protected under HIPAA regulations.</div>
+        <div class="hipaa-notice"><strong>Important:</strong> GreenDial is not HIPAA-compliant. <span class="waiver-link" onclick="showHipaaWaiver()">Read the full HIPAA waiver</span> before creating an account.</div>
         <div class="form-group"><label>Username</label><input type="text" id="signup-username" placeholder="Choose a username" required></div>
         <div class="form-group"><label>Passphrase</label><input type="password" id="signup-password" placeholder="Create a passphrase" required></div>
         <div class="checkbox-group">
           <input type="checkbox" id="signup-hipaa" required>
-          <label for="signup-hipaa">I understand this service is not HIPAA-compliant</label>
+          <label for="signup-hipaa">I have read and agree to the <span class="waiver-link" onclick="event.preventDefault(); showHipaaWaiver()">HIPAA Waiver</span></label>
         </div>
         <div class="form-error" id="signup-error"></div>
         <div class="popup-buttons">
@@ -478,6 +499,86 @@
           <button type="submit" class="btn btn-primary" id="signup-btn">Create Account</button>
         </div>
       </form>
+    </div>
+  </div>
+  
+  <div class="popup-overlay" id="hipaa-popup">
+    <div class="waiver-popup">
+      <h3>HIPAA Waiver and Health Information Disclosure</h3>
+      
+      <div class="waiver-section">
+        <h4>What is HIPAA?</h4>
+        <p>The Health Insurance Portability and Accountability Act (HIPAA) is a United States federal law enacted in 1996 that establishes national standards for the protection of sensitive patient health information. HIPAA requires that healthcare providers, health plans, and healthcare clearinghouses implement safeguards to protect the privacy and security of Protected Health Information (PHI).</p>
+      </div>
+      
+      <div class="waiver-section">
+        <h4>What HIPAA Protects</h4>
+        <p>Under HIPAA, Protected Health Information (PHI) includes any individually identifiable health information, such as:</p>
+        <ul>
+          <li>Medical diagnoses, conditions, and treatment history</li>
+          <li>Mental health information and therapy records</li>
+          <li>Prescription and medication information</li>
+          <li>Laboratory test results and medical imaging</li>
+          <li>Health insurance and billing information</li>
+          <li>Any information that can identify you combined with health data (name, address, date of birth, Social Security number, etc.)</li>
+        </ul>
+      </div>
+      
+      <div class="waiver-section">
+        <h4>GreenDial's Status</h4>
+        <p>GreenDial is <strong>NOT</strong> a HIPAA-covered entity and does <strong>NOT</strong> comply with HIPAA regulations. This means:</p>
+        <ul>
+          <li>We are not required to implement HIPAA-mandated security safeguards</li>
+          <li>We are not subject to HIPAA breach notification requirements</li>
+          <li>We are not bound by HIPAA's restrictions on how health information may be used or disclosed</li>
+          <li>You do not have the rights granted under HIPAA regarding your health information stored with us</li>
+          <li>There is no guarantee of encryption, access controls, or audit trails as required by HIPAA</li>
+        </ul>
+      </div>
+      
+      <div class="waiver-section">
+        <h4>How Your Information May Be Used</h4>
+        <p>By using GreenDial, you acknowledge that any health information you provide:</p>
+        <ul>
+          <li>Is stored on third-party cloud servers (Amazon Web Services S3)</li>
+          <li>May be processed by third-party AI language model providers</li>
+          <li>Is not encrypted at the same level required by HIPAA</li>
+          <li>May be accessed by GreenDial administrators for service improvement</li>
+          <li>Could potentially be exposed in the event of a data breach</li>
+          <li>Will not be sold to third parties for marketing purposes</li>
+        </ul>
+      </div>
+      
+      <div class="waiver-section">
+        <h4>Your Acknowledgment</h4>
+        <div class="highlight">
+          <p>By checking the HIPAA waiver checkbox and creating an account, you acknowledge and agree that:</p>
+        </div>
+        <ul>
+          <li>You understand GreenDial is not HIPAA-compliant</li>
+          <li>You voluntarily choose to share health information with GreenDial</li>
+          <li>You waive any expectation of HIPAA protections for information shared with this service</li>
+          <li>You understand the risks of sharing sensitive health information on a non-HIPAA platform</li>
+          <li>You will not hold GreenDial liable for any unauthorized disclosure of your health information</li>
+          <li>You are at least 18 years of age or have parental/guardian consent</li>
+        </ul>
+      </div>
+      
+      <div class="waiver-section">
+        <h4>Recommendation</h4>
+        <p>We recommend that you:</p>
+        <ul>
+          <li>Do not share highly sensitive medical information (HIV status, mental health diagnoses, substance abuse history, genetic information)</li>
+          <li>Use a username that does not identify you personally</li>
+          <li>Consider the information you share as potentially accessible to others</li>
+          <li>Consult with qualified healthcare professionals for medical advice</li>
+        </ul>
+        <p>GreenDial is intended as a general health tracking and wellness tool, not as a substitute for professional medical care.</p>
+      </div>
+      
+      <div class="popup-buttons">
+        <button type="button" class="btn btn-primary" onclick="hideHipaaWaiver()" style="flex:1">I Understand</button>
+      </div>
     </div>
   </div>
 
@@ -896,6 +997,14 @@
       document.getElementById('signup-error').textContent = '';
       document.getElementById('login-form').reset();
       document.getElementById('signup-form').reset();
+    }
+    
+    function showHipaaWaiver() {
+      document.getElementById('hipaa-popup').classList.add('show');
+    }
+    
+    function hideHipaaWaiver() {
+      document.getElementById('hipaa-popup').classList.remove('show');
     }
     
     function switchAuthTab(tab) {
