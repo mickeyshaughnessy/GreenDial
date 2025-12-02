@@ -6,15 +6,26 @@ import requests
 import config
 
 
-def completion(prompt, model=None, temperature=None, max_tokens=None):
+def completion(prompt, model=None, temperature=None, max_tokens=None, system_prompt=None):
     """
     Call OpenRouter API for LLM completion.
+    
+    Args:
+        prompt: User message content
+        model: Model to use (default from config)
+        temperature: Sampling temperature
+        max_tokens: Max response tokens
+        system_prompt: Optional system message (for two-stage calls)
     """
     model = model or config.LLM_MODEL
     temperature = temperature if temperature is not None else config.LLM_TEMPERATURE
     max_tokens = max_tokens or config.LLM_MAX_TOKENS
     
-    messages = [{"role": "user", "content": prompt}]
+    # Build messages array
+    messages = []
+    if system_prompt:
+        messages.append({"role": "system", "content": system_prompt})
+    messages.append({"role": "user", "content": prompt})
     
     if not config.LLM_API_KEY:
         print("[LLM] No API key configured")
@@ -70,3 +81,45 @@ def completion(prompt, model=None, temperature=None, max_tokens=None):
     except Exception as e:
         print(f"[LLM] Unexpected error: {e}")
         return "Something went wrong. Please try again."
+
+
+def two_stage_completion(user_input, username="Guest", profile=None, recent_transcript=""):
+    """
+    Two-stage LLM completion:
+    1. Supervisor analyzes context and builds dynamic system prompt
+    2. Doc responds using the supervisor's instructions
+    
+    Returns:
+        Doc's response string
+    """
+    from prompts import supervisor
+    
+    profile = profile or {}
+    
+    # Stage 1: Supervisor
+    print("[LLM] Stage 1: Supervisor analyzing...")
+    sup_prompt = supervisor.build_supervisor_prompt(user_input, profile, recent_transcript)
+    
+    supervisor_response = completion(
+        prompt=sup_prompt["user"],
+        system_prompt=sup_prompt["system"],
+        temperature=0.3,  # Lower temp for more consistent JSON
+        max_tokens=300
+    )
+    
+    # Parse supervisor output
+    sup_output = supervisor.parse_supervisor_response(supervisor_response)
+    print(f"[LLM] Supervisor: style={sup_output['style']}, tone={sup_output['tone']}, action={sup_output['profile_action']}")
+    
+    # Stage 2: Doc
+    print("[LLM] Stage 2: Doc responding...")
+    doc_system = supervisor.build_doc_prompt(sup_output, username, profile, recent_transcript)
+    
+    doc_response = completion(
+        prompt=user_input,
+        system_prompt=doc_system,
+        temperature=0.8,
+        max_tokens=300
+    )
+    
+    return doc_response

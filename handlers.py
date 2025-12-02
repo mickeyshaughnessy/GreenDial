@@ -545,7 +545,7 @@ def _build_prompt(user_id=None, session_id=None, user_input=""):
 
 
 def handle_chat(request):
-    """Handle chat with Doc"""
+    """Handle chat with Doc using two-stage LLM completion"""
     user_id = request.get('user_id')
     session_id = request.get('session_id') or str(uuid.uuid4())
     user_input = request.get('text', '').strip()
@@ -565,10 +565,21 @@ def handle_chat(request):
             "user_id": user_id
         })
     
-    prompt = _build_prompt(user_id, session_id, user_input)
+    # Get user context
+    user = get_user_data(user_id) if user_id else {}
+    username = user.get('username', 'Guest')
+    profile = user.get('profile', {})
+    transcript = user.get('transcript', '') or _sessions.get(session_id, {}).get('transcript', '')
+    recent_transcript = _get_recent_transcript(transcript, max_lines=8)
     
     try:
-        doc_response = utils.completion(prompt, temperature=0.8, max_tokens=300)
+        # Two-stage completion: Supervisor -> Doc
+        doc_response = utils.two_stage_completion(
+            user_input=user_input,
+            username=username,
+            profile=profile,
+            recent_transcript=recent_transcript
+        )
     except Exception as e:
         print(f"[Chat] Completion error: {e}")
         doc_response = "I'm having trouble responding right now. Please try again."
