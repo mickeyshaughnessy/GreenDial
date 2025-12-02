@@ -109,7 +109,7 @@ def two_stage_completion(user_input, username="Guest", profile=None, recent_tran
     
     # Parse supervisor output
     sup_output = supervisor.parse_supervisor_response(supervisor_response)
-    print(f"[LLM] Supervisor: style={sup_output['style']}, tone={sup_output['tone']}, action={sup_output['profile_action']}")
+    print(f"[LLM] Supervisor: {sup_output['word_count']}w -> {sup_output['target_words']}w, style={sup_output['style']}, tone={sup_output['tone']}")
     
     # Stage 2: Doc
     print("[LLM] Stage 2: Doc responding...")
