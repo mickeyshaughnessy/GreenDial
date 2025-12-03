@@ -73,7 +73,7 @@ DOC_SYSTEM_TEMPLATE = """You are Doc, a health assistant helping {username}.
 
 ## RULES
 - End with ONE question
-- Only emit **PROFILE_UPDATE** if user shared health info
+- If user shared health info, emit **PROFILE_UPDATE** {"fieldname": "value"} (e.g. {"goals": "lose weight"})
 
 {profile_context}
 
@@ -94,10 +94,16 @@ TONE_INSTRUCTIONS = {
 PROFILE_INSTRUCTIONS = {
     "none": "",
     "gather": "Try to learn about: {fields}",
-    "update": """User shared health info. Emit:
+    "update": """User shared health info. Emit a profile update.
+
+FORMAT (use actual field names as keys):
 **PROFILE_UPDATE**
-{{"field": "value"}}
-Fields: {fields}"""
+{{"goals": "their goal", "age": "44"}}
+
+CORRECT: {{"goals": "get stronger", "weight": "180lbs"}}
+WRONG: {{"field": "goals", "value": "get stronger"}}
+
+Fields to update: {fields}"""
 }
 
 
