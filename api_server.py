@@ -30,6 +30,16 @@ def ping():
     return Response(json.dumps({"status": "ok", "service": "greendial"}), mimetype='application/json')
 
 
+@app.route("/stats", methods=['GET'])
+def stats():
+    import s3_storage
+    try:
+        users = s3_storage.list_users()
+        return Response(json.dumps({"user_count": len(users)}), mimetype='application/json')
+    except Exception as e:
+        return Response(json.dumps({"user_count": 0, "error": str(e)}), mimetype='application/json')
+
+
 # ============ AUTHENTICATION ============
 
 @app.route("/auth", methods=['POST', 'OPTIONS'])

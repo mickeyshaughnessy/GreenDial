@@ -32,6 +32,13 @@
       align-items: center;
       gap: 8px;
     }
+    .user-count {
+      font-size: 11px;
+      color: rgba(255,255,255,0.5);
+      padding: 4px 8px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 12px;
+    }
     .nav-tabs { display: flex; gap: 4px; }
     .nav-tab {
       padding: 8px 16px;
@@ -406,6 +413,7 @@
 <body>
   <div class="header">
     <div class="logo"><span>🌿</span><span>GreenDial</span></div>
+    <div class="user-count" id="userCount" title="Registered users"></div>
     <div class="nav-tabs">
       <button class="nav-tab active" onclick="switchView('chat')">💬 Chat</button>
       <button class="nav-tab" onclick="switchView('profile')">📋 Profile</button>
@@ -591,6 +599,16 @@
     let userProfile = {};
     let userSettings = { doc_style: 'questioning', notifications_enabled: true };
     let notifications = [];
+
+    // Fetch user count on load
+    fetch(API + '/stats')
+      .then(r => r.json())
+      .then(data => {
+        if (data.user_count > 0) {
+          document.getElementById('userCount').textContent = data.user_count + ' users';
+        }
+      })
+      .catch(() => {});
     let isLoading = false;
     let currentView = 'chat';
     
