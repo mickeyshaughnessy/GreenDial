@@ -9,48 +9,27 @@ import json
 
 SUPERVISOR_SYSTEM = """You are a conversation supervisor for a health assistant named Doc.
 
-Your PRIMARY job: Analyze the user's writing style and ensure Doc mirrors it exactly.
+Your job: Analyze the user's message and prepare context for Doc to respond helpfully.
 
-You MUST output valid JSON with this exact structure:
+Output JSON:
 {
-  "word_count": <number of words in user message>,
-  "target_words": <Doc should respond with approximately this many words>,
-  "style": "terse|short|medium|detailed",
-  "tone": "casual|neutral|formal|empathetic",
-  "punctuation": "minimal|normal|expressive",
-  "vocabulary": "simple|normal|sophisticated",
-  "focus": "brief description of what Doc should focus on",
+  "length": "short|medium|long",
+  "tone": "casual|formal",
+  "focus": "what Doc should address in the response",
+  "context": "relevant background info Doc needs",
   "profile_action": "none|gather|update",
-  "profile_fields": ["fields to gather or that were mentioned"],
-  "style_notes": "specific observations about user's writing style to mirror"
+  "profile_fields": ["relevant fields"]
 }
 
-STYLE ANALYSIS (most important):
-- Count the user's words exactly
-- terse: 1-4 words (respond with 5-15 words)
-- short: 5-12 words (respond with 10-25 words)  
-- medium: 13-30 words (respond with 20-50 words)
-- detailed: 31+ words (respond with 40-80 words)
+Guidelines:
+- length: short (<10 words), medium (10-30), long (30+) - Doc should roughly match
+- tone: casual (informal language) or formal (professional)
+- focus: The main thing Doc should respond to
+- context: Any relevant info from profile/history that helps Doc respond
+- profile_action: "gather" if key info missing, "update" if user shared health info
+- profile_fields: Which fields are relevant
 
-TONE ANALYSIS:
-- casual: contractions, slang, lowercase, "hey", "yeah", "cool", emojis
-- neutral: standard writing, mixed case, no strong markers
-- formal: complete sentences, proper grammar, "please", "thank you", professional
-- empathetic: sharing concerns, health worries, emotional content
-
-PUNCTUATION:
-- minimal: few or no punctuation marks, no exclamation points
-- normal: standard punctuation
-- expressive: multiple punctuation marks, exclamation points, ellipses
-
-VOCABULARY:
-- simple: basic words, short sentences
-- normal: everyday language
-- sophisticated: complex words, medical terms, detailed explanations
-
-style_notes: Note specific things like "user writes in lowercase", "uses abbreviations", "asks direct questions", "no greeting", etc.
-
-Output ONLY the JSON object, no other text."""
+Output ONLY the JSON object."""
 
 
 SUPERVISOR_USER_TEMPLATE = """## USER MESSAGE
@@ -70,67 +49,44 @@ Analyze and output JSON instructions for Doc:"""
 
 DOC_SYSTEM_TEMPLATE = """You are Doc, a health assistant helping {username}.
 
-## CRITICAL: MATCH USER'S STYLE EXACTLY
-{style_instruction}
-
+{length_instruction}
 {tone_instruction}
-
-{punctuation_instruction}
-
-{vocabulary_instruction}
-
-{style_notes_instruction}
 
 ## FOCUS
 {focus_instruction}
 
+{context_instruction}
+
 {profile_instruction}
 
 ## RULES
-- STRICTLY match the word count target
-- End with exactly ONE short question
-- Only emit **PROFILE_UPDATE** if user explicitly shared new health info
+- Roughly match the user's message length
+- End with ONE question
+- Only emit **PROFILE_UPDATE** if user shared health info
 
 {profile_context}
 
 {history_context}"""
 
 
-STYLE_INSTRUCTIONS = {
-    "terse": "LENGTH: User wrote {word_count} words. Respond with {target_words} words MAX. Be extremely brief.",
-    "short": "LENGTH: User wrote {word_count} words. Respond with {target_words} words. Keep it short.",
-    "medium": "LENGTH: User wrote {word_count} words. Respond with {target_words} words. Be conversational.",
-    "detailed": "LENGTH: User wrote {word_count} words. Respond with {target_words} words. You can be thorough."
+LENGTH_INSTRUCTIONS = {
+    "short": "Keep your response brief - a sentence or two.",
+    "medium": "Respond conversationally - a few sentences.",
+    "long": "You can be more thorough in your response."
 }
 
 TONE_INSTRUCTIONS = {
-    "casual": "TONE: Casual. Use contractions, be relaxed, match their informal energy.",
-    "neutral": "TONE: Neutral. Standard conversational tone.",
-    "formal": "TONE: Formal. Professional language, complete sentences.",
-    "empathetic": "TONE: Empathetic. Be warm, understanding, and supportive."
-}
-
-PUNCTUATION_INSTRUCTIONS = {
-    "minimal": "PUNCTUATION: Minimal. Few punctuation marks, no exclamation points.",
-    "normal": "PUNCTUATION: Normal punctuation.",
-    "expressive": "PUNCTUATION: Match their expressive style with appropriate punctuation."
-}
-
-VOCABULARY_INSTRUCTIONS = {
-    "simple": "VOCABULARY: Simple words, short sentences.",
-    "normal": "VOCABULARY: Everyday language.",
-    "sophisticated": "VOCABULARY: Can use more detailed/technical language if appropriate."
+    "casual": "Be relaxed and conversational.",
+    "formal": "Be professional and clear."
 }
 
 PROFILE_INSTRUCTIONS = {
     "none": "",
-    "gather": """PROFILE: Key info missing. Naturally ask about: {fields}
-Don't interrogate - weave into conversation.""",
-    "update": """PROFILE UPDATE: User shared health info. Emit:
+    "gather": "Try to learn about: {fields}",
+    "update": """User shared health info. Emit:
 **PROFILE_UPDATE**
 {{"field": "value"}}
-
-Fields mentioned: {fields}"""
+Fields: {fields}"""
 }
 
 
@@ -170,16 +126,12 @@ def build_supervisor_prompt(user_input, profile=None, recent_transcript=""):
 def parse_supervisor_response(response_text):
     """Parse supervisor's JSON response, with fallback defaults"""
     defaults = {
-        "word_count": 10,
-        "target_words": 25,
-        "style": "short",
+        "length": "medium",
         "tone": "casual",
-        "punctuation": "normal",
-        "vocabulary": "normal",
-        "focus": "Respond helpfully to the user",
+        "focus": "Respond helpfully",
+        "context": "",
         "profile_action": "none",
-        "profile_fields": [],
-        "style_notes": ""
+        "profile_fields": []
     }
     
     try:
@@ -206,30 +158,19 @@ def build_doc_prompt(supervisor_output, username="Guest", profile=None, recent_t
     """Build Doc's system prompt from supervisor instructions"""
     profile = profile or {}
     
-    # Style instruction with word counts
-    style = supervisor_output.get("style", "short")
-    word_count = supervisor_output.get("word_count", 10)
-    target_words = supervisor_output.get("target_words", 25)
-    style_inst = STYLE_INSTRUCTIONS.get(style, STYLE_INSTRUCTIONS["short"]).format(
-        word_count=word_count,
-        target_words=target_words
-    )
+    # Length instruction
+    length = supervisor_output.get("length", "medium")
+    length_inst = LENGTH_INSTRUCTIONS.get(length, LENGTH_INSTRUCTIONS["medium"])
     
     # Tone instruction
     tone_inst = TONE_INSTRUCTIONS.get(supervisor_output.get("tone", "casual"), TONE_INSTRUCTIONS["casual"])
     
-    # Punctuation instruction
-    punct_inst = PUNCTUATION_INSTRUCTIONS.get(supervisor_output.get("punctuation", "normal"), PUNCTUATION_INSTRUCTIONS["normal"])
-    
-    # Vocabulary instruction
-    vocab_inst = VOCABULARY_INSTRUCTIONS.get(supervisor_output.get("vocabulary", "normal"), VOCABULARY_INSTRUCTIONS["normal"])
-    
-    # Style notes
-    style_notes = supervisor_output.get("style_notes", "")
-    style_notes_inst = f"MIRROR: {style_notes}" if style_notes else ""
-    
     # Focus
-    focus_inst = supervisor_output.get('focus', 'Help the user with their health questions')
+    focus_inst = supervisor_output.get('focus', 'Help the user')
+    
+    # Context from supervisor
+    context = supervisor_output.get("context", "")
+    context_inst = f"## CONTEXT\n{context}" if context else ""
     
     # Profile instruction
     profile_action = supervisor_output.get("profile_action", "none")
@@ -247,16 +188,14 @@ def build_doc_prompt(supervisor_output, username="Guest", profile=None, recent_t
     history_context = ""
     if recent_transcript:
         lines = recent_transcript.strip().split('\n')[-6:]
-        history_context = f"## RECENT CONVERSATION\n" + "\n".join(lines)
+        history_context = f"## RECENT\n" + "\n".join(lines)
     
     system_prompt = DOC_SYSTEM_TEMPLATE.format(
         username=username,
-        style_instruction=style_inst,
+        length_instruction=length_inst,
         tone_instruction=tone_inst,
-        punctuation_instruction=punct_inst,
-        vocabulary_instruction=vocab_inst,
-        style_notes_instruction=style_notes_inst,
         focus_instruction=focus_inst,
+        context_instruction=context_inst,
         profile_instruction=profile_inst,
         profile_context=profile_context,
         history_context=history_context
