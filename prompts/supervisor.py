@@ -35,6 +35,9 @@ Output ONLY the JSON object."""
 SUPERVISOR_USER_TEMPLATE = """## USER MESSAGE
 {user_input}
 
+## DOC'S STYLE SETTING
+{doc_style}
+
 ## CURRENT PROFILE
 {profile_json}
 
@@ -47,8 +50,17 @@ SUPERVISOR_USER_TEMPLATE = """## USER MESSAGE
 Analyze and output JSON instructions for Doc:"""
 
 
+DOC_STYLE_DESCRIPTIONS = {
+    "questioning": "Be curious and inquisitive. Ask follow-up questions to learn more.",
+    "professional": "Be clinical and direct. Focus on facts and clear guidance.",
+    "friendly": "Be warm and personable. Show genuine interest and care."
+}
+
+
 DOC_SYSTEM_TEMPLATE = """You are Doc, a health assistant helping {username}.
 
+## STYLE
+{doc_style_instruction}
 {length_instruction}
 {tone_instruction}
 
@@ -60,7 +72,6 @@ DOC_SYSTEM_TEMPLATE = """You are Doc, a health assistant helping {username}.
 {profile_instruction}
 
 ## RULES
-- Roughly match the user's message length
 - End with ONE question
 - Only emit **PROFILE_UPDATE** if user shared health info
 
@@ -107,15 +118,20 @@ def get_missing_fields(profile):
     return missing
 
 
-def build_supervisor_prompt(user_input, profile=None, recent_transcript=""):
+def build_supervisor_prompt(user_input, profile=None, recent_transcript="", settings=None):
     """Build the prompt for the supervisor (first LLM call)"""
     profile = profile or {}
+    settings = settings or {}
     missing = get_missing_fields(profile)
+    
+    doc_style = settings.get("doc_style", "questioning")
+    doc_style_desc = DOC_STYLE_DESCRIPTIONS.get(doc_style, DOC_STYLE_DESCRIPTIONS["questioning"])
     
     return {
         "system": SUPERVISOR_SYSTEM,
         "user": SUPERVISOR_USER_TEMPLATE.format(
             user_input=user_input,
+            doc_style=f"{doc_style}: {doc_style_desc}",
             profile_json=json.dumps(profile, indent=2) if profile else "{}",
             missing_fields=", ".join(missing) if missing else "None - profile is complete",
             recent_transcript=recent_transcript[-1000:] if recent_transcript else "No previous conversation"
@@ -154,9 +170,14 @@ def parse_supervisor_response(response_text):
         return defaults
 
 
-def build_doc_prompt(supervisor_output, username="Guest", profile=None, recent_transcript=""):
+def build_doc_prompt(supervisor_output, username="Guest", profile=None, recent_transcript="", settings=None):
     """Build Doc's system prompt from supervisor instructions"""
     profile = profile or {}
+    settings = settings or {}
+    
+    # Doc style from settings
+    doc_style = settings.get("doc_style", "questioning")
+    doc_style_inst = DOC_STYLE_DESCRIPTIONS.get(doc_style, DOC_STYLE_DESCRIPTIONS["questioning"])
     
     # Length instruction
     length = supervisor_output.get("length", "medium")
@@ -192,6 +213,7 @@ def build_doc_prompt(supervisor_output, username="Guest", profile=None, recent_t
     
     system_prompt = DOC_SYSTEM_TEMPLATE.format(
         username=username,
+        doc_style_instruction=doc_style_inst,
         length_instruction=length_inst,
         tone_instruction=tone_inst,
         focus_instruction=focus_inst,

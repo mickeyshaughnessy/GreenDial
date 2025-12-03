@@ -83,7 +83,7 @@ def completion(prompt, model=None, temperature=None, max_tokens=None, system_pro
         return "Something went wrong. Please try again."
 
 
-def two_stage_completion(user_input, username="Guest", profile=None, recent_transcript=""):
+def two_stage_completion(user_input, username="Guest", profile=None, recent_transcript="", settings=None):
     """
     Two-stage LLM completion:
     1. Supervisor analyzes context and builds dynamic system prompt
@@ -95,10 +95,11 @@ def two_stage_completion(user_input, username="Guest", profile=None, recent_tran
     from prompts import supervisor
     
     profile = profile or {}
+    settings = settings or {}
     
     # Stage 1: Supervisor
     print("[LLM] Stage 1: Supervisor analyzing...")
-    sup_prompt = supervisor.build_supervisor_prompt(user_input, profile, recent_transcript)
+    sup_prompt = supervisor.build_supervisor_prompt(user_input, profile, recent_transcript, settings)
     
     supervisor_response = completion(
         prompt=sup_prompt["user"],
@@ -113,7 +114,7 @@ def two_stage_completion(user_input, username="Guest", profile=None, recent_tran
     
     # Stage 2: Doc
     print("[LLM] Stage 2: Doc responding...")
-    doc_system = supervisor.build_doc_prompt(sup_output, username, profile, recent_transcript)
+    doc_system = supervisor.build_doc_prompt(sup_output, username, profile, recent_transcript, settings)
     
     doc_response = completion(
         prompt=user_input,

@@ -569,6 +569,7 @@ def handle_chat(request):
     user = get_user_data(user_id) if user_id else {}
     username = user.get('username', 'Guest')
     profile = user.get('profile', {})
+    settings = user.get('settings', {})
     transcript = user.get('transcript', '') or _sessions.get(session_id, {}).get('transcript', '')
     recent_transcript = _get_recent_transcript(transcript, max_lines=8)
     
@@ -578,7 +579,8 @@ def handle_chat(request):
             user_input=user_input,
             username=username,
             profile=profile,
-            recent_transcript=recent_transcript
+            recent_transcript=recent_transcript,
+            settings=settings
         )
     except Exception as e:
         print(f"[Chat] Completion error: {e}")
