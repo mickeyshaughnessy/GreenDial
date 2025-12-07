@@ -11,7 +11,8 @@ from datetime import datetime
 import config
 import utils
 import s3_storage
-from prompts import doc
+from prompts import doc, notifications
+import threading
 
 # In-memory session cache
 _sessions = {}
@@ -48,6 +49,9 @@ def handle_auth(request):
     if not request.get('create_new'):
         if user:
             if user.get('passphrase') == passphrase:
+                # Generate notifications in background on login
+                threading.Thread(target=generate_login_notifications, args=(user_id,)).start()
+                
                 return json.dumps({
                     "user_id": user_id,
                     "username": user.get('username', username),
@@ -84,6 +88,9 @@ def handle_auth(request):
     try:
         s3_storage.save_user(user_id, new_user)
         _cache_user(user_id, new_user)
+        
+        # Generate initial notifications in background
+        threading.Thread(target=generate_login_notifications, args=(user_id,)).start()
     except Exception as e:
         print(f"[Auth] Failed to save user: {e}")
         return json.dumps({"error": "Failed to create account"}), 500
@@ -242,6 +249,78 @@ def handle_dismiss_notification(user_id, notification_id):
         print(f"[Notifications] Failed to dismiss: {e}")
     
     return json.dumps({"success": True})
+
+
+def generate_login_notifications(user_id):
+    """Background task to generate contextual notifications"""
+    import time
+    
+    # Wait a moment to not impact login response time
+    time.sleep(2)
+    
+    user = get_user_data(user_id)
+    if not user:
+        return
+        
+    if not user.get('settings', {}).get('notifications_enabled', True):
+        return
+
+    # Check if we generated notifications recently (5 min debounce)
+    last_gen = user.get('last_notification_gen')
+    if last_gen:
+        try:
+            last_dt = datetime.fromisoformat(last_gen.replace('Z', '+00:00'))
+            if (datetime.utcnow() - last_dt.replace(tzinfo=None)).total_seconds() < 300:
+                return
+        except:
+            pass
+
+    transcript = user.get('transcript', '')
+    profile = user.get('profile', {})
+    
+    prompt = notifications.USER_TEMPLATE.format(
+        profile_json=json.dumps(profile, indent=2),
+        transcript=transcript[-2000:] if transcript else ""
+    )
+    
+    response = utils.completion(
+        prompt=prompt,
+        system_prompt=notifications.SYSTEM_PROMPT,
+        temperature=0.7,
+        max_tokens=400
+    )
+    
+    try:
+        # Extract JSON
+        text = response.strip()
+        if "```json" in text:
+            text = text.split("```json")[1].split("```")[0]
+        elif "```" in text:
+            text = text.split("```")[1].split("```")[0]
+            
+        data = json.loads(text)
+        new_notes = data.get('notifications', [])
+        
+        if new_notes:
+            current_notes = user.get('notifications', [])
+            
+            # Add IDs and timestamps
+            for note in new_notes:
+                note['id'] = str(uuid.uuid4())
+                note['created'] = datetime.utcnow().isoformat()
+                note['read'] = False
+                current_notes.append(note)
+            
+            # Limit to 20
+            user['notifications'] = current_notes[-20:]
+            user['last_notification_gen'] = datetime.utcnow().isoformat()
+            
+            s3_storage.save_user(user_id, user)
+            _cache_user(user_id, user)
+            print(f"[Notifications] Generated {len(new_notes)} for {user_id}")
+            
+    except Exception as e:
+        print(f"[Notifications] Generation failed: {e}")
 
 
 def generate_notification(user_id):

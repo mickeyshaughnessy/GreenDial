@@ -3,6 +3,10 @@ GreenDial Configuration
 All sensitive values loaded from environment variables
 """
 import os
+from dotenv import load_dotenv
+
+# Load .env file
+load_dotenv()
 
 # Flask
 SECRET_KEY = os.environ.get('SECRET_KEY', 'greendial-dev-secret-key')
