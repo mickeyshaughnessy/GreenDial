@@ -59,7 +59,10 @@ def completion(prompt, model=None, temperature=None, max_tokens=None, system_pro
             return "I'm being rate limited. Please try again in a moment."
         
         if response.status_code >= 400:
-            print(f"[LLM] Error: {response.status_code} - {response.text[:200]}")
+            err_msg = f"[LLM] Error: {response.status_code} - {response.text[:200]}"
+            print(err_msg)
+            with open("/tmp/llm_debug.log", "a") as f:
+                f.write(err_msg + "\n")
             return "I'm having trouble responding right now. Please try again."
         
         result = response.json()
