@@ -73,7 +73,7 @@ DOC_SYSTEM_TEMPLATE = """You are Doc, a health assistant helping {username}.
 
 ## RULES
 - End with ONE question
-- If user shared health info, emit **PROFILE_UPDATE** {"fieldname": "value"} (e.g. {"goals": "lose weight"})
+- If user shared health info, emit **PROFILE_UPDATE** {{"fieldname": "value"}} (e.g. {{"goals": "lose weight"}})
 
 {profile_context}
 
