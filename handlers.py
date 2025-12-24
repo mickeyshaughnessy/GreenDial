@@ -11,12 +11,15 @@ from datetime import datetime
 import config
 import utils
 import s3_storage
-from prompts import doc, notifications
+from prompts import doc, notifications, facilitator
 import threading
 
 # In-memory session cache
 _sessions = {}
 _user_cache = {}
+_participant_cache = {}
+_campaign_cache = {}
+_group_cache = {}
 
 
 def _cache_user(user_id, data):
@@ -25,6 +28,39 @@ def _cache_user(user_id, data):
 
 def _get_cached_user(user_id):
     return _user_cache.get(user_id)
+
+
+def _cache_participant(participant_id, data):
+    _participant_cache[participant_id] = data
+
+
+def _get_cached_participant(participant_id):
+    return _participant_cache.get(participant_id)
+
+
+def _cache_campaign(campaign_id, data):
+    _campaign_cache[campaign_id] = data
+
+
+def _get_cached_campaign(campaign_id):
+    return _campaign_cache.get(campaign_id)
+
+
+def _cache_group(group_id, data):
+    _group_cache[group_id] = data
+
+
+def _get_cached_group(group_id):
+    return _group_cache.get(group_id)
+
+
+def _normalize_phone(phone):
+    digits = re.sub(r"\D", "", phone or "")
+    return digits[-15:] if digits else ""
+
+
+def _now_iso():
+    return datetime.utcnow().isoformat()
 
 
 # ============ AUTHENTICATION ============
@@ -751,3 +787,442 @@ def handle_clear_transcript(user_id):
         return json.dumps({"error": "Failed to clear transcript"}), 500
     
     return json.dumps({"success": True})
+
+
+# ============ UNPROMPTED (GROUP FACILITATOR) ============
+
+
+def _build_participant_id(phone):
+    norm = _normalize_phone(phone)
+    if norm:
+        return f"pt_{norm}"
+    return f"pt_{uuid.uuid4().hex[:8]}"
+
+
+def _get_participant_record(participant_id):
+    if not participant_id:
+        return None
+    cached = _get_cached_participant(participant_id)
+    if cached:
+        return cached
+    try:
+        participant = s3_storage.get_unprompted_participant(participant_id)
+        if participant:
+            _cache_participant(participant_id, participant)
+            return participant
+    except Exception as e:
+        print(f"[Unprompted] Failed to get participant: {e}")
+    return None
+
+
+def _save_participant_record(participant):
+    if not participant or not participant.get('participant_id'):
+        return
+    try:
+        s3_storage.save_unprompted_participant(participant)
+        _cache_participant(participant['participant_id'], participant)
+    except Exception as e:
+        print(f"[Unprompted] Failed to save participant: {e}")
+
+
+def _get_campaign_record(campaign_id):
+    if not campaign_id:
+        return None
+    cached = _get_cached_campaign(campaign_id)
+    if cached:
+        return cached
+    try:
+        campaign = s3_storage.get_unprompted_campaign(campaign_id)
+        if campaign:
+            _cache_campaign(campaign_id, campaign)
+            return campaign
+    except Exception as e:
+        print(f"[Unprompted] Failed to get campaign: {e}")
+    return None
+
+
+def _save_campaign_record(campaign):
+    if not campaign or not campaign.get('campaign_id'):
+        return
+    try:
+        s3_storage.save_unprompted_campaign(campaign)
+        _cache_campaign(campaign['campaign_id'], campaign)
+    except Exception as e:
+        print(f"[Unprompted] Failed to save campaign: {e}")
+
+
+def _get_group_record(group_id):
+    if not group_id:
+        return None
+    cached = _get_cached_group(group_id)
+    if cached:
+        return cached
+    try:
+        group = s3_storage.get_unprompted_group(group_id)
+        if group:
+            _cache_group(group_id, group)
+            return group
+    except Exception as e:
+        print(f"[Unprompted] Failed to get group: {e}")
+    return None
+
+
+def _save_group_record(group):
+    if not group or not group.get('group_id'):
+        return
+    try:
+        s3_storage.save_unprompted_group(group)
+        _cache_group(group['group_id'], group)
+    except Exception as e:
+        print(f"[Unprompted] Failed to save group: {e}")
+
+
+def _ensure_jeeves_in_group(group):
+    participants = group.setdefault('participants', [])
+    if 'jeeves' not in participants:
+        participants.insert(0, 'jeeves')
+    group['participants'] = participants
+
+
+def _hydrate_participants(participant_ids):
+    hydrated = []
+    for pid in participant_ids or []:
+        if pid == 'jeeves':
+            hydrated.append({
+                "participant_id": "jeeves",
+                "name": "Jeeves",
+                "phone": None,
+                "location": None
+            })
+            continue
+        participant = _get_participant_record(pid)
+        if participant:
+            hydrated.append({
+                "participant_id": participant.get('participant_id'),
+                "name": participant.get('name'),
+                "phone": participant.get('phone'),
+                "location": participant.get('location')
+            })
+    return hydrated
+
+
+def _group_summary(group):
+    return {
+        "group_id": group.get('group_id'),
+        "topic": group.get('topic'),
+        "location": group.get('location'),
+        "participant_count": len([p for p in group.get('participants', []) if p != 'jeeves']),
+        "last_updated": group.get('last_updated')
+    }
+
+
+def _ensure_default_campaign(location=None):
+    campaigns = s3_storage.list_unprompted_campaigns()
+    for camp in campaigns:
+        if camp.get('slug') == 'default' or camp.get('name', '').lower() == 'community agreements':
+            return camp
+    now = _now_iso()
+    default_campaign = {
+        "campaign_id": f"camp_{uuid.uuid4().hex[:6]}",
+        "name": "Community Agreements",
+        "slug": "default",
+        "topics": ["general"],
+        "location": location or "unspecified",
+        "created": now,
+        "created_by": None,
+        "groups": []
+    }
+    _save_campaign_record(default_campaign)
+    return default_campaign
+
+
+def _find_group_for_topic(campaign, topic, location=None):
+    for gmeta in campaign.get('groups', []):
+        if gmeta.get('topic') != topic:
+            continue
+        loc_match = (not location) or (not gmeta.get('location')) or (gmeta.get('location') == location)
+        if not loc_match:
+            continue
+        group = _get_group_record(gmeta.get('group_id'))
+        if not group:
+            continue
+        current_size = len([p for p in group.get('participants', []) if p != 'jeeves'])
+        if current_size < 5:
+            return group
+    return None
+
+
+def _create_group(campaign, topic, location=None):
+    now = _now_iso()
+    group = {
+        "group_id": f"gc_{uuid.uuid4().hex[:8]}",
+        "campaign_id": campaign.get('campaign_id'),
+        "topic": topic,
+        "location": location or campaign.get('location') or "unspecified",
+        "participants": ["jeeves"],
+        "messages": [],
+        "created": now,
+        "last_updated": now
+    }
+    _append_message_to_group(group, "jeeves", "Jeeves", "facilitator", "I'm Jeeves, here to keep the conversation flowing. Share your thoughts when you're ready.", channel="system")
+    _save_group_record(group)
+    campaign.setdefault('groups', []).append({
+        "group_id": group['group_id'],
+        "topic": topic,
+        "location": group['location'],
+        "participant_count": 0,
+        "last_updated": now
+    })
+    _save_campaign_record(campaign)
+    return group
+
+
+def _assign_participant_to_campaign(participant, campaign, topics=None):
+    if not participant or not campaign:
+        return []
+    participant.setdefault('campaign_assignments', {})
+    if isinstance(topics, str):
+        topics = [t.strip() for t in topics.split(',') if t.strip()]
+    topics = topics or campaign.get('topics') or ["general"]
+    topics = [t.strip() for t in topics if t]
+    topics = topics[:3]
+    assigned = []
+    for topic in topics:
+        group = _find_group_for_topic(campaign, topic, participant.get('location'))
+        if not group:
+            group = _create_group(campaign, topic, participant.get('location'))
+        current_size = len([p for p in group.get('participants', []) if p != 'jeeves'])
+        if participant.get('participant_id') not in group.get('participants', []):
+            if current_size >= 5:
+                group = _create_group(campaign, topic, participant.get('location'))
+            group.setdefault('participants', []).append(participant['participant_id'])
+        group['last_updated'] = _now_iso()
+        _save_group_record(group)
+        participant['campaign_assignments'].setdefault(campaign['campaign_id'], [])
+        if group['group_id'] not in participant['campaign_assignments'][campaign['campaign_id']]:
+            participant['campaign_assignments'][campaign['campaign_id']].append(group['group_id'])
+        if not participant.get('default_group_id'):
+            participant['default_group_id'] = group['group_id']
+        assigned.append(_group_summary(group))
+        # Update campaign metadata
+        for gmeta in campaign.get('groups', []):
+            if gmeta.get('group_id') == group['group_id']:
+                gmeta['participant_count'] = len([p for p in group.get('participants', []) if p != 'jeeves'])
+                gmeta['last_updated'] = group['last_updated']
+                break
+    participant['last_active'] = _now_iso()
+    _save_campaign_record(campaign)
+    _save_participant_record(participant)
+    return assigned
+
+
+def _append_message_to_group(group, sender_id, sender_name, sender_type, text, channel="web"):
+    if not text:
+        return None
+    message = {
+        "id": str(uuid.uuid4()),
+        "sender_id": sender_id,
+        "sender_name": sender_name,
+        "sender_type": sender_type,
+        "text": text,
+        "channel": channel,
+        "timestamp": _now_iso()
+    }
+    group.setdefault('messages', []).append(message)
+    if len(group['messages']) > 200:
+        group['messages'] = group['messages'][-200:]
+    group['last_updated'] = message['timestamp']
+    return message
+
+
+def _prepare_group_response(group, campaign):
+    _ensure_jeeves_in_group(group)
+    participants = _hydrate_participants(group.get('participants', []))
+    return {
+        "group_id": group.get('group_id'),
+        "campaign_id": group.get('campaign_id'),
+        "topic": group.get('topic'),
+        "location": group.get('location'),
+        "participants": participants,
+        "messages": group.get('messages', []),
+        "campaign": {
+            "campaign_id": campaign.get('campaign_id') if campaign else None,
+            "name": campaign.get('name') if campaign else None,
+            "topics": campaign.get('topics') if campaign else [],
+            "location": campaign.get('location') if campaign else None
+        }
+    }
+
+
+def _process_unprompted_message(participant, group, campaign, text, channel="web"):
+    text = (text or "").strip()
+    if not text:
+        return {"error": "Empty message"}
+    if not group or not campaign:
+        return {"error": "Group not found"}
+    _ensure_jeeves_in_group(group)
+    if participant.get('participant_id') not in group.get('participants', []):
+        current_size = len([p for p in group.get('participants', []) if p != 'jeeves'])
+        if current_size >= 5:
+            return {"error": "Group is full"}
+        group['participants'].append(participant['participant_id'])
+    user_msg = _append_message_to_group(group, participant['participant_id'], participant.get('name', 'Participant'), "participant", text, channel=channel)
+    prompt = facilitator.build_prompt(campaign, group, group.get('messages', []), participants=_hydrate_participants(group.get('participants', [])))
+    facilitator_response = utils.completion(
+        prompt=prompt,
+        system_prompt=facilitator.SYSTEM_PROMPT,
+        temperature=0.6,
+        max_tokens=220
+    )
+    facilitator_text = (facilitator_response or "...").strip() or "..."
+    facilitator_msg = _append_message_to_group(group, "jeeves", "Jeeves", "facilitator", facilitator_text, channel="ai")
+    _save_group_record(group)
+    participant['last_active'] = _now_iso()
+    _save_participant_record(participant)
+    return {
+        "message": user_msg,
+        "facilitator_message": facilitator_msg,
+        "reply": facilitator_text,
+        "group": _prepare_group_response(group, campaign)
+    }
+
+
+def handle_unprompted_login(request):
+    name = (request.get('name') or "").strip()
+    phone = (request.get('phone') or "").strip()
+    location = (request.get('location') or "").strip()
+    if not phone:
+        return json.dumps({"error": "Phone number required"}), 400
+    if not name:
+        name = "Guest"
+    participant_id = _build_participant_id(phone)
+    participant = _get_participant_record(participant_id) or {
+        "participant_id": participant_id,
+        "phone": phone,
+        "phone_normalized": _normalize_phone(phone),
+        "created": _now_iso(),
+        "campaign_assignments": {}
+    }
+    participant['name'] = name
+    participant['location'] = location
+    participant['last_active'] = _now_iso()
+    _save_participant_record(participant)
+    return json.dumps({
+        "participant": participant,
+        "campaign_assignments": participant.get('campaign_assignments', {})
+    })
+
+
+def handle_unprompted_create_campaign(request):
+    name = (request.get('name') or "").strip()
+    if not name:
+        return json.dumps({"error": "Campaign name required"}), 400
+    topics = request.get('topics') or []
+    if isinstance(topics, str):
+        topics = [t.strip() for t in topics.split(',') if t.strip()]
+    location = (request.get('location') or "").strip()
+    campaign = {
+        "campaign_id": f"camp_{uuid.uuid4().hex[:8]}",
+        "name": name,
+        "topics": topics or ["general"],
+        "location": location or "unspecified",
+        "created": _now_iso(),
+        "created_by": request.get('created_by'),
+        "groups": []
+    }
+    _save_campaign_record(campaign)
+    return json.dumps({"campaign": campaign})
+
+
+def handle_unprompted_list_campaigns():
+    try:
+        campaigns = s3_storage.list_unprompted_campaigns()
+    except Exception as e:
+        print(f"[Unprompted] List campaigns failed: {e}")
+        campaigns = []
+    return json.dumps({"campaigns": campaigns})
+
+
+def handle_unprompted_assign(request):
+    participant_id = request.get('participant_id')
+    campaign_id = request.get('campaign_id')
+    topics = request.get('topics')
+    participant = _get_participant_record(participant_id)
+    campaign = _get_campaign_record(campaign_id)
+    if not participant:
+        return json.dumps({"error": "Participant not found"}), 404
+    if not campaign:
+        return json.dumps({"error": "Campaign not found"}), 404
+    assigned = _assign_participant_to_campaign(participant, campaign, topics)
+    return json.dumps({
+        "participant": participant,
+        "assigned_groups": assigned,
+        "campaign": campaign
+    })
+
+
+def handle_unprompted_get_group(group_id):
+    group = _get_group_record(group_id)
+    if not group:
+        return json.dumps({"error": "Group not found"}), 404
+    campaign = _get_campaign_record(group.get('campaign_id'))
+    return json.dumps({"group": _prepare_group_response(group, campaign)})
+
+
+def handle_unprompted_message(request):
+    participant_id = request.get('participant_id')
+    group_id = request.get('group_id')
+    text = request.get('text', '')
+    channel = request.get('channel', 'web')
+    participant = _get_participant_record(participant_id)
+    group = _get_group_record(group_id)
+    if not participant:
+        return json.dumps({"error": "Participant not found"}), 404
+    if not group:
+        return json.dumps({"error": "Group not found"}), 404
+    campaign = _get_campaign_record(group.get('campaign_id'))
+    result = _process_unprompted_message(participant, group, campaign, text, channel=channel)
+    if result.get('error'):
+        return json.dumps(result), 400
+    return json.dumps(result)
+
+
+def handle_unprompted_sms(form_data):
+    phone = (form_data.get('From') or "").strip()
+    text = (form_data.get('Body') or "").strip()
+    if not phone or not text:
+        return "", 400
+    participant_id = _build_participant_id(phone)
+    participant = _get_participant_record(participant_id)
+    if not participant:
+        participant = {
+            "participant_id": participant_id,
+            "phone": phone,
+            "phone_normalized": _normalize_phone(phone),
+            "name": form_data.get('ProfileName') or "SMS Friend",
+            "location": form_data.get('FromCity') or "",
+            "created": _now_iso(),
+            "campaign_assignments": {}
+        }
+        _save_participant_record(participant)
+    campaign = None
+    if participant.get('campaign_assignments'):
+        first_campaign_id = list(participant['campaign_assignments'].keys())[0]
+        campaign = _get_campaign_record(first_campaign_id)
+    if not campaign:
+        campaign = _ensure_default_campaign(participant.get('location'))
+        _assign_participant_to_campaign(participant, campaign, campaign.get('topics'))
+    group_id = participant.get('default_group_id')
+    if not group_id:
+        assignments = _assign_participant_to_campaign(participant, campaign, campaign.get('topics'))
+        if assignments:
+            group_id = assignments[0].get('group_id')
+    group = _get_group_record(group_id) if group_id else None
+    if not group:
+        fallback_topics = campaign.get('topics') or ['general']
+        group = _create_group(campaign, fallback_topics[0], participant.get('location'))
+        _assign_participant_to_campaign(participant, campaign, [group.get('topic')])
+    result = _process_unprompted_message(participant, group, campaign, text, channel="sms")
+    reply_text = (result.get('reply') or "...").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+    twiml = f"<?xml version=\"1.0\" encoding=\"UTF-8\"?><Response><Message>{reply_text}</Message></Response>"
+    return twiml

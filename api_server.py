@@ -25,6 +25,11 @@ def index():
     return send_from_directory('.', 'index.html')
 
 
+@app.route("/unprompted", methods=['GET'])
+def unprompted_index():
+    return send_from_directory('.', 'unprompted.html')
+
+
 @app.route("/ping", methods=['GET'])
 def ping():
     return Response(json.dumps({"status": "ok", "service": "greendial"}), mimetype='application/json')
@@ -179,6 +184,73 @@ def get_conversation(user_id, conversation_id):
     if isinstance(result, tuple):
         return Response(result[0], status=result[1], mimetype='application/json')
     return Response(result, mimetype='application/json')
+
+
+# ============ UNPROMPTED (GROUP FACILITATOR) ============
+
+@app.route("/unprompted/login", methods=['POST', 'OPTIONS'])
+def unprompted_login():
+    if request.method == 'OPTIONS':
+        return Response('', status=200)
+    req = request.get_json() or {}
+    result = handlers.handle_unprompted_login(req)
+    if isinstance(result, tuple):
+        return Response(result[0], status=result[1], mimetype='application/json')
+    return Response(result, mimetype='application/json')
+
+
+@app.route("/unprompted/campaigns", methods=['GET', 'POST', 'OPTIONS'])
+def unprompted_campaigns():
+    if request.method == 'OPTIONS':
+        return Response('', status=200)
+    if request.method == 'GET':
+        result = handlers.handle_unprompted_list_campaigns()
+        return Response(result, mimetype='application/json')
+    req = request.get_json() or {}
+    result = handlers.handle_unprompted_create_campaign(req)
+    if isinstance(result, tuple):
+        return Response(result[0], status=result[1], mimetype='application/json')
+    return Response(result, mimetype='application/json')
+
+
+@app.route("/unprompted/assign", methods=['POST', 'OPTIONS'])
+def unprompted_assign():
+    if request.method == 'OPTIONS':
+        return Response('', status=200)
+    req = request.get_json() or {}
+    result = handlers.handle_unprompted_assign(req)
+    if isinstance(result, tuple):
+        return Response(result[0], status=result[1], mimetype='application/json')
+    return Response(result, mimetype='application/json')
+
+
+@app.route("/unprompted/groups/<group_id>", methods=['GET', 'OPTIONS'])
+def unprompted_group(group_id):
+    if request.method == 'OPTIONS':
+        return Response('', status=200)
+    result = handlers.handle_unprompted_get_group(group_id)
+    if isinstance(result, tuple):
+        return Response(result[0], status=result[1], mimetype='application/json')
+    return Response(result, mimetype='application/json')
+
+
+@app.route("/unprompted/message", methods=['POST', 'OPTIONS'])
+def unprompted_message():
+    if request.method == 'OPTIONS':
+        return Response('', status=200)
+    req = request.get_json() or {}
+    result = handlers.handle_unprompted_message(req)
+    if isinstance(result, tuple):
+        return Response(result[0], status=result[1], mimetype='application/json')
+    return Response(result, mimetype='application/json')
+
+
+@app.route("/unprompted/sms", methods=['POST'])
+def unprompted_sms():
+    result = handlers.handle_unprompted_sms(request.form)
+    if isinstance(result, tuple):
+        return Response(result[0], status=result[1], mimetype='application/xml')
+    return Response(result, mimetype='application/xml')
 
 
 # ============ THIRD-PARTY API ============

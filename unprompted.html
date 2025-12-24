@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Unprompted - Group Facilitator</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: radial-gradient(circle at 20% 20%, rgba(16,185,129,0.08), transparent 30%),
+                  radial-gradient(circle at 80% 0%, rgba(99,102,241,0.12), transparent 30%),
+                  #0b1021;
+      color: #e6f3ff;
+      min-height: 100vh;
+    }
+    header {
+      padding: 14px 22px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(255,255,255,0.03);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      position: sticky;
+      top: 0;
+      backdrop-filter: blur(12px);
+      z-index: 10;
+    }
+    .brand { font-size: 20px; font-weight: 700; color: #6ee7b7; display: flex; align-items: center; gap: 10px; }
+    .badge { padding: 6px 12px; background: rgba(255,255,255,0.06); border-radius: 14px; font-size: 12px; color: #9fb7ff; }
+    .layout { display: grid; grid-template-columns: 380px 1fr; gap: 18px; padding: 20px; max-width: 1400px; margin: 0 auto; }
+    @media (max-width: 1000px) { .layout { grid-template-columns: 1fr; } }
+    .panel {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.35);
+    }
+    .panel + .panel { margin-top: 12px; }
+    h2 { font-size: 16px; margin-bottom: 12px; color: #cfe6ff; }
+    label { display: block; font-size: 12px; color: rgba(255,255,255,0.6); margin-bottom: 6px; letter-spacing: 0.02em; }
+    input, textarea { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.05); color: #e6f3ff; font-size: 14px; }
+    input:focus, textarea:focus { outline: none; border-color: #6ee7b7; box-shadow: 0 0 0 3px rgba(110,231,183,0.15); }
+    .btn { padding: 10px 14px; border: none; border-radius: 10px; cursor: pointer; font-size: 14px; color: #0b1021; background: #6ee7b7; transition: transform 0.12s, box-shadow 0.12s; font-weight: 600; }
+    .btn:hover { transform: translateY(-1px); box-shadow: 0 10px 24px rgba(110,231,183,0.25); }
+    .btn.secondary { background: rgba(255,255,255,0.08); color: #cfe6ff; border: 1px solid rgba(255,255,255,0.12); }
+    .stack { display: flex; flex-direction: column; gap: 10px; }
+    .row { display: flex; gap: 10px; }
+    .row > * { flex: 1; }
+    .list { display: flex; flex-direction: column; gap: 10px; }
+    .card {
+      padding: 12px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+    .card header { padding: 0; background: none; border: none; margin-bottom: 6px; position: static; }
+    .card-title { font-weight: 600; color: #e6f3ff; }
+    .meta { font-size: 12px; color: rgba(255,255,255,0.6); margin-top: 4px; }
+    .pill { display: inline-flex; align-items: center; padding: 4px 8px; border-radius: 10px; background: rgba(255,255,255,0.08); color: #9fb7ff; font-size: 12px; margin-right: 6px; }
+    .chat-panel { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; display: flex; flex-direction: column; min-height: 75vh; box-shadow: 0 20px 50px rgba(0,0,0,0.35); }
+    .chat-header { padding: 14px 16px; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.02); }
+    .chat-topic { font-weight: 700; color: #6ee7b7; }
+    .chat-body { flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+    .msg { max-width: 78%; padding: 12px 14px; border-radius: 12px; line-height: 1.5; font-size: 14px; }
+    .msg.participant { align-self: flex-end; background: linear-gradient(135deg, #6ee7b7, #34d399); color: #041013; border-bottom-right-radius: 4px; }
+    .msg.facilitator { align-self: flex-start; background: rgba(255,255,255,0.08); border-bottom-left-radius: 4px; }
+    .msg.system { align-self: center; background: rgba(99,102,241,0.12); color: #cdd9ff; }
+    .msg .byline { font-size: 12px; color: rgba(255,255,255,0.65); margin-bottom: 4px; display: flex; gap: 6px; align-items: center; }
+    .chat-input { padding: 14px; border-top: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.02); display: flex; gap: 10px; }
+    .chat-input input { flex: 1; }
+    .empty { color: rgba(255,255,255,0.5); text-align: center; padding: 20px; }
+    .status { margin-top: 10px; font-size: 13px; color: #fbbf24; }
+    .tagline { font-size: 13px; color: rgba(255,255,255,0.7); }
+    .subtitle { font-size: 13px; color: rgba(255,255,255,0.6); margin-bottom: 6px; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">Unprompted <span class="badge">Jeeves facilitates</span></div>
+    <div class="tagline">Comfortable group negotiation via web or SMS</div>
+  </header>
+
+  <main class="layout">
+    <section>
+      <div class="panel">
+        <h2>Join a group</h2>
+        <div class="stack">
+          <div>
+            <label for="name">Your name</label>
+            <input id="name" placeholder="Alex" />
+          </div>
+          <div>
+            <label for="phone">Phone (for SMS sync)</label>
+            <input id="phone" placeholder="+15551234567" />
+          </div>
+          <div>
+            <label for="location">Location</label>
+            <input id="location" placeholder="City, Region" />
+          </div>
+          <button class="btn" onclick="login()">Save & Continue</button>
+          <div id="status" class="status"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>New campaign</h2>
+        <div class="stack">
+          <div>
+            <label for="camp-name">Campaign name</label>
+            <input id="camp-name" placeholder="Neighborhood Agreements" />
+          </div>
+          <div>
+            <label for="camp-topics">Topics (comma separated)</label>
+            <input id="camp-topics" placeholder="parking, safety, shared spaces" />
+          </div>
+          <div class="row">
+            <div>
+              <label for="camp-location">Location</label>
+              <input id="camp-location" placeholder="City" />
+            </div>
+            <div style="align-self:flex-end; text-align:right;">
+              <button class="btn secondary" onclick="createCampaign()">Create</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Campaigns</h2>
+        <div id="campaign-list" class="list"></div>
+      </div>
+
+      <div class="panel">
+        <h2>Your groups</h2>
+        <div id="group-list" class="list"></div>
+      </div>
+    </section>
+
+    <section class="chat-panel">
+      <div class="chat-header">
+        <div>
+          <div class="chat-topic" id="chat-topic">No group selected</div>
+          <div class="subtitle" id="chat-subtitle">Pick or create a campaign to start.</div>
+        </div>
+        <div class="badge" id="chat-participants">0 participants</div>
+      </div>
+      <div class="chat-body" id="messages">
+        <div class="empty">Messages will appear here once you join a group.</div>
+      </div>
+      <div class="chat-input">
+        <input id="chat-input" placeholder="Share your thoughts..." onkeydown="if(event.key==='Enter'){sendMessage();}" />
+        <button class="btn" onclick="sendMessage()">Send</button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const state = {
+      participant: null,
+      campaigns: [],
+      groups: {},
+      activeGroupId: null
+    };
+
+    const statusEl = document.getElementById('status');
+    const campaignListEl = document.getElementById('campaign-list');
+    const groupListEl = document.getElementById('group-list');
+    const messagesEl = document.getElementById('messages');
+    const chatTopicEl = document.getElementById('chat-topic');
+    const chatSubtitleEl = document.getElementById('chat-subtitle');
+    const chatParticipantsEl = document.getElementById('chat-participants');
+
+    async function api(path, options = {}) {
+      const res = await fetch(path, Object.assign({ headers: { 'Content-Type': 'application/json' } }, options));
+      const text = await res.text();
+      let data = {};
+      try { data = text ? JSON.parse(text) : {}; } catch (e) { data = {}; }
+      if (!res.ok) throw new Error(data.error || 'Request failed');
+      return data;
+    }
+
+    function setStatus(msg) { statusEl.textContent = msg || ''; }
+
+    async function login() {
+      const name = document.getElementById('name').value;
+      const phone = document.getElementById('phone').value;
+      const location = document.getElementById('location').value;
+      setStatus('Saving...');
+      try {
+        const data = await api('/unprompted/login', { method: 'POST', body: JSON.stringify({ name, phone, location }) });
+        state.participant = data.participant;
+        state.participant.campaign_assignments = data.campaign_assignments || state.participant.campaign_assignments || {};
+        setStatus('Saved. Choose a campaign to join.');
+        await loadCampaigns();
+        await hydrateAssignments();
+      } catch (e) {
+        setStatus(e.message);
+      }
+    }
+
+    async function loadCampaigns() {
+      try {
+        const data = await api('/unprompted/campaigns');
+        state.campaigns = data.campaigns || [];
+        renderCampaigns();
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    async function createCampaign() {
+      const name = document.getElementById('camp-name').value;
+      const topics = document.getElementById('camp-topics').value;
+      const location = document.getElementById('camp-location').value;
+      try {
+        const data = await api('/unprompted/campaigns', { method: 'POST', body: JSON.stringify({ name, topics, location, created_by: state.participant?.participant_id }) });
+        state.campaigns.unshift(data.campaign);
+        renderCampaigns();
+        setStatus('Campaign created. Join it to start chatting.');
+      } catch (e) {
+        setStatus(e.message);
+      }
+    }
+
+    async function joinCampaign(id) {
+      if (!state.participant) { setStatus('Save your name and phone first.'); return; }
+      const input = document.querySelector(`[data-topics="${id}"]`);
+      const topics = input ? input.value : '';
+      try {
+        const data = await api('/unprompted/assign', { method: 'POST', body: JSON.stringify({ participant_id: state.participant.participant_id, campaign_id: id, topics }) });
+        state.participant = data.participant;
+        await hydrateAssignments();
+        setStatus('Assigned. Open a group to chat.');
+      } catch (e) {
+        setStatus(e.message);
+      }
+    }
+
+    async function hydrateAssignments() {
+      const assignments = state.participant?.campaign_assignments || {};
+      for (const groupIds of Object.values(assignments)) {
+        for (const gid of groupIds) {
+          await loadGroup(gid);
+        }
+      }
+      renderGroups();
+    }
+
+    async function loadGroup(groupId) {
+      try {
+        const data = await api(`/unprompted/groups/${groupId}`);
+        state.groups[groupId] = data.group;
+        if (!state.activeGroupId) state.activeGroupId = groupId;
+        if (state.activeGroupId === groupId) renderChat();
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function renderCampaigns() {
+      campaignListEl.innerHTML = '';
+      if (!state.campaigns.length) {
+        campaignListEl.innerHTML = '<div class="empty">No campaigns yet.</div>';
+        return;
+      }
+      state.campaigns.forEach(c => {
+        const div = document.createElement('div');
+        div.className = 'card';
+        div.innerHTML = `
+          <div class="card-title">${c.name}</div>
+          <div class="meta">Topics: ${(c.topics || []).join(', ') || 'general'} · Location: ${c.location || 'unspecified'}</div>
+          <div class="row" style="margin-top:8px; align-items:center;">
+            <input data-topics="${c.campaign_id}" placeholder="Topics to join (optional)" />
+            <button class="btn secondary" onclick="joinCampaign('${c.campaign_id}')">Join</button>
+          </div>
+        `;
+        campaignListEl.appendChild(div);
+      });
+    }
+
+    function renderGroups() {
+      groupListEl.innerHTML = '';
+      const groups = Object.values(state.groups);
+      if (!groups.length) { groupListEl.innerHTML = '<div class="empty">No groups yet.</div>'; return; }
+      groups.forEach(g => {
+        const div = document.createElement('div');
+        div.className = 'card';
+        div.innerHTML = `
+          <div class="card-title">${g.topic || 'Discussion'}</div>
+          <div class="meta">${g.location || 'unspecified'} · ${(g.participants || []).length} participants</div>
+          <button class="btn secondary" style="margin-top:8px;" onclick="setActiveGroup('${g.group_id}')">Open</button>
+        `;
+        groupListEl.appendChild(div);
+      });
+      renderChat();
+    }
+
+    function setActiveGroup(id) {
+      state.activeGroupId = id;
+      renderChat();
+    }
+
+    function renderChat() {
+      const group = state.groups[state.activeGroupId];
+      if (!group) {
+        chatTopicEl.textContent = 'No group selected';
+        chatSubtitleEl.textContent = 'Pick or create a campaign to start.';
+        chatParticipantsEl.textContent = '0 participants';
+        messagesEl.innerHTML = '<div class="empty">Messages will appear here once you join a group.</div>';
+        return;
+      }
+      chatTopicEl.textContent = group.topic || 'Discussion';
+      chatSubtitleEl.textContent = `${group.campaign?.name || 'Campaign'} · ${group.location || 'unspecified'}`;
+      chatParticipantsEl.textContent = `${group.participants?.length || 0} participants`;
+      messagesEl.innerHTML = '';
+      (group.messages || []).forEach(msg => {
+        const div = document.createElement('div');
+        div.className = `msg ${msg.sender_type || 'system'}`;
+        div.innerHTML = `<div class="byline">${msg.sender_name || 'Unknown'} · ${new Date(msg.timestamp || Date.now()).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>${msg.text}`;
+        messagesEl.appendChild(div);
+      });
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    async function sendMessage() {
+      const input = document.getElementById('chat-input');
+      const text = input.value.trim();
+      if (!text) return;
+      const groupId = state.activeGroupId;
+      if (!groupId || !state.participant) { setStatus('Join a group first.'); return; }
+      input.value = '';
+      try {
+        const data = await api('/unprompted/message', { method: 'POST', body: JSON.stringify({ participant_id: state.participant.participant_id, group_id: groupId, text, channel: 'web' }) });
+        state.groups[groupId] = data.group;
+        renderChat();
+      } catch (e) {
+        setStatus(e.message);
+      }
+    }
+
+    loadCampaigns();
+  </script>
+</body>
+</html>
