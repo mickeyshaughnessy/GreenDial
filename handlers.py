@@ -11,7 +11,7 @@ from datetime import datetime
 import config
 import utils
 import s3_storage
-from prompts import doc, notifications, facilitator
+from prompts import doc, doc_v2, notifications, facilitator
 import threading
 
 # In-memory session cache
@@ -632,30 +632,26 @@ def _get_summary(transcript, max_chars=2000):
 
 
 def _build_prompt(user_id=None, session_id=None, user_input=""):
-    """Build Doc's prompt dynamically using modular components"""
+    """Build Doc's prompt using Unprompted-style guided conversation"""
     user = get_user_data(user_id) if user_id else {}
     session = _sessions.get(session_id, {})
     
     # Get transcript
     transcript = user.get('transcript', '') or session.get('transcript', '')
     
-    # Split into recent and summary
-    recent_transcript = _get_recent_transcript(transcript, max_lines=8)
-    summary = _get_summary(transcript)
+    # Split into recent
+    recent_transcript = _get_recent_transcript(transcript, max_lines=10)
     
     # Get user info
     username = user.get('username', 'Guest')
     profile = user.get('profile', {})
-    settings = user.get('settings', {})
     
-    # Use the new modular prompt builder
-    return doc.build_prompt(
+    # Use the new Unprompted-style prompt builder
+    return doc_v2.build_doc_prompt(
         user_input=user_input,
-        username=username,
         profile=profile,
         recent_transcript=recent_transcript,
-        summary=summary,
-        settings=settings
+        username=username
     )
 
 
@@ -689,13 +685,18 @@ def handle_chat(request):
     recent_transcript = _get_recent_transcript(transcript, max_lines=8)
     
     try:
-        # Two-stage completion: Supervisor -> Doc
-        doc_response = utils.two_stage_completion(
-            user_input=user_input,
-            username=username,
-            profile=profile,
-            recent_transcript=recent_transcript,
-            settings=settings
+        # Build Unprompted-style guided prompt
+        prompt = _build_prompt(
+            user_id=user_id,
+            session_id=session_id,
+            user_input=user_input
+        )
+        
+        # Single-stage completion with enhanced prompt
+        doc_response = utils.completion(
+            prompt=prompt,
+            temperature=0.7,
+            max_tokens=config.LLM_MAX_TOKENS
         )
     except Exception as e:
         print(f"[Chat] Completion error: {e}")
