@@ -6,16 +6,17 @@ Proactive, guided medical profile building through natural conversation
 import json
 
 # ============ CORE IDENTITY ============
-CORE_IDENTITY = """You are Doc, a proactive health assistant who guides users through building a comprehensive medical profile.
+CORE_IDENTITY = """You are Doc, a focused health assistant who efficiently gathers medical information.
 
-Your approach:
-- You LEAD the conversation by asking thoughtful, probing questions
-- You explore each topic deeply before moving on
-- You connect different aspects of their health situation
-- You're genuinely curious about understanding their complete health picture
-- You never wait for the user to volunteer information - you actively seek it
+Your style:
+- Ask ONE direct question at a time
+- Keep questions SHORT - one line max
+- Don't comment on their answers - just record and move on
+- Drive the conversation forward with each question
+- Favor yes/no or brief-answer questions
+- Skip pleasantries - get straight to the point
 
-Your goal: Build a detailed, actionable health profile through natural conversation."""
+Your goal: Build a complete health profile efficiently through rapid-fire questions."""
 
 
 # ============ MEDICAL PROFILE STRUCTURE ============
@@ -26,71 +27,71 @@ PROFILE_FIELDS = {
         "priority": 1,
         "category": "Core",
         "questions": [
-            "What brings you here today? What's your main health concern?",
-            "What prompted you to start using this health assistant?",
-            "Is there a specific health issue you're trying to address?"
+            "What's your main health concern?",
+            "What brings you here?",
+            "What health issue are you dealing with?"
         ],
         "follow_ups": [
-            "When did you first notice this?",
-            "How has this been affecting your daily life?",
-            "Have you talked to a doctor about this yet?"
+            "When did this start?",
+            "Is it affecting your daily life?",
+            "Seen a doctor about it?"
         ]
     },
     "health_conditions": {
         "priority": 1,
         "category": "Core",
         "questions": [
-            "Do you have any ongoing health conditions or chronic issues?",
-            "Have you been diagnosed with any medical conditions?",
-            "Are there any health problems you're managing?"
+            "Any chronic health conditions?",
+            "Any diagnosed medical conditions?",
+            "Managing any health problems?"
         ],
         "follow_ups": [
-            "When were you diagnosed with {condition}?",
-            "How well controlled is your {condition}?",
-            "What treatments have you tried for {condition}?"
+            "When diagnosed with {condition}?",
+            "Is {condition} well controlled?",
+            "What treatments for {condition}?"
         ]
     },
     "medications": {
         "priority": 2,
         "category": "Treatment",
         "questions": [
-            "What medications are you currently taking?",
-            "Are you on any prescription drugs?",
-            "Do you take any supplements or vitamins?"
+            "Taking any medications?",
+            "On any prescriptions?",
+            "Any supplements or vitamins?"
         ],
         "follow_ups": [
-            "What's the dosage of {medication}?",
-            "How long have you been taking {medication}?",
-            "Are you experiencing any side effects?",
-            "Do you take it consistently?"
+            "Dosage of {medication}?",
+            "How long on {medication}?",
+            "Any side effects?",
+            "Taking it consistently?"
         ]
     },
     "allergies": {
         "priority": 2,
         "category": "Safety",
         "questions": [
-            "Do you have any allergies - to medications, foods, or anything else?",
-            "Are there any drugs or substances you can't take?",
-            "Have you had any allergic reactions in the past?"
+            "Any allergies?",
+            "Any drugs you can't take?",
+            "Past allergic reactions?"
         ],
         "follow_ups": [
-            "What happens when you're exposed to {allergen}?",
-            "How severe is the reaction?"
+            "What happens with {allergen}?",
+            "How severe?"
         ]
     },
     "symptoms": {
         "priority": 1,
         "category": "Current State",
         "questions": [
-            "What symptoms are you experiencing right now?",
-            "How are you feeling today?",
-            "Are there any specific discomforts or issues you're dealing with?"
+            "What symptoms now?",
+            "How are you feeling?",
+            "Any discomforts?"
         ],
         "follow_ups": [
-            "On a scale of 1-10, how severe is {symptom}?",
-            "When does {symptom} tend to be worst?",
-            "What makes {symptom} better or worse?",
-            "How long have you been experiencing {symptom}?"
+            "{symptom} severity 1-10?",
+            "When is {symptom} worst?",
+            "What makes {symptom} better?",
+            "How long with {symptom}?"
         ]
     },
     
@@ -99,53 +100,53 @@ PROFILE_FIELDS = {
         "priority": 3,
         "category": "Lifestyle",
         "questions": [
-            "How often do you exercise or stay physically active?",
-            "What's your typical activity level throughout the week?"
+            "How often do you exercise?",
+            "Active during the week?"
         ],
         "follow_ups": [
-            "What types of exercise do you do?",
-            "How long do your exercise sessions typically last?",
-            "What prevents you from exercising more often?"
+            "What type of exercise?",
+            "How long per session?",
+            "What stops you from exercising more?"
         ]
     },
     "diet_type": {
         "priority": 3,
         "category": "Lifestyle",
         "questions": [
-            "How would you describe your diet?",
-            "What does your typical daily eating pattern look like?"
+            "How's your diet?",
+            "Typical eating pattern?"
         ],
         "follow_ups": [
-            "Are you following any specific diet plan?",
-            "Do you have any dietary restrictions?",
-            "How many meals do you eat per day?",
-            "Do you struggle with any particular food cravings or aversions?"
+            "Following a specific diet?",
+            "Any dietary restrictions?",
+            "Meals per day?",
+            "Any food cravings?"
         ]
     },
     "sleep_hours": {
         "priority": 3,
         "category": "Lifestyle",
         "questions": [
-            "How many hours of sleep do you usually get?",
-            "How's your sleep quality?"
+            "Hours of sleep per night?",
+            "Sleep quality good?"
         ],
         "follow_ups": [
-            "Do you have trouble falling asleep or staying asleep?",
-            "Do you wake up feeling rested?",
-            "What's your typical bedtime and wake time?"
+            "Trouble falling or staying asleep?",
+            "Wake up rested?",
+            "Typical bedtime?"
         ]
     },
     "stress_level": {
         "priority": 3,
         "category": "Mental Health",
         "questions": [
-            "How would you rate your current stress level?",
-            "What's your mental and emotional state like lately?"
+            "Stress level 1-10?",
+            "Feeling stressed lately?"
         ],
         "follow_ups": [
-            "What are your main sources of stress?",
-            "How does stress affect you physically?",
-            "What do you do to manage stress?"
+            "Main stress sources?",
+            "Physical effects of stress?",
+            "How do you manage stress?"
         ]
     },
     
@@ -155,7 +156,7 @@ PROFILE_FIELDS = {
         "category": "Demographics",
         "questions": [
             "How old are you?",
-            "What's your age?"
+            "Your age?"
         ],
         "follow_ups": []
     },
@@ -163,39 +164,39 @@ PROFILE_FIELDS = {
         "priority": 4,
         "category": "Background",
         "questions": [
-            "Is there any family history of health conditions I should know about?",
-            "Do any diseases or conditions run in your family?"
+            "Any family health history?",
+            "Conditions run in family?"
         ],
         "follow_ups": [
-            "Did anyone in your immediate family have {condition}?",
-            "At what age were they diagnosed?"
+            "Who had {condition}?",
+            "Age when diagnosed?"
         ]
     },
     "previous_treatments": {
         "priority": 3,
         "category": "History",
         "questions": [
-            "Have you tried any treatments or therapies for your health concerns?",
-            "What have you already done to address this?"
+            "Tried any treatments?",
+            "What have you tried already?"
         ],
         "follow_ups": [
-            "How well did {treatment} work for you?",
-            "Why did you stop {treatment}?",
-            "Were there any problems with {treatment}?"
+            "Did {treatment} work?",
+            "Why stop {treatment}?",
+            "Problems with {treatment}?"
         ]
     },
     "goals": {
         "priority": 2,
         "category": "Objectives",
         "questions": [
-            "What are your health goals?",
-            "What would you like to improve or achieve with your health?",
-            "Where do you want to be in 3-6 months?"
+            "Health goals?",
+            "What do you want to improve?",
+            "Where in 3-6 months?"
         ],
         "follow_ups": [
-            "What's the biggest obstacle to reaching {goal}?",
-            "Have you tried working toward {goal} before?",
-            "What does success look like to you?"
+            "Biggest obstacle to {goal}?",
+            "Tried {goal} before?",
+            "What's success?"
         ]
     }
 }
@@ -290,59 +291,26 @@ def generate_follow_up_questions(field_name, field_value, profile):
 
 STAGE_INSTRUCTIONS = {
     "introduction": """
-## CONVERSATION STAGE: Introduction
-This is your first conversation with the user. Your approach:
-1. Give a warm, brief welcome (1-2 sentences max)
-2. Immediately ask them what brings them here today
-3. Listen carefully to understand their primary concern
-4. Ask 2-3 focused follow-up questions to understand the issue deeply
-5. Don't jump to other topics yet - explore this first concern thoroughly
-
-Remember: You're building trust and understanding their main issue first.
+## STAGE: Introduction
+Ask what brings them here. Then ask focused follow-ups about that concern.
 """,
     "core_assessment": """
-## CONVERSATION STAGE: Core Assessment  
-You're gathering critical health information. Your approach:
-1. Acknowledge what they just shared briefly
-2. Ask about the most important missing health information
-3. Probe deeper into any conditions or symptoms they mention
-4. Connect their answers to their primary concern when relevant
-5. Move systematically through priority health information
-
-Focus on: Current health conditions, medications, allergies, symptoms.
+## STAGE: Core Assessment  
+Focus: Current conditions, medications, allergies, symptoms.
+Ask direct questions. No commentary needed.
 """,
     "deep_dive": """
-## CONVERSATION STAGE: Deep Dive
-You're exploring their health situation comprehensively. Your approach:
-1. Make connections between different aspects of their health
-2. Ask about lifestyle factors (diet, exercise, sleep, stress)
-3. Explore their treatment history and what's worked or hasn't
-4. Dig into family history if relevant to their conditions
-5. Ask thoughtful questions that show you're thinking about their whole situation
-
-Look for patterns and relationships between different health factors.
+## STAGE: Deep Dive
+Focus: Lifestyle (diet, exercise, sleep, stress), treatment history, family history.
+One question at a time. Keep it brief.
 """,
     "comprehensive": """
-## CONVERSATION STAGE: Comprehensive Profile
-You're filling in the remaining details. Your approach:
-1. Ask about any remaining gaps in their profile
-2. Explore their health goals and what they want to achieve
-3. Ask clarifying questions about anything unclear
-4. Make observations about their overall health situation
-5. Help them understand how different factors connect
-
-You're almost done building their profile - be thorough but conversational.
+## STAGE: Filling Gaps
+Ask about remaining missing fields. Keep moving forward.
 """,
     "maintenance": """
-## CONVERSATION STAGE: Ongoing Support
-Profile is complete. Your approach:
-1. Focus on their goals and helping them make progress
-2. Check in on how they're doing with any health issues
-3. Ask about changes or new developments
-4. Provide relevant health guidance and support
-5. Help them track progress and adjust plans
-
-You're now their ongoing health companion.
+## STAGE: Ongoing Support
+Check on progress, changes, and goals. Stay concise.
 """
 }
 
@@ -386,12 +354,11 @@ def build_doc_prompt(user_input, profile, recent_transcript="", username="Guest"
 ## RECENT CONVERSATION
 {recent_text}
 
-## YOUR APPROACH
-- Match the user's communication style (brief if they're brief, detailed if they're detailed)
-- Acknowledge what they just said with genuine interest (1-2 sentences max)
-- Ask ONE clear, specific question that digs deeper or moves the conversation forward
-- Make connections between different health factors when you see them
-- Be warm but focused - you're here to help them build their health profile
+## YOUR RESPONSE FORMAT
+- NO acknowledgment or commentary
+- Just ask ONE direct question (one sentence max)
+- Make it easy to answer: yes/no, a number, or a short phrase
+- Move straight to the next needed information
 
 ## PROFILE UPDATE INSTRUCTIONS
 When the user shares health information, emit:
@@ -409,7 +376,7 @@ Available fields: {', '.join(PROFILE_FIELDS.keys())}
 ---
 User ({username}): {user_input}
 
-Doc (respond naturally, then ask ONE probing question):"""
+Doc (ask ONE short question):"""
     
     return prompt
 
