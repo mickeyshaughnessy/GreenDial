@@ -1,26 +1,25 @@
 """
 S3 Storage Module
 Handles all persistent storage for GreenDial
+Uses Digital Ocean Spaces (S3-compatible)
 """
 import json
 import boto3
 from botocore.exceptions import ClientError, NoCredentialsError
 import config
 
-# Initialize S3 client
+# Initialize DO Spaces client (S3-compatible)
 try:
-    if config.AWS_ACCESS_KEY_ID and config.AWS_SECRET_ACCESS_KEY:
-        s3_client = boto3.client(
-            's3',
-            region_name=config.AWS_REGION,
-            aws_access_key_id=config.AWS_ACCESS_KEY_ID,
-            aws_secret_access_key=config.AWS_SECRET_ACCESS_KEY
-        )
-    else:
-        # Use default credentials (IAM role, env vars, etc.)
-        s3_client = boto3.client('s3', region_name=config.AWS_REGION)
+    s3_client = boto3.client(
+        's3',
+        region_name=config.DO_SPACES_REGION,
+        endpoint_url=config.DO_SPACES_ENDPOINT,
+        aws_access_key_id=config.DO_SPACES_KEY,
+        aws_secret_access_key=config.DO_SPACES_SECRET
+    )
+    print(f"[Storage] Initialized DO Spaces client: {config.DO_SPACES_BUCKET}/{config.S3_PREFIX}")
 except Exception as e:
-    print(f"[S3] Warning: Could not initialize S3 client: {e}")
+    print(f"[Storage] ERROR: Could not initialize DO Spaces client: {e}")
     s3_client = None
 
 
@@ -32,17 +31,17 @@ def _key(path):
 def _check_client():
     """Check if S3 client is available"""
     if s3_client is None:
-        raise RuntimeError("S3 client not initialized. Check AWS credentials.")
+        raise RuntimeError("DO Spaces client not initialized. Check configuration.")
 
 
 # ============ USER DATA ============
 
 def get_user(user_id):
-    """Retrieve user data from S3"""
+    """Retrieve user data from DO Spaces"""
     _check_client()
     try:
         resp = s3_client.get_object(
-            Bucket=config.S3_BUCKET,
+            Bucket=config.DO_SPACES_BUCKET,
             Key=_key(f"users/{user_id}.json")
         )
         return json.loads(resp['Body'].read().decode('utf-8'))
@@ -53,10 +52,10 @@ def get_user(user_id):
 
 
 def save_user(user_id, data):
-    """Save user data to S3"""
+    """Save user data to DO Spaces"""
     _check_client()
     s3_client.put_object(
-        Bucket=config.S3_BUCKET,
+        Bucket=config.DO_SPACES_BUCKET,
         Key=_key(f"users/{user_id}.json"),
         Body=json.dumps(data, indent=2),
         ContentType='application/json'
@@ -67,7 +66,7 @@ def list_users():
     """List all user IDs"""
     _check_client()
     resp = s3_client.list_objects_v2(
-        Bucket=config.S3_BUCKET,
+        Bucket=config.DO_SPACES_BUCKET,
         Prefix=_key("users/")
     )
     users = []
@@ -86,7 +85,7 @@ def get_conversation(user_id, conversation_id):
     _check_client()
     try:
         resp = s3_client.get_object(
-            Bucket=config.S3_BUCKET,
+            Bucket=config.DO_SPACES_BUCKET,
             Key=_key(f"conversations/{user_id}/{conversation_id}.json")
         )
         return json.loads(resp['Body'].read().decode('utf-8'))
@@ -100,7 +99,7 @@ def save_conversation(user_id, conversation_id, data):
     """Save a conversation"""
     _check_client()
     s3_client.put_object(
-        Bucket=config.S3_BUCKET,
+        Bucket=config.DO_SPACES_BUCKET,
         Key=_key(f"conversations/{user_id}/{conversation_id}.json"),
         Body=json.dumps(data, indent=2),
         ContentType='application/json'
@@ -111,7 +110,7 @@ def list_conversations(user_id):
     """List all conversations for a user"""
     _check_client()
     resp = s3_client.list_objects_v2(
-        Bucket=config.S3_BUCKET,
+        Bucket=config.DO_SPACES_BUCKET,
         Prefix=_key(f"conversations/{user_id}/")
     )
     conversations = []
@@ -137,7 +136,7 @@ def get_unprompted_participant(participant_id):
     _check_client()
     try:
         resp = s3_client.get_object(
-            Bucket=config.S3_BUCKET,
+            Bucket=config.DO_SPACES_BUCKET,
             Key=_unprompted_key(f"participants/{participant_id}.json")
         )
         return json.loads(resp['Body'].read().decode('utf-8'))
@@ -154,7 +153,7 @@ def save_unprompted_participant(participant):
     if not participant_id:
         raise ValueError("participant_id required")
     s3_client.put_object(
-        Bucket=config.S3_BUCKET,
+        Bucket=config.DO_SPACES_BUCKET,
         Key=_unprompted_key(f"participants/{participant_id}.json"),
         Body=json.dumps(participant, indent=2),
         ContentType='application/json'
@@ -166,7 +165,7 @@ def get_unprompted_campaign(campaign_id):
     _check_client()
     try:
         resp = s3_client.get_object(
-            Bucket=config.S3_BUCKET,
+            Bucket=config.DO_SPACES_BUCKET,
             Key=_unprompted_key(f"campaigns/{campaign_id}.json")
         )
         return json.loads(resp['Body'].read().decode('utf-8'))
@@ -183,7 +182,7 @@ def save_unprompted_campaign(campaign):
     if not campaign_id:
         raise ValueError("campaign_id required")
     s3_client.put_object(
-        Bucket=config.S3_BUCKET,
+        Bucket=config.DO_SPACES_BUCKET,
         Key=_unprompted_key(f"campaigns/{campaign_id}.json"),
         Body=json.dumps(campaign, indent=2),
         ContentType='application/json'
@@ -194,7 +193,7 @@ def list_unprompted_campaigns():
     """List all campaigns (loads minimal metadata)"""
     _check_client()
     resp = s3_client.list_objects_v2(
-        Bucket=config.S3_BUCKET,
+        Bucket=config.DO_SPACES_BUCKET,
         Prefix=_unprompted_key("campaigns/")
     )
     campaigns = []
@@ -213,7 +212,7 @@ def get_unprompted_group(group_id):
     _check_client()
     try:
         resp = s3_client.get_object(
-            Bucket=config.S3_BUCKET,
+            Bucket=config.DO_SPACES_BUCKET,
             Key=_unprompted_key(f"groups/{group_id}.json")
         )
         return json.loads(resp['Body'].read().decode('utf-8'))
@@ -230,7 +229,7 @@ def save_unprompted_group(group):
     if not group_id:
         raise ValueError("group_id required")
     s3_client.put_object(
-        Bucket=config.S3_BUCKET,
+        Bucket=config.DO_SPACES_BUCKET,
         Key=_unprompted_key(f"groups/{group_id}.json"),
         Body=json.dumps(group, indent=2),
         ContentType='application/json'

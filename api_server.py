@@ -290,7 +290,7 @@ if __name__ == '__main__':
     print(f"  http://{config.FLASK_HOST}:{config.FLASK_PORT}")
     print(f"")
     print(f"  LLM: {config.LLM_MODEL}")
-    print(f"  S3: s3://{config.S3_BUCKET}/{config.S3_PREFIX}")
+    print(f"  Storage: {config.DO_SPACES_BUCKET}/{config.S3_PREFIX}")
     print(f"")
     
     app.run(debug=config.DEBUG, host=config.FLASK_HOST, port=config.FLASK_PORT)
