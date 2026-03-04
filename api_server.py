@@ -289,7 +289,7 @@ if __name__ == '__main__':
     print(f"  GreenDial Health Assistant")
     print(f"  http://{config.FLASK_HOST}:{config.FLASK_PORT}")
     print(f"")
-    print(f"  LLM: {config.LLM_MODEL}")
+    print(f"  LLM: {config.OPENROUTER_MODEL}")
     print(f"  Storage: {config.DO_SPACES_BUCKET}/{config.S3_PREFIX}")
     print(f"")
     

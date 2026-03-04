@@ -6,9 +6,9 @@ import requests
 import config
 
 
-def completion(prompt, model=None, temperature=None, max_tokens=None, system_prompt=None):
+def completion(prompt, model=None, temperature=None, max_tokens=None, system_prompt=None, use_fallback=False):
     """
-    Call OpenRouter API for LLM completion.
+    Call OpenRouter API for LLM completion with fallback support.
     
     Args:
         prompt: User message content
@@ -16,8 +16,12 @@ def completion(prompt, model=None, temperature=None, max_tokens=None, system_pro
         temperature: Sampling temperature
         max_tokens: Max response tokens
         system_prompt: Optional system message (for two-stage calls)
+        use_fallback: If True, use paid fallback model
     """
-    model = model or config.LLM_MODEL
+    # Use fallback model if requested, otherwise use primary free model
+    if model is None:
+        model = config.OPENROUTER_FALLBACK_MODEL if use_fallback else config.OPENROUTER_MODEL
+    
     temperature = temperature if temperature is not None else config.LLM_TEMPERATURE
     max_tokens = max_tokens or config.LLM_MAX_TOKENS
     
@@ -27,12 +31,12 @@ def completion(prompt, model=None, temperature=None, max_tokens=None, system_pro
         messages.append({"role": "system", "content": system_prompt})
     messages.append({"role": "user", "content": prompt})
     
-    if not config.LLM_API_KEY:
+    if not config.OPENROUTER_API_KEY:
         print("[LLM] No API key configured")
         return "I'm having trouble connecting. Please configure an API key."
     
     headers = {
-        'Authorization': f"Bearer {config.LLM_API_KEY}",
+        'Authorization': f"Bearer {config.OPENROUTER_API_KEY}",
         'Content-Type': 'application/json',
         'HTTP-Referer': 'https://greendial.org',
         'X-Title': 'GreenDial'
@@ -48,21 +52,28 @@ def completion(prompt, model=None, temperature=None, max_tokens=None, system_pro
     try:
         print(f"[LLM] Calling {model}...")
         response = requests.post(
-            config.LLM_API_URL,
+            config.OPENROUTER_API_URL,
             headers=headers,
             json=payload,
-            timeout=30
+            timeout=15
         )
         
-        if response.status_code == 429:
-            print("[LLM] Rate limited (429)")
-            return "I'm being rate limited. Please try again in a moment."
+        # Handle rate limiting - fallback to paid model
+        if response.status_code == 429 and not use_fallback:
+            print(f"[LLM] Rate limited on {model}, falling back to {config.OPENROUTER_FALLBACK_MODEL}")
+            return completion(prompt, model=None, temperature=temperature, max_tokens=max_tokens, 
+                            system_prompt=system_prompt, use_fallback=True)
         
         if response.status_code >= 400:
             err_msg = f"[LLM] Error: {response.status_code} - {response.text[:200]}"
             print(err_msg)
             with open("/tmp/llm_debug.log", "a") as f:
                 f.write(err_msg + "\n")
+            # Try fallback if not already using it
+            if not use_fallback:
+                print(f"[LLM] Retrying with fallback model {config.OPENROUTER_FALLBACK_MODEL}...")
+                return completion(prompt, model=None, temperature=temperature, max_tokens=max_tokens,
+                                system_prompt=system_prompt, use_fallback=True)
             return "I'm having trouble responding right now. Please try again."
         
         result = response.json()

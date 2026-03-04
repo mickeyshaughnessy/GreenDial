@@ -6,6 +6,7 @@ import uuid
 import re
 import base64
 import random
+import time
 from datetime import datetime
 
 import config
@@ -14,44 +15,65 @@ import s3_storage
 from prompts import doc, doc_v2, notifications, facilitator
 import threading
 
-# In-memory session cache
-_sessions = {}
-_user_cache = {}
-_participant_cache = {}
-_campaign_cache = {}
-_group_cache = {}
+# In-memory TTL cache
+_cache_store = {}
+_cache_ts = {}
+
+_TTL_USER = 60        # seconds
+_TTL_SESSION = 300
+_TTL_PARTICIPANT = 60
+_TTL_CAMPAIGN = 300
+_TTL_GROUP = 60
+
+
+def _cache_set(namespace, key, data, ttl):
+    _cache_store[(namespace, key)] = data
+    _cache_ts[(namespace, key)] = time.time() + ttl
+
+
+def _cache_get(namespace, key):
+    k = (namespace, key)
+    if k in _cache_store and time.time() < _cache_ts.get(k, 0):
+        return _cache_store[k]
+    return None
+
+
+def _cache_del(namespace, key):
+    k = (namespace, key)
+    _cache_store.pop(k, None)
+    _cache_ts.pop(k, None)
 
 
 def _cache_user(user_id, data):
-    _user_cache[user_id] = data
+    _cache_set('user', user_id, data, _TTL_USER)
 
 
 def _get_cached_user(user_id):
-    return _user_cache.get(user_id)
+    return _cache_get('user', user_id)
 
 
 def _cache_participant(participant_id, data):
-    _participant_cache[participant_id] = data
+    _cache_set('participant', participant_id, data, _TTL_PARTICIPANT)
 
 
 def _get_cached_participant(participant_id):
-    return _participant_cache.get(participant_id)
+    return _cache_get('participant', participant_id)
 
 
 def _cache_campaign(campaign_id, data):
-    _campaign_cache[campaign_id] = data
+    _cache_set('campaign', campaign_id, data, _TTL_CAMPAIGN)
 
 
 def _get_cached_campaign(campaign_id):
-    return _campaign_cache.get(campaign_id)
+    return _cache_get('campaign', campaign_id)
 
 
 def _cache_group(group_id, data):
-    _group_cache[group_id] = data
+    _cache_set('group', group_id, data, _TTL_GROUP)
 
 
 def _get_cached_group(group_id):
-    return _group_cache.get(group_id)
+    return _cache_get('group', group_id)
 
 
 def _normalize_phone(phone):
