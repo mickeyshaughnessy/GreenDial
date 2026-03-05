@@ -652,7 +652,7 @@
     function renderMessages() {
       const container = document.getElementById('chat-messages');
       container.innerHTML = chatHistory.map(m => 
-        `<div class="msg ${m.role}">${escapeHtml(m.text)}</div>`
+        `<div class="msg ${m.role}">${m.role === 'doc' ? renderMarkdown(m.text) : escapeHtml(m.text)}</div>`
       ).join('');
       if (isLoading) {
         container.innerHTML += '<div class="msg doc loading">Doc is typing...</div>';
@@ -664,6 +664,22 @@
       const div = document.createElement('div');
       div.textContent = text;
       return div.innerHTML;
+    }
+
+    function renderMarkdown(text) {
+      let escaped = escapeHtml(text);
+      // Bold
+      escaped = escaped.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+      // Italic
+      escaped = escaped.replace(/\*(.+?)\*/g, '<em>$1</em>');
+      // Bullet lists: lines starting with "- " or "• "
+      escaped = escaped.replace(/^[-•]\s+(.+)$/gm, '<li>$1</li>');
+      escaped = escaped.replace(/(<li>.*<\/li>(\n|$))+/gs, m => `<ul style="margin:.4em 0 .4em 1.2em;padding:0">${m}</ul>`);
+      // Numbered lists
+      escaped = escaped.replace(/^\d+\.\s+(.+)$/gm, '<li>$1</li>');
+      // Line breaks
+      escaped = escaped.replace(/\n/g, '<br>');
+      return escaped;
     }
     
     async function sendMessage(prefillText) {
@@ -1068,6 +1084,9 @@
           startFreshChat(`Welcome back, ${data.username}! Let's continue building your health profile.`);
           
           fetchNotifications();
+          // Auto-refresh notification count every 2 minutes
+          if (window._notifInterval) clearInterval(window._notifInterval);
+          window._notifInterval = setInterval(fetchNotifications, 120000);
         }
       } catch (error) {
         errorEl.textContent = 'Connection error.';

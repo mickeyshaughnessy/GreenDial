@@ -1,29 +1,31 @@
 """
 GreenDial Configuration
-All sensitive values loaded from environment variables
+
+This module contains hardcoded configuration values.
+This file is in .gitignore and should not be committed.
 """
-import os
-from dotenv import load_dotenv
 
-# Load .env file
-load_dotenv()
+# Flask Configuration
+SECRET_KEY = 'greendial-production-secret-key-2026'
+FLASK_HOST = '0.0.0.0'
+FLASK_PORT = 8012
+DEBUG = False
 
-# Flask
-SECRET_KEY = os.environ.get('SECRET_KEY', 'greendial-dev-secret-key')
-FLASK_HOST = os.environ.get('FLASK_HOST', '0.0.0.0')
-FLASK_PORT = int(os.environ.get('FLASK_PORT', '8012'))
-DEBUG = os.environ.get('DEBUG', 'true').lower() == 'true'
+# Digital Ocean Spaces Configuration (S3-compatible)
+# Unified credentials from Agreed
+DO_SPACES_KEY = 'DO009JWM9AU4ZWNNZBCM'
+DO_SPACES_SECRET = 'kteBtxY57U1jx5+RuDDXTZRayqhrRtVNYlRPrk/tVzo'
+DO_SPACES_REGION = 'sfo3'
+DO_SPACES_ENDPOINT = 'https://sfo3.digitaloceanspaces.com'
+DO_SPACES_BUCKET = 'mithril-media'
+S3_PREFIX = 'greendial/'
 
-# AWS S3 Configuration
-AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID', '')
-AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY', '')
-AWS_REGION = os.environ.get('AWS_REGION', 'us-east-1')
-S3_BUCKET = os.environ.get('S3_BUCKET', 'mithrilmedia')
-S3_PREFIX = os.environ.get('S3_PREFIX', 'greendial/')
-
-# LLM Configuration (OpenRouter)
-LLM_API_URL = os.environ.get('LLM_API_URL', 'https://openrouter.ai/api/v1/chat/completions')
-LLM_API_KEY = os.environ.get('LLM_API_KEY', '')
-LLM_MODEL = os.environ.get('LLM_MODEL', 'meta-llama/llama-3.2-3b-instruct:free')
-LLM_TEMPERATURE = float(os.environ.get('LLM_TEMPERATURE', '0.7'))
-LLM_MAX_TOKENS = int(os.environ.get('LLM_MAX_TOKENS', '800'))
+# LLM Configuration (OpenRouter) - Unified
+OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions'
+OPENROUTER_API_KEY = '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'
+# Free model (primary) - falls back to paid on rate limit
+OPENROUTER_MODEL = 'meta-llama/llama-3.2-3b-instruct:free'
+# Paid fallback model when free is rate-limited
+OPENROUTER_FALLBACK_MODEL = 'anthropic/claude-3.5-haiku'
+LLM_TEMPERATURE = 0.7
+LLM_MAX_TOKENS = 800
