@@ -670,13 +670,17 @@
       let escaped = escapeHtml(text);
       // Bold
       escaped = escaped.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-      // Italic
-      escaped = escaped.replace(/\*(.+?)\*/g, '<em>$1</em>');
-      // Bullet lists: lines starting with "- " or "• "
-      escaped = escaped.replace(/^[-•]\s+(.+)$/gm, '<li>$1</li>');
-      escaped = escaped.replace(/(<li>.*<\/li>(\n|$))+/gs, m => `<ul style="margin:.4em 0 .4em 1.2em;padding:0">${m}</ul>`);
-      // Numbered lists
-      escaped = escaped.replace(/^\d+\.\s+(.+)$/gm, '<li>$1</li>');
+      // Italic (not inside bold)
+      escaped = escaped.replace(/\*([^*]+?)\*/g, '<em>$1</em>');
+      // Bullet and numbered lists — collect consecutive list lines into <ul>/<ol>
+      escaped = escaped.replace(/((?:^[-•]\s+.+$\n?)+)/gm, m => {
+        const items = m.trim().split('\n').map(l => `<li>${l.replace(/^[-•]\s+/, '')}</li>`).join('');
+        return `<ul style="margin:.4em 0 .4em 1.2em;padding:0">${items}</ul>`;
+      });
+      escaped = escaped.replace(/((?:^\d+\.\s+.+$\n?)+)/gm, m => {
+        const items = m.trim().split('\n').map(l => `<li>${l.replace(/^\d+\.\s+/, '')}</li>`).join('');
+        return `<ol style="margin:.4em 0 .4em 1.2em;padding:0">${items}</ol>`;
+      });
       // Line breaks
       escaped = escaped.replace(/\n/g, '<br>');
       return escaped;
