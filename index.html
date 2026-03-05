@@ -1137,6 +1137,10 @@
           
           // Start fresh chat for new user
           startFreshChat(`Welcome, ${data.username}! I'm Doc. I'll help you build your health profile. What's your main health focus right now?`);
+          
+          // Start notification auto-refresh
+          if (window._notifInterval) clearInterval(window._notifInterval);
+          window._notifInterval = setInterval(fetchNotifications, 120000);
         }
       } catch (error) {
         errorEl.textContent = 'Connection error.';
@@ -1150,6 +1154,7 @@
       currentUser = null;
       userProfile = {};
       notifications = [];
+      if (window._notifInterval) { clearInterval(window._notifInterval); window._notifInterval = null; }
       
       updateUserUI();
       updateAllProfileDisplays();
