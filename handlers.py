@@ -19,6 +19,9 @@ import threading
 _cache_store = {}
 _cache_ts = {}
 
+# In-memory session store
+_sessions = {}
+
 _TTL_USER = 60        # seconds
 _TTL_SESSION = 300
 _TTL_PARTICIPANT = 60
