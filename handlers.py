@@ -457,11 +457,38 @@ Emit **PROFILE_UPDATE** if the user shared new health info."""
         return None
 
 
+def _migrate_legacy_subscriptions(user):
+    """Rewrite immunity/disease_prevention -> protect in user settings (in-place, saves if changed)."""
+    settings = user.get('settings', {})
+    subs = settings.get('agent_subscriptions', [])
+    new_subs = []
+    changed = False
+    for aid in subs:
+        mapped = agent_registry.LEGACY_ID_MAP.get(aid)
+        if mapped:
+            if mapped not in new_subs:
+                new_subs.append(mapped)
+            changed = True
+        else:
+            if aid not in new_subs:
+                new_subs.append(aid)
+    if changed:
+        settings['agent_subscriptions'] = new_subs
+        user['settings'] = settings
+        try:
+            s3_storage.save_user(user.get('user_id', ''), user)
+            _cache_user(user.get('user_id', ''), user)
+        except Exception:
+            pass
+
+
 def handle_get_agent_subscriptions(user_id):
     """Get user's agent subscription settings."""
     user = get_user_data(user_id)
     if not user:
         return json.dumps({"error": "User not found"}), 404
+
+    _migrate_legacy_subscriptions(user)
 
     settings = user.get('settings', {})
     subscriptions = settings.get('agent_subscriptions', [])

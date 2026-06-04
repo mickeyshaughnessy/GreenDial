@@ -14,21 +14,26 @@ Agent contract:
     (receives profile, recent_transcript as format kwargs)
 """
 
-from . import diet, exercise, immunity, sleep, disease_prevention, mental_health, relationships, environment, custom, cross_ai
+from . import diet, exercise, protect, sleep, mental_health, relationships, environment, custom, cross_ai
 
 # Ordered registry — Doc and cron runner look agents up here
 # cross_ai is listed last so keyword matching prefers specialists
 REGISTRY = {
-    "diet":               diet,
-    "exercise":           exercise,
-    "immunity":           immunity,
-    "sleep":              sleep,
-    "disease_prevention": disease_prevention,
-    "mental_health":      mental_health,
-    "relationships":      relationships,
-    "environment":        environment,
-    "custom":             custom,
-    "cross_ai":           cross_ai,
+    "diet":          diet,
+    "exercise":      exercise,
+    "protect":       protect,
+    "sleep":         sleep,
+    "mental_health": mental_health,
+    "relationships": relationships,
+    "environment":   environment,
+    "custom":        custom,
+    "cross_ai":      cross_ai,
+}
+
+# Legacy IDs from before the immunity+disease_prevention merge — map to protect
+LEGACY_ID_MAP = {
+    "immunity":           "protect",
+    "disease_prevention": "protect",
 }
 
 ALL_AGENT_IDS = list(REGISTRY.keys())
