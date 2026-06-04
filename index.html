@@ -557,6 +557,14 @@
           <div class="admin-stat-card"><div class="admin-stat-num" id="admin-total-users">—</div><div class="admin-stat-label">Total Users</div></div>
           <div class="admin-stat-card"><div class="admin-stat-num" id="admin-new-today">—</div><div class="admin-stat-label">Joined Today</div></div>
           <div class="admin-stat-card"><div class="admin-stat-num" id="admin-with-profile">—</div><div class="admin-stat-label">Have Profile</div></div>
+          <div class="admin-stat-card" title="₿ Bitcoin donation address">
+            <div class="admin-stat-num" id="admin-btc-balance" style="font-size:1.3rem">—</div>
+            <div class="admin-stat-label">BTC Balance</div>
+          </div>
+          <div class="admin-stat-card" title="Ξ Ethereum donation address">
+            <div class="admin-stat-num" id="admin-eth-balance" style="font-size:1.3rem">—</div>
+            <div class="admin-stat-label">ETH Balance</div>
+          </div>
         </div>
         <div class="admin-table-wrap">
           <table class="admin-table">
@@ -1359,32 +1367,52 @@
       }
       const tbody = document.getElementById('admin-user-tbody');
       tbody.innerHTML = '<tr><td colspan="5" style="padding:24px;text-align:center;color:rgba(255,255,255,0.4)">Loading…</td></tr>';
+
+      // Fetch user stats and crypto balances in parallel
+      const uid = encodeURIComponent(currentUser.user_id);
+      const [statsRes, balRes] = await Promise.allSettled([
+        fetch(`${API}/admin/stats?user_id=${uid}`),
+        fetch(`${API}/admin/balances?user_id=${uid}`)
+      ]);
+
       try {
-        const res = await fetch(`${API}/admin/stats?user_id=${encodeURIComponent(currentUser.user_id)}`);
-        const data = await res.json();
+        const data = statsRes.status === 'fulfilled' ? await statsRes.value.json() : {};
         if (data.error) {
           tbody.innerHTML = `<tr><td colspan="5" style="padding:24px;color:#ef4444">${escapeHtml(data.error)}</td></tr>`;
           return;
         }
-        document.getElementById('admin-total-users').textContent = data.total_users;
-        document.getElementById('admin-new-today').textContent = data.new_today;
-        document.getElementById('admin-with-profile').textContent = data.with_profile;
+        document.getElementById('admin-total-users').textContent = data.total_users ?? '—';
+        document.getElementById('admin-new-today').textContent = data.new_today ?? '—';
+        document.getElementById('admin-with-profile').textContent = data.with_profile ?? '—';
 
         const users = data.users || [];
         if (!users.length) {
           tbody.innerHTML = '<tr><td colspan="5" style="padding:24px;text-align:center;color:rgba(255,255,255,0.4)">No users yet</td></tr>';
-          return;
+        } else {
+          tbody.innerHTML = users.map((u, i) => `
+            <tr>
+              <td>${i + 1}</td>
+              <td><strong>${escapeHtml(u.username)}</strong></td>
+              <td style="color:rgba(255,255,255,0.5);font-size:12px">${u.created ? u.created.slice(0, 10) : '—'}</td>
+              <td>${u.profile_fields}</td>
+              <td style="font-size:12px;color:rgba(255,255,255,0.5)">${escapeHtml(u.doc_style || '—')}</td>
+            </tr>`).join('');
         }
-        tbody.innerHTML = users.map((u, i) => `
-          <tr>
-            <td>${i + 1}</td>
-            <td><strong>${escapeHtml(u.username)}</strong></td>
-            <td style="color:rgba(255,255,255,0.5);font-size:12px">${u.created ? u.created.slice(0, 10) : '—'}</td>
-            <td>${u.profile_fields}</td>
-            <td style="font-size:12px;color:rgba(255,255,255,0.5)">${escapeHtml(u.doc_style || '—')}</td>
-          </tr>`).join('');
       } catch (e) {
         tbody.innerHTML = `<tr><td colspan="5" style="padding:24px;color:#ef4444">Error: ${escapeHtml(e.message)}</td></tr>`;
+      }
+
+      try {
+        if (balRes.status === 'fulfilled') {
+          const bal = await balRes.value.json();
+          document.getElementById('admin-btc-balance').textContent =
+            bal.btc !== null && bal.btc !== undefined ? bal.btc + ' BTC' : 'unavailable';
+          document.getElementById('admin-eth-balance').textContent =
+            bal.eth !== null && bal.eth !== undefined ? bal.eth + ' ETH' : 'unavailable';
+        }
+      } catch (e) {
+        document.getElementById('admin-btc-balance').textContent = 'error';
+        document.getElementById('admin-eth-balance').textContent = 'error';
       }
     }
 

@@ -1258,6 +1258,50 @@ def handle_unprompted_sms(form_data):
 
 ADMIN_USER_IDS = {'user_mickey'}
 
+BTC_ADDRESS = '139VrBnUEB3UgzwGCQwLxDHnDTUWoE96Y8'
+ETH_ADDRESS = '0x58ed1da7a1A58DaB2Fb8d21317725D8760C816Fe'
+
+
+def handle_admin_balances(requesting_user_id):
+    """Fetch public crypto wallet balances for admin display"""
+    if requesting_user_id not in ADMIN_USER_IDS:
+        return json.dumps({"error": "Unauthorized"}), 403
+
+    import requests as _requests
+
+    result = {"btc": None, "eth": None, "btc_address": BTC_ADDRESS, "eth_address": ETH_ADDRESS}
+
+    # BTC via blockchain.info
+    try:
+        r = _requests.get(
+            f"https://blockchain.info/balance?active={BTC_ADDRESS}",
+            timeout=5
+        )
+        if r.status_code == 200:
+            data = r.json()
+            satoshis = data.get(BTC_ADDRESS, {}).get("final_balance", 0)
+            result["btc"] = round(satoshis / 1e8, 8)
+    except Exception as e:
+        print(f"[Admin] BTC balance fetch failed: {e}")
+
+    # ETH via etherscan (no key needed for single address)
+    try:
+        r = _requests.get(
+            f"https://api.etherscan.io/api?module=account&action=balance"
+            f"&address={ETH_ADDRESS}&tag=latest",
+            timeout=5
+        )
+        if r.status_code == 200:
+            data = r.json()
+            if data.get("status") == "1":
+                wei = int(data.get("result", "0"))
+                result["eth"] = round(wei / 1e18, 6)
+    except Exception as e:
+        print(f"[Admin] ETH balance fetch failed: {e}")
+
+    return json.dumps(result)
+
+
 def handle_admin_stats(requesting_user_id):
     """Return site stats for admin users only"""
     if requesting_user_id not in ADMIN_USER_IDS:

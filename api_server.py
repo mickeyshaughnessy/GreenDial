@@ -289,6 +289,17 @@ def api_update_profile():
 
 # ============ ADMIN ============
 
+@app.route("/admin/balances", methods=['GET', 'OPTIONS'])
+def admin_balances():
+    if request.method == 'OPTIONS':
+        return Response('', status=200)
+    user_id = request.args.get('user_id', '')
+    result = handlers.handle_admin_balances(user_id)
+    if isinstance(result, tuple):
+        return Response(result[0], status=result[1], mimetype='application/json')
+    return Response(result, mimetype='application/json')
+
+
 @app.route("/admin/stats", methods=['GET', 'OPTIONS'])
 def admin_stats():
     if request.method == 'OPTIONS':
