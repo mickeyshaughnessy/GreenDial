@@ -284,6 +284,53 @@ def handle_update_settings(user_id, data):
 
 # ============ AGENTS ============
 
+# Fields that are worth tracking historically (time-series)
+TRACKABLE_FIELDS = {
+    'sleep_hours', 'weight', 'stress_level', 'mood', 'energy_level',
+    'exercise_minutes', 'steps_per_day', 'water_intake_liters',
+    'diet_notes', 'symptom_notes', 'resting_heart_rate',
+    'blood_pressure_systolic', 'blood_pressure_diastolic',
+}
+
+
+def _append_history(user, field, value):
+    """Append a timestamped entry to profile_history[field]."""
+    if field not in TRACKABLE_FIELDS:
+        return
+    date = datetime.utcnow().strftime('%Y-%m-%d')
+    history = user.setdefault('profile_history', {})
+    entries = history.setdefault(field, [])
+    # Avoid duplicate entries for the same date
+    if entries and entries[-1].get('ts') == date:
+        entries[-1]['v'] = str(value)
+    else:
+        entries.append({'ts': date, 'v': str(value)})
+    # Cap at 365 entries per field
+    history[field] = entries[-365:]
+
+
+def handle_get_history(user_id, field=None, days=30):
+    """Return profile history, optionally filtered by field and time window."""
+    user = get_user_data(user_id)
+    if not user:
+        return json.dumps({"error": "User not found"}), 404
+
+    from datetime import timedelta
+    cutoff = (datetime.utcnow() - timedelta(days=days)).strftime('%Y-%m-%d')
+    history = user.get('profile_history', {})
+
+    if field:
+        entries = [e for e in history.get(field, []) if e.get('ts', '') >= cutoff]
+        return json.dumps({field: entries})
+
+    result = {}
+    for f, entries in history.items():
+        filtered = [e for e in entries if e.get('ts', '') >= cutoff]
+        if filtered:
+            result[f] = filtered
+    return json.dumps(result)
+
+
 def _parse_agent_dispatch(doc_response):
     """Extract **CALL_AGENT** directive from Doc's raw response, if present."""
     import re
@@ -298,10 +345,22 @@ def _parse_agent_dispatch(doc_response):
     return None
 
 
+def _parse_redirect(doc_response):
+    """Extract **REDIRECT_TO** directive from Doc's response."""
+    match = re.search(r'\*\*REDIRECT_TO\*\*\s*(\{[^{}]*\})', doc_response, re.IGNORECASE)
+    if match:
+        try:
+            return json.loads(match.group(1)).get('agent')
+        except json.JSONDecodeError:
+            pass
+    return None
+
+
 def _clean_agent_directive(response):
-    """Remove **CALL_AGENT** markers from response text."""
-    import re
-    return re.sub(r'\*\*CALL_AGENT\*\*\s*\{[^{}]*\}', '', response, flags=re.IGNORECASE).strip()
+    """Remove **CALL_AGENT** and **REDIRECT_TO** markers from response text."""
+    cleaned = re.sub(r'\*\*CALL_AGENT\*\*\s*\{[^{}]*\}', '', response, flags=re.IGNORECASE)
+    cleaned = re.sub(r'\*\*REDIRECT_TO\*\*\s*\{[^{}]*\}', '', cleaned, flags=re.IGNORECASE)
+    return cleaned.strip()
 
 
 def _run_agent(agent_id, user_input, profile, recent_transcript):
@@ -624,6 +683,7 @@ def handle_agent_chat(agent_id, request):
     session_id = request.get('session_id') or str(uuid.uuid4())
     user_input = (request.get('text') or '').strip()
     is_init = request.get('init', False) or not user_input
+    followup_context = (request.get('context') or '').strip()  # notification message or redirect context
 
     user = get_user_data(user_id) if user_id else {}
     profile = user.get('profile', {}) if user else {}
@@ -639,15 +699,32 @@ def handle_agent_chat(agent_id, request):
     agent_intro = getattr(module, 'ONBOARDING_INTRO', '')
 
     if is_init:
-        # First visit — generate a warm intro + first question
-        prompt = f"""You are {agent_name} for GreenDial. {agent_intro}
+        if followup_context:
+            # Notification-triggered or redirect-triggered followup — skip intro, ask specific question
+            prompt = f"""You are {agent_name} for GreenDial.
+
+KNOWN PROFILE:
+{json.dumps(profile, indent=2) if profile else "{}"}
+
+CONTEXT (what brought the user here):
+{followup_context}
+
+Ask ONE specific, personal check-in question based on this context and their profile.
+Do NOT re-introduce yourself. Be direct and warm.
+Examples of good follow-up questions: "How'd you sleep last night?", "Did you get any movement in yesterday?", "How's your energy been today?"
+Match the question to the context and to what you already know about the user.
+
+{agent_name}:"""
+        else:
+            # First visit — warm intro
+            prompt = f"""You are {agent_name} for GreenDial. {agent_intro}
 
 The user has just opened your dedicated chat for the first time.
 
 KNOWN PROFILE:
 {json.dumps(profile, indent=2) if profile else "{}"}
 
-Introduce yourself warmly in 1-2 sentences. Then ask your single most important opening question to start understanding the user. Be specific, not generic. If the profile already has relevant data, acknowledge it and ask about what's missing.
+Introduce yourself in 1 sentence. Then ask your single most important opening question. Be specific to what you already know about their profile.
 
 Emit **PROFILE_UPDATE** if the user has already shared info you can capture.
 
@@ -687,15 +764,13 @@ User: {user_input}
         print(f"[AgentChat] {agent_id} error: {e}")
         return json.dumps({"error": "Agent unavailable, try again."}), 500
 
-    # Extract and save profile updates
+    # Extract and save profile updates (with history tracking)
     profile_updates = _parse_profile_updates(response)
     updated_profile = None
     if profile_updates and user_id:
         user = get_user_data(user_id)
         if user:
-            user.setdefault('profile', {})
-            _apply_profile_updates(user['profile'], profile_updates)
-            updated_profile = user['profile']
+            updated_profile = _apply_profile_updates_with_history(user, profile_updates)
             user['last_updated'] = datetime.utcnow().isoformat()
             _cache_user(user_id, user)
             try:
@@ -1057,7 +1132,17 @@ def _apply_profile_updates(profile, updates):
         else:
             profile[key] = value
             print(f"[Chat] Set profile field {key}: {value}")
-    
+
+    return profile
+
+
+def _apply_profile_updates_with_history(user, updates):
+    """Apply profile updates and record trackable fields to history."""
+    profile = user.setdefault('profile', {})
+    _apply_profile_updates(profile, updates)
+    for key, value in updates.items():
+        if value is not None and key in TRACKABLE_FIELDS:
+            _append_history(user, key, value)
     return profile
 
 
@@ -1178,13 +1263,13 @@ def handle_chat(request):
     if user_id:
         onboard_agent_id, onboard_turn = _check_onboarding_needed(user)
 
+    redirect_agent = None
     if onboard_agent_id:
         print(f"[Chat] Onboarding: {onboard_agent_id} turn {onboard_turn}")
         agent_resp = _run_agent_onboarding(
             onboard_agent_id, user_input, profile, recent_transcript, onboard_turn
         )
         if agent_resp:
-            # Advance onboarding state (saves after profile update below)
             _advance_onboarding(user, onboard_agent_id, onboard_turn)
             doc_response = agent_resp
         else:
@@ -1211,56 +1296,45 @@ def handle_chat(request):
             print(f"[Chat] Completion error: {e}")
             doc_response = "I'm having trouble responding right now. Please try again."
 
-        # Stage 2: Determine which agent(s) to run
-        doc_requested_agent = _parse_agent_dispatch(doc_response)
-
-        if len(keyword_agents) >= 2 or doc_requested_agent == 'cross_ai':
-            # Cross AI path — multi-agent synthesis
-            print(f"[Chat] Cross AI: synthesizing {keyword_agents}")
-            cross_context = _run_cross_ai(keyword_agents or [doc_requested_agent], user_input, profile, recent_transcript)
-            if cross_context:
-                try:
-                    prompt_with_agent = doc_v2.build_doc_prompt(
-                        user_input=user_input,
-                        profile=profile,
-                        recent_transcript=recent_transcript,
-                        username=username,
-                        agent_context=cross_context
-                    )
-                    doc_response = utils.completion(
-                        prompt=prompt_with_agent,
-                        temperature=0.7,
-                        max_tokens=config.LLM_MAX_TOKENS
-                    )
-                except Exception as e:
-                    print(f"[Chat] Cross AI augmented completion error: {e}")
+        # Stage 2: Check for redirect first (takes priority over synthesis)
+        redirect_agent = _parse_redirect(doc_response)
+        if redirect_agent:
+            print(f"[Chat] Redirect to: {redirect_agent}")
         else:
-            # Single specialist path
-            agent_id = doc_requested_agent or (keyword_agents[0] if keyword_agents else None)
-            if agent_id and agent_id != 'cross_ai':
-                print(f"[Chat] Specialist: {agent_id}")
-                agent_context = _run_agent(agent_id, user_input, profile, recent_transcript)
-                if agent_context:
+            doc_requested_agent = _parse_agent_dispatch(doc_response)
+            if len(keyword_agents) >= 2 or doc_requested_agent == 'cross_ai':
+                print(f"[Chat] Cross AI: synthesizing {keyword_agents}")
+                cross_context = _run_cross_ai(keyword_agents or [doc_requested_agent], user_input, profile, recent_transcript)
+                if cross_context:
                     try:
                         prompt_with_agent = doc_v2.build_doc_prompt(
-                            user_input=user_input,
-                            profile=profile,
-                            recent_transcript=recent_transcript,
-                            username=username,
-                            agent_context=agent_context
+                            user_input=user_input, profile=profile,
+                            recent_transcript=recent_transcript, username=username,
+                            agent_context=cross_context
                         )
-                        doc_response = utils.completion(
-                            prompt=prompt_with_agent,
-                            temperature=0.7,
-                            max_tokens=config.LLM_MAX_TOKENS
-                        )
+                        doc_response = utils.completion(prompt=prompt_with_agent, temperature=0.7, max_tokens=config.LLM_MAX_TOKENS)
                     except Exception as e:
-                        print(f"[Chat] Agent-augmented completion error: {e}")
+                        print(f"[Chat] Cross AI error: {e}")
+            else:
+                agent_id = doc_requested_agent or (keyword_agents[0] if keyword_agents else None)
+                if agent_id and agent_id != 'cross_ai':
+                    print(f"[Chat] Specialist: {agent_id}")
+                    agent_context = _run_agent(agent_id, user_input, profile, recent_transcript)
+                    if agent_context:
+                        try:
+                            prompt_with_agent = doc_v2.build_doc_prompt(
+                                user_input=user_input, profile=profile,
+                                recent_transcript=recent_transcript, username=username,
+                                agent_context=agent_context
+                            )
+                            doc_response = utils.completion(prompt=prompt_with_agent, temperature=0.7, max_tokens=config.LLM_MAX_TOKENS)
+                        except Exception as e:
+                            print(f"[Chat] Agent-augmented error: {e}")
 
-    # Remove any residual agent directives from the response
+    # Remove any residual markers from the response
     doc_response = _clean_agent_directive(doc_response)
-    
-    # Extract and apply profile updates
+
+    # Extract and apply profile updates (with history tracking)
     profile_updates = _parse_profile_updates(doc_response)
     updated_profile = None
     needs_save = bool(profile_updates) or bool(onboard_agent_id)
@@ -1269,10 +1343,7 @@ def handle_chat(request):
         user = get_user_data(user_id)
         if user:
             if profile_updates:
-                user.setdefault('profile', {})
-                _apply_profile_updates(user['profile'], profile_updates)
-                updated_profile = user['profile']
-                # Re-check if onboarding can be marked complete now that profile is updated
+                updated_profile = _apply_profile_updates_with_history(user, profile_updates)
                 if onboard_agent_id:
                     missing_now = agent_registry.get_missing_onboarding_fields(onboard_agent_id, user['profile'])
                     if len(missing_now) == 0:
@@ -1282,21 +1353,22 @@ def handle_chat(request):
             try:
                 s3_storage.save_user(user_id, user)
             except Exception as e:
-                print(f"[Chat] Failed to save user update: {e}")
-    
+                print(f"[Chat] Failed to save: {e}")
+
     clean_response = _clean_profile_markers(doc_response)
     _update_transcript(user_id, user_input, clean_response, session_id)
-    
+
     response_data = {
         "response": clean_response,
         "session_id": session_id,
         "user_id": user_id
     }
-    
     if updated_profile:
         response_data["profile_updated"] = True
         response_data["profile"] = updated_profile
-    
+    if redirect_agent:
+        response_data["redirect_to_agent"] = redirect_agent
+
     return json.dumps(response_data)
 
 

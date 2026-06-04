@@ -299,6 +299,18 @@ def unprompted_sms():
 
 # ============ AGENTS ============
 
+@app.route("/history/<user_id>", methods=['GET', 'OPTIONS'])
+def get_history(user_id):
+    if request.method == 'OPTIONS':
+        return Response('', status=200)
+    field = request.args.get('field')
+    days = int(request.args.get('days', 30))
+    result = handlers.handle_get_history(user_id, field=field, days=days)
+    if isinstance(result, tuple):
+        return Response(result[0], status=result[1], mimetype='application/json')
+    return Response(result, mimetype='application/json')
+
+
 @app.route("/agents/<user_id>", methods=['GET', 'OPTIONS'])
 def get_agent_subscriptions(user_id):
     if request.method == 'OPTIONS':

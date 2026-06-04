@@ -886,9 +886,10 @@
     function updateAgentTabs() {
       const row = document.getElementById('agent-tabs-row');
       if (!row) return;
-      const subs = userSettings.agent_subscriptions || [];
+      // All agents always visible — subscriptions only control daily notifications
+      const allAgentIds = ['diet','exercise','protect','sleep','mental_health','relationships','environment','custom','cross_ai'];
       let html = `<button class="agent-tab-btn ${currentAgent==='doc'?'active':''}" onclick="switchChatAgent('doc')">🌿 Doc</button>`;
-      for (const aid of subs) {
+      for (const aid of allAgentIds) {
         const m = getAgentMeta(aid);
         html += `<button class="agent-tab-btn ${currentAgent===aid?'active':''}" onclick="switchChatAgent('${aid}')">${m.emoji} ${m.name}</button>`;
       }
@@ -911,26 +912,38 @@
       updateAgentTabs();
       if (!agentChats[agentId]) agentChats[agentId] = [];
       renderMessages();
+      // Auto-intro only when tab is freshly opened (empty) and user is signed in
       if (agentId !== 'doc' && agentChats[agentId].length === 0 && currentUser) {
         await initAgentChat(agentId);
       }
       document.getElementById('chat-input').focus();
     }
 
-    async function initAgentChat(agentId) {
+    async function initAgentChat(agentId, context = null) {
       if (!currentUser) return;
       isLoading = true; renderMessages();
       try {
+        const body = { user_id: currentUser.user_id, text: '', init: true };
+        if (context) body.context = context;
         const res = await fetch(`${API}/chat/agent/${agentId}`, {
           method: 'POST', headers: {'Content-Type':'application/json'},
-          body: JSON.stringify({ user_id: currentUser.user_id, text: '', init: true })
+          body: JSON.stringify(body)
         });
         const data = await res.json();
-        if (data.response) agentChats[agentId] = [{ role: agentId, text: data.response }];
+        if (data.response) {
+          if (!agentChats[agentId]) agentChats[agentId] = [];
+          agentChats[agentId].push({ role: agentId, text: data.response });
+        }
         if (data.session_id) agentSessionIds[agentId] = data.session_id;
         if (data.profile_updated && data.profile) { userProfile = data.profile; updateAllProfileDisplays(); }
       } catch (e) { console.error('initAgentChat', e); }
       isLoading = false; renderMessages();
+    }
+
+    async function triggerAgentFollowup(agentId, notifContext) {
+      // Called from a notification click — open agent tab and ask a specific check-in question
+      await switchChatAgent(agentId);
+      await initAgentChat(agentId, notifContext);
     }
 
     function parseTranscript(transcript, agentId) {
@@ -1100,6 +1113,21 @@
 
         if (data.response) addMessage(currentAgent, data.response);
         if (data.profile_updated && data.profile) { userProfile = data.profile; updateAllProfileDisplays(); }
+
+        // Doc is redirecting the user to a specialist — switch tabs and open with context
+        if (data.redirect_to_agent && currentAgent === 'doc') {
+          const targetAgent = data.redirect_to_agent;
+          setTimeout(async () => {
+            await switchChatAgent(targetAgent);
+            // Pass the original user message as context so the agent can address it directly
+            if (!agentChats[targetAgent] || agentChats[targetAgent].length === 0) {
+              // initAgentChat already fired from switchChatAgent — it got the context via the empty-tab auto-trigger
+              // If history already exists, just fire a followup with the user's original question
+            } else {
+              await initAgentChat(targetAgent, text);
+            }
+          }, 400); // brief delay so the user sees Doc's handoff message first
+        }
       } catch (error) {
         console.error('Chat error:', error);
         addMessage(currentAgent, 'Connection issue. Try again.');
@@ -1152,21 +1180,27 @@
         document.getElementById('full-profile-panel').innerHTML = '<div class="profile-empty">Sign in to view your health profile</div>';
         return;
       }
-      
       try {
-        const response = await fetch(`${API}/user/${currentUser.user_id}`);
-        const data = await response.json();
-        if (data.profile) userProfile = data.profile;
+        const [userRes, histRes] = await Promise.allSettled([
+          fetch(`${API}/user/${currentUser.user_id}`),
+          fetch(`${API}/history/${currentUser.user_id}?days=30`)
+        ]);
+        if (userRes.status === 'fulfilled') {
+          const data = await userRes.value.json();
+          if (data.profile) userProfile = data.profile;
+        }
+        let historyData = {};
+        if (histRes.status === 'fulfilled') historyData = await histRes.value.json();
+        renderFullProfile(historyData);
       } catch (e) {
         console.error('Profile fetch error:', e);
+        renderFullProfile({});
       }
-      
-      renderFullProfile();
       updateJsonProfile();
       updateSidebarProfile();
     }
     
-    function renderFullProfile() {
+    function renderFullProfile(historyData = {}) {
       const panel = document.getElementById('full-profile-panel');
       const p = userProfile || {};
       
@@ -1215,6 +1249,43 @@
         html += '</div>';
       }
       
+      // ── History section ──────────────────────────────────────────────────
+      const FIELD_LABELS = {
+        sleep_hours: 'Sleep (hrs)', weight: 'Weight', stress_level: 'Stress',
+        mood: 'Mood', energy_level: 'Energy', exercise_minutes: 'Exercise (min)',
+        steps_per_day: 'Steps', water_intake_liters: 'Water (L)',
+        diet_notes: 'Diet notes', symptom_notes: 'Symptoms',
+        resting_heart_rate: 'Resting HR', blood_pressure_systolic: 'BP Systolic',
+        blood_pressure_diastolic: 'BP Diastolic'
+      };
+
+      const histFields = Object.entries(historyData).filter(([, entries]) => entries && entries.length > 0);
+      if (histFields.length) {
+        html += '<div class="profile-section"><div class="profile-section-title">📈 History (last 30 days)</div>';
+        for (const [field, entries] of histFields) {
+          const label = FIELD_LABELS[field] || field.replace(/_/g, ' ');
+          const sorted = [...entries].sort((a, b) => b.ts.localeCompare(a.ts));
+          const recent = sorted.slice(0, 14);
+          // Compute avg for numeric fields
+          const nums = recent.map(e => parseFloat(e.v)).filter(n => !isNaN(n));
+          const avg = nums.length ? (nums.reduce((a, b) => a + b, 0) / nums.length).toFixed(1) : null;
+          html += `<div style="margin-bottom:14px">
+            <div style="font-size:11px;color:rgba(255,255,255,0.5);text-transform:uppercase;margin-bottom:6px">
+              ${escapeHtml(label)}${avg ? ` <span style="color:#10b981;font-weight:600">avg ${avg}</span>` : ''}
+            </div>
+            <div style="overflow-x:auto">
+              <table style="border-collapse:collapse;font-size:12px;min-width:100%">
+                ${recent.map(e => `<tr>
+                  <td style="padding:3px 10px 3px 0;color:rgba(255,255,255,0.4);white-space:nowrap">${e.ts}</td>
+                  <td style="padding:3px 0;color:#e2e8f0">${escapeHtml(String(e.v))}</td>
+                </tr>`).join('')}
+              </table>
+            </div>
+          </div>`;
+        }
+        html += '</div>';
+      }
+
       panel.innerHTML = html || '<div class="profile-empty">No profile data yet</div>';
     }
     
@@ -1308,7 +1379,7 @@
           <div class="settings-item">
             <div>
               <div class="settings-label">${escapeHtml(a.emoji)} ${escapeHtml(a.name)}</div>
-              <div class="settings-desc">Daily check-ins · separate chat tab</div>
+              <div class="settings-desc">Daily notification check-ins</div>
             </div>
             <div class="settings-toggle ${isOn ? 'on' : ''}"
                  onclick="toggleAgentSub('${a.id}', this)"></div>
@@ -1362,9 +1433,9 @@
           </div>
         </div>
         <div class="settings-group">
-          <div class="settings-group-title">Health Agents</div>
+          <div class="settings-group-title">Daily Notifications</div>
           <div style="padding:0 0 10px;font-size:12px;color:rgba(255,255,255,0.5)">
-            Activate agents for daily check-ins. Each gets its own chat tab.
+            All agents are available in the chat tabs above. Toggle to receive daily check-in notifications from specific agents.
           </div>
           ${agentToggles || '<div class="profile-empty">Loading agents…</div>'}
         </div>
@@ -1462,32 +1533,38 @@
       
       const icons = { tip: '💡', goal_reminder: '🎯', profile_incomplete: '📋', encouragement: '🌟' };
       
-      list.innerHTML = notifs.map(n => `
-        <div class="notification-item" onclick="openNotificationInChat('${n.id}', '${escapeHtml(n.message).replace(/'/g, "\\'")}')">
-          <span class="notification-icon">${icons[n.type] || '📬'}</span>
+      list.innerHTML = notifs.map(n => {
+        const agentId = n.agent || '';
+        const agentMeta = agentId ? getAgentMeta(agentId) : null;
+        const icon = agentMeta ? agentMeta.emoji : (icons[n.type] || '📬');
+        const safemsg = escapeHtml(n.message).replace(/'/g, "\\'");
+        return `
+        <div class="notification-item" onclick="openNotificationInChat('${n.id}', '${safemsg}', '${agentId}')">
+          <span class="notification-icon">${icon}</span>
           <div class="notification-content">
             <div class="notification-message">${escapeHtml(n.message)}</div>
-            <div class="notification-time">${formatTime(n.created)}</div>
+            <div class="notification-time">${agentMeta ? agentMeta.name + ' · ' : ''}${formatTime(n.created)}</div>
           </div>
           <button class="notification-dismiss" onclick="event.stopPropagation(); dismissNotification('${n.id}')">&times;</button>
-        </div>
-      `).join('');
+        </div>`;
+      }).join('');
     }
     
-    function openNotificationInChat(notifId, message) {
-      // Close dropdown
+    async function openNotificationInChat(notifId, message, agentId) {
       document.getElementById('notif-dropdown').classList.remove('show');
-      
-      // Switch to chat view
       switchView('chat');
-      
-      // Put notification message in input and send it
-      const input = document.getElementById('chat-input');
-      input.value = message;
-      input.focus();
-      
-      // Dismiss the notification
       dismissNotification(notifId);
+
+      if (agentId && agentId !== 'doc' && AGENT_META[agentId]) {
+        // Open the agent's chat and ask a specific follow-up based on the notification
+        await triggerAgentFollowup(agentId, message);
+      } else {
+        // Doc chat — put message in input for the user to send
+        const input = document.getElementById('chat-input');
+        await switchChatAgent('doc');
+        input.value = message;
+        input.focus();
+      }
     }
     
     async function dismissNotification(id) {
