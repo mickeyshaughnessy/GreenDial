@@ -2,6 +2,7 @@
 Utilities Module
 LLM completion via OpenRouter API
 """
+import json
 import requests
 import config
 
@@ -95,6 +96,121 @@ def completion(prompt, model=None, temperature=None, max_tokens=None, system_pro
     except Exception as e:
         print(f"[LLM] Unexpected error: {e}")
         return "Something went wrong. Please try again."
+
+
+def completion_with_tools(messages, tools=None, system_prompt=None, model=None,
+                          temperature=None, max_tokens=None):
+    """
+    LLM completion with tool/function calling support (OpenAI-compatible format).
+
+    Args:
+        messages: list of {"role": ..., "content": ...} dicts (no system msg)
+        tools: list of tool defs in OpenAI format {"type":"function","function":{...}}
+        system_prompt: injected as the first system message
+        model: defaults to config.OPENROUTER_TOOLS_MODEL
+
+    Returns dict:
+        {
+          "stop_reason": "end_turn" | "tool_calls",
+          "text":        str | None,   # assistant text, None when only tool calls
+          "tool_uses":   [{"id","name","input"}, ...],
+          "raw_content": dict,         # full assistant message for appending to history
+          "error":       str | None
+        }
+    """
+    model = model or config.OPENROUTER_TOOLS_MODEL
+    temperature = temperature if temperature is not None else config.LLM_TEMPERATURE
+    max_tokens = max_tokens or config.LLM_MAX_TOKENS
+
+    all_messages = []
+    if system_prompt:
+        all_messages.append({"role": "system", "content": system_prompt})
+    all_messages.extend(messages)
+
+    payload = {
+        "model": model,
+        "messages": all_messages,
+        "temperature": temperature,
+        "max_tokens": max_tokens,
+    }
+    if tools:
+        payload["tools"] = tools
+        payload["tool_choice"] = "auto"
+
+    headers = {
+        "Authorization": f"Bearer {config.OPENROUTER_API_KEY}",
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://greendial.org",
+        "X-Title": "GreenDial",
+    }
+
+    def _err(msg):
+        return {"stop_reason": "end_turn", "text": None, "tool_uses": [], "raw_content": None, "error": msg}
+
+    try:
+        print(f"[LLM Tools] Calling {model} (tools={len(tools or [])})...")
+        resp = requests.post(config.OPENROUTER_API_URL, headers=headers, json=payload, timeout=30)
+
+        if resp.status_code == 429:
+            # Rate-limited on tools model → retry with fallback (also supports tools)
+            if model != config.OPENROUTER_FALLBACK_MODEL:
+                print(f"[LLM Tools] Rate limited, retrying with {config.OPENROUTER_FALLBACK_MODEL}")
+                return completion_with_tools(messages, tools=tools, system_prompt=system_prompt,
+                                             model=config.OPENROUTER_FALLBACK_MODEL,
+                                             temperature=temperature, max_tokens=max_tokens)
+            return _err("rate_limited")
+
+        if resp.status_code >= 400:
+            print(f"[LLM Tools] Error {resp.status_code}: {resp.text[:300]}")
+            # Hard errors: try fallback once
+            if model != config.OPENROUTER_FALLBACK_MODEL:
+                print(f"[LLM Tools] Falling back to {config.OPENROUTER_FALLBACK_MODEL}")
+                return completion_with_tools(messages, tools=tools, system_prompt=system_prompt,
+                                             model=config.OPENROUTER_FALLBACK_MODEL,
+                                             temperature=temperature, max_tokens=max_tokens)
+            return _err(f"http_{resp.status_code}")
+
+        data = resp.json()
+        choice = (data.get("choices") or [{}])[0]
+        msg = choice.get("message", {})
+        finish_reason = choice.get("finish_reason", "stop")
+
+        text = msg.get("content")           # may be None when only tool calls present
+        raw_tool_calls = msg.get("tool_calls") or []
+
+        # Parse tool calls
+        tool_uses = []
+        for tc in raw_tool_calls:
+            try:
+                func = tc.get("function", {})
+                args = func.get("arguments", "{}")
+                tool_uses.append({
+                    "id": tc.get("id", f"tc_{len(tool_uses)}"),
+                    "name": func.get("name", ""),
+                    "input": json.loads(args) if isinstance(args, str) else args,
+                })
+            except Exception as e:
+                print(f"[LLM Tools] Could not parse tool call: {e}")
+
+        # Build raw_content for appending back to message history
+        raw_content = {"role": "assistant", "content": text}
+        if raw_tool_calls:
+            raw_content["tool_calls"] = raw_tool_calls
+
+        return {
+            "stop_reason": "tool_calls" if (finish_reason == "tool_calls" or tool_uses) else "end_turn",
+            "text": text,
+            "tool_uses": tool_uses,
+            "raw_content": raw_content,
+            "error": None,
+        }
+
+    except requests.exceptions.Timeout:
+        print("[LLM Tools] Timeout")
+        return _err("timeout")
+    except Exception as e:
+        print(f"[LLM Tools] Unexpected error: {e}")
+        return _err(str(e))
 
 
 def two_stage_completion(user_input, username="Guest", profile=None, recent_transcript="", settings=None):

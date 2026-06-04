@@ -175,6 +175,17 @@ def dismiss_notification(user_id, notification_id):
 
 # ============ CONVERSATIONS ============
 
+@app.route("/task", methods=['POST', 'OPTIONS'])
+def task():
+    if request.method == 'OPTIONS':
+        return Response('', status=200)
+    req = request.get_json() or {}
+    result = handlers.handle_task(req)
+    if isinstance(result, tuple):
+        return Response(result[0], status=result[1], mimetype='application/json')
+    return Response(result, mimetype='application/json')
+
+
 @app.route("/chat/agent/<agent_id>", methods=['POST', 'OPTIONS'])
 def agent_chat(agent_id):
     if request.method == 'OPTIONS':

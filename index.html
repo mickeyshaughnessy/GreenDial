@@ -478,6 +478,18 @@
     .admin-table tr:last-child td { border-bottom: none; }
     .admin-table tr:hover td { background: rgba(255,255,255,0.03); }
 
+    /* Task mode toggle */
+    .task-toggle {
+      padding: 4px 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.15);
+      background: transparent; color: rgba(255,255,255,0.5); font-size: 11px;
+      cursor: pointer; transition: all 0.15s; white-space: nowrap;
+    }
+    .task-toggle:hover { background: rgba(255,255,255,0.08); color: white; }
+    .task-toggle.on { background: rgba(251,191,36,0.18); color: #fcd34d; border-color: rgba(251,191,36,0.4); }
+    .task-tools-badge {
+      font-size: 10px; color: rgba(16,185,129,0.7); margin-left: 4px;
+    }
+
     /* Agent chat tabs */
     .agent-tabs-row {
       display: flex; gap: 6px; padding: 8px 14px;
@@ -581,6 +593,7 @@
         </div>
         <div class="chat-messages" id="chat-messages"></div>
         <div class="chat-input-area">
+          <button class="task-toggle" id="task-toggle-btn" onclick="toggleTaskMode()" title="Task mode: uses Gemini Flash with real tools to log data, read history, and consult specialists" style="display:none">⚡ Task</button>
           <input type="text" id="chat-input" placeholder="Type a message..." onkeypress="if(event.key==='Enter')sendMessage()">
           <button class="btn btn-primary" onclick="sendMessage()">Send</button>
         </div>
@@ -819,6 +832,7 @@
     let notifications = [];
     let availableAgents = [];
     let currentHistoryAgent = 'doc';
+    let taskMode = false; // task mode uses agentic Gemini Flash loop for Doc
 
     // Fetch user count on load
     fetch(API + '/stats')
@@ -898,6 +912,9 @@
       const m = getAgentMeta(currentAgent);
       const hdr = document.getElementById('chat-agent-header');
       if (hdr) hdr.textContent = `${m.emoji} Chat with ${m.name}`;
+      // Show task toggle only on Doc tab
+      const toggleBtn = document.getElementById('task-toggle-btn');
+      if (toggleBtn) toggleBtn.style.display = (currentAgent === 'doc' && currentUser) ? '' : 'none';
       // Update history select — show all agents, not just subscribed
       const sel = document.getElementById('history-agent-select');
       if (sel) {
@@ -941,6 +958,23 @@
       } catch (e) { console.error('initAgentChat', e); }
       isLoading = false;
       if (currentAgent === agentId) renderMessages();
+    }
+
+    function toggleTaskMode() {
+      taskMode = !taskMode;
+      const btn = document.getElementById('task-toggle-btn');
+      if (btn) {
+        btn.classList.toggle('on', taskMode);
+        btn.textContent = taskMode ? '⚡ Task' : '⚡ Task';
+        btn.title = taskMode
+          ? 'Task mode ON — Gemini Flash with tools (logs data, reads history, consults specialists)'
+          : 'Task mode OFF — switch on to use real tool-calling agents';
+      }
+      // update placeholder
+      const inp = document.getElementById('chat-input');
+      if (inp) inp.placeholder = taskMode
+        ? 'Describe a task (e.g. "log 7 hours sleep", "analyze my stress trend", "plan my morning routine")…'
+        : 'Type a message…';
     }
 
     async function triggerAgentFollowup(agentId, notifContext) {
@@ -1107,10 +1141,16 @@
 
       try {
         let endpoint, body;
-        if (activeAgent === 'doc') {
+        if (activeAgent === 'doc' && taskMode) {
+          // Task mode: agentic Gemini Flash loop with real tools
+          endpoint = `${API}/task`;
+          body = { text, user_id: currentUser.user_id };
+        } else if (activeAgent === 'doc') {
+          // Conversational Doc: free llama model
           endpoint = `${API}/chat`;
           body = { text, user_id: currentUser.user_id, session_id: agentSessionIds['doc'] };
         } else {
+          // All agent tabs always use the agentic loop
           endpoint = `${API}/chat/agent/${activeAgent}`;
           body = { text, user_id: currentUser.user_id, session_id: agentSessionIds[activeAgent] };
         }
@@ -1784,7 +1824,11 @@
           <button class="btn btn-secondary btn-sm" onclick="logout()">Sign Out</button>
         `;
         fetchNotifications();
+        updateAgentTabs(); // refresh task toggle visibility
       } else {
+        taskMode = false;
+        const toggleBtn = document.getElementById('task-toggle-btn');
+        if (toggleBtn) { toggleBtn.style.display = 'none'; toggleBtn.classList.remove('on'); }
         if (adminTab) adminTab.style.display = 'none';
         userArea.innerHTML = `
           <div style="position:relative">

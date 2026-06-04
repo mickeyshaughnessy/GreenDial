@@ -331,6 +331,324 @@ def handle_get_history(user_id, field=None, days=30):
     return json.dumps(result)
 
 
+# ============ TOOL DEFINITIONS ============
+
+HEALTH_TOOLS = [
+    {
+        "type": "function",
+        "function": {
+            "name": "read_profile",
+            "description": "Read the user's current health profile. Call this at the start of any conversation to understand their health context.",
+            "parameters": {"type": "object", "properties": {}, "required": []}
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "update_profile",
+            "description": "Save or update a field in the user's health profile. Use for stable facts: conditions, medications, goals, preferences.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "field": {"type": "string", "description": "Profile field name (e.g. sleep_hours, weight, primary_concern, goals)"},
+                    "value": {"type": "string", "description": "Value to save"}
+                },
+                "required": ["field", "value"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "log_health_data",
+            "description": "Log a timestamped health data point for trend tracking. Use when the user reports a daily/recurring metric. Creates a time-series record.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "field": {
+                        "type": "string",
+                        "description": "Trackable field. Must be one of: sleep_hours, weight, stress_level, mood, energy_level, exercise_minutes, steps_per_day, water_intake_liters, diet_notes, symptom_notes, resting_heart_rate, blood_pressure_systolic, blood_pressure_diastolic"
+                    },
+                    "value": {"type": "string", "description": "Value to record (numbers as strings, e.g. '7.5' for sleep hours)"}
+                },
+                "required": ["field", "value"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "read_history",
+            "description": "Read historical health data for a tracked field to analyze trends, averages, and patterns over time.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "field": {"type": "string", "description": "Field to retrieve history for (e.g. sleep_hours, mood, weight)"},
+                    "days": {"type": "integer", "description": "Number of past days to retrieve (default 30)", "default": 30}
+                },
+                "required": ["field"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "call_specialist",
+            "description": "Consult a specialist health agent for expert advice on a specific topic. Use when the question falls outside your primary domain.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "agent": {
+                        "type": "string",
+                        "enum": ["diet", "exercise", "protect", "sleep", "mental_health", "relationships", "environment", "custom"],
+                        "description": "Which specialist to consult"
+                    },
+                    "question": {"type": "string", "description": "Specific question to ask the specialist (provide full context)"}
+                },
+                "required": ["agent", "question"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "queue_notification",
+            "description": "Schedule a notification or reminder for the user (e.g. follow-up check, medication reminder, goal reminder).",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "message": {"type": "string", "description": "Notification text shown to the user (max 25 words, specific and actionable)"},
+                    "agent": {"type": "string", "description": "Agent ID to associate with this notification"}
+                },
+                "required": ["message"]
+            }
+        }
+    }
+]
+
+TOOL_USE_INSTRUCTIONS = """
+## TOOL USE RULES
+You have real tools — use them, don't simulate them.
+
+- **read_profile** — call this FIRST when opening a conversation; don't ask for info already in the profile
+- **log_health_data** — call this immediately when the user reports a daily metric (sleep, weight, mood, exercise, etc.); don't wait to be asked
+- **update_profile** — call this to save stable health facts (conditions, goals, preferences)
+- **read_history** — call this before giving trend advice ("your sleep has been averaging 6.2h this week")
+- **call_specialist** — call this to get expert input from another domain agent
+- **queue_notification** — call this to set reminders the user asked for, or proactive check-ins you think would help
+
+Always confirm tool actions in your reply: "Logged: 7 hours sleep for tonight."
+"""
+
+
+def _is_numeric(s):
+    try:
+        float(str(s).replace(',', ''))
+        return True
+    except ValueError:
+        return False
+
+
+def _read_history_for_tool(user, field, days=30):
+    """Return formatted history string for a field."""
+    from datetime import timedelta
+    cutoff = (datetime.utcnow() - timedelta(days=days)).strftime('%Y-%m-%d')
+    entries = [e for e in user.get('profile_history', {}).get(field, [])
+               if e.get('ts', '') >= cutoff]
+    if not entries:
+        return f"No history for {field} in the last {days} days."
+    nums = [float(e['v']) for e in entries if _is_numeric(e['v'])]
+    summary = f"{field} — {len(entries)} entries over {days} days"
+    if nums:
+        avg = sum(nums) / len(nums)
+        summary += f" | avg {avg:.1f}, min {min(nums):.1f}, max {max(nums):.1f}"
+    recent = entries[-10:]
+    rows = "  ".join(f"{e['ts']}:{e['v']}" for e in recent)
+    return f"{summary}\nRecent: {rows}"
+
+
+def _execute_health_tool(name, inputs, user_id, agent_id):
+    """Execute a health tool call and return a plain-text result string."""
+    try:
+        if name == "read_profile":
+            u = get_user_data(user_id) if user_id else {}
+            profile = (u or {}).get('profile', {})
+            if not profile:
+                return "Profile is empty — no data yet."
+            return f"Current profile:\n{json.dumps(profile, indent=2)}"
+
+        elif name == "update_profile":
+            field = (inputs.get("field") or "").strip()
+            value = (inputs.get("value") or "").strip()
+            if not field or not value:
+                return "Error: field and value are required."
+            if user_id:
+                u = get_user_data(user_id)
+                if u:
+                    u.setdefault('profile', {})[field] = value
+                    u['last_updated'] = datetime.utcnow().isoformat()
+                    _cache_user(user_id, u)
+                    s3_storage.save_user(user_id, u)
+            return f"Saved profile.{field} = {value!r}"
+
+        elif name == "log_health_data":
+            field = (inputs.get("field") or "").strip()
+            value = (inputs.get("value") or "").strip()
+            if not field or not value:
+                return "Error: field and value are required."
+            if field not in TRACKABLE_FIELDS:
+                return f"Error: {field!r} is not a trackable field. Trackable: {', '.join(sorted(TRACKABLE_FIELDS))}"
+            date = datetime.utcnow().strftime('%Y-%m-%d')
+            if user_id:
+                u = get_user_data(user_id)
+                if u:
+                    _append_history(u, field, value)
+                    u.setdefault('profile', {})[field] = value
+                    u['last_updated'] = datetime.utcnow().isoformat()
+                    _cache_user(user_id, u)
+                    s3_storage.save_user(user_id, u)
+            return f"Logged: {field} = {value} on {date}"
+
+        elif name == "read_history":
+            field = (inputs.get("field") or "").strip()
+            days = int(inputs.get("days") or 30)
+            if not field:
+                return "Error: field is required."
+            if user_id:
+                u = get_user_data(user_id)
+                if u:
+                    return _read_history_for_tool(u, field, days)
+            return "User ID required to read history."
+
+        elif name == "call_specialist":
+            target = (inputs.get("agent") or "").strip()
+            question = (inputs.get("question") or "").strip()
+            if not target or not question:
+                return "Error: agent and question are required."
+            target_module = agent_registry.get_agent(target)
+            if not target_module:
+                return f"Error: unknown agent {target!r}"
+            u = get_user_data(user_id) if user_id else {}
+            profile = (u or {}).get('profile', {})
+            specialist_resp = _run_agent(target, question, profile, "")
+            name_str = getattr(target_module, 'AGENT_NAME', target)
+            return f"{name_str} says: {specialist_resp or '(no response)'}"
+
+        elif name == "queue_notification":
+            message = (inputs.get("message") or "").strip()
+            notif_agent = (inputs.get("agent") or agent_id or "doc").strip()
+            if not message:
+                return "Error: message is required."
+            if user_id:
+                u = get_user_data(user_id)
+                if u:
+                    notif = {
+                        "id": str(uuid.uuid4()),
+                        "type": f"{notif_agent}_reminder",
+                        "agent": notif_agent,
+                        "message": message,
+                        "created": datetime.utcnow().isoformat(),
+                        "read": False
+                    }
+                    u.setdefault('notifications', []).append(notif)
+                    u['notifications'] = u['notifications'][-20:]
+                    _cache_user(user_id, u)
+                    s3_storage.save_user(user_id, u)
+            return f"Notification queued: {message!r}"
+
+        else:
+            return f"Unknown tool: {name!r}"
+
+    except Exception as e:
+        print(f"[Tool] Error in {name}: {e}")
+        return f"Tool error: {e}"
+
+
+def _run_agentic_loop(messages, system_prompt, user_id, agent_id, max_steps=6):
+    """
+    Core agentic loop: call LLM with tools, execute tool calls, repeat until
+    end_turn or max_steps. Returns (final_text, profile_updates_dict).
+    """
+    final_text = ""
+    profile_updates = {}
+
+    for step in range(max_steps):
+        resp = utils.completion_with_tools(
+            messages=messages,
+            tools=HEALTH_TOOLS,
+            system_prompt=system_prompt
+        )
+
+        if resp.get("error"):
+            # Hard failure — fall back to simple conversational completion
+            print(f"[AgentLoop] Error at step {step}: {resp['error']} — falling back")
+            last_user_content = next(
+                (m["content"] for m in reversed(messages) if m.get("role") == "user"), ""
+            )
+            final_text = utils.completion(
+                prompt=last_user_content,
+                system_prompt=system_prompt,
+                temperature=config.LLM_TEMPERATURE
+            )
+            break
+
+        if resp.get("text"):
+            final_text = resp["text"]
+
+        tool_uses = resp.get("tool_uses") or []
+        if not tool_uses or resp.get("stop_reason") == "end_turn":
+            break
+
+        # Append assistant turn
+        messages.append(resp["raw_content"])
+
+        # Execute tools and collect results
+        tool_results = []
+        for tc in tool_uses:
+            result = _execute_health_tool(tc["name"], tc["input"], user_id, agent_id)
+            if tc["name"] in ("update_profile", "log_health_data"):
+                f = tc["input"].get("field", "")
+                v = tc["input"].get("value", "")
+                if f and v:
+                    profile_updates[f] = v
+            tool_results.append({
+                "role": "tool",
+                "tool_call_id": tc["id"],
+                "content": str(result)
+            })
+            print(f"[AgentLoop] step={step} {tc['name']}({tc['input']}) → {str(result)[:80]}")
+
+        messages.extend(tool_results)
+
+    # If the loop ended on a tool call with no text, do one final turn
+    if not final_text:
+        resp = utils.completion_with_tools(
+            messages=messages,
+            tools=HEALTH_TOOLS,
+            system_prompt=system_prompt
+        )
+        final_text = resp.get("text") or "Done."
+
+    return final_text, profile_updates
+
+
+def _save_profile_updates_from_tools(user_id, updates):
+    """Apply tool-originated profile updates with history tracking and save."""
+    if not updates or not user_id:
+        return None
+    u = get_user_data(user_id)
+    if not u:
+        return None
+    updated = _apply_profile_updates_with_history(u, updates)
+    u['last_updated'] = datetime.utcnow().isoformat()
+    _cache_user(user_id, u)
+    try:
+        s3_storage.save_user(user_id, u)
+    except Exception as e:
+        print(f"[AgentLoop] Profile save error: {e}")
+    return updated
+
+
 def _parse_agent_dispatch(doc_response):
     """Extract **CALL_AGENT** directive from Doc's raw response, if present."""
     import re
@@ -674,7 +992,7 @@ def _update_agent_transcript(user_id, user, agent_id, user_input, agent_response
 
 
 def handle_agent_chat(agent_id, request):
-    """Direct chat with a named specialist agent (not via Doc)."""
+    """Direct chat with a specialist agent — uses real agentic tool loop (Gemini Flash)."""
     module = agent_registry.get_agent(agent_id)
     if not module:
         return json.dumps({"error": f"Unknown agent: {agent_id}"}), 404
@@ -683,129 +1001,76 @@ def handle_agent_chat(agent_id, request):
     session_id = request.get('session_id') or str(uuid.uuid4())
     user_input = (request.get('text') or '').strip()
     is_init = request.get('init', False) or not user_input
-    followup_context = (request.get('context') or '').strip()  # notification message or redirect context
+    followup_context = (request.get('context') or '').strip()
 
     user = get_user_data(user_id) if user_id else {}
-    profile = user.get('profile', {}) if user else {}
     transcript = _get_agent_transcript(user, agent_id) if user else ''
-    recent = _get_recent_transcript(transcript, max_lines=8)
+    recent = _get_recent_transcript(transcript, max_lines=6)
 
-    # Style hint for language mirroring
-    style_hint = _detect_style(user_input) if user_input else ""
-
-    # Build prompt
-    system_prompt = getattr(module, 'SYSTEM_PROMPT', None)
     agent_name = getattr(module, 'AGENT_NAME', agent_id)
     agent_intro = getattr(module, 'ONBOARDING_INTRO', '')
+    agent_system = getattr(module, 'SYSTEM_PROMPT', '')
 
-    if is_init:
-        if followup_context:
-            # Notification-triggered or redirect-triggered followup — skip intro, ask specific question
-            prompt = f"""You are {agent_name} for GreenDial.
+    # Combine agent persona with tool use instructions
+    full_system = f"{agent_system}\n\n{TOOL_USE_INSTRUCTIONS}"
 
-KNOWN PROFILE:
-{json.dumps(profile, indent=2) if profile else "{}"}
-
-CONTEXT (what brought the user here):
-{followup_context}
-
-Ask ONE specific, personal check-in question based on this context and their profile.
-Do NOT re-introduce yourself. Be direct and warm.
-Examples of good follow-up questions: "How'd you sleep last night?", "Did you get any movement in yesterday?", "How's your energy been today?"
-Match the question to the context and to what you already know about the user.
-
-{agent_name}:"""
-        else:
-            # First visit — warm intro
-            prompt = f"""You are {agent_name} for GreenDial. {agent_intro}
-
-The user has just opened your dedicated chat for the first time.
-
-KNOWN PROFILE:
-{json.dumps(profile, indent=2) if profile else "{}"}
-
-Introduce yourself in 1 sentence. Then ask your single most important opening question. Be specific to what you already know about their profile.
-
-Emit **PROFILE_UPDATE** if the user has already shared info you can capture.
-
-{agent_name}:"""
-    else:
-        missing = agent_registry.get_missing_onboarding_fields(agent_id, profile)
-        missing_str = ', '.join(missing[:4]) if missing else 'none — profile complete for this domain'
-        prompt = f"""You are {agent_name} for GreenDial. You are kind, helpful, and truthful.
-
-USER PROFILE:
-{json.dumps(profile, indent=2) if profile else "{}"}
-
-MISSING INFO FOR YOUR DOMAIN: {missing_str}
-
-RECENT CONVERSATION:
-{recent or "(start of conversation)"}
-
-STYLE: {style_hint}
-
-When the user shares health information, emit:
-**PROFILE_UPDATE**
-{{"field": "value"}}
-
-Ask ONE focused follow-up question if more domain info is needed.
-
-User: {user_input}
-{agent_name}:"""
-
-    try:
-        response = utils.completion(
-            prompt=prompt,
-            system_prompt=system_prompt,
-            temperature=0.7,
-            max_tokens=config.LLM_MAX_TOKENS
+    # Build initial user message for the loop
+    if is_init and followup_context:
+        init_user_msg = (
+            f"NOTIFICATION CONTEXT: {followup_context}\n\n"
+            f"First call read_profile. Then ask ONE specific, warm check-in question "
+            f"based on the context and profile. Do NOT re-introduce yourself."
         )
-    except Exception as e:
-        print(f"[AgentChat] {agent_id} error: {e}")
-        return json.dumps({"error": "Agent unavailable, try again."}), 500
+    elif is_init:
+        init_user_msg = (
+            f"The user just opened your chat for the first time. "
+            f"First call read_profile to see what we know. "
+            f"Then introduce yourself in 1 sentence and ask your most important opening question."
+        )
+    else:
+        style = _detect_style(user_input)
+        recent_block = f"Recent conversation:\n{recent}\n\n" if recent else ""
+        init_user_msg = f"{recent_block}STYLE HINT: {style}\n\nUser says: {user_input}"
 
-    # Extract and save profile updates (with history tracking)
-    profile_updates = _parse_profile_updates(response)
-    updated_profile = None
-    if profile_updates and user_id:
-        user = get_user_data(user_id)
-        if user:
-            updated_profile = _apply_profile_updates_with_history(user, profile_updates)
-            user['last_updated'] = datetime.utcnow().isoformat()
-            _cache_user(user_id, user)
-            try:
-                s3_storage.save_user(user_id, user)
-            except Exception as e:
-                print(f"[AgentChat] Failed to save profile: {e}")
+    messages = [{"role": "user", "content": init_user_msg}]
 
-    clean_response = _clean_profile_markers(response)
+    # Run the agentic loop
+    final_text, tool_profile_updates = _run_agentic_loop(
+        messages=messages,
+        system_prompt=full_system,
+        user_id=user_id,
+        agent_id=agent_id,
+        max_steps=6
+    )
 
-    # Save to agent transcript (skip user turn for init calls)
-    if user_id and not is_init:
-        user = get_user_data(user_id)
-        if user:
-            _update_agent_transcript(user_id, user, agent_id, user_input, clean_response)
-            _cache_user(user_id, user)
-            try:
-                s3_storage.save_user(user_id, user)
-            except Exception as e:
-                print(f"[AgentChat] Failed to save transcript: {e}")
-    elif user_id and is_init:
-        # Save just the agent's intro turn
-        user = get_user_data(user_id)
-        if user:
+    # Also parse any old-style **PROFILE_UPDATE** markers (belt + suspenders)
+    text_profile_updates = _parse_profile_updates(final_text)
+    all_updates = {**tool_profile_updates, **text_profile_updates}
+
+    # Save all profile updates
+    updated_profile = _save_profile_updates_from_tools(user_id, all_updates) if all_updates else None
+
+    clean_response = _clean_profile_markers(final_text)
+
+    # Save transcript
+    if user_id:
+        u = get_user_data(user_id)
+        if u:
             timestamp = datetime.utcnow().isoformat()
             agent_name_key = agent_id.replace('_', ' ').title()
-            transcripts = user.setdefault('agent_transcripts', {})
-            existing = transcripts.get(agent_id, '')
-            existing += f"\n[{timestamp}] {agent_name_key}: {clean_response}"
-            transcripts[agent_id] = existing
-            user['last_updated'] = timestamp
-            _cache_user(user_id, user)
+            transcripts = u.setdefault('agent_transcripts', {})
+            if is_init:
+                existing = transcripts.get(agent_id, '')
+                existing += f"\n[{timestamp}] {agent_name_key}: {clean_response}"
+                transcripts[agent_id] = existing
+            else:
+                _update_agent_transcript(user_id, u, agent_id, user_input, clean_response)
+            u['last_updated'] = timestamp
+            _cache_user(user_id, u)
             try:
-                s3_storage.save_user(user_id, user)
+                s3_storage.save_user(user_id, u)
             except Exception as e:
-                print(f"[AgentChat] Failed to save intro: {e}")
+                print(f"[AgentChat] Transcript save error: {e}")
 
     result = {
         "response": clean_response,
@@ -813,6 +1078,51 @@ User: {user_input}
         "agent_id": agent_id,
         "user_id": user_id
     }
+    if updated_profile:
+        result["profile_updated"] = True
+        result["profile"] = updated_profile
+    return json.dumps(result)
+
+
+def handle_task(request):
+    """Task mode for Doc — agentic loop for complex health tasks (Gemini Flash)."""
+    user_id = request.get('user_id')
+    task_text = (request.get('text') or '').strip()
+
+    if not task_text:
+        return json.dumps({"response": "What would you like me to help with?", "user_id": user_id})
+
+    DOC_TASK_SYSTEM = f"""You are Doc, GreenDial's primary health coordinator. You have real tools.
+
+{TOOL_USE_INSTRUCTIONS}
+
+Your goal: Complete the user's health task using tools.
+- Read the profile first to understand their context
+- Log any data they provide (sleep, weight, mood, exercise, etc.)
+- Consult specialists for domain-specific depth
+- Give a clear, specific, actionable response when done
+Be concise and direct — this is task mode, not open-ended chat."""
+
+    messages = [{"role": "user", "content": task_text}]
+
+    final_text, tool_updates = _run_agentic_loop(
+        messages=messages,
+        system_prompt=DOC_TASK_SYSTEM,
+        user_id=user_id,
+        agent_id="doc",
+        max_steps=8
+    )
+
+    text_updates = _parse_profile_updates(final_text)
+    all_updates = {**tool_updates, **text_updates}
+    updated_profile = _save_profile_updates_from_tools(user_id, all_updates) if all_updates else None
+
+    clean = _clean_profile_markers(final_text)
+
+    if user_id:
+        _update_transcript(user_id, task_text, clean)
+
+    result = {"response": clean, "user_id": user_id}
     if updated_profile:
         result["profile_updated"] = True
         result["profile"] = updated_profile
