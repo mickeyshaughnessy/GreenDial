@@ -898,11 +898,12 @@
       const m = getAgentMeta(currentAgent);
       const hdr = document.getElementById('chat-agent-header');
       if (hdr) hdr.textContent = `${m.emoji} Chat with ${m.name}`;
-      // Update history select
+      // Update history select — show all agents, not just subscribed
       const sel = document.getElementById('history-agent-select');
       if (sel) {
+        const allIds = ['diet','exercise','protect','sleep','mental_health','relationships','environment','custom','cross_ai'];
         sel.innerHTML = `<option value="doc">🌿 Doc</option>` +
-          subs.map(aid => { const am = getAgentMeta(aid); return `<option value="${aid}">${am.emoji} ${am.name}</option>`; }).join('');
+          allIds.map(aid => { const am = getAgentMeta(aid); return `<option value="${aid}">${am.emoji} ${am.name}</option>`; }).join('');
         sel.value = currentHistoryAgent;
       }
     }
@@ -921,7 +922,8 @@
 
     async function initAgentChat(agentId, context = null) {
       if (!currentUser) return;
-      isLoading = true; renderMessages();
+      isLoading = true;
+      if (currentAgent === agentId) renderMessages();
       try {
         const body = { user_id: currentUser.user_id, text: '', init: true };
         if (context) body.context = context;
@@ -937,7 +939,8 @@
         if (data.session_id) agentSessionIds[agentId] = data.session_id;
         if (data.profile_updated && data.profile) { userProfile = data.profile; updateAllProfileDisplays(); }
       } catch (e) { console.error('initAgentChat', e); }
-      isLoading = false; renderMessages();
+      isLoading = false;
+      if (currentAgent === agentId) renderMessages();
     }
 
     async function triggerAgentFollowup(agentId, notifContext) {
@@ -969,8 +972,11 @@
         const res = await fetch(`${API}/conversations/${userId}/agents`);
         const data = await res.json();
         if (data.doc_transcript) agentChats['doc'] = parseTranscript(data.doc_transcript, 'doc');
-        for (const [aid, t] of Object.entries(data.agents || {})) {
-          if (t) agentChats[aid] = parseTranscript(t, aid);
+        // Initialise all agent chats (empty if no history yet)
+        const allIds = ['diet','exercise','protect','sleep','mental_health','relationships','environment','custom','cross_ai'];
+        for (const aid of allIds) {
+          const t = (data.agents || {})[aid];
+          agentChats[aid] = t ? parseTranscript(t, aid) : [];
         }
         renderMessages();
       } catch (e) { console.error('loadAgentChats', e); }
@@ -978,7 +984,9 @@
 
     // ── CHAT CORE ────────────────────────────────────────────────────────────
     function startFreshChat(welcomeMessage) {
+      const allIds = ['diet','exercise','protect','sleep','mental_health','relationships','environment','custom','cross_ai'];
       agentChats = { doc: [] };
+      for (const aid of allIds) agentChats[aid] = [];
       agentSessionIds = {};
       currentAgent = 'doc';
       if (welcomeMessage) agentChats.doc.push({ role: 'doc', text: welcomeMessage });
@@ -987,7 +995,9 @@
     }
 
     function init() {
+      const allIds = ['diet','exercise','protect','sleep','mental_health','relationships','environment','custom','cross_ai'];
       agentChats = { doc: [{ role: 'doc', text: "Hi! I'm Doc. I'll help you build your health profile. What brings you here today?" }] };
+      for (const aid of allIds) agentChats[aid] = [];
       agentSessionIds = {};
       updateAgentTabs();
       renderMessages();
@@ -1087,6 +1097,9 @@
         return;
       }
 
+      // Capture active agent NOW — async response must go to this tab regardless of later tab switches
+      const activeAgent = currentAgent;
+
       addMessage('user', text);
       input.value = '';
       isLoading = true;
@@ -1094,12 +1107,12 @@
 
       try {
         let endpoint, body;
-        if (currentAgent === 'doc') {
+        if (activeAgent === 'doc') {
           endpoint = `${API}/chat`;
           body = { text, user_id: currentUser.user_id, session_id: agentSessionIds['doc'] };
         } else {
-          endpoint = `${API}/chat/agent/${currentAgent}`;
-          body = { text, user_id: currentUser.user_id, session_id: agentSessionIds[currentAgent] };
+          endpoint = `${API}/chat/agent/${activeAgent}`;
+          body = { text, user_id: currentUser.user_id, session_id: agentSessionIds[activeAgent] };
         }
 
         const response = await fetch(endpoint, {
@@ -1108,33 +1121,37 @@
         });
         const data = await response.json();
 
-        if (currentAgent === 'doc') agentSessionIds['doc'] = data.session_id || agentSessionIds['doc'];
-        else agentSessionIds[currentAgent] = data.session_id || agentSessionIds[currentAgent];
+        if (activeAgent === 'doc') agentSessionIds['doc'] = data.session_id || agentSessionIds['doc'];
+        else agentSessionIds[activeAgent] = data.session_id || agentSessionIds[activeAgent];
 
-        if (data.response) addMessage(currentAgent, data.response);
+        if (data.response) {
+          if (!agentChats[activeAgent]) agentChats[activeAgent] = [];
+          agentChats[activeAgent].push({ role: activeAgent, text: data.response });
+          if (currentAgent === activeAgent) renderMessages();
+        }
         if (data.profile_updated && data.profile) { userProfile = data.profile; updateAllProfileDisplays(); }
 
-        // Doc is redirecting the user to a specialist — switch tabs and open with context
-        if (data.redirect_to_agent && currentAgent === 'doc') {
+        // Doc is redirecting the user to a specialist
+        if (data.redirect_to_agent && activeAgent === 'doc') {
           const targetAgent = data.redirect_to_agent;
           setTimeout(async () => {
             await switchChatAgent(targetAgent);
-            // Pass the original user message as context so the agent can address it directly
-            if (!agentChats[targetAgent] || agentChats[targetAgent].length === 0) {
-              // initAgentChat already fired from switchChatAgent — it got the context via the empty-tab auto-trigger
-              // If history already exists, just fire a followup with the user's original question
-            } else {
+            if (agentChats[targetAgent] && agentChats[targetAgent].length > 1) {
+              // existing chat — send a contextual followup with the user's original message
               await initAgentChat(targetAgent, text);
             }
-          }, 400); // brief delay so the user sees Doc's handoff message first
+            // if empty, switchChatAgent already triggered initAgentChat which got context from init
+          }, 400);
         }
       } catch (error) {
         console.error('Chat error:', error);
-        addMessage(currentAgent, 'Connection issue. Try again.');
+        if (!agentChats[activeAgent]) agentChats[activeAgent] = [];
+        agentChats[activeAgent].push({ role: activeAgent, text: 'Connection issue. Try again.' });
+        if (currentAgent === activeAgent) renderMessages();
       }
 
       isLoading = false;
-      renderMessages();
+      if (currentAgent === activeAgent) renderMessages();
       input.focus();
     }
     
