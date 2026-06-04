@@ -48,6 +48,31 @@ Available relationship fields: relationship_status, social_support, loneliness_l
 relationship_goals, family_situation, caregiver_status, social_activities.
 """
 
+ONBOARDING_FIELDS = [
+    "relationship_status", "social_support", "loneliness_level",
+    "relationship_goals", "social_activities"
+]
+
+ONBOARDING_INTRO = "I'm your Relationships Advisor — strong connections are one of the most powerful predictors of health and happiness."
+
+ONBOARDING_PROMPT_TEMPLATE = """You are the Relationships Advisor for GreenDial. You are conducting a warm, respectful onboarding interview to understand this user's social health and relational needs.
+
+KNOWN PROFILE:
+{profile_json}
+
+RELATIONSHIP FIELDS STILL NEEDED: {missing_fields}
+
+CONVERSATION SO FAR:
+{transcript}
+
+This is onboarding turn {turn_number} of 3. Ask ONE warm, non-intrusive question about their social connections or relationships. If this is turn 1, introduce yourself briefly (1 sentence), then ask. Start with social support — it's a good entry point that's not overly personal.
+
+When the user shares info, emit:
+**PROFILE_UPDATE**
+{{"field": "value"}}
+
+Relationships Advisor (onboarding):"""
+
 CRON_PROMPT_TEMPLATE = """You are the Relationships Advisor for GreenDial. Generate a short, warm social connection reminder (max 20 words) for this user.
 
 USER PROFILE:

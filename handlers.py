@@ -338,6 +338,125 @@ Keep your response to 2-4 sentences. Emit **PROFILE_UPDATE** if the user shared 
         return None
 
 
+def _check_onboarding_needed(user):
+    """Return (agent_id, turn_number) if a subscribed agent needs onboarding, else (None, 0)."""
+    settings = user.get('settings', {})
+    subscriptions = settings.get('agent_subscriptions', [])
+    agent_prefs = settings.get('agent_prefs', {})
+    profile = user.get('profile', {})
+
+    for agent_id in subscriptions:
+        if agent_registry.needs_onboarding(agent_id, profile, agent_prefs):
+            turn = agent_prefs.get(agent_id, {}).get('onboard_turns', 0)
+            if turn < 3:
+                return agent_id, turn + 1
+    return None, 0
+
+
+def _run_agent_onboarding(agent_id, user_input, profile, transcript, turn_number):
+    """Run an agent in onboarding/interview mode. Returns agent response text."""
+    module = agent_registry.get_agent(agent_id)
+    if not module:
+        return None
+
+    template = getattr(module, 'ONBOARDING_PROMPT_TEMPLATE', None)
+    if not template:
+        return None
+
+    missing = agent_registry.get_missing_onboarding_fields(agent_id, profile)
+    missing_str = ', '.join(missing) if missing else 'none — profile is complete'
+
+    prompt = template.format(
+        profile_json=json.dumps(profile, indent=2) if profile else '{}',
+        missing_fields=missing_str,
+        transcript=transcript[-1000:] if transcript else '(first conversation)',
+        turn_number=turn_number
+    )
+
+    system_prompt = getattr(module, 'SYSTEM_PROMPT', None)
+    try:
+        return utils.completion(
+            prompt=prompt,
+            system_prompt=system_prompt,
+            temperature=0.7,
+            max_tokens=config.LLM_MAX_TOKENS
+        )
+    except Exception as e:
+        print(f"[Onboarding] {agent_id} failed: {e}")
+        return None
+
+
+def _advance_onboarding(user, agent_id, turn_number):
+    """Increment onboard_turns; mark onboarded if turn >= 3 or profile complete."""
+    settings = user.setdefault('settings', {})
+    agent_prefs = settings.setdefault('agent_prefs', {})
+    prefs = agent_prefs.setdefault(agent_id, {})
+    prefs['onboard_turns'] = turn_number
+    profile = user.get('profile', {})
+    missing = agent_registry.get_missing_onboarding_fields(agent_id, profile)
+    if turn_number >= 3 or len(missing) == 0:
+        prefs['onboarded'] = True
+        print(f"[Onboarding] {agent_id} onboarding complete for {user.get('user_id')}")
+
+
+def _run_cross_ai(matched_agent_ids, user_input, profile, transcript):
+    """Run up to 3 specialist agents then synthesize with Cross AI. Returns synthesis text."""
+    import concurrent.futures
+    agents_to_run = matched_agent_ids[:3]
+
+    specialist_responses = {}
+    with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+        futures = {
+            executor.submit(_run_agent, aid, user_input, profile, transcript): aid
+            for aid in agents_to_run
+        }
+        for future in concurrent.futures.as_completed(futures, timeout=12):
+            aid = futures[future]
+            try:
+                result = future.result()
+                if result:
+                    specialist_responses[aid] = result
+            except Exception as e:
+                print(f"[CrossAI] Agent {aid} failed: {e}")
+
+    if not specialist_responses:
+        return None
+
+    cross_ai_module = agent_registry.get_agent('cross_ai')
+    if not cross_ai_module:
+        return None
+
+    # Build synthesis prompt
+    specialist_block = "\n\n".join(
+        f"--- {agent_registry.REGISTRY[aid].AGENT_NAME} ---\n{resp}"
+        for aid, resp in specialist_responses.items()
+    )
+    synthesis_prompt = f"""You are the Cross AI Coordinator. Synthesize these specialist perspectives into one cohesive, actionable response.
+
+USER'S PROFILE:
+{json.dumps(profile, indent=2) if profile else '{{}}'}
+
+USER'S QUESTION:
+{user_input}
+
+SPECIALIST PERSPECTIVES:
+{specialist_block}
+
+Provide an integrated, holistic response (3-5 sentences). Connect the insights. End with ONE prioritized recommendation.
+Emit **PROFILE_UPDATE** if the user shared new health info."""
+
+    try:
+        return utils.completion(
+            prompt=synthesis_prompt,
+            system_prompt=cross_ai_module.SYSTEM_PROMPT,
+            temperature=0.7,
+            max_tokens=config.LLM_MAX_TOKENS
+        )
+    except Exception as e:
+        print(f"[CrossAI] Synthesis failed: {e}")
+        return None
+
+
 def handle_get_agent_subscriptions(user_id):
     """Get user's agent subscription settings."""
     user = get_user_data(user_id)
@@ -823,49 +942,90 @@ def handle_chat(request):
     transcript = user.get('transcript', '') or _sessions.get(session_id, {}).get('transcript', '')
     recent_transcript = _get_recent_transcript(transcript, max_lines=8)
     
-    # Check if any agents match the user's message keywords (fast path)
-    keyword_agents = agent_registry.agents_for_message(user_input)
+    # ── ONBOARDING CHECK ──────────────────────────────────────────────────────
+    # If a newly subscribed agent needs to interview the user, hand off to it.
+    onboard_agent_id, onboard_turn = (None, 0)
+    if user_id:
+        onboard_agent_id, onboard_turn = _check_onboarding_needed(user)
 
-    # Stage 1: Doc generates initial response (may include **CALL_AGENT**)
-    agent_context = None
-    try:
-        prompt = _build_prompt(
-            user_id=user_id,
-            session_id=session_id,
-            user_input=user_input
+    if onboard_agent_id:
+        print(f"[Chat] Onboarding: {onboard_agent_id} turn {onboard_turn}")
+        agent_resp = _run_agent_onboarding(
+            onboard_agent_id, user_input, profile, recent_transcript, onboard_turn
         )
-        doc_response = utils.completion(
-            prompt=prompt,
-            temperature=0.7,
-            max_tokens=config.LLM_MAX_TOKENS
-        )
-    except Exception as e:
-        print(f"[Chat] Completion error: {e}")
-        doc_response = "I'm having trouble responding right now. Please try again."
+        if agent_resp:
+            # Advance onboarding state (saves after profile update below)
+            _advance_onboarding(user, onboard_agent_id, onboard_turn)
+            doc_response = agent_resp
+        else:
+            doc_response = "I'm having a little trouble right now — try again in a moment."
+    else:
+        # ── NORMAL CHAT FLOW ──────────────────────────────────────────────────
+        # Check keyword matches — 2+ means Cross AI, 1 means specialist, 0 means Doc alone
+        keyword_agents = agent_registry.agents_for_message(user_input)
 
-    # Stage 2: If Doc (or keyword matching) requested an agent, fetch agent context
-    agent_id = _parse_agent_dispatch(doc_response) or (keyword_agents[0] if keyword_agents else None)
-    if agent_id:
-        print(f"[Chat] Dispatching to agent: {agent_id}")
-        agent_context = _run_agent(agent_id, user_input, profile, recent_transcript)
-        if agent_context:
-            # Stage 3: Re-run Doc with agent context woven in
-            try:
-                prompt_with_agent = doc_v2.build_doc_prompt(
-                    user_input=user_input,
-                    profile=profile,
-                    recent_transcript=recent_transcript,
-                    username=username,
-                    agent_context=agent_context
-                )
-                doc_response = utils.completion(
-                    prompt=prompt_with_agent,
-                    temperature=0.7,
-                    max_tokens=config.LLM_MAX_TOKENS
-                )
-            except Exception as e:
-                print(f"[Chat] Agent-augmented completion error: {e}")
-                # Fall through with original doc_response
+        # Stage 1: Doc generates initial response (may include **CALL_AGENT**)
+        agent_context = None
+        try:
+            prompt = _build_prompt(
+                user_id=user_id,
+                session_id=session_id,
+                user_input=user_input
+            )
+            doc_response = utils.completion(
+                prompt=prompt,
+                temperature=0.7,
+                max_tokens=config.LLM_MAX_TOKENS
+            )
+        except Exception as e:
+            print(f"[Chat] Completion error: {e}")
+            doc_response = "I'm having trouble responding right now. Please try again."
+
+        # Stage 2: Determine which agent(s) to run
+        doc_requested_agent = _parse_agent_dispatch(doc_response)
+
+        if len(keyword_agents) >= 2 or doc_requested_agent == 'cross_ai':
+            # Cross AI path — multi-agent synthesis
+            print(f"[Chat] Cross AI: synthesizing {keyword_agents}")
+            cross_context = _run_cross_ai(keyword_agents or [doc_requested_agent], user_input, profile, recent_transcript)
+            if cross_context:
+                try:
+                    prompt_with_agent = doc_v2.build_doc_prompt(
+                        user_input=user_input,
+                        profile=profile,
+                        recent_transcript=recent_transcript,
+                        username=username,
+                        agent_context=cross_context
+                    )
+                    doc_response = utils.completion(
+                        prompt=prompt_with_agent,
+                        temperature=0.7,
+                        max_tokens=config.LLM_MAX_TOKENS
+                    )
+                except Exception as e:
+                    print(f"[Chat] Cross AI augmented completion error: {e}")
+        else:
+            # Single specialist path
+            agent_id = doc_requested_agent or (keyword_agents[0] if keyword_agents else None)
+            if agent_id and agent_id != 'cross_ai':
+                print(f"[Chat] Specialist: {agent_id}")
+                agent_context = _run_agent(agent_id, user_input, profile, recent_transcript)
+                if agent_context:
+                    try:
+                        prompt_with_agent = doc_v2.build_doc_prompt(
+                            user_input=user_input,
+                            profile=profile,
+                            recent_transcript=recent_transcript,
+                            username=username,
+                            agent_context=agent_context
+                        )
+                        doc_response = utils.completion(
+                            prompt=prompt_with_agent,
+                            temperature=0.7,
+                            max_tokens=config.LLM_MAX_TOKENS
+                        )
+                    except Exception as e:
+                        print(f"[Chat] Agent-augmented completion error: {e}")
 
     # Remove any residual agent directives from the response
     doc_response = _clean_agent_directive(doc_response)
@@ -873,19 +1033,26 @@ def handle_chat(request):
     # Extract and apply profile updates
     profile_updates = _parse_profile_updates(doc_response)
     updated_profile = None
-    
-    if profile_updates and user_id:
+    needs_save = bool(profile_updates) or bool(onboard_agent_id)
+
+    if needs_save and user_id:
         user = get_user_data(user_id)
         if user:
-            user.setdefault('profile', {})
-            _apply_profile_updates(user['profile'], profile_updates)
+            if profile_updates:
+                user.setdefault('profile', {})
+                _apply_profile_updates(user['profile'], profile_updates)
+                updated_profile = user['profile']
+                # Re-check if onboarding can be marked complete now that profile is updated
+                if onboard_agent_id:
+                    missing_now = agent_registry.get_missing_onboarding_fields(onboard_agent_id, user['profile'])
+                    if len(missing_now) == 0:
+                        user.setdefault('settings', {}).setdefault('agent_prefs', {}).setdefault(onboard_agent_id, {})['onboarded'] = True
             user['last_updated'] = datetime.utcnow().isoformat()
             _cache_user(user_id, user)
             try:
                 s3_storage.save_user(user_id, user)
-                updated_profile = user['profile']
             except Exception as e:
-                print(f"[Chat] Failed to save profile update: {e}")
+                print(f"[Chat] Failed to save user update: {e}")
     
     clean_response = _clean_profile_markers(doc_response)
     _update_transcript(user_id, user_input, clean_response, session_id)

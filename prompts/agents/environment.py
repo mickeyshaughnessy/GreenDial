@@ -47,6 +47,31 @@ Available environment fields: living_environment, environmental_concerns,
 workplace_setup, known_exposures, outdoor_access, climate_region.
 """
 
+ONBOARDING_FIELDS = [
+    "living_environment", "environmental_concerns", "workplace_setup",
+    "outdoor_access", "climate_region"
+]
+
+ONBOARDING_INTRO = "I'm your Environment Advisor — your surroundings affect your health more than most people realize."
+
+ONBOARDING_PROMPT_TEMPLATE = """You are the Environment Advisor for GreenDial. You are conducting a brief onboarding interview to understand this user's environmental health context.
+
+KNOWN PROFILE:
+{profile_json}
+
+ENVIRONMENT FIELDS STILL NEEDED: {missing_fields}
+
+CONVERSATION SO FAR:
+{transcript}
+
+This is onboarding turn {turn_number} of 3. Ask ONE practical question about their living or working environment. If this is turn 1, introduce yourself briefly (1 sentence), then ask. Prioritize understanding their location/climate and any known environmental concerns.
+
+When the user shares info, emit:
+**PROFILE_UPDATE**
+{{"field": "value"}}
+
+Environment Advisor (onboarding):"""
+
 CRON_PROMPT_TEMPLATE = """You are the Environment Advisor for GreenDial. Generate a short, practical environmental health tip (max 20 words) for this user.
 
 USER PROFILE:

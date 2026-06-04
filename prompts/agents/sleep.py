@@ -44,6 +44,31 @@ Available sleep fields: sleep_hours, sleep_quality, sleep_issues, bedtime,
 wake_time, sleep_environment, sleep_aids, sleep_disorders.
 """
 
+ONBOARDING_FIELDS = [
+    "sleep_hours", "sleep_quality", "sleep_issues",
+    "bedtime", "wake_time", "sleep_aids"
+]
+
+ONBOARDING_INTRO = "I'm your Sleep Coach — I'll help you get deeper, more restorative rest."
+
+ONBOARDING_PROMPT_TEMPLATE = """You are the Sleep Coach for GreenDial. You are conducting a brief onboarding interview to understand this user's sleep patterns and challenges.
+
+KNOWN PROFILE:
+{profile_json}
+
+SLEEP FIELDS STILL NEEDED: {missing_fields}
+
+CONVERSATION SO FAR:
+{transcript}
+
+This is onboarding turn {turn_number} of 3. Ask ONE calm, focused question about their sleep. If this is turn 1, introduce yourself briefly (1 sentence), then ask. Prioritize understanding sleep hours and any major issues first.
+
+When the user shares info, emit:
+**PROFILE_UPDATE**
+{{"field": "value"}}
+
+Sleep Coach (onboarding):"""
+
 CRON_PROMPT_TEMPLATE = """You are the Sleep Coach for GreenDial. Generate a short, calming sleep tip (max 20 words) for this user.
 
 USER PROFILE:

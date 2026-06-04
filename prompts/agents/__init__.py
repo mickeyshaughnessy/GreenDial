@@ -14,9 +14,10 @@ Agent contract:
     (receives profile, recent_transcript as format kwargs)
 """
 
-from . import diet, exercise, immunity, sleep, disease_prevention, mental_health, relationships, environment, custom
+from . import diet, exercise, immunity, sleep, disease_prevention, mental_health, relationships, environment, custom, cross_ai
 
 # Ordered registry — Doc and cron runner look agents up here
+# cross_ai is listed last so keyword matching prefers specialists
 REGISTRY = {
     "diet":               diet,
     "exercise":           exercise,
@@ -27,6 +28,7 @@ REGISTRY = {
     "relationships":      relationships,
     "environment":        environment,
     "custom":             custom,
+    "cross_ai":           cross_ai,
 }
 
 ALL_AGENT_IDS = list(REGISTRY.keys())
@@ -37,12 +39,32 @@ def get_agent(agent_id: str):
 
 
 def agents_for_message(user_message: str) -> list:
-    """Return list of agent_ids whose keywords appear in the user message."""
+    """Return list of agent_ids whose keywords appear in the user message (excludes cross_ai)."""
     text = user_message.lower()
     matched = []
     for agent_id, module in REGISTRY.items():
+        if agent_id == "cross_ai":
+            continue
         for kw in getattr(module, "CHAT_KEYWORDS", []):
             if kw in text:
                 matched.append(agent_id)
                 break
     return matched
+
+
+def get_missing_onboarding_fields(agent_id: str, profile: dict) -> list:
+    """Return which ONBOARDING_FIELDS for this agent are missing from the profile."""
+    module = REGISTRY.get(agent_id)
+    if not module:
+        return []
+    fields = getattr(module, "ONBOARDING_FIELDS", [])
+    return [f for f in fields if not profile.get(f)]
+
+
+def needs_onboarding(agent_id: str, profile: dict, agent_prefs: dict) -> bool:
+    """True if this agent has onboarding fields and they haven't all been gathered."""
+    prefs = (agent_prefs or {}).get(agent_id, {})
+    if prefs.get("onboarded"):
+        return False
+    missing = get_missing_onboarding_fields(agent_id, profile)
+    return len(missing) >= 2  # needs onboarding if 2+ fields still missing

@@ -43,6 +43,31 @@ Available exercise fields: exercise_frequency, exercise_type, fitness_goals,
 exercise_limitations, preferred_workout_time, fitness_level, steps_per_day.
 """
 
+ONBOARDING_FIELDS = [
+    "exercise_frequency", "exercise_type", "fitness_goals",
+    "exercise_limitations", "fitness_level", "preferred_workout_time"
+]
+
+ONBOARDING_INTRO = "I'm your Exercise Coach — I'll help you move more and feel stronger."
+
+ONBOARDING_PROMPT_TEMPLATE = """You are the Exercise Coach for GreenDial. You are conducting a brief onboarding interview to understand this user's current activity level and fitness goals.
+
+KNOWN PROFILE:
+{profile_json}
+
+FITNESS FIELDS STILL NEEDED: {missing_fields}
+
+CONVERSATION SO FAR:
+{transcript}
+
+This is onboarding turn {turn_number} of 3. Ask ONE warm, focused question about their physical activity or fitness. If this is turn 1, introduce yourself briefly (1 sentence), then ask. Prioritize understanding current activity level and any limitations.
+
+When the user shares info, emit:
+**PROFILE_UPDATE**
+{{"field": "value"}}
+
+Exercise Coach (onboarding):"""
+
 CRON_PROMPT_TEMPLATE = """You are the Exercise Coach for GreenDial. Generate a short, motivating movement reminder (max 20 words) for this user.
 
 USER PROFILE:

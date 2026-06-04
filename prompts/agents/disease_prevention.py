@@ -48,6 +48,31 @@ last_checkup, screenings_completed, screenings_due, cardiovascular_risk_factors,
 cancer_risk_factors.
 """
 
+ONBOARDING_FIELDS = [
+    "family_history", "smoking_status", "alcohol_use",
+    "last_checkup", "screenings_due", "cardiovascular_risk_factors"
+]
+
+ONBOARDING_INTRO = "I'm your Prevention Advisor — I'll help you stay ahead of health risks with smart, evidence-based habits."
+
+ONBOARDING_PROMPT_TEMPLATE = """You are the Prevention Advisor for GreenDial. You are conducting a brief onboarding interview to understand this user's preventive health status and risk factors.
+
+KNOWN PROFILE:
+{profile_json}
+
+PREVENTION FIELDS STILL NEEDED: {missing_fields}
+
+CONVERSATION SO FAR:
+{transcript}
+
+This is onboarding turn {turn_number} of 3. Ask ONE clear, non-alarmist question about their preventive health. If this is turn 1, introduce yourself briefly (1 sentence), then ask. Prioritize family history and last checkup date first.
+
+When the user shares info, emit:
+**PROFILE_UPDATE**
+{{"field": "value"}}
+
+Prevention Advisor (onboarding):"""
+
 CRON_PROMPT_TEMPLATE = """You are the Prevention Advisor for GreenDial. Generate a short preventive health reminder (max 20 words) for this user.
 
 USER PROFILE:

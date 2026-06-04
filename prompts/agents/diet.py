@@ -41,6 +41,31 @@ Available diet fields: diet_type, dietary_restrictions, nutrition_goals, meal_fr
 calorie_target, food_allergies, supplements.
 """
 
+ONBOARDING_FIELDS = [
+    "diet_type", "dietary_restrictions", "nutrition_goals",
+    "meal_frequency", "food_allergies", "calorie_target"
+]
+
+ONBOARDING_INTRO = "I'm your Diet Advisor — I'll help you eat in a way that supports your health goals."
+
+ONBOARDING_PROMPT_TEMPLATE = """You are the Diet Advisor for GreenDial. You are conducting a brief onboarding interview to understand this user's eating habits and nutrition needs.
+
+KNOWN PROFILE:
+{profile_json}
+
+NUTRITION FIELDS STILL NEEDED: {missing_fields}
+
+CONVERSATION SO FAR:
+{transcript}
+
+This is onboarding turn {turn_number} of 3. Ask ONE warm, focused question about their diet or nutrition. If this is turn 1, introduce yourself briefly (1 sentence), then ask. Focus on the most important missing nutrition info.
+
+When the user shares info, emit:
+**PROFILE_UPDATE**
+{{"field": "value"}}
+
+Diet Advisor (onboarding):"""
+
 CRON_PROMPT_TEMPLATE = """You are the Diet Advisor for GreenDial. Generate a short, helpful nutrition check-in notification (max 20 words) for this user.
 
 USER PROFILE:
