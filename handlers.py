@@ -1252,3 +1252,55 @@ def handle_unprompted_sms(form_data):
     reply_text = (result.get('reply') or "...").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
     twiml = f"<?xml version=\"1.0\" encoding=\"UTF-8\"?><Response><Message>{reply_text}</Message></Response>"
     return twiml
+
+
+# ============ ADMIN ============
+
+ADMIN_USER_IDS = {'user_mickey'}
+
+def handle_admin_stats(requesting_user_id):
+    """Return site stats for admin users only"""
+    if requesting_user_id not in ADMIN_USER_IDS:
+        return json.dumps({"error": "Unauthorized"}), 403
+
+    try:
+        user_ids = s3_storage.list_users()
+    except Exception as e:
+        return json.dumps({"error": str(e)}), 500
+
+    today = datetime.utcnow().date().isoformat()
+    users_out = []
+    new_today = 0
+    with_profile = 0
+
+    for uid in user_ids:
+        try:
+            u = s3_storage.get_user(uid)
+            if not u:
+                continue
+            created = u.get('created', '')
+            profile = u.get('profile') or {}
+            profile_fields = len([v for v in profile.values() if v])
+            if profile_fields > 0:
+                with_profile += 1
+            if created.startswith(today):
+                new_today += 1
+            settings = u.get('settings') or {}
+            users_out.append({
+                'user_id': uid,
+                'username': u.get('username', uid),
+                'created': created,
+                'profile_fields': profile_fields,
+                'doc_style': settings.get('doc_style', ''),
+            })
+        except Exception:
+            continue
+
+    users_out.sort(key=lambda x: x.get('created', ''), reverse=True)
+
+    return json.dumps({
+        'total_users': len(users_out),
+        'new_today': new_today,
+        'with_profile': with_profile,
+        'users': users_out,
+    })

@@ -408,6 +408,86 @@
     .waiver-popup .waiver-section:last-of-type { border-bottom: none; }
     .waiver-popup .highlight { background: rgba(255,193,7,0.15); padding: 12px; border-radius: 8px; border-left: 3px solid #ffc107; }
     .waiver-popup .highlight p { margin-bottom: 0; }
+
+    /* Donate modal */
+    .donate-popup {
+      background: #2a2a4e;
+      border-radius: 16px;
+      padding: 24px;
+      max-width: 460px;
+      width: 95%;
+    }
+    .donate-popup h3 { margin-bottom: 8px; }
+    .donate-popup .subtitle { color: rgba(255,255,255,0.5); font-size: 13px; margin-bottom: 20px; }
+    .crypto-row {
+      background: rgba(255,255,255,0.05);
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-bottom: 14px;
+    }
+    .crypto-row .crypto-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: rgba(255,255,255,0.5);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .crypto-row .crypto-addr {
+      font-family: 'Monaco','Menlo',monospace;
+      font-size: 12px;
+      word-break: break-all;
+      color: #10b981;
+      margin-bottom: 8px;
+    }
+    .btn-copy {
+      padding: 5px 12px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 6px;
+      color: rgba(255,255,255,0.7);
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-copy:hover { background: rgba(255,255,255,0.2); color: white; }
+    .btn-copy.copied { background: rgba(16,185,129,0.2); color: #10b981; border-color: #10b981; }
+
+    /* Admin view */
+    .admin-view { padding: 24px; max-width: 1200px; margin: 0 auto; }
+    .admin-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .admin-stat-card {
+      background: rgba(255,255,255,0.05);
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+    }
+    .admin-stat-num { font-size: 2rem; font-weight: 700; color: #10b981; }
+    .admin-stat-label { font-size: 11px; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: .05em; margin-top: 4px; }
+    .admin-table-wrap { background: rgba(255,255,255,0.05); border-radius: 12px; overflow: auto; }
+    .admin-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .admin-table th { padding: 12px 14px; text-align: left; font-weight: 600; font-size: 11px; text-transform: uppercase; color: rgba(255,255,255,0.5); border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .admin-table td { padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .admin-table tr:last-child td { border-bottom: none; }
+    .admin-table tr:hover td { background: rgba(255,255,255,0.03); }
+
+    /* Mobile header fix */
+    @media (max-width: 700px) {
+      .header { flex-wrap: wrap; gap: 8px; padding: 10px 14px; }
+      .nav-tabs { order: 3; width: 100%; overflow-x: auto; }
+      .user-count { display: none; }
+      .user-area { margin-left: auto; }
+    }
+    @media (max-width: 420px) {
+      .nav-tab { padding: 6px 10px; font-size: 12px; }
+    }
   </style>
 </head>
 <body>
@@ -419,6 +499,7 @@
       <button class="nav-tab" onclick="switchView('profile')">📋 Profile</button>
       <button class="nav-tab" onclick="switchView('history')">📜 History</button>
       <button class="nav-tab" onclick="switchView('settings')">⚙️ Settings</button>
+      <button class="nav-tab" id="admin-tab" style="display:none" onclick="switchView('admin')">🛡️ Admin</button>
     </div>
     <div class="user-area" id="user-area">
       <div style="position:relative">
@@ -428,6 +509,7 @@
           <div class="notification-list" id="notif-list"><div class="notification-empty">No notifications</div></div>
         </div>
       </div>
+      <button class="btn btn-secondary btn-sm" onclick="showDonateModal()" title="Support GreenDial">💚 Donate</button>
       <span class="user-badge">Guest</span>
       <button class="btn btn-primary btn-sm" onclick="showAuthPopup()">Sign In</button>
     </div>
@@ -465,6 +547,28 @@
         <div class="panel-content" id="settings-panel"><div class="profile-empty">Sign in to manage settings</div></div>
       </div>
     </div>
+
+    <div class="view" id="view-admin">
+      <div class="admin-view" style="width:100%">
+        <h2 style="margin-bottom:4px;">🛡️ Admin Dashboard</h2>
+        <p style="color:rgba(255,255,255,0.4);font-size:13px;margin-bottom:20px;">Live data — passphrases not shown.</p>
+        <div class="admin-stats-grid" id="admin-stats-grid">
+          <div class="admin-stat-card"><div class="admin-stat-num" id="admin-total-users">—</div><div class="admin-stat-label">Total Users</div></div>
+          <div class="admin-stat-card"><div class="admin-stat-num" id="admin-new-today">—</div><div class="admin-stat-label">Joined Today</div></div>
+          <div class="admin-stat-card"><div class="admin-stat-num" id="admin-with-profile">—</div><div class="admin-stat-label">Have Profile</div></div>
+        </div>
+        <div class="admin-table-wrap">
+          <table class="admin-table">
+            <thead><tr>
+              <th>#</th><th>Username</th><th>Joined</th><th>Profile Fields</th><th>Settings</th>
+            </tr></thead>
+            <tbody id="admin-user-tbody">
+              <tr><td colspan="5" style="padding:24px;text-align:center;color:rgba(255,255,255,0.4)">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
     
     <div class="sidebar">
       <div class="panel">
@@ -478,6 +582,26 @@
     </div>
   </div>
   
+  <div class="popup-overlay" id="donate-popup">
+    <div class="donate-popup">
+      <h3>💚 Support GreenDial</h3>
+      <p class="subtitle">GreenDial is free and open-source. Donations help keep the AI running.</p>
+      <div class="crypto-row">
+        <div class="crypto-label">₿ Bitcoin (BTC)</div>
+        <div class="crypto-addr" id="btc-addr">139VrBnUEB3UgzwGCQwLxDHnDTUWoE96Y8</div>
+        <button class="btn-copy" onclick="copyAddr('btc-addr', this)">Copy address</button>
+      </div>
+      <div class="crypto-row">
+        <div class="crypto-label">Ξ Ethereum (ETH)</div>
+        <div class="crypto-addr" id="eth-addr">0x58ed1da7a1A58DaB2Fb8d21317725D8760C816Fe</div>
+        <button class="btn-copy" onclick="copyAddr('eth-addr', this)">Copy address</button>
+      </div>
+      <div class="popup-buttons">
+        <button type="button" class="btn btn-primary" onclick="hideDonateModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
   <div class="popup-overlay" id="auth-popup">
     <div class="popup">
       <div class="form-tabs">
@@ -638,6 +762,7 @@
       if (view === 'profile') refreshProfile();
       if (view === 'history') refreshHistory();
       if (view === 'settings') refreshSettings();
+      if (view === 'admin') loadAdminStats();
     }
     
     function goToSettings() {
@@ -1167,7 +1292,10 @@
     
     function updateUserUI() {
       const userArea = document.getElementById('user-area');
+      const adminTab = document.getElementById('admin-tab');
       if (currentUser) {
+        const isAdmin = currentUser.username.toLowerCase() === 'mickey';
+        if (adminTab) adminTab.style.display = isAdmin ? '' : 'none';
         userArea.innerHTML = `
           <div style="position:relative">
             <button class="notification-bell" onclick="toggleNotifications()">🔔<span class="notification-badge" id="notif-badge" style="display:none">0</span></button>
@@ -1176,11 +1304,13 @@
               <div class="notification-list" id="notif-list"><div class="notification-empty">No notifications</div></div>
             </div>
           </div>
+          <button class="btn btn-secondary btn-sm" onclick="showDonateModal()" title="Support GreenDial">💚 Donate</button>
           <span class="user-badge" onclick="goToSettings()">👤 ${escapeHtml(currentUser.username)}</span>
           <button class="btn btn-secondary btn-sm" onclick="logout()">Sign Out</button>
         `;
         fetchNotifications();
       } else {
+        if (adminTab) adminTab.style.display = 'none';
         userArea.innerHTML = `
           <div style="position:relative">
             <button class="notification-bell" onclick="toggleNotifications()">🔔</button>
@@ -1189,12 +1319,67 @@
               <div class="notification-list" id="notif-list"><div class="notification-empty">Sign in for notifications</div></div>
             </div>
           </div>
+          <button class="btn btn-secondary btn-sm" onclick="showDonateModal()" title="Support GreenDial">💚 Donate</button>
           <span class="user-badge">Guest</span>
           <button class="btn btn-primary btn-sm" onclick="showAuthPopup()">Sign In</button>
         `;
       }
     }
     
+    // ---- Donate modal ----
+    function showDonateModal() {
+      document.getElementById('donate-popup').classList.add('show');
+    }
+    function hideDonateModal() {
+      document.getElementById('donate-popup').classList.remove('show');
+    }
+    function copyAddr(elemId, btn) {
+      const addr = document.getElementById(elemId).textContent;
+      navigator.clipboard.writeText(addr).then(() => {
+        btn.textContent = 'Copied!';
+        btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = 'Copy address'; btn.classList.remove('copied'); }, 2000);
+      });
+    }
+
+    // ---- Admin ----
+    async function loadAdminStats() {
+      if (!currentUser || currentUser.username.toLowerCase() !== 'mickey') {
+        document.getElementById('admin-user-tbody').innerHTML =
+          '<tr><td colspan="5" style="padding:24px;text-align:center;color:#ef4444">Unauthorized</td></tr>';
+        return;
+      }
+      const tbody = document.getElementById('admin-user-tbody');
+      tbody.innerHTML = '<tr><td colspan="5" style="padding:24px;text-align:center;color:rgba(255,255,255,0.4)">Loading…</td></tr>';
+      try {
+        const res = await fetch(`${API}/admin/stats?user_id=${encodeURIComponent(currentUser.user_id)}`);
+        const data = await res.json();
+        if (data.error) {
+          tbody.innerHTML = `<tr><td colspan="5" style="padding:24px;color:#ef4444">${escapeHtml(data.error)}</td></tr>`;
+          return;
+        }
+        document.getElementById('admin-total-users').textContent = data.total_users;
+        document.getElementById('admin-new-today').textContent = data.new_today;
+        document.getElementById('admin-with-profile').textContent = data.with_profile;
+
+        const users = data.users || [];
+        if (!users.length) {
+          tbody.innerHTML = '<tr><td colspan="5" style="padding:24px;text-align:center;color:rgba(255,255,255,0.4)">No users yet</td></tr>';
+          return;
+        }
+        tbody.innerHTML = users.map((u, i) => `
+          <tr>
+            <td>${i + 1}</td>
+            <td><strong>${escapeHtml(u.username)}</strong></td>
+            <td style="color:rgba(255,255,255,0.5);font-size:12px">${u.created ? u.created.slice(0, 10) : '—'}</td>
+            <td>${u.profile_fields}</td>
+            <td style="font-size:12px;color:rgba(255,255,255,0.5)">${escapeHtml(u.doc_style || '—')}</td>
+          </tr>`).join('');
+      } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="5" style="padding:24px;color:#ef4444">Error: ${escapeHtml(e.message)}</td></tr>`;
+      }
+    }
+
     init();
   </script>
 </body>
