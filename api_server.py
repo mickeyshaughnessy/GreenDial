@@ -40,6 +40,16 @@ def ping():
     return Response(json.dumps({"status": "ok", "service": "greendial"}), mimetype='application/json')
 
 
+@app.route("/spec/openapi.yaml", methods=['GET'])
+def spec_openapi():
+    return send_from_directory('arazzo', 'greendial-openapi.yaml', mimetype='text/yaml')
+
+
+@app.route("/spec/arazzo.yaml", methods=['GET'])
+def spec_arazzo():
+    return send_from_directory('arazzo', 'greendial-agents.arazzo.yaml', mimetype='text/yaml')
+
+
 @app.route("/stats", methods=['GET'])
 def stats():
     import s3_storage

@@ -27,29 +27,32 @@
       top: 0;
       z-index: 50;
     }
-    .logo {
-      font-size: 20px;
-      font-weight: 700;
-      color: #10b981;
-      text-decoration: none;
-    }
-    .header-title {
-      font-size: 14px;
-      color: rgba(255,255,255,0.5);
-    }
+    .logo { font-size: 20px; font-weight: 700; color: #10b981; text-decoration: none; }
+    .header-title { font-size: 14px; color: rgba(255,255,255,0.5); }
 
-    .container {
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 40px 24px 80px;
-    }
+    .container { max-width: 900px; margin: 0 auto; padding: 40px 24px 80px; }
 
     h1 { font-size: 28px; margin-bottom: 8px; }
     h2 { font-size: 20px; margin: 40px 0 12px; color: #10b981; }
     h3 { font-size: 15px; margin: 24px 0 8px; color: rgba(255,255,255,0.8); }
-    p { color: rgba(255,255,255,0.75); margin-bottom: 12px; font-size: 14px; }
+    p  { color: rgba(255,255,255,0.75); margin-bottom: 12px; font-size: 14px; }
 
-    .subtitle { color: rgba(255,255,255,0.5); font-size: 14px; margin-bottom: 32px; }
+    .subtitle { color: rgba(255,255,255,0.5); font-size: 14px; margin-bottom: 20px; }
+
+    /* Spec links */
+    .spec-links { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 32px; }
+    .spec-link {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 14px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 20px;
+      font-size: 12px;
+      color: rgba(255,255,255,0.75);
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .spec-link:hover { background: rgba(16,185,129,0.15); border-color: rgba(16,185,129,0.4); color: #10b981; }
 
     .endpoint {
       background: rgba(255,255,255,0.04);
@@ -59,80 +62,45 @@
       overflow: hidden;
     }
     .endpoint-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
+      display: flex; align-items: center; gap: 12px;
       padding: 12px 16px;
       background: rgba(0,0,0,0.2);
       border-bottom: 1px solid rgba(255,255,255,0.06);
     }
     .method {
       font-family: 'Monaco','Menlo',monospace;
-      font-size: 11px;
-      font-weight: 700;
-      padding: 3px 8px;
-      border-radius: 4px;
-      text-transform: uppercase;
+      font-size: 11px; font-weight: 700;
+      padding: 3px 8px; border-radius: 4px; text-transform: uppercase;
     }
-    .method.get  { background: rgba(59,130,246,0.25); color: #93c5fd; }
-    .method.post { background: rgba(16,185,129,0.25); color: #6ee7b7; }
-    .method.put  { background: rgba(245,158,11,0.25); color: #fcd34d; }
-    .method.delete { background: rgba(239,68,68,0.25); color: #fca5a5; }
-    .path {
-      font-family: 'Monaco','Menlo',monospace;
-      font-size: 13px;
-      color: #e2e8f0;
-    }
-    .endpoint-desc {
-      padding: 12px 16px;
-      font-size: 13px;
-      color: rgba(255,255,255,0.65);
-    }
+    .method.get    { background: rgba(59,130,246,0.25);  color: #93c5fd; }
+    .method.post   { background: rgba(16,185,129,0.25);  color: #6ee7b7; }
+    .method.put    { background: rgba(245,158,11,0.25);  color: #fcd34d; }
+    .method.delete { background: rgba(239,68,68,0.25);   color: #fca5a5; }
+    .path { font-family: 'Monaco','Menlo',monospace; font-size: 13px; color: #e2e8f0; }
+    .endpoint-desc { padding: 12px 16px; font-size: 13px; color: rgba(255,255,255,0.65); }
 
     .code-block {
-      background: rgba(0,0,0,0.4);
-      border-radius: 8px;
-      padding: 16px;
-      font-family: 'Monaco','Menlo',monospace;
-      font-size: 12px;
-      line-height: 1.6;
-      overflow-x: auto;
-      white-space: pre;
-      color: #a5d6ff;
-      margin: 12px 0;
+      background: rgba(0,0,0,0.4); border-radius: 8px;
+      padding: 16px; font-family: 'Monaco','Menlo',monospace;
+      font-size: 12px; line-height: 1.6; overflow-x: auto;
+      white-space: pre; color: #a5d6ff; margin: 12px 0;
     }
 
     .prompt-block {
-      background: rgba(0,0,0,0.4);
-      border: 1px solid rgba(16,185,129,0.2);
-      border-radius: 10px;
-      padding: 20px;
-      font-family: 'Monaco','Menlo',monospace;
-      font-size: 12px;
-      line-height: 1.7;
-      overflow-x: auto;
-      white-space: pre-wrap;
-      color: #d1fae5;
+      background: rgba(0,0,0,0.4); border: 1px solid rgba(16,185,129,0.2);
+      border-radius: 10px; padding: 20px;
+      font-family: 'Monaco','Menlo',monospace; font-size: 12px;
+      line-height: 1.7; overflow-x: auto; white-space: pre-wrap; color: #d1fae5;
     }
-    .prompt-section {
-      margin-bottom: 24px;
-    }
+    .prompt-section { margin-bottom: 24px; }
     .prompt-section-title {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      color: #10b981;
-      margin-bottom: 8px;
+      font-size: 11px; text-transform: uppercase; letter-spacing: .08em;
+      color: #10b981; margin-bottom: 8px;
     }
 
     .badge {
-      display: inline-block;
-      padding: 2px 8px;
-      border-radius: 4px;
-      font-size: 11px;
-      background: rgba(16,185,129,0.15);
-      color: #10b981;
-      margin-left: 8px;
+      display: inline-block; padding: 2px 8px; border-radius: 4px;
+      font-size: 11px; background: rgba(16,185,129,0.15); color: #10b981; margin-left: 8px;
     }
 
     .field-table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 8px 0 16px; }
@@ -142,16 +110,32 @@
     .field-table td em { color: rgba(255,255,255,0.4); font-style: normal; font-size: 12px; }
 
     .note {
-      background: rgba(255,193,7,0.08);
-      border-left: 3px solid #ffc107;
-      padding: 10px 14px;
-      border-radius: 0 6px 6px 0;
-      font-size: 13px;
-      color: rgba(255,255,255,0.7);
-      margin: 12px 0;
+      background: rgba(255,193,7,0.08); border-left: 3px solid #ffc107;
+      padding: 10px 14px; border-radius: 0 6px 6px 0;
+      font-size: 13px; color: rgba(255,255,255,0.7); margin: 12px 0;
     }
 
     hr { border: none; border-top: 1px solid rgba(255,255,255,0.08); margin: 40px 0; }
+
+    /* Live ping tester */
+    .ping-tester { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+    .btn-try {
+      align-self: flex-start;
+      padding: 6px 16px; border: none; border-radius: 6px;
+      background: rgba(16,185,129,0.25); color: #6ee7b7;
+      font-size: 12px; font-family: 'Monaco','Menlo',monospace;
+      cursor: pointer; transition: background 0.2s;
+    }
+    .btn-try:hover { background: rgba(16,185,129,0.4); }
+    .btn-try:disabled { opacity: 0.5; cursor: not-allowed; }
+    .ping-result {
+      display: none;
+      background: rgba(0,0,0,0.4); border-radius: 8px;
+      padding: 12px 16px; font-family: 'Monaco','Menlo',monospace;
+      font-size: 12px; line-height: 1.6;
+    }
+    .ping-result.ok  { display: block; color: #6ee7b7; border-left: 3px solid #10b981; }
+    .ping-result.err { display: block; color: #fca5a5; border-left: 3px solid #ef4444; }
   </style>
 </head>
 <body>
@@ -163,34 +147,71 @@
 
 <div class="container">
   <h1>GreenDial API</h1>
-  <p class="subtitle">REST API for the GreenDial health assistant. All endpoints return JSON. Base URL: <code style="color:#10b981">https://greendial.org</code></p>
+  <p class="subtitle">REST API — base URL: <code style="color:#10b981">https://greendial.org</code> &nbsp;·&nbsp; All endpoints return JSON unless noted.</p>
+
+  <div class="spec-links">
+    <a class="spec-link" href="/spec/openapi.yaml" target="_blank">📄 OpenAPI 3.1 Spec</a>
+    <a class="spec-link" href="/spec/arazzo.yaml"  target="_blank">🔀 Arazzo Workflow Spec</a>
+    <a class="spec-link" href="https://github.com/mickeyshaughnessy/GreenDial" target="_blank">⚙️ Source on GitHub</a>
+  </div>
 
   <!-- ===== OVERVIEW ===== -->
   <h2>Overview</h2>
-  <p>GreenDial is a personal health platform powered by <strong>Doc</strong>, an AI coordinator, and a team of nine specialist <strong>health agents</strong>. Doc guides conversations, builds the user's health profile, and routes specialist questions to the right agent. Agents also run on a server-side cron schedule, sending proactive check-ins as notifications.</p>
-  <p>Authentication is username + passphrase. Third-party integrations use HTTP Basic Auth.</p>
+  <p>GreenDial is a personal health platform powered by <strong>Doc</strong>, a primary AI coordinator, and a team of specialist <strong>health agents</strong>. Doc guides conversations, builds the user's health profile, and routes domain-specific questions to the right agent. When a message matches two or more agent domains, <strong>Cross AI</strong> synthesizes perspectives from multiple specialists in parallel.</p>
+  <p>Agents also run on a server-side cron schedule (08:00 UTC daily), generating personalized check-in notifications for subscribed users. Each agent has its own dedicated chat tab in the UI, with a profile-building onboarding interview on first activation.</p>
+  <p>Authentication is username + passphrase for the app; HTTP Basic Auth for third-party integrations.</p>
 
   <h3>Agent roster</h3>
   <table class="field-table">
     <thead><tr><th>ID</th><th>Name</th><th>Domain</th></tr></thead>
     <tbody>
-      <tr><td>diet</td><td>🥗 Diet Advisor</td><td>Nutrition, food, eating habits, weight</td></tr>
-      <tr><td>exercise</td><td>💪 Exercise Coach</td><td>Fitness, movement, workouts, recovery</td></tr>
-      <tr><td>immunity</td><td>🛡️ Immunity Specialist</td><td>Immune health, inflammation, gut health</td></tr>
-      <tr><td>sleep</td><td>😴 Sleep Coach</td><td>Sleep quality, insomnia, circadian rhythm</td></tr>
-      <tr><td>disease_prevention</td><td>🔬 Prevention Advisor</td><td>Screenings, risk factors, preventive habits</td></tr>
-      <tr><td>mental_health</td><td>🧠 Mental Wellness Guide</td><td>Stress, anxiety, depression, resilience</td></tr>
-      <tr><td>relationships</td><td>💞 Relationships Advisor</td><td>Social connection, communication, loneliness</td></tr>
-      <tr><td>environment</td><td>🌍 Environment Advisor</td><td>Air quality, ergonomics, home/workplace health</td></tr>
-      <tr><td>custom</td><td>⚙️ Custom Agent</td><td>User-defined system prompt</td></tr>
+      <tr><td>diet</td><td>🥗 Diet</td><td>Nutrition, eating habits, weight management, hydration</td></tr>
+      <tr><td>exercise</td><td>💪 Exercise</td><td>Fitness, movement, workouts, injury prevention</td></tr>
+      <tr><td>protect</td><td>🛡️ Protect AI</td><td>Immune resilience + disease prevention, screenings, risk factors</td></tr>
+      <tr><td>sleep</td><td>😴 Sleep</td><td>Sleep quality, insomnia, circadian rhythm, sleep hygiene</td></tr>
+      <tr><td>mental_health</td><td>🧠 Mind</td><td>Stress, anxiety, depression, mindfulness, resilience</td></tr>
+      <tr><td>relationships</td><td>💞 Relationships</td><td>Social connection, communication, loneliness, caregiving</td></tr>
+      <tr><td>environment</td><td>🌍 Environment</td><td>Air quality, ergonomics, home/workplace health, nature</td></tr>
+      <tr><td>custom</td><td>⚙️ Custom</td><td>User-defined system prompt — any health topic</td></tr>
+      <tr><td>cross_ai</td><td>🔀 Cross AI</td><td>Multi-domain synthesis — activated when 2+ domains match</td></tr>
     </tbody>
   </table>
 
   <h3>How agents activate</h3>
-  <p><strong>1. Via Doc (chat-triggered)</strong> — When a user's message matches an agent's keyword list, or when Doc emits a <code>**CALL_AGENT**</code> directive, the server runs the specialist agent and feeds its response back to Doc as context. Doc synthesizes a reply that weaves in expert knowledge naturally.</p>
-  <p><strong>2. Via crontab (scheduled)</strong> — <code>agent_runner.py</code> runs on the production VM at scheduled intervals. For each user with active agent subscriptions, it generates a personalized check-in notification from each subscribed agent. Users see these in the notification bell.</p>
+  <p><strong>1. Via Doc (chat-triggered)</strong> — Doc checks keyword lists and emits <code>**CALL_AGENT**</code>. Single-domain → specialist. Two or more domains → Cross AI runs matched agents in parallel threads and synthesizes.</p>
+  <p><strong>2. Via agent direct chat</strong> — Users open an agent's tab; the server routes to <code>POST /chat/agent/{agent_id}</code>. Each agent maintains its own transcript separate from Doc.</p>
+  <p><strong>3. Via crontab (scheduled)</strong> — <code>agent_runner.py</code> at 08:00 UTC daily. Per-user, per-agent, 20-hour debounce. Results land in the notification bell.</p>
 
-  <div class="note">All agents are kind, helpful, and truthful. They always recommend professional consultation for medical decisions and never diagnose.</div>
+  <div class="note">All agents are kind, helpful, and truthful. They always recommend professional consultation for medical decisions and never diagnose. The Mental Wellness Guide includes crisis resource escalation.</div>
+
+  <hr>
+
+  <!-- ===== PING ===== -->
+  <h2>System</h2>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method get">GET</span>
+      <span class="path">/ping</span>
+    </div>
+    <div class="endpoint-desc">
+      Health check. No auth required.
+      <div class="ping-tester">
+        <button class="btn-try" id="ping-btn" onclick="runPing()">▶ Try it live</button>
+        <div class="ping-result" id="ping-result"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method get">GET</span>
+      <span class="path">/stats</span>
+    </div>
+    <div class="endpoint-desc">Public. Returns total registered user count.
+      <div class="code-block">{"user_count": 23}</div>
+    </div>
+  </div>
 
   <hr>
 
@@ -208,13 +229,13 @@
         <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
         <tbody>
           <tr><td>username</td><td>string</td><td>Required</td></tr>
-          <tr><td>password</td><td>string</td><td>Required</td></tr>
+          <tr><td>password</td><td>string</td><td>Required (passphrase)</td></tr>
           <tr><td>create_new</td><td>bool</td><td>Set <em>true</em> to register</td></tr>
           <tr><td>hipaa_waiver_accepted</td><td>bool</td><td>Required when registering</td></tr>
+          <tr><td>profile</td><td>object</td><td>Optional initial profile on signup</td></tr>
         </tbody>
       </table>
-      <div class="code-block">// Sign in
-POST /auth
+      <div class="code-block">POST /auth
 {"username": "alice", "password": "mypassphrase"}
 
 // Response
@@ -233,25 +254,61 @@ POST /auth
       <span class="path">/chat</span>
     </div>
     <div class="endpoint-desc">
-      Send a message to Doc. Pass <code>user_id</code> for persistent profile updates; omit for anonymous sessions.
+      Send a message to Doc (primary coordinator). Doc may dispatch to a specialist agent internally. Pass <code>user_id</code> to persist profile updates.
       <table class="field-table" style="margin-top:12px">
         <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
         <tbody>
           <tr><td>text</td><td>string</td><td>User's message</td></tr>
-          <tr><td>user_id</td><td>string</td><td>Optional — links conversation to profile</td></tr>
-          <tr><td>session_id</td><td>string</td><td>Optional — pass back from previous response to continue session</td></tr>
+          <tr><td>user_id</td><td>string</td><td>Optional — links to saved profile</td></tr>
+          <tr><td>session_id</td><td>string</td><td>Optional — pass back to continue session</td></tr>
         </tbody>
       </table>
       <div class="code-block">POST /chat
-{"text": "I have type 2 diabetes", "user_id": "user_alice", "session_id": "session_abc123"}
+{"text": "I have type 2 diabetes", "user_id": "user_alice", "session_id": "session_abc"}
 
 // Response
 {
-  "response": "Thanks for sharing that. How long have you had diabetes, and are you currently on any medication for it?",
-  "session_id": "session_abc123",
+  "response": "Thanks for sharing. How long have you had diabetes?",
+  "session_id": "session_abc",
   "profile_updated": true,
   "profile": {"health_conditions": "type 2 diabetes", ...}
 }</div>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method post">POST</span>
+      <span class="path">/chat/agent/{agent_id}</span>
+    </div>
+    <div class="endpoint-desc">
+      Chat directly with a named specialist agent. Each agent maintains its own transcript. Pass <code>"init": true</code> (or empty <code>text</code>) to trigger the agent's welcome message and begin onboarding.
+      <table class="field-table" style="margin-top:12px">
+        <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td>text</td><td>string</td><td>User's message. Empty or omitted → triggers intro.</td></tr>
+          <tr><td>user_id</td><td>string</td><td>Optional — for profile persistence</td></tr>
+          <tr><td>session_id</td><td>string</td><td>Optional session token</td></tr>
+          <tr><td>init</td><td>bool</td><td>Set <em>true</em> to request welcome message without saving a user turn</td></tr>
+        </tbody>
+      </table>
+      <div class="code-block">// First visit — trigger intro
+POST /chat/agent/sleep
+{"user_id": "user_alice", "init": true}
+
+// Response
+{
+  "response": "Hi, I'm your Sleep Coach! How many hours are you typically sleeping?",
+  "agent_id": "sleep",
+  "session_id": "...",
+  "profile_updated": false
+}
+
+// Regular turn
+POST /chat/agent/protect
+{"text": "My father had a heart attack at 55", "user_id": "user_alice"}
+
+// Response includes profile update for family_history</div>
     </div>
   </div>
 
@@ -265,7 +322,7 @@ POST /auth
       <span class="method get">GET</span>
       <span class="path">/user/{user_id}</span>
     </div>
-    <div class="endpoint-desc">Fetch a user's profile data (passphrase excluded).</div>
+    <div class="endpoint-desc">Fetch a user's full record (passphrase excluded).</div>
   </div>
 
   <div class="endpoint">
@@ -274,32 +331,48 @@ POST /auth
       <span class="path">/user/{user_id}</span>
     </div>
     <div class="endpoint-desc">
-      Update profile fields directly.
+      Partial update. Allowed top-level keys: <code>username</code>, <code>settings</code>, <code>profile</code>. Nested objects are merged.
       <div class="code-block">PUT /user/user_alice
-{"profile": {"weight": "165 lbs", "goals": "lose 20 lbs"}}</div>
+{"profile": {"weight": "165 lbs", "goals": "lose 20 lbs", "avatar": "🧑"}}</div>
     </div>
   </div>
 
-  <h3>Profile fields</h3>
+  <h3>Core profile fields</h3>
   <table class="field-table">
     <thead><tr><th>Field</th><th>Description</th></tr></thead>
     <tbody>
       <tr><td>primary_concern</td><td>Main health focus</td></tr>
       <tr><td>health_conditions</td><td>Diagnoses, chronic conditions</td></tr>
-      <tr><td>medications</td><td>Current medications</td></tr>
+      <tr><td>medications</td><td>Current medications and supplements</td></tr>
       <tr><td>allergies</td><td>Drug or food allergies</td></tr>
       <tr><td>age</td><td>Age</td></tr>
       <tr><td>weight</td><td>Weight</td></tr>
       <tr><td>height</td><td>Height</td></tr>
       <tr><td>location</td><td>City / region</td></tr>
-      <tr><td>diet_type</td><td>Diet style (e.g. keto, vegan)</td></tr>
+      <tr><td>diet_type</td><td>Diet style (e.g. keto, vegan, Mediterranean)</td></tr>
       <tr><td>exercise_frequency</td><td>How often they exercise</td></tr>
-      <tr><td>exercise_type</td><td>What kind of exercise</td></tr>
+      <tr><td>exercise_type</td><td>Type of exercise</td></tr>
       <tr><td>sleep_hours</td><td>Average nightly sleep</td></tr>
       <tr><td>sleep_quality</td><td>Self-rated sleep quality</td></tr>
       <tr><td>stress_level</td><td>Self-rated stress level</td></tr>
       <tr><td>goals</td><td>Health goals</td></tr>
+      <tr><td>avatar</td><td>Emoji string or base64 data URL for profile picture</td></tr>
       <tr><td>notes</td><td>Free-form notes</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Agent-specific profile fields</h3>
+  <p>Written by agents during onboarding and chat. Merged into the same profile object.</p>
+  <table class="field-table">
+    <thead><tr><th>Field</th><th>Agent</th></tr></thead>
+    <tbody>
+      <tr><td>diet_type, dietary_restrictions, nutrition_goals, food_allergies</td><td>🥗 Diet</td></tr>
+      <tr><td>fitness_goals, fitness_level, exercise_limitations, preferred_workout_time</td><td>💪 Exercise</td></tr>
+      <tr><td>immune_concerns, supplements, autoimmune_conditions, family_history, smoking_status, last_checkup, screenings_due</td><td>🛡️ Protect AI</td></tr>
+      <tr><td>sleep_issues, bedtime, wake_time, sleep_aids, sleep_disorders</td><td>😴 Sleep</td></tr>
+      <tr><td>mental_health_concerns, therapy_status, coping_strategies, mindfulness_practice</td><td>🧠 Mind</td></tr>
+      <tr><td>relationship_status, social_support, loneliness_level, relationship_goals</td><td>💞 Relationships</td></tr>
+      <tr><td>living_environment, environmental_concerns, workplace_setup, climate_region</td><td>🌍 Environment</td></tr>
     </tbody>
   </table>
 
@@ -322,17 +395,15 @@ POST /auth
       <span class="path">/settings/{user_id}</span>
     </div>
     <div class="endpoint-desc">
-      Update settings (partial update — only provided fields change).
+      Partial update — only provided fields change.
       <table class="field-table" style="margin-top:12px">
         <thead><tr><th>Field</th><th>Values</th><th>Description</th></tr></thead>
         <tbody>
           <tr><td>doc_style</td><td><em>questioning</em> · professional · friendly</td><td>Doc's conversational tone</td></tr>
           <tr><td>notifications_enabled</td><td><em>true</em> · false</td><td>All notifications on/off</td></tr>
-          <tr><td>agent_subscriptions</td><td>array of agent IDs</td><td>Which agents send periodic check-ins</td></tr>
-          <tr><td>agent_prefs</td><td>object</td><td>Per-agent preference overrides</td></tr>
+          <tr><td>agent_subscriptions</td><td>array of agent IDs</td><td>Which agents send periodic check-ins and get chat tabs</td></tr>
+          <tr><td>agent_prefs</td><td>object</td><td>Per-agent preference overrides, e.g. <code>{"sleep": {"goal_hours": 8}}</code></td></tr>
           <tr><td>custom_agent_prompt</td><td>string (max 2000)</td><td>System prompt for the Custom agent</td></tr>
-          <tr><td>notification_schedule</td><td>daily_morning · daily_evening · weekly</td><td>When to receive cron notifications</td></tr>
-          <tr><td>timezone</td><td>IANA string e.g. America/New_York</td><td>Used by cron agent scheduler</td></tr>
         </tbody>
       </table>
     </div>
@@ -342,7 +413,7 @@ POST /auth
 
   <!-- ===== AGENTS ===== -->
   <h2>Agents</h2>
-  <p>Manage which specialist agents a user subscribes to. Subscribed agents generate daily personalized notifications via cron. Agents also activate automatically during chat based on keyword matching and Doc's dispatch decisions.</p>
+  <p>Manage agent subscriptions. Subscribed agents generate daily notifications via cron and appear as chat tabs in the UI. First activation triggers a 3-turn onboarding interview that fills domain-specific profile fields.</p>
 
   <div class="endpoint">
     <div class="endpoint-header">
@@ -350,16 +421,22 @@ POST /auth
       <span class="path">/agents/{user_id}</span>
     </div>
     <div class="endpoint-desc">
-      Get the user's current subscriptions and the full list of available agents.
+      Get subscriptions and full agent list. Legacy agent IDs (<code>immunity</code>, <code>disease_prevention</code>) are transparently migrated to <code>protect</code>.
       <div class="code-block">GET /agents/user_alice
 
 {
-  "subscriptions": ["diet", "sleep"],
-  "agent_prefs": {"diet": {"style": "plant-based"}},
+  "subscriptions": ["diet", "sleep", "protect"],
+  "agent_prefs": {},
   "available_agents": [
-    {"id": "diet",    "name": "Diet Advisor",    "emoji": "🥗", "subscribed": true},
-    {"id": "exercise","name": "Exercise Coach",  "emoji": "💪", "subscribed": false},
-    ...
+    {"id": "diet",         "name": "Diet",         "emoji": "🥗", "subscribed": true},
+    {"id": "exercise",     "name": "Exercise",      "emoji": "💪", "subscribed": false},
+    {"id": "protect",      "name": "Protect AI",    "emoji": "🛡️", "subscribed": true},
+    {"id": "sleep",        "name": "Sleep",         "emoji": "😴", "subscribed": true},
+    {"id": "mental_health","name": "Mind",          "emoji": "🧠", "subscribed": false},
+    {"id": "relationships","name": "Relationships", "emoji": "💞", "subscribed": false},
+    {"id": "environment",  "name": "Environment",   "emoji": "🌍", "subscribed": false},
+    {"id": "custom",       "name": "Custom",        "emoji": "⚙️", "subscribed": false},
+    {"id": "cross_ai",     "name": "Cross AI",      "emoji": "🔀", "subscribed": false}
   ]
 }</div>
     </div>
@@ -371,27 +448,27 @@ POST /auth
       <span class="path">/agents/{user_id}</span>
     </div>
     <div class="endpoint-desc">
-      Update agent subscriptions, per-agent preferences, and custom agent prompt.
+      Update subscriptions, per-agent preferences, and custom agent prompt.
       <table class="field-table" style="margin-top:12px">
         <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
         <tbody>
-          <tr><td>subscriptions</td><td>string[]</td><td>Agent IDs to subscribe to. Unrecognized IDs are silently dropped.</td></tr>
+          <tr><td>subscriptions</td><td>string[]</td><td>Agent IDs. Unrecognized IDs silently dropped.</td></tr>
           <tr><td>agent_prefs</td><td>object</td><td>Per-agent preferences (merged with existing)</td></tr>
           <tr><td>custom_agent_prompt</td><td>string</td><td>System prompt for the Custom agent (max 2000 chars)</td></tr>
         </tbody>
       </table>
       <div class="code-block">PUT /agents/user_alice
-{"subscriptions": ["diet", "sleep", "mental_health"],
- "agent_prefs": {"sleep": {"goal_hours": 8}},
- "custom_agent_prompt": "You are a longevity coach focused on Blue Zone habits."}</div>
+{
+  "subscriptions": ["diet", "sleep", "protect"],
+  "custom_agent_prompt": "You are a longevity coach focused on Blue Zone habits."
+}</div>
     </div>
   </div>
 
   <div class="note">
-    <strong>Cron runner:</strong> <code>agent_runner.py</code> runs on the production VM.
-    Each subscribed agent is run once per 20 hours per user. Results are appended to
-    the user's notification list (max 20 notifications kept). Run manually with:<br>
-    <code>python3 agent_runner.py --agent diet --user user_alice --dry-run</code>
+    <strong>Cron runner:</strong> <code>agent_runner.py</code> — 08:00 UTC daily, 20-hour debounce per user per agent.
+    Logs to <code>/var/log/greendial_agents.log</code>. Manual run:<br>
+    <code>python3 agent_runner.py --agent protect --user user_alice --dry-run</code>
   </div>
 
   <hr>
@@ -402,9 +479,28 @@ POST /auth
   <div class="endpoint">
     <div class="endpoint-header">
       <span class="method get">GET</span>
+      <span class="path">/conversations/{user_id}/agents</span>
+    </div>
+    <div class="endpoint-desc">
+      Fetch all transcripts — Doc's and each agent's — in one call. Used by the browser on login.
+      <div class="code-block">GET /conversations/user_alice/agents
+
+{
+  "doc_transcript": "[2026-06-04T10:00:00] User: hi\n[2026-06-04T10:00:01] Doc: ...",
+  "agents": {
+    "sleep": "[2026-06-04T08:00:00] Sleep: Hi, I'm your Sleep Coach! ...",
+    "diet":  ""
+  }
+}</div>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method get">GET</span>
       <span class="path">/conversations/{user_id}</span>
     </div>
-    <div class="endpoint-desc">Get the user's full conversation transcript.</div>
+    <div class="endpoint-desc">Get Doc's transcript only (legacy endpoint, backward-compatible).</div>
   </div>
 
   <div class="endpoint">
@@ -412,7 +508,15 @@ POST /auth
       <span class="method delete">DELETE</span>
       <span class="path">/conversations/{user_id}</span>
     </div>
-    <div class="endpoint-desc">Clear all conversation history for the user.</div>
+    <div class="endpoint-desc">Clear Doc's transcript.</div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method delete">DELETE</span>
+      <span class="path">/conversations/{user_id}/agent/{agent_id}</span>
+    </div>
+    <div class="endpoint-desc">Clear one agent's transcript without affecting others.</div>
   </div>
 
   <hr>
@@ -425,7 +529,7 @@ POST /auth
       <span class="method get">GET</span>
       <span class="path">/notifications/{user_id}</span>
     </div>
-    <div class="endpoint-desc">List pending notifications.</div>
+    <div class="endpoint-desc">List pending notifications (last 10). Notifications come from Doc, agents, and the cron runner.</div>
   </div>
 
   <div class="endpoint">
@@ -433,7 +537,7 @@ POST /auth
       <span class="method post">POST</span>
       <span class="path">/notifications/{user_id}/generate</span>
     </div>
-    <div class="endpoint-desc">Trigger Doc to generate a new notification (tip, reminder, encouragement) based on the user's current profile.</div>
+    <div class="endpoint-desc">Trigger an on-demand notification based on the user's current profile.</div>
   </div>
 
   <div class="endpoint">
@@ -447,8 +551,8 @@ POST /auth
   <hr>
 
   <!-- ===== THIRD-PARTY API ===== -->
-  <h2>Third-Party API <span class="badge">Token auth</span></h2>
-  <p>These endpoints accept an <code>Authorization: Basic &lt;base64(username:password)&gt;</code> header for use from external apps.</p>
+  <h2>Third-Party API <span class="badge">Basic Auth</span></h2>
+  <p>Use <code>Authorization: Basic &lt;base64(username:passphrase)&gt;</code> for machine-to-machine profile sync.</p>
 
   <div class="endpoint">
     <div class="endpoint-header">
@@ -460,162 +564,102 @@ POST /auth
 
   <div class="endpoint">
     <div class="endpoint-header">
-      <span class="method post">POST</span>
+      <span class="method put">PUT</span>
       <span class="path">/api/v1/profile</span>
     </div>
     <div class="endpoint-desc">
-      Update the authenticated user's profile from an external app.
-      <div class="code-block">POST /api/v1/profile
+      Merge profile fields from an external app (wearable, EHR export, etc.).
+      <div class="code-block">PUT /api/v1/profile
 Authorization: Basic YWxpY2U6bXlwYXNzcGhyYXNl
 
-{"profile": {"weight": "162 lbs"}}</div>
+{"profile": {"weight": "162 lbs", "steps_per_day": "8200"}}</div>
     </div>
   </div>
 
   <hr>
 
-  <!-- ===== STATS ===== -->
-  <h2>Stats</h2>
-
-  <div class="endpoint">
-    <div class="endpoint-header">
-      <span class="method get">GET</span>
-      <span class="path">/stats</span>
-    </div>
-    <div class="endpoint-desc">Public endpoint. Returns the total number of registered users.
-      <div class="code-block">{"user_count": 42}</div>
-    </div>
-  </div>
+  <!-- ===== SPEC FILES ===== -->
+  <h2>Spec Files</h2>
+  <p>Machine-readable specs for tooling, code generation, and AI agents that interact with this API.</p>
+  <table class="field-table">
+    <thead><tr><th>File</th><th>URL</th><th>Format</th></tr></thead>
+    <tbody>
+      <tr><td>OpenAPI 3.1</td><td><a href="/spec/openapi.yaml">/spec/openapi.yaml</a></td><td>Full endpoint schemas, request/response models</td></tr>
+      <tr><td>Arazzo 1.0</td><td><a href="/spec/arazzo.yaml">/spec/arazzo.yaml</a></td><td>Workflow descriptions: chat dispatch, cron notifications, onboarding, profile updates</td></tr>
+    </tbody>
+  </table>
 
   <hr>
 
-  <!-- ===== DOC SYSTEM PROMPT ===== -->
+  <!-- ===== HOW DOC WORKS ===== -->
   <h2>How Doc Works</h2>
-  <p>Doc is the primary coordinator. Its behavior is controlled by a dynamically assembled prompt. At each turn, the server may run up to one specialist agent and inject its response as context before Doc's final reply.</p>
+  <p>Doc is the primary coordinator. Its prompt is assembled dynamically each turn from profile state, conversation stage, and optional agent context.</p>
 
   <div class="note">
-    Doc runs on an LLM via OpenRouter. Two structured markers are stripped server-side before returning text to the user:
-    <br>• <code>**PROFILE_UPDATE** {"field": "value"}</code> — saves health data to the user's profile
-    <br>• <code>**CALL_AGENT** {"agent": "sleep"}</code> — triggers a specialist agent sub-call
+    Two structured markers are stripped server-side before returning text to the user:<br>
+    • <code>**PROFILE_UPDATE** {"field": "value"}</code> — persists health data<br>
+    • <code>**CALL_AGENT** {"agent": "sleep"}</code> — triggers a specialist sub-call
   </div>
 
-  <h3>Agent dispatch flow</h3>
-  <div class="code-block">1. User sends message
-2. Server checks keyword → agent matches
-3. Doc generates response (may include **CALL_AGENT**)
-4. If agent identified:
-   a. Specialist agent runs with user profile + transcript
-   b. Agent returns 2-4 sentence expert response
-   c. Doc re-runs with agent response as AGENT CONTEXT
-   d. Doc synthesizes a natural, expert-informed reply
-5. Server strips **CALL_AGENT** and **PROFILE_UPDATE** markers
-6. Final response returned to browser</div>
+  <h3>Dispatch flow</h3>
+  <div class="code-block">User message
+  │
+  ├─ keyword match → 0 agents  →  Doc answers directly
+  │
+  ├─ keyword match → 1 agent   →  specialist runs → Doc synthesizes with context
+  │
+  └─ keyword match → 2+ agents →  Cross AI runs matched agents in parallel threads
+                                   → Cross AI synthesizes → Doc wraps final reply
 
-  <div class="prompt-section">
-    <div class="prompt-section-title">Core Identity</div>
-    <div class="prompt-block">You are Doc, a proactive health assistant. You lead the conversation to build the user's health profile and provide guidance.</div>
-  </div>
+Profile updates extracted from any response → saved to S3 → sidebar refreshes</div>
 
-  <div class="prompt-section">
-    <div class="prompt-section-title">Profile Update Instructions (injected when profile is incomplete)</div>
-    <div class="prompt-block">## PROFILE UPDATES
-When the user shares health info, emit:
+  <h3>Language mirroring</h3>
+  <p>All agents (Doc and specialists) detect message length and tone from each user turn and inject a style-matching instruction. Very short messages get terse replies; detailed messages get thorough ones. Casual phrasing gets casual responses.</p>
 
+  <h3>Profile update syntax</h3>
+  <div class="prompt-block">// Set a field
 **PROFILE_UPDATE**
-{"field": "value"}
+{"age": "44", "health_conditions": "type 2 diabetes"}
 
-Operations:
-- Set:    {"age": "44"}              — sets the field
-- Append: {"medications": "+aspirin"} — adds to existing (use + prefix)
-- Delete: {"allergies": null}         — removes the field
-- Nested: {"vitals": {"bp": "120/80"}} — creates sub-object
-
-Fields: primary_concern, health_conditions, medications, allergies,
-        age, weight, height, location, diet_type, exercise_frequency,
-        exercise_type, sleep_hours, sleep_quality, stress_level, goals, notes
-
-Example — User says "I'm 44 and have diabetes":
+// Append to existing value
 **PROFILE_UPDATE**
-{"age": "44", "health_conditions": "diabetes"}</div>
-  </div>
+{"medications": "+metformin 500mg twice daily"}
 
-  <div class="prompt-section">
-    <div class="prompt-section-title">Style Mirroring (injected based on user's detected tone &amp; message length)</div>
-    <div class="prompt-block">## YOUR STYLE
-User writes briefly. Match them: 1-2 short sentences max. No fluff.
+// Delete a field
+**PROFILE_UPDATE**
+{"allergies": null}
 
-— or —
-
-## YOUR STYLE
-User writes moderate length. Match them: 2-3 sentences. Be conversational.
-
-— or —
-
-## YOUR STYLE
-User writes detailed messages. You can be more thorough, but stay focused.
-
-## TONE
-User is casual/informal. Match their energy. Use contractions, be relaxed.
-
-— or —
-
-## TONE
-User is formal. Be professional and clear.</div>
-  </div>
-
-  <div class="prompt-section">
-    <div class="prompt-section-title">Profile Status (one of three variants)</div>
-    <div class="prompt-block">## PROFILE STATUS
-Empty - gather basic info: why they're here, any health conditions, goals.
-
-— or —
-
-## PROFILE STATUS
-Partial - missing: primary_concern, goals
-## CURRENT PROFILE
-{"health_conditions": "type 2 diabetes", "age": "44", ...}
-
-— or —
-
-## PROFILE STATUS
-Complete. Focus on their goals and providing helpful responses.
-## CURRENT PROFILE
-{...full profile...}</div>
-  </div>
-
-  <div class="prompt-section">
-    <div class="prompt-section-title">Conversation History (injected when available)</div>
-    <div class="prompt-block">## CONVERSATION SUMMARY
-{summary of older exchanges}
-
-## RECENT CONVERSATION
-User: I've been feeling tired lately
-Doc: How long has that been going on? Have you had any changes in sleep?
-User: About two weeks, sleep is fine
-Doc: ...</div>
-  </div>
-
-  <div class="prompt-section">
-    <div class="prompt-section-title">Response Rules (always injected)</div>
-    <div class="prompt-block">## RULES
-- ALWAYS end your response with exactly ONE question to drive the conversation forward
-- NEVER wait for the user to initiate a topic. You lead.
-- Match the user's message length
-- Only update profile with info they explicitly stated</div>
-  </div>
-
-  <div class="prompt-section">
-    <div class="prompt-section-title">Final instruction (always appended)</div>
-    <div class="prompt-block">---
-User: {user_input}
-
-Doc (respond appropriately, then ask ONE leading question):</div>
-  </div>
+// Nested sub-object
+**PROFILE_UPDATE**
+{"vitals": {"bp": "120/80", "resting_hr": "62"}}</div>
 
   <hr>
 
   <p style="color:rgba(255,255,255,0.3);font-size:12px">GreenDial is open source. Questions? <a href="mailto:mickeyshaughnessy@gmail.com">mickeyshaughnessy@gmail.com</a></p>
 </div>
+
+<script>
+  async function runPing() {
+    const btn = document.getElementById('ping-btn');
+    const result = document.getElementById('ping-result');
+    btn.disabled = true;
+    btn.textContent = '⏳ Pinging…';
+    result.className = 'ping-result';
+    const t0 = performance.now();
+    try {
+      const res = await fetch('/ping');
+      const ms = Math.round(performance.now() - t0);
+      const data = await res.json();
+      result.className = 'ping-result ok';
+      result.textContent = `HTTP ${res.status}  ${ms}ms\n\n${JSON.stringify(data, null, 2)}`;
+    } catch (e) {
+      result.className = 'ping-result err';
+      result.textContent = `Error: ${e.message}`;
+    }
+    btn.disabled = false;
+    btn.textContent = '▶ Try it live';
+  }
+</script>
 
 </body>
 </html>
