@@ -1,0 +1,195 @@
+arazzo: "1.0.0"
+info:
+  title: GreenDial Health Agent Workflows
+  description: |
+    Arazzo document describing how GreenDial's health agents interact with each other,
+    with Doc (the primary coordinator), and with the user.
+
+    Two activation paths:
+      1. User-initiated (via chat with Doc)
+      2. System-initiated (via crontab on the production VM)
+  version: "1.0.0"
+
+sourceDescriptions:
+  - name: greendial-api
+    url: ./greendial-openapi.yaml
+    type: openapi
+
+# ============================================================
+# WORKFLOW 1: User sends a message, Doc dispatches to an agent
+# ============================================================
+workflows:
+  - workflowId: doc-agent-dispatch
+    summary: User chat with agent-augmented Doc response
+    description: |
+      The user sends a message. Doc decides whether the message warrants
+      a specialist agent. If so, Doc calls the agent, receives specialist
+      context, and synthesizes a final reply.
+
+    steps:
+      - stepId: user-sends-message
+        description: User sends a chat message via the browser UI
+        operationId: postChat
+        requestBody:
+          contentType: application/json
+          payload:
+            text: $inputs.user_message
+            user_id: $inputs.user_id
+            session_id: $inputs.session_id
+
+      - stepId: doc-initial-response
+        description: |
+          Doc generates an initial response. If the message is about a
+          specialist domain, Doc emits **CALL_AGENT** {"agent": "<id>"}.
+          The server parses this directive before returning the response.
+        successCriteria:
+          - condition: $statusCode == 200
+
+      - stepId: agent-dispatch-check
+        description: |
+          Server-side: parse **CALL_AGENT** directive from Doc's response.
+          Also check keyword matching against user's message.
+          If an agent is identified, proceed to agent-run.
+          Otherwise, proceed to return-final-response.
+
+      - stepId: agent-run
+        description: |
+          Run the identified specialist agent with:
+          - The user's original message
+          - The user's health profile
+          - Recent conversation transcript
+          The agent returns a 2-4 sentence specialist response.
+        dependsOn: [agent-dispatch-check]
+
+      - stepId: doc-synthesize
+        description: |
+          Re-run Doc with the agent's response injected as AGENT CONTEXT.
+          Doc weaves the specialist insight naturally into its reply without
+          attributing it to the agent.
+        dependsOn: [agent-run]
+
+      - stepId: return-final-response
+        description: |
+          Return Doc's final synthesized response to the browser.
+          Profile updates extracted from the response are saved to S3.
+          Session transcript is updated.
+        outputs:
+          response: $steps.doc-synthesize.outputs.response
+          profile_updated: $steps.doc-synthesize.outputs.profile_updated
+          profile: $steps.doc-synthesize.outputs.profile
+
+  # ============================================================
+  # WORKFLOW 2: Cron runner — periodic agent notifications
+  # ============================================================
+  - workflowId: cron-agent-notification
+    summary: Periodic agent check-in via crontab
+    description: |
+      Runs on the production VM via crontab (typically daily at 8 AM UTC).
+      For each active user with agent subscriptions, generates a personalized
+      health tip or check-in from each subscribed agent and saves it as a
+      notification. The user sees these in their notification bell in the UI.
+
+    steps:
+      - stepId: load-active-users
+        description: |
+          List all users from S3. Filter to those with:
+          - notifications_enabled: true
+          - At least one agent_subscription
+          - The agent was not run in the last 20 hours
+
+      - stepId: for-each-user-agent
+        description: |
+          For each (user, agent_id) pair, build the agent's cron prompt
+          using the user's profile and recent transcript.
+
+      - stepId: run-agent-llm
+        description: |
+          Call the LLM with the agent's SYSTEM_PROMPT and CRON_PROMPT_TEMPLATE.
+          The response is a JSON object: {"message": "...", "type": "..."}
+
+      - stepId: save-notification
+        description: |
+          Append the notification to the user's notifications array in S3.
+          Update agent_last_ran[agent_id] timestamp.
+          Limit notifications array to 20 most recent.
+
+      - stepId: user-views-notification
+        description: |
+          The user opens GreenDial, sees the notification badge, and clicks it.
+          Optionally clicks the notification to send it as a chat message to Doc.
+
+  # ============================================================
+  # WORKFLOW 3: User configures agent subscriptions
+  # ============================================================
+  - workflowId: configure-agent-subscriptions
+    summary: User subscribes to or unsubscribes from health agents
+    description: |
+      The user opens Settings and selects which agents they want to receive
+      periodic check-ins from. They can also set per-agent preferences and
+      configure a custom agent with a personal system prompt.
+
+    steps:
+      - stepId: open-settings
+        description: User navigates to Settings tab in the UI
+
+      - stepId: view-available-agents
+        operationId: getAgentSubscriptions
+        description: |
+          Fetch current subscriptions and the full list of available agents.
+          Each agent shows: id, name, emoji, and subscribed (bool).
+        parameters:
+          - name: user_id
+            in: path
+            value: $inputs.user_id
+
+      - stepId: toggle-subscription
+        operationId: updateAgentSubscriptions
+        description: |
+          User toggles agents on/off. Client sends updated subscriptions array.
+          Optionally includes agent_prefs dict and custom_agent_prompt.
+        requestBody:
+          contentType: application/json
+          payload:
+            subscriptions: $inputs.selected_agents
+            agent_prefs: $inputs.agent_prefs
+            custom_agent_prompt: $inputs.custom_prompt
+
+      - stepId: settings-saved
+        description: |
+          Server validates agent IDs against registry, saves to user settings.
+          Returns success with final subscriptions list.
+
+  # ============================================================
+  # WORKFLOW 4: Doc modifies user profile during chat
+  # ============================================================
+  - workflowId: doc-profile-update
+    summary: Doc extracts and saves health profile updates from conversation
+    description: |
+      During a chat, Doc emits **PROFILE_UPDATE** JSON markers whenever
+      the user shares health information. The server parses these markers,
+      applies the updates to the profile (with append/delete/merge support),
+      and returns the updated profile to the browser so the sidebar refreshes.
+
+    steps:
+      - stepId: user-shares-health-info
+        description: User mentions age, condition, medication, goal, etc.
+
+      - stepId: doc-emits-profile-update
+        description: |
+          Doc emits: **PROFILE_UPDATE** {"field": "value"}
+          Supported operations:
+          - Set:    {"field": "value"}
+          - Append: {"field": "+additional value"}
+          - Delete: {"field": null}
+          - Merge:  {"field": {"subfield": "value"}}
+
+      - stepId: server-parses-and-applies
+        description: |
+          Server extracts **PROFILE_UPDATE** markers from Doc's raw response.
+          Applies updates to user.profile in S3.
+          Strips markers from the response before returning to browser.
+
+      - stepId: browser-refreshes-profile
+        description: |
+          Browser receives profile_updated: true and updated profile object.
+          Sidebar Quick Profile and Profile JSON panels refresh immediately.

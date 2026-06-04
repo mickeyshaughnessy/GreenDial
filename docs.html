@@ -167,8 +167,30 @@
 
   <!-- ===== OVERVIEW ===== -->
   <h2>Overview</h2>
-  <p>GreenDial lets users have open-ended health conversations with <strong>Doc</strong>, an AI assistant that builds a structured profile from natural conversation. Profiles are stored in cloud object storage and can be read/updated through the API.</p>
-  <p>Authentication is username + passphrase. No tokens — include credentials in the request body for endpoints that need them.</p>
+  <p>GreenDial is a personal health platform powered by <strong>Doc</strong>, an AI coordinator, and a team of nine specialist <strong>health agents</strong>. Doc guides conversations, builds the user's health profile, and routes specialist questions to the right agent. Agents also run on a server-side cron schedule, sending proactive check-ins as notifications.</p>
+  <p>Authentication is username + passphrase. Third-party integrations use HTTP Basic Auth.</p>
+
+  <h3>Agent roster</h3>
+  <table class="field-table">
+    <thead><tr><th>ID</th><th>Name</th><th>Domain</th></tr></thead>
+    <tbody>
+      <tr><td>diet</td><td>🥗 Diet Advisor</td><td>Nutrition, food, eating habits, weight</td></tr>
+      <tr><td>exercise</td><td>💪 Exercise Coach</td><td>Fitness, movement, workouts, recovery</td></tr>
+      <tr><td>immunity</td><td>🛡️ Immunity Specialist</td><td>Immune health, inflammation, gut health</td></tr>
+      <tr><td>sleep</td><td>😴 Sleep Coach</td><td>Sleep quality, insomnia, circadian rhythm</td></tr>
+      <tr><td>disease_prevention</td><td>🔬 Prevention Advisor</td><td>Screenings, risk factors, preventive habits</td></tr>
+      <tr><td>mental_health</td><td>🧠 Mental Wellness Guide</td><td>Stress, anxiety, depression, resilience</td></tr>
+      <tr><td>relationships</td><td>💞 Relationships Advisor</td><td>Social connection, communication, loneliness</td></tr>
+      <tr><td>environment</td><td>🌍 Environment Advisor</td><td>Air quality, ergonomics, home/workplace health</td></tr>
+      <tr><td>custom</td><td>⚙️ Custom Agent</td><td>User-defined system prompt</td></tr>
+    </tbody>
+  </table>
+
+  <h3>How agents activate</h3>
+  <p><strong>1. Via Doc (chat-triggered)</strong> — When a user's message matches an agent's keyword list, or when Doc emits a <code>**CALL_AGENT**</code> directive, the server runs the specialist agent and feeds its response back to Doc as context. Doc synthesizes a reply that weaves in expert knowledge naturally.</p>
+  <p><strong>2. Via crontab (scheduled)</strong> — <code>agent_runner.py</code> runs on the production VM at scheduled intervals. For each user with active agent subscriptions, it generates a personalized check-in notification from each subscribed agent. Users see these in the notification bell.</p>
+
+  <div class="note">All agents are kind, helpful, and truthful. They always recommend professional consultation for medical decisions and never diagnose.</div>
 
   <hr>
 
@@ -300,15 +322,76 @@ POST /auth
       <span class="path">/settings/{user_id}</span>
     </div>
     <div class="endpoint-desc">
-      Update settings.
+      Update settings (partial update — only provided fields change).
       <table class="field-table" style="margin-top:12px">
-        <thead><tr><th>Field</th><th>Values</th></tr></thead>
+        <thead><tr><th>Field</th><th>Values</th><th>Description</th></tr></thead>
         <tbody>
-          <tr><td>doc_style</td><td><em>questioning</em> · professional · friendly</td></tr>
-          <tr><td>notifications_enabled</td><td><em>true</em> · false</td></tr>
+          <tr><td>doc_style</td><td><em>questioning</em> · professional · friendly</td><td>Doc's conversational tone</td></tr>
+          <tr><td>notifications_enabled</td><td><em>true</em> · false</td><td>All notifications on/off</td></tr>
+          <tr><td>agent_subscriptions</td><td>array of agent IDs</td><td>Which agents send periodic check-ins</td></tr>
+          <tr><td>agent_prefs</td><td>object</td><td>Per-agent preference overrides</td></tr>
+          <tr><td>custom_agent_prompt</td><td>string (max 2000)</td><td>System prompt for the Custom agent</td></tr>
+          <tr><td>notification_schedule</td><td>daily_morning · daily_evening · weekly</td><td>When to receive cron notifications</td></tr>
+          <tr><td>timezone</td><td>IANA string e.g. America/New_York</td><td>Used by cron agent scheduler</td></tr>
         </tbody>
       </table>
     </div>
+  </div>
+
+  <hr>
+
+  <!-- ===== AGENTS ===== -->
+  <h2>Agents</h2>
+  <p>Manage which specialist agents a user subscribes to. Subscribed agents generate daily personalized notifications via cron. Agents also activate automatically during chat based on keyword matching and Doc's dispatch decisions.</p>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method get">GET</span>
+      <span class="path">/agents/{user_id}</span>
+    </div>
+    <div class="endpoint-desc">
+      Get the user's current subscriptions and the full list of available agents.
+      <div class="code-block">GET /agents/user_alice
+
+{
+  "subscriptions": ["diet", "sleep"],
+  "agent_prefs": {"diet": {"style": "plant-based"}},
+  "available_agents": [
+    {"id": "diet",    "name": "Diet Advisor",    "emoji": "🥗", "subscribed": true},
+    {"id": "exercise","name": "Exercise Coach",  "emoji": "💪", "subscribed": false},
+    ...
+  ]
+}</div>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method put">PUT</span>
+      <span class="path">/agents/{user_id}</span>
+    </div>
+    <div class="endpoint-desc">
+      Update agent subscriptions, per-agent preferences, and custom agent prompt.
+      <table class="field-table" style="margin-top:12px">
+        <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td>subscriptions</td><td>string[]</td><td>Agent IDs to subscribe to. Unrecognized IDs are silently dropped.</td></tr>
+          <tr><td>agent_prefs</td><td>object</td><td>Per-agent preferences (merged with existing)</td></tr>
+          <tr><td>custom_agent_prompt</td><td>string</td><td>System prompt for the Custom agent (max 2000 chars)</td></tr>
+        </tbody>
+      </table>
+      <div class="code-block">PUT /agents/user_alice
+{"subscriptions": ["diet", "sleep", "mental_health"],
+ "agent_prefs": {"sleep": {"goal_hours": 8}},
+ "custom_agent_prompt": "You are a longevity coach focused on Blue Zone habits."}</div>
+    </div>
+  </div>
+
+  <div class="note">
+    <strong>Cron runner:</strong> <code>agent_runner.py</code> runs on the production VM.
+    Each subscribed agent is run once per 20 hours per user. Results are appended to
+    the user's notification list (max 20 notifications kept). Run manually with:<br>
+    <code>python3 agent_runner.py --agent diet --user user_alice --dry-run</code>
   </div>
 
   <hr>
@@ -407,10 +490,26 @@ Authorization: Basic YWxpY2U6bXlwYXNzcGhyYXNl
   <hr>
 
   <!-- ===== DOC SYSTEM PROMPT ===== -->
-  <h2>How Doc Works — System Prompt</h2>
-  <p>Doc's behavior is controlled by a dynamically assembled system prompt. The components below are combined at inference time based on the user's current profile completeness, conversation history, and detected communication style.</p>
+  <h2>How Doc Works</h2>
+  <p>Doc is the primary coordinator. Its behavior is controlled by a dynamically assembled prompt. At each turn, the server may run up to one specialist agent and inject its response as context before Doc's final reply.</p>
 
-  <div class="note">Doc runs on an LLM via OpenRouter. Profile updates are parsed from a structured <code>**PROFILE_UPDATE**</code> block that Doc emits inline with its response — the server strips it before returning text to the user.</div>
+  <div class="note">
+    Doc runs on an LLM via OpenRouter. Two structured markers are stripped server-side before returning text to the user:
+    <br>• <code>**PROFILE_UPDATE** {"field": "value"}</code> — saves health data to the user's profile
+    <br>• <code>**CALL_AGENT** {"agent": "sleep"}</code> — triggers a specialist agent sub-call
+  </div>
+
+  <h3>Agent dispatch flow</h3>
+  <div class="code-block">1. User sends message
+2. Server checks keyword → agent matches
+3. Doc generates response (may include **CALL_AGENT**)
+4. If agent identified:
+   a. Specialist agent runs with user profile + transcript
+   b. Agent returns 2-4 sentence expert response
+   c. Doc re-runs with agent response as AGENT CONTEXT
+   d. Doc synthesizes a natural, expert-informed reply
+5. Server strips **CALL_AGENT** and **PROFILE_UPDATE** markers
+6. Final response returned to browser</div>
 
   <div class="prompt-section">
     <div class="prompt-section-title">Core Identity</div>

@@ -1021,19 +1021,42 @@
       }
     }
     
+    let availableAgents = [];
+
     async function refreshSettings() {
       const panel = document.getElementById('settings-panel');
       if (!currentUser) {
         panel.innerHTML = '<div class="profile-empty">Sign in to manage settings</div>';
         return;
       }
-      
+
       try {
-        const response = await fetch(`${API}/settings/${currentUser.user_id}`);
-        const data = await response.json();
-        userSettings = data.settings || userSettings;
+        const [settingsRes, agentsRes] = await Promise.allSettled([
+          fetch(`${API}/settings/${currentUser.user_id}`),
+          fetch(`${API}/agents/${currentUser.user_id}`)
+        ]);
+        if (settingsRes.status === 'fulfilled') {
+          const data = await settingsRes.value.json();
+          userSettings = data.settings || userSettings;
+        }
+        if (agentsRes.status === 'fulfilled') {
+          const data = await agentsRes.value.json();
+          availableAgents = data.available_agents || [];
+          userSettings.agent_subscriptions = data.subscriptions || [];
+        }
       } catch (e) {}
-      
+
+      const subs = userSettings.agent_subscriptions || [];
+      const agentToggles = availableAgents.map(a => `
+        <div class="settings-item">
+          <div>
+            <div class="settings-label">${escapeHtml(a.emoji)} ${escapeHtml(a.name)}</div>
+            <div class="settings-desc">Daily check-ins from ${escapeHtml(a.name)}</div>
+          </div>
+          <div class="settings-toggle ${subs.includes(a.id) ? 'on' : ''}"
+               onclick="toggleAgentSub('${escapeHtml(a.id)}', this)"></div>
+        </div>`).join('');
+
       panel.innerHTML = `
         <div class="settings-group">
           <div class="settings-group-title">Doc's Communication Style</div>
@@ -1054,11 +1077,34 @@
           </div>
         </div>
         <div class="settings-group">
+          <div class="settings-group-title">Health Agents</div>
+          <div class="settings-desc" style="padding:0 0 12px;font-size:12px;color:rgba(255,255,255,0.5)">
+            Subscribe to specialist agents for daily personalized check-ins.
+          </div>
+          ${agentToggles || '<div class="profile-empty">Loading agents…</div>'}
+        </div>
+        <div class="settings-group">
           <div class="settings-group-title">Account</div>
           <div class="settings-item"><div><div class="settings-label">Username</div><div class="settings-desc">${escapeHtml(currentUser.username)}</div></div></div>
           <div class="settings-item"><div><div class="settings-label">Sign Out</div></div><button class="btn btn-danger btn-sm" onclick="logout()">Sign Out</button></div>
         </div>
       `;
+    }
+
+    async function toggleAgentSub(agentId, toggleEl) {
+      const subs = userSettings.agent_subscriptions || [];
+      const idx = subs.indexOf(agentId);
+      if (idx === -1) subs.push(agentId);
+      else subs.splice(idx, 1);
+      userSettings.agent_subscriptions = subs;
+      toggleEl.classList.toggle('on', subs.includes(agentId));
+      try {
+        await fetch(`${API}/agents/${currentUser.user_id}`, {
+          method: 'PUT',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({subscriptions: subs})
+        });
+      } catch (e) {}
     }
     
     async function updateSetting(key, value) {

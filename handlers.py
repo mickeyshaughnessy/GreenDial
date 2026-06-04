@@ -13,6 +13,7 @@ import config
 import utils
 import s3_storage
 from prompts import doc, doc_v2, notifications, facilitator
+from prompts import agents as agent_registry
 import threading
 
 # In-memory TTL cache
@@ -279,6 +280,119 @@ def handle_update_settings(user_id, data):
         return json.dumps({"error": "Failed to save settings"}), 500
     
     return json.dumps({"success": True, "settings": user['settings']})
+
+
+# ============ AGENTS ============
+
+def _parse_agent_dispatch(doc_response):
+    """Extract **CALL_AGENT** directive from Doc's raw response, if present."""
+    import re
+    pattern = r'\*\*CALL_AGENT\*\*\s*(\{[^{}]*\})'
+    match = re.search(pattern, doc_response, re.IGNORECASE)
+    if match:
+        try:
+            data = json.loads(match.group(1))
+            return data.get('agent')
+        except json.JSONDecodeError:
+            pass
+    return None
+
+
+def _clean_agent_directive(response):
+    """Remove **CALL_AGENT** markers from response text."""
+    import re
+    return re.sub(r'\*\*CALL_AGENT\*\*\s*\{[^{}]*\}', '', response, flags=re.IGNORECASE).strip()
+
+
+def _run_agent(agent_id, user_input, profile, recent_transcript):
+    """Run a specialist agent and return its raw text response."""
+    module = agent_registry.get_agent(agent_id)
+    if not module:
+        return None
+    system_prompt = getattr(module, 'SYSTEM_PROMPT', None)
+
+    # Build a focused agent prompt
+    agent_prompt = f"""A user needs help with the following. Provide a focused, helpful expert response.
+
+USER PROFILE:
+{json.dumps(profile, indent=2) if profile else "{}"}
+
+RECENT CONVERSATION:
+{recent_transcript or "(start of conversation)"}
+
+USER MESSAGE:
+{user_input}
+
+Respond as the {getattr(module, 'AGENT_NAME', agent_id)}. Be kind, helpful, and truthful.
+Keep your response to 2-4 sentences. Emit **PROFILE_UPDATE** if the user shared relevant data."""
+
+    try:
+        return utils.completion(
+            prompt=agent_prompt,
+            system_prompt=system_prompt,
+            temperature=0.7,
+            max_tokens=300
+        )
+    except Exception as e:
+        print(f"[Agent] {agent_id} failed: {e}")
+        return None
+
+
+def handle_get_agent_subscriptions(user_id):
+    """Get user's agent subscription settings."""
+    user = get_user_data(user_id)
+    if not user:
+        return json.dumps({"error": "User not found"}), 404
+
+    settings = user.get('settings', {})
+    subscriptions = settings.get('agent_subscriptions', [])
+    prefs = settings.get('agent_prefs', {})
+
+    available = [
+        {
+            "id": aid,
+            "name": getattr(module, 'AGENT_NAME', aid),
+            "emoji": getattr(module, 'AGENT_EMOJI', '🤖'),
+            "subscribed": aid in subscriptions
+        }
+        for aid, module in agent_registry.REGISTRY.items()
+    ]
+
+    return json.dumps({
+        "subscriptions": subscriptions,
+        "agent_prefs": prefs,
+        "available_agents": available
+    })
+
+
+def handle_update_agent_subscriptions(user_id, data):
+    """Update which agents a user is subscribed to."""
+    user = get_user_data(user_id)
+    if not user:
+        return json.dumps({"error": "User not found"}), 404
+
+    subscriptions = data.get('subscriptions', [])
+    # Validate against known agents
+    valid = [aid for aid in subscriptions if aid in agent_registry.REGISTRY]
+
+    user.setdefault('settings', {})['agent_subscriptions'] = valid
+
+    if 'agent_prefs' in data and isinstance(data['agent_prefs'], dict):
+        user['settings'].setdefault('agent_prefs', {}).update(data['agent_prefs'])
+
+    if 'custom_agent_prompt' in data:
+        user['settings']['custom_agent_prompt'] = str(data['custom_agent_prompt'])[:2000]
+
+    user['last_updated'] = datetime.utcnow().isoformat()
+
+    try:
+        s3_storage.save_user(user_id, user)
+        _cache_user(user_id, user)
+    except Exception as e:
+        print(f"[Agents] Failed to save subscriptions: {e}")
+        return json.dumps({"error": "Failed to save"}), 500
+
+    return json.dumps({"success": True, "subscriptions": valid})
 
 
 # ============ NOTIFICATIONS ============
@@ -709,15 +823,17 @@ def handle_chat(request):
     transcript = user.get('transcript', '') or _sessions.get(session_id, {}).get('transcript', '')
     recent_transcript = _get_recent_transcript(transcript, max_lines=8)
     
+    # Check if any agents match the user's message keywords (fast path)
+    keyword_agents = agent_registry.agents_for_message(user_input)
+
+    # Stage 1: Doc generates initial response (may include **CALL_AGENT**)
+    agent_context = None
     try:
-        # Build Unprompted-style guided prompt
         prompt = _build_prompt(
             user_id=user_id,
             session_id=session_id,
             user_input=user_input
         )
-        
-        # Single-stage completion with enhanced prompt
         doc_response = utils.completion(
             prompt=prompt,
             temperature=0.7,
@@ -726,6 +842,33 @@ def handle_chat(request):
     except Exception as e:
         print(f"[Chat] Completion error: {e}")
         doc_response = "I'm having trouble responding right now. Please try again."
+
+    # Stage 2: If Doc (or keyword matching) requested an agent, fetch agent context
+    agent_id = _parse_agent_dispatch(doc_response) or (keyword_agents[0] if keyword_agents else None)
+    if agent_id:
+        print(f"[Chat] Dispatching to agent: {agent_id}")
+        agent_context = _run_agent(agent_id, user_input, profile, recent_transcript)
+        if agent_context:
+            # Stage 3: Re-run Doc with agent context woven in
+            try:
+                prompt_with_agent = doc_v2.build_doc_prompt(
+                    user_input=user_input,
+                    profile=profile,
+                    recent_transcript=recent_transcript,
+                    username=username,
+                    agent_context=agent_context
+                )
+                doc_response = utils.completion(
+                    prompt=prompt_with_agent,
+                    temperature=0.7,
+                    max_tokens=config.LLM_MAX_TOKENS
+                )
+            except Exception as e:
+                print(f"[Chat] Agent-augmented completion error: {e}")
+                # Fall through with original doc_response
+
+    # Remove any residual agent directives from the response
+    doc_response = _clean_agent_directive(doc_response)
     
     # Extract and apply profile updates
     profile_updates = _parse_profile_updates(doc_response)
