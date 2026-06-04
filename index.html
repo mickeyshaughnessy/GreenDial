@@ -816,7 +816,14 @@
       const input = document.getElementById('chat-input');
       const text = prefillText || input.value.trim();
       if (!text || isLoading) return;
-      
+
+      if (!currentUser) {
+        addMessage('user', text);
+        input.value = '';
+        addMessage('doc', 'Sign in if you want to chat.');
+        return;
+      }
+
       addMessage('user', text);
       input.value = '';
       isLoading = true;
