@@ -160,6 +160,35 @@ def dismiss_notification(user_id, notification_id):
 
 # ============ CONVERSATIONS ============
 
+@app.route("/chat/agent/<agent_id>", methods=['POST', 'OPTIONS'])
+def agent_chat(agent_id):
+    if request.method == 'OPTIONS':
+        return Response('', status=200)
+    req = request.get_json() or {}
+    result = handlers.handle_agent_chat(agent_id, req)
+    if isinstance(result, tuple):
+        return Response(result[0], status=result[1], mimetype='application/json')
+    return Response(result, mimetype='application/json')
+
+
+@app.route("/conversations/<user_id>/agents", methods=['GET', 'OPTIONS'])
+def get_agent_transcripts(user_id):
+    if request.method == 'OPTIONS':
+        return Response('', status=200)
+    result = handlers.handle_get_agent_transcripts(user_id)
+    return Response(result, mimetype='application/json')
+
+
+@app.route("/conversations/<user_id>/agent/<agent_id>", methods=['DELETE', 'OPTIONS'])
+def clear_agent_transcript(user_id, agent_id):
+    if request.method == 'OPTIONS':
+        return Response('', status=200)
+    result = handlers.handle_clear_agent_transcript(user_id, agent_id)
+    if isinstance(result, tuple):
+        return Response(result[0], status=result[1], mimetype='application/json')
+    return Response(result, mimetype='application/json')
+
+
 @app.route("/conversations/<user_id>", methods=['GET', 'OPTIONS'])
 def get_conversations(user_id):
     if request.method == 'OPTIONS':

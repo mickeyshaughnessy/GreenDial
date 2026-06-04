@@ -545,6 +545,209 @@ def handle_dismiss_notification(user_id, notification_id):
     return json.dumps({"success": True})
 
 
+def _detect_style(text):
+    """Return a style-mirroring instruction based on the user's message."""
+    words = text.split()
+    n = len(words)
+    text_lower = text.lower()
+    if n <= 4:
+        length_hint = "very short (1-4 words). Respond in 1-2 sentences max."
+    elif n <= 15:
+        length_hint = "brief (5-15 words). Respond in 2-3 sentences."
+    elif n <= 40:
+        length_hint = "moderate (15-40 words). Respond conversationally in 3-5 sentences."
+    else:
+        length_hint = "detailed (40+ words). You can be thorough."
+    casual = (
+        text == text_lower and n > 2
+        or any(w in {'hey', 'hi', 'yeah', 'yep', 'nope', 'nah', 'ok', 'okay',
+                     'lol', 'tbh', 'idk', 'omg', 'btw', 'gonna', 'wanna', 'kinda',
+                     'sorta', 'bc', 'cuz', 'tho'} for w in words)
+    )
+    tone = "casual and conversational" if casual else "neutral"
+    return f"The user's message is {length_hint} Tone is {tone}. Mirror their style closely."
+
+
+def _get_agent_transcript(user, agent_id):
+    """Return the transcript for a specific agent."""
+    return user.get('agent_transcripts', {}).get(agent_id, '')
+
+
+def _update_agent_transcript(user_id, user, agent_id, user_input, agent_response):
+    """Append a turn to the agent-specific transcript and save."""
+    timestamp = datetime.utcnow().isoformat()
+    agent_name = agent_id.replace('_', ' ').title()
+    transcripts = user.setdefault('agent_transcripts', {})
+    existing = transcripts.get(agent_id, '')
+    existing += f"\n[{timestamp}] User: {user_input}\n[{timestamp}] {agent_name}: {agent_response}"
+    lines = existing.split('\n')
+    if len(lines) > 300:
+        existing = '\n'.join(lines[-300:])
+    transcripts[agent_id] = existing
+    user['last_updated'] = timestamp
+
+
+def handle_agent_chat(agent_id, request):
+    """Direct chat with a named specialist agent (not via Doc)."""
+    module = agent_registry.get_agent(agent_id)
+    if not module:
+        return json.dumps({"error": f"Unknown agent: {agent_id}"}), 404
+
+    user_id = request.get('user_id')
+    session_id = request.get('session_id') or str(uuid.uuid4())
+    user_input = (request.get('text') or '').strip()
+    is_init = request.get('init', False) or not user_input
+
+    user = get_user_data(user_id) if user_id else {}
+    profile = user.get('profile', {}) if user else {}
+    transcript = _get_agent_transcript(user, agent_id) if user else ''
+    recent = _get_recent_transcript(transcript, max_lines=8)
+
+    # Style hint for language mirroring
+    style_hint = _detect_style(user_input) if user_input else ""
+
+    # Build prompt
+    system_prompt = getattr(module, 'SYSTEM_PROMPT', None)
+    agent_name = getattr(module, 'AGENT_NAME', agent_id)
+    agent_intro = getattr(module, 'ONBOARDING_INTRO', '')
+
+    if is_init:
+        # First visit — generate a warm intro + first question
+        prompt = f"""You are {agent_name} for GreenDial. {agent_intro}
+
+The user has just opened your dedicated chat for the first time.
+
+KNOWN PROFILE:
+{json.dumps(profile, indent=2) if profile else "{}"}
+
+Introduce yourself warmly in 1-2 sentences. Then ask your single most important opening question to start understanding the user. Be specific, not generic. If the profile already has relevant data, acknowledge it and ask about what's missing.
+
+Emit **PROFILE_UPDATE** if the user has already shared info you can capture.
+
+{agent_name}:"""
+    else:
+        missing = agent_registry.get_missing_onboarding_fields(agent_id, profile)
+        missing_str = ', '.join(missing[:4]) if missing else 'none — profile complete for this domain'
+        prompt = f"""You are {agent_name} for GreenDial. You are kind, helpful, and truthful.
+
+USER PROFILE:
+{json.dumps(profile, indent=2) if profile else "{}"}
+
+MISSING INFO FOR YOUR DOMAIN: {missing_str}
+
+RECENT CONVERSATION:
+{recent or "(start of conversation)"}
+
+STYLE: {style_hint}
+
+When the user shares health information, emit:
+**PROFILE_UPDATE**
+{{"field": "value"}}
+
+Ask ONE focused follow-up question if more domain info is needed.
+
+User: {user_input}
+{agent_name}:"""
+
+    try:
+        response = utils.completion(
+            prompt=prompt,
+            system_prompt=system_prompt,
+            temperature=0.7,
+            max_tokens=config.LLM_MAX_TOKENS
+        )
+    except Exception as e:
+        print(f"[AgentChat] {agent_id} error: {e}")
+        return json.dumps({"error": "Agent unavailable, try again."}), 500
+
+    # Extract and save profile updates
+    profile_updates = _parse_profile_updates(response)
+    updated_profile = None
+    if profile_updates and user_id:
+        user = get_user_data(user_id)
+        if user:
+            user.setdefault('profile', {})
+            _apply_profile_updates(user['profile'], profile_updates)
+            updated_profile = user['profile']
+            user['last_updated'] = datetime.utcnow().isoformat()
+            _cache_user(user_id, user)
+            try:
+                s3_storage.save_user(user_id, user)
+            except Exception as e:
+                print(f"[AgentChat] Failed to save profile: {e}")
+
+    clean_response = _clean_profile_markers(response)
+
+    # Save to agent transcript (skip user turn for init calls)
+    if user_id and not is_init:
+        user = get_user_data(user_id)
+        if user:
+            _update_agent_transcript(user_id, user, agent_id, user_input, clean_response)
+            _cache_user(user_id, user)
+            try:
+                s3_storage.save_user(user_id, user)
+            except Exception as e:
+                print(f"[AgentChat] Failed to save transcript: {e}")
+    elif user_id and is_init:
+        # Save just the agent's intro turn
+        user = get_user_data(user_id)
+        if user:
+            timestamp = datetime.utcnow().isoformat()
+            agent_name_key = agent_id.replace('_', ' ').title()
+            transcripts = user.setdefault('agent_transcripts', {})
+            existing = transcripts.get(agent_id, '')
+            existing += f"\n[{timestamp}] {agent_name_key}: {clean_response}"
+            transcripts[agent_id] = existing
+            user['last_updated'] = timestamp
+            _cache_user(user_id, user)
+            try:
+                s3_storage.save_user(user_id, user)
+            except Exception as e:
+                print(f"[AgentChat] Failed to save intro: {e}")
+
+    result = {
+        "response": clean_response,
+        "session_id": session_id,
+        "agent_id": agent_id,
+        "user_id": user_id
+    }
+    if updated_profile:
+        result["profile_updated"] = True
+        result["profile"] = updated_profile
+    return json.dumps(result)
+
+
+def handle_get_agent_transcripts(user_id):
+    """Return Doc transcript + all agent transcripts for the user."""
+    if not user_id:
+        return json.dumps({"doc_transcript": "", "agents": {}})
+    user = get_user_data(user_id)
+    if not user:
+        return json.dumps({"doc_transcript": "", "agents": {}})
+    return json.dumps({
+        "doc_transcript": user.get('transcript', ''),
+        "agents": user.get('agent_transcripts', {})
+    })
+
+
+def handle_clear_agent_transcript(user_id, agent_id):
+    """Clear one agent's transcript."""
+    user = get_user_data(user_id)
+    if not user:
+        return json.dumps({"error": "User not found"}), 404
+    if agent_id == 'doc':
+        user['transcript'] = ''
+    else:
+        user.setdefault('agent_transcripts', {}).pop(agent_id, None)
+    user['last_updated'] = datetime.utcnow().isoformat()
+    try:
+        s3_storage.save_user(user_id, user)
+        _cache_user(user_id, user)
+    except Exception as e:
+        print(f"[AgentChat] Failed to clear transcript: {e}")
+    return json.dumps({"success": True})
+
+
 def generate_login_notifications(user_id):
     """Background task to generate contextual notifications"""
     import time
