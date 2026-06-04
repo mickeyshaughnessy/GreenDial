@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GreenDial API Docs</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #1a1a2e;
+      color: #eee;
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+    a { color: #10b981; }
+    a:hover { color: #059669; }
+
+    .header {
+      background: linear-gradient(135deg, rgba(16,185,129,0.15), rgba(26,26,46,0.95));
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .logo {
+      font-size: 20px;
+      font-weight: 700;
+      color: #10b981;
+      text-decoration: none;
+    }
+    .header-title {
+      font-size: 14px;
+      color: rgba(255,255,255,0.5);
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px 24px 80px;
+    }
+
+    h1 { font-size: 28px; margin-bottom: 8px; }
+    h2 { font-size: 20px; margin: 40px 0 12px; color: #10b981; }
+    h3 { font-size: 15px; margin: 24px 0 8px; color: rgba(255,255,255,0.8); }
+    p { color: rgba(255,255,255,0.75); margin-bottom: 12px; font-size: 14px; }
+
+    .subtitle { color: rgba(255,255,255,0.5); font-size: 14px; margin-bottom: 32px; }
+
+    .endpoint {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      margin-bottom: 16px;
+      overflow: hidden;
+    }
+    .endpoint-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      background: rgba(0,0,0,0.2);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .method {
+      font-family: 'Monaco','Menlo',monospace;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+    .method.get  { background: rgba(59,130,246,0.25); color: #93c5fd; }
+    .method.post { background: rgba(16,185,129,0.25); color: #6ee7b7; }
+    .method.put  { background: rgba(245,158,11,0.25); color: #fcd34d; }
+    .method.delete { background: rgba(239,68,68,0.25); color: #fca5a5; }
+    .path {
+      font-family: 'Monaco','Menlo',monospace;
+      font-size: 13px;
+      color: #e2e8f0;
+    }
+    .endpoint-desc {
+      padding: 12px 16px;
+      font-size: 13px;
+      color: rgba(255,255,255,0.65);
+    }
+
+    .code-block {
+      background: rgba(0,0,0,0.4);
+      border-radius: 8px;
+      padding: 16px;
+      font-family: 'Monaco','Menlo',monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      overflow-x: auto;
+      white-space: pre;
+      color: #a5d6ff;
+      margin: 12px 0;
+    }
+
+    .prompt-block {
+      background: rgba(0,0,0,0.4);
+      border: 1px solid rgba(16,185,129,0.2);
+      border-radius: 10px;
+      padding: 20px;
+      font-family: 'Monaco','Menlo',monospace;
+      font-size: 12px;
+      line-height: 1.7;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      color: #d1fae5;
+    }
+    .prompt-section {
+      margin-bottom: 24px;
+    }
+    .prompt-section-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: #10b981;
+      margin-bottom: 8px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      background: rgba(16,185,129,0.15);
+      color: #10b981;
+      margin-left: 8px;
+    }
+
+    .field-table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 8px 0 16px; }
+    .field-table th { text-align: left; padding: 8px 12px; font-size: 11px; text-transform: uppercase; color: rgba(255,255,255,0.4); border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .field-table td { padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.04); color: rgba(255,255,255,0.75); vertical-align: top; }
+    .field-table td:first-child { font-family: 'Monaco','Menlo',monospace; font-size: 12px; color: #fcd34d; }
+    .field-table td em { color: rgba(255,255,255,0.4); font-style: normal; font-size: 12px; }
+
+    .note {
+      background: rgba(255,193,7,0.08);
+      border-left: 3px solid #ffc107;
+      padding: 10px 14px;
+      border-radius: 0 6px 6px 0;
+      font-size: 13px;
+      color: rgba(255,255,255,0.7);
+      margin: 12px 0;
+    }
+
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.08); margin: 40px 0; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <a class="logo" href="/">🌿 GreenDial</a>
+  <span class="header-title">/ API Docs</span>
+</div>
+
+<div class="container">
+  <h1>GreenDial API</h1>
+  <p class="subtitle">REST API for the GreenDial health assistant. All endpoints return JSON. Base URL: <code style="color:#10b981">https://greendial.org</code></p>
+
+  <!-- ===== OVERVIEW ===== -->
+  <h2>Overview</h2>
+  <p>GreenDial lets users have open-ended health conversations with <strong>Doc</strong>, an AI assistant that builds a structured profile from natural conversation. Profiles are stored in cloud object storage and can be read/updated through the API.</p>
+  <p>Authentication is username + passphrase. No tokens — include credentials in the request body for endpoints that need them.</p>
+
+  <hr>
+
+  <!-- ===== AUTH ===== -->
+  <h2>Authentication</h2>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method post">POST</span>
+      <span class="path">/auth</span>
+    </div>
+    <div class="endpoint-desc">
+      Sign in or create an account.
+      <table class="field-table" style="margin-top:12px">
+        <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td>username</td><td>string</td><td>Required</td></tr>
+          <tr><td>password</td><td>string</td><td>Required</td></tr>
+          <tr><td>create_new</td><td>bool</td><td>Set <em>true</em> to register</td></tr>
+          <tr><td>hipaa_waiver_accepted</td><td>bool</td><td>Required when registering</td></tr>
+        </tbody>
+      </table>
+      <div class="code-block">// Sign in
+POST /auth
+{"username": "alice", "password": "mypassphrase"}
+
+// Response
+{"user_id": "user_alice", "username": "alice", "profile": {...}, "settings": {...}}</div>
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- ===== CHAT ===== -->
+  <h2>Chat</h2>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method post">POST</span>
+      <span class="path">/chat</span>
+    </div>
+    <div class="endpoint-desc">
+      Send a message to Doc. Pass <code>user_id</code> for persistent profile updates; omit for anonymous sessions.
+      <table class="field-table" style="margin-top:12px">
+        <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td>text</td><td>string</td><td>User's message</td></tr>
+          <tr><td>user_id</td><td>string</td><td>Optional — links conversation to profile</td></tr>
+          <tr><td>session_id</td><td>string</td><td>Optional — pass back from previous response to continue session</td></tr>
+        </tbody>
+      </table>
+      <div class="code-block">POST /chat
+{"text": "I have type 2 diabetes", "user_id": "user_alice", "session_id": "session_abc123"}
+
+// Response
+{
+  "response": "Thanks for sharing that. How long have you had diabetes, and are you currently on any medication for it?",
+  "session_id": "session_abc123",
+  "profile_updated": true,
+  "profile": {"health_conditions": "type 2 diabetes", ...}
+}</div>
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- ===== USER / PROFILE ===== -->
+  <h2>User &amp; Profile</h2>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method get">GET</span>
+      <span class="path">/user/{user_id}</span>
+    </div>
+    <div class="endpoint-desc">Fetch a user's profile data (passphrase excluded).</div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method put">PUT</span>
+      <span class="path">/user/{user_id}</span>
+    </div>
+    <div class="endpoint-desc">
+      Update profile fields directly.
+      <div class="code-block">PUT /user/user_alice
+{"profile": {"weight": "165 lbs", "goals": "lose 20 lbs"}}</div>
+    </div>
+  </div>
+
+  <h3>Profile fields</h3>
+  <table class="field-table">
+    <thead><tr><th>Field</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>primary_concern</td><td>Main health focus</td></tr>
+      <tr><td>health_conditions</td><td>Diagnoses, chronic conditions</td></tr>
+      <tr><td>medications</td><td>Current medications</td></tr>
+      <tr><td>allergies</td><td>Drug or food allergies</td></tr>
+      <tr><td>age</td><td>Age</td></tr>
+      <tr><td>weight</td><td>Weight</td></tr>
+      <tr><td>height</td><td>Height</td></tr>
+      <tr><td>location</td><td>City / region</td></tr>
+      <tr><td>diet_type</td><td>Diet style (e.g. keto, vegan)</td></tr>
+      <tr><td>exercise_frequency</td><td>How often they exercise</td></tr>
+      <tr><td>exercise_type</td><td>What kind of exercise</td></tr>
+      <tr><td>sleep_hours</td><td>Average nightly sleep</td></tr>
+      <tr><td>sleep_quality</td><td>Self-rated sleep quality</td></tr>
+      <tr><td>stress_level</td><td>Self-rated stress level</td></tr>
+      <tr><td>goals</td><td>Health goals</td></tr>
+      <tr><td>notes</td><td>Free-form notes</td></tr>
+    </tbody>
+  </table>
+
+  <hr>
+
+  <!-- ===== SETTINGS ===== -->
+  <h2>Settings</h2>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method get">GET</span>
+      <span class="path">/settings/{user_id}</span>
+    </div>
+    <div class="endpoint-desc">Get user settings.</div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method put">PUT</span>
+      <span class="path">/settings/{user_id}</span>
+    </div>
+    <div class="endpoint-desc">
+      Update settings.
+      <table class="field-table" style="margin-top:12px">
+        <thead><tr><th>Field</th><th>Values</th></tr></thead>
+        <tbody>
+          <tr><td>doc_style</td><td><em>questioning</em> · professional · friendly</td></tr>
+          <tr><td>notifications_enabled</td><td><em>true</em> · false</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- ===== CONVERSATIONS ===== -->
+  <h2>Conversations</h2>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method get">GET</span>
+      <span class="path">/conversations/{user_id}</span>
+    </div>
+    <div class="endpoint-desc">Get the user's full conversation transcript.</div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method delete">DELETE</span>
+      <span class="path">/conversations/{user_id}</span>
+    </div>
+    <div class="endpoint-desc">Clear all conversation history for the user.</div>
+  </div>
+
+  <hr>
+
+  <!-- ===== NOTIFICATIONS ===== -->
+  <h2>Notifications</h2>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method get">GET</span>
+      <span class="path">/notifications/{user_id}</span>
+    </div>
+    <div class="endpoint-desc">List pending notifications.</div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method post">POST</span>
+      <span class="path">/notifications/{user_id}/generate</span>
+    </div>
+    <div class="endpoint-desc">Trigger Doc to generate a new notification (tip, reminder, encouragement) based on the user's current profile.</div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method delete">DELETE</span>
+      <span class="path">/notifications/{user_id}/{notification_id}</span>
+    </div>
+    <div class="endpoint-desc">Dismiss a notification.</div>
+  </div>
+
+  <hr>
+
+  <!-- ===== THIRD-PARTY API ===== -->
+  <h2>Third-Party API <span class="badge">Token auth</span></h2>
+  <p>These endpoints accept an <code>Authorization: Basic &lt;base64(username:password)&gt;</code> header for use from external apps.</p>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method get">GET</span>
+      <span class="path">/api/v1/profile</span>
+    </div>
+    <div class="endpoint-desc">Read the authenticated user's health profile.</div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method post">POST</span>
+      <span class="path">/api/v1/profile</span>
+    </div>
+    <div class="endpoint-desc">
+      Update the authenticated user's profile from an external app.
+      <div class="code-block">POST /api/v1/profile
+Authorization: Basic YWxpY2U6bXlwYXNzcGhyYXNl
+
+{"profile": {"weight": "162 lbs"}}</div>
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- ===== STATS ===== -->
+  <h2>Stats</h2>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method get">GET</span>
+      <span class="path">/stats</span>
+    </div>
+    <div class="endpoint-desc">Public endpoint. Returns the total number of registered users.
+      <div class="code-block">{"user_count": 42}</div>
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- ===== DOC SYSTEM PROMPT ===== -->
+  <h2>How Doc Works — System Prompt</h2>
+  <p>Doc's behavior is controlled by a dynamically assembled system prompt. The components below are combined at inference time based on the user's current profile completeness, conversation history, and detected communication style.</p>
+
+  <div class="note">Doc runs on an LLM via OpenRouter. Profile updates are parsed from a structured <code>**PROFILE_UPDATE**</code> block that Doc emits inline with its response — the server strips it before returning text to the user.</div>
+
+  <div class="prompt-section">
+    <div class="prompt-section-title">Core Identity</div>
+    <div class="prompt-block">You are Doc, a proactive health assistant. You lead the conversation to build the user's health profile and provide guidance.</div>
+  </div>
+
+  <div class="prompt-section">
+    <div class="prompt-section-title">Profile Update Instructions (injected when profile is incomplete)</div>
+    <div class="prompt-block">## PROFILE UPDATES
+When the user shares health info, emit:
+
+**PROFILE_UPDATE**
+{"field": "value"}
+
+Operations:
+- Set:    {"age": "44"}              — sets the field
+- Append: {"medications": "+aspirin"} — adds to existing (use + prefix)
+- Delete: {"allergies": null}         — removes the field
+- Nested: {"vitals": {"bp": "120/80"}} — creates sub-object
+
+Fields: primary_concern, health_conditions, medications, allergies,
+        age, weight, height, location, diet_type, exercise_frequency,
+        exercise_type, sleep_hours, sleep_quality, stress_level, goals, notes
+
+Example — User says "I'm 44 and have diabetes":
+**PROFILE_UPDATE**
+{"age": "44", "health_conditions": "diabetes"}</div>
+  </div>
+
+  <div class="prompt-section">
+    <div class="prompt-section-title">Style Mirroring (injected based on user's detected tone &amp; message length)</div>
+    <div class="prompt-block">## YOUR STYLE
+User writes briefly. Match them: 1-2 short sentences max. No fluff.
+
+— or —
+
+## YOUR STYLE
+User writes moderate length. Match them: 2-3 sentences. Be conversational.
+
+— or —
+
+## YOUR STYLE
+User writes detailed messages. You can be more thorough, but stay focused.
+
+## TONE
+User is casual/informal. Match their energy. Use contractions, be relaxed.
+
+— or —
+
+## TONE
+User is formal. Be professional and clear.</div>
+  </div>
+
+  <div class="prompt-section">
+    <div class="prompt-section-title">Profile Status (one of three variants)</div>
+    <div class="prompt-block">## PROFILE STATUS
+Empty - gather basic info: why they're here, any health conditions, goals.
+
+— or —
+
+## PROFILE STATUS
+Partial - missing: primary_concern, goals
+## CURRENT PROFILE
+{"health_conditions": "type 2 diabetes", "age": "44", ...}
+
+— or —
+
+## PROFILE STATUS
+Complete. Focus on their goals and providing helpful responses.
+## CURRENT PROFILE
+{...full profile...}</div>
+  </div>
+
+  <div class="prompt-section">
+    <div class="prompt-section-title">Conversation History (injected when available)</div>
+    <div class="prompt-block">## CONVERSATION SUMMARY
+{summary of older exchanges}
+
+## RECENT CONVERSATION
+User: I've been feeling tired lately
+Doc: How long has that been going on? Have you had any changes in sleep?
+User: About two weeks, sleep is fine
+Doc: ...</div>
+  </div>
+
+  <div class="prompt-section">
+    <div class="prompt-section-title">Response Rules (always injected)</div>
+    <div class="prompt-block">## RULES
+- ALWAYS end your response with exactly ONE question to drive the conversation forward
+- NEVER wait for the user to initiate a topic. You lead.
+- Match the user's message length
+- Only update profile with info they explicitly stated</div>
+  </div>
+
+  <div class="prompt-section">
+    <div class="prompt-section-title">Final instruction (always appended)</div>
+    <div class="prompt-block">---
+User: {user_input}
+
+Doc (respond appropriately, then ask ONE leading question):</div>
+  </div>
+
+  <hr>
+
+  <p style="color:rgba(255,255,255,0.3);font-size:12px">GreenDial is open source. Questions? <a href="mailto:mickeyshaughnessy@gmail.com">mickeyshaughnessy@gmail.com</a></p>
+</div>
+
+</body>
+</html>

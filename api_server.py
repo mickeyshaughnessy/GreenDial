@@ -30,6 +30,11 @@ def unprompted_index():
     return send_from_directory('.', 'unprompted.html')
 
 
+@app.route("/docs", methods=['GET'])
+def docs():
+    return send_from_directory('.', 'docs.html')
+
+
 @app.route("/ping", methods=['GET'])
 def ping():
     return Response(json.dumps({"status": "ok", "service": "greendial"}), mimetype='application/json')

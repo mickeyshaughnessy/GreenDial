@@ -492,7 +492,7 @@
 </head>
 <body>
   <div class="header">
-    <div class="logo"><span>🌿</span><span>GreenDial</span></div>
+    <div class="logo" onclick="switchView('chat')" style="cursor:pointer" title="Home"><span>🌿</span><span>GreenDial</span></div>
     <div class="user-count" id="userCount" title="Registered users"></div>
     <div class="nav-tabs">
       <button class="nav-tab active" onclick="switchView('chat')">💬 Chat</button>
@@ -500,6 +500,7 @@
       <button class="nav-tab" onclick="switchView('history')">📜 History</button>
       <button class="nav-tab" onclick="switchView('settings')">⚙️ Settings</button>
       <button class="nav-tab" id="admin-tab" style="display:none" onclick="switchView('admin')">🛡️ Admin</button>
+      <a class="nav-tab" href="/docs" target="_blank" style="text-decoration:none">📄 Docs</a>
     </div>
     <div class="user-area" id="user-area">
       <div style="position:relative">
