@@ -35,6 +35,11 @@ def docs():
     return send_from_directory('.', 'docs.html')
 
 
+@app.route("/arazzo", methods=['GET'])
+def arazzo():
+    return send_from_directory('.', 'arazzo.html')
+
+
 @app.route("/ping", methods=['GET'])
 def ping():
     return Response(json.dumps({"status": "ok", "service": "greendial"}), mimetype='application/json')

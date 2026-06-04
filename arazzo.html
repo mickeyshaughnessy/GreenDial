@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GreenDial — How It Works</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #1a1a2e;
+      color: #eee;
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+    a { color: #10b981; }
+    a:hover { color: #059669; }
+
+    /* ── HEADER ── */
+    .header {
+      background: linear-gradient(135deg, rgba(16,185,129,0.18), rgba(26,26,46,0.97));
+      padding: 14px 28px;
+      display: flex; align-items: center; gap: 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      position: sticky; top: 0; z-index: 50;
+    }
+    .logo { font-size: 20px; font-weight: 700; color: #10b981; text-decoration: none; }
+    .header-links { margin-left: auto; display: flex; gap: 16px; font-size: 13px; }
+    .header-links a { color: rgba(255,255,255,0.55); text-decoration: none; }
+    .header-links a:hover { color: #10b981; }
+
+    /* ── HERO ── */
+    .hero {
+      background: linear-gradient(180deg, rgba(16,185,129,0.08) 0%, transparent 100%);
+      padding: 60px 28px 40px;
+      text-align: center;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .hero h1 { font-size: 36px; font-weight: 700; margin-bottom: 14px; }
+    .hero h1 span { color: #10b981; }
+    .hero p { font-size: 16px; color: rgba(255,255,255,0.6); max-width: 620px; margin: 0 auto 24px; }
+    .hero-links { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .hero-btn {
+      padding: 10px 22px; border-radius: 24px; font-size: 13px;
+      text-decoration: none; transition: all 0.2s;
+    }
+    .hero-btn.primary { background: #10b981; color: white; }
+    .hero-btn.primary:hover { background: #059669; }
+    .hero-btn.secondary {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      color: rgba(255,255,255,0.75);
+    }
+    .hero-btn.secondary:hover { background: rgba(255,255,255,0.14); color: white; }
+
+    /* ── CONTAINER ── */
+    .container { max-width: 1000px; margin: 0 auto; padding: 48px 24px 80px; }
+
+    h2 { font-size: 22px; color: #10b981; margin: 48px 0 16px; }
+    h3 { font-size: 15px; color: rgba(255,255,255,0.85); margin: 0 0 4px; }
+    p { font-size: 14px; color: rgba(255,255,255,0.65); margin-bottom: 12px; }
+
+    /* ── AGENT GRID ── */
+    .agent-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+      gap: 10px;
+      margin-bottom: 48px;
+    }
+    .agent-chip {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      padding: 12px 14px;
+    }
+    .agent-chip .emoji { font-size: 22px; margin-bottom: 6px; }
+    .agent-chip .name { font-size: 13px; font-weight: 600; color: white; }
+    .agent-chip .desc { font-size: 11px; color: rgba(255,255,255,0.45); margin-top: 2px; }
+
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.07); margin: 16px 0 48px; }
+
+    /* ── EXAMPLE CARDS ── */
+    .examples { display: flex; flex-direction: column; gap: 32px; }
+
+    .ex-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    .ex-header {
+      background: rgba(0,0,0,0.25);
+      padding: 16px 22px;
+      display: flex; align-items: center; gap: 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+    }
+    .ex-num {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: rgba(16,185,129,0.2); color: #10b981;
+      font-size: 14px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .ex-title { font-size: 16px; font-weight: 600; }
+    .ex-agents { margin-left: auto; display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
+    .agent-badge {
+      padding: 3px 9px; border-radius: 12px; font-size: 11px;
+      background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.6);
+      white-space: nowrap;
+    }
+    .ex-body { padding: 20px 22px; }
+    .ex-context {
+      font-size: 13px; color: rgba(255,255,255,0.5);
+      margin-bottom: 18px; font-style: italic;
+      padding-left: 12px; border-left: 2px solid rgba(255,255,255,0.1);
+    }
+
+    /* ── FLOW ── */
+    .flow { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+    .flow-row {
+      display: flex; align-items: flex-start; gap: 10px;
+    }
+    .flow-row.right { flex-direction: row-reverse; }
+    .flow-row.center { justify-content: center; }
+    .flow-av {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: rgba(255,255,255,0.07);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 17px; flex-shrink: 0; margin-top: 2px;
+    }
+    .flow-bubble {
+      padding: 9px 14px; border-radius: 14px;
+      font-size: 13px; line-height: 1.5; max-width: 74%;
+    }
+    .flow-row.right .flow-bubble {
+      background: #10b981; color: white;
+      border-bottom-right-radius: 3px;
+    }
+    .flow-row.left .flow-bubble {
+      background: rgba(255,255,255,0.09);
+      border-bottom-left-radius: 3px;
+    }
+    .flow-row.event .flow-bubble {
+      background: rgba(255,193,7,0.1); color: #fcd34d;
+      font-size: 12px; font-style: italic;
+      border-radius: 8px; max-width: 100%;
+    }
+    .flow-row.redirect .flow-bubble {
+      background: rgba(16,185,129,0.1); color: #6ee7b7;
+      font-size: 12px; border-radius: 8px; max-width: 100%;
+    }
+    .flow-label {
+      font-size: 10px; color: rgba(255,255,255,0.35);
+      margin-top: 3px; text-align: right;
+    }
+    .flow-row.right .flow-label { text-align: right; }
+    .flow-row.left .flow-label { text-align: left; }
+
+    /* ── TAGS ── */
+    .ex-footer {
+      border-top: 1px solid rgba(255,255,255,0.06);
+      padding: 14px 22px;
+      display: flex; gap: 24px; flex-wrap: wrap;
+    }
+    .ex-footer-group { }
+    .ex-footer-label {
+      font-size: 10px; text-transform: uppercase; letter-spacing: .06em;
+      color: rgba(255,255,255,0.35); margin-bottom: 6px;
+    }
+    .tag-row { display: flex; flex-wrap: wrap; gap: 5px; }
+    .tag {
+      padding: 3px 9px; border-radius: 10px; font-size: 11px;
+      font-family: 'Monaco','Menlo',monospace;
+    }
+    .tag.profile { background: rgba(16,185,129,0.15); color: #6ee7b7; }
+    .tag.history { background: rgba(165,214,255,0.12); color: #a5d6ff; }
+    .tag.notif   { background: rgba(251,191,36,0.13);  color: #fcd34d; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <a class="logo" href="/">🌿 GreenDial</a>
+  <span style="color:rgba(255,255,255,0.35);font-size:14px">/ How It Works</span>
+  <div class="header-links">
+    <a href="/docs">API Docs</a>
+    <a href="/spec/arazzo.yaml">Arazzo YAML</a>
+    <a href="/spec/openapi.yaml">OpenAPI</a>
+  </div>
+</div>
+
+<div class="hero">
+  <h1>How to Use <span>GreenDial</span></h1>
+  <p>GreenDial combines Doc — your primary AI health coordinator — with nine specialist agents. Here are ten real ways people build healthier lives with the system.</p>
+  <div class="hero-links">
+    <a class="hero-btn primary" href="/">Open GreenDial →</a>
+    <a class="hero-btn secondary" href="/docs">API Reference</a>
+    <a class="hero-btn secondary" href="/spec/arazzo.yaml">Arazzo Spec</a>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- AGENTS REFERENCE -->
+  <h2>The Agents</h2>
+  <p>Doc coordinates everything. Specialists handle their domains. Cross AI synthesizes across domains when your question spans more than one.</p>
+  <div class="agent-grid">
+    <div class="agent-chip"><div class="emoji">🌿</div><div class="name">Doc</div><div class="desc">Primary coordinator</div></div>
+    <div class="agent-chip"><div class="emoji">🥗</div><div class="name">Diet</div><div class="desc">Nutrition & eating</div></div>
+    <div class="agent-chip"><div class="emoji">💪</div><div class="name">Exercise</div><div class="desc">Movement & fitness</div></div>
+    <div class="agent-chip"><div class="emoji">🛡️</div><div class="name">Protect AI</div><div class="desc">Immunity & prevention</div></div>
+    <div class="agent-chip"><div class="emoji">😴</div><div class="name">Sleep</div><div class="desc">Rest & recovery</div></div>
+    <div class="agent-chip"><div class="emoji">🧠</div><div class="name">Mind</div><div class="desc">Mental wellness</div></div>
+    <div class="agent-chip"><div class="emoji">💞</div><div class="name">Relationships</div><div class="desc">Social health</div></div>
+    <div class="agent-chip"><div class="emoji">🌍</div><div class="name">Environment</div><div class="desc">Home & workplace</div></div>
+    <div class="agent-chip"><div class="emoji">⚙️</div><div class="name">Custom</div><div class="desc">Your own prompt</div></div>
+    <div class="agent-chip"><div class="emoji">🔀</div><div class="name">Cross AI</div><div class="desc">Multi-domain synthesis</div></div>
+  </div>
+
+  <hr>
+  <h2>10 Ways People Use GreenDial</h2>
+  <p style="margin-bottom:32px">Each sequence shows a real interaction flow — what the user says, how Doc and the agents respond, what gets saved to the profile, and what the daily check-ins look like.</p>
+
+  <div class="examples">
+
+    <!-- ══ 1 ══ -->
+    <div class="ex-card">
+      <div class="ex-header">
+        <div class="ex-num">1</div>
+        <div>
+          <div class="ex-title">Breaking a chronic sleep problem</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:2px">A tired professional reclaims their nights over 30 days</div>
+        </div>
+        <div class="ex-agents"><span class="agent-badge">🌿 Doc</span><span class="agent-badge">😴 Sleep</span><span class="agent-badge">🧠 Mind</span></div>
+      </div>
+      <div class="ex-body">
+        <div class="ex-context">Maya, 34, has been waking up exhausted for months. She opens GreenDial and starts talking to Doc.</div>
+        <div class="flow">
+          <div class="flow-row right"><div class="flow-bubble">I haven't been sleeping well for months. I'm waking up tired every day.</div></div>
+          <div class="flow-row left"><div class="flow-av">🌿</div><div><div class="flow-bubble">That sounds really draining. Connecting you with the Sleep Coach now.</div><div class="flow-label">Doc → Sleep Coach</div></div></div>
+          <div class="flow-row redirect"><div class="flow-bubble">↪ Doc redirects · Sleep Coach tab opens automatically</div></div>
+          <div class="flow-row left"><div class="flow-av">😴</div><div><div class="flow-bubble">I'm your Sleep Coach. You've been waking exhausted — how many hours are you actually in bed, and do you know if you're waking during the night?</div><div class="flow-label">Sleep Coach</div></div></div>
+          <div class="flow-row right"><div class="flow-bubble">About 7 hours in bed but I wake up 2-3 times. I feel like I never get into deep sleep.</div></div>
+          <div class="flow-row left"><div class="flow-av">😴</div><div><div class="flow-bubble">Sleep fragmentation — that's the key issue. Your total time is fine, your architecture isn't. What's your phone/screen routine in the last hour before bed?</div></div></div>
+          <div class="flow-row right"><div class="flow-bubble">I'm usually on my phone until I fall asleep.</div></div>
+          <div class="flow-row left"><div class="flow-av">😴</div><div><div class="flow-bubble">That's a large part of the problem. Blue light at 400-480nm directly suppresses melatonin onset. Let's build a 20-minute wind-down protocol. Starting tonight: phone in another room 30 minutes before your target sleep time. What time do you want to be asleep by?</div></div></div>
+          <div class="flow-row event"><div class="flow-bubble">⏰ 08:00 UTC next morning — cron notification fires</div></div>
+          <div class="flow-row left"><div class="flow-av">😴</div><div><div class="flow-bubble">How'd you sleep last night? Did the phone-free window help at all?</div><div class="flow-label">Daily check-in</div></div></div>
+          <div class="flow-row right"><div class="flow-bubble">Actually better — only woke up once. Maybe 6.5 hours of real sleep.</div></div>
+        </div>
+      </div>
+      <div class="ex-footer">
+        <div class="ex-footer-group"><div class="ex-footer-label">Profile updated</div><div class="tag-row"><span class="tag profile">sleep_hours</span><span class="tag profile">sleep_issues</span><span class="tag profile">bedtime</span></div></div>
+        <div class="ex-footer-group"><div class="ex-footer-label">History tracked</div><div class="tag-row"><span class="tag history">sleep_hours · daily</span></div></div>
+        <div class="ex-footer-group"><div class="ex-footer-label">Daily notification</div><div class="tag-row"><span class="tag notif">😴 "How'd you sleep last night?"</span></div></div>
+      </div>
+    </div>
+
+    <!-- ══ 2 ══ -->
+    <div class="ex-card">
+      <div class="ex-header">
+        <div class="ex-num">2</div>
+        <div>
+          <div class="ex-title">Losing weight with diabetes</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:2px">Multi-agent coordination for a complex metabolic picture</div>
+        </div>
+        <div class="ex-agents"><span class="agent-badge">🌿 Doc</span><span class="agent-badge">🥗 Diet</span><span class="agent-badge">💪 Exercise</span><span class="agent-badge">🛡️ Protect</span><span class="agent-badge">🔀 Cross AI</span></div>
+      </div>
+      <div class="ex-body">
+        <div class="ex-context">David, 52, has type 2 diabetes and wants to lose 30 lbs. He starts with Doc to build his profile.</div>
+        <div class="flow">
+          <div class="flow-row right"><div class="flow-bubble">I have type 2 diabetes, I'm on metformin, and I want to lose about 30 pounds.</div></div>
+          <div class="flow-row left"><div class="flow-av">🌿</div><div><div class="flow-bubble">Got it — diabetes, metformin, 30 lb goal. That means diet and exercise both matter and need to be coordinated with your glucose management. Let me get the Diet advisor involved first.</div></div></div>
+          <div class="flow-row redirect"><div class="flow-bubble">↪ Diet tab opens · profile context passed</div></div>
+          <div class="flow-row left"><div class="flow-av">🥗</div><div><div class="flow-bubble">With T2D and metformin, low-glycemic eating is your lever. What does a typical day of eating look like right now?</div></div></div>
+          <div class="flow-row right"><div class="flow-bubble">Cereal for breakfast, sandwich for lunch, pasta or rice most nights.</div></div>
+          <div class="flow-row left"><div class="flow-av">🥗</div><div><div class="flow-bubble">High glycemic index at every meal — that pattern will keep your blood sugar on a roller coaster and drive hunger. Here's the swap: eggs + vegetables at breakfast, protein + greens at lunch, halve the rice and add beans. This alone typically drops A1C by 0.5-1 point over 12 weeks.</div></div></div>
+          <div class="flow-row event"><div class="flow-bubble">↪ User opens Exercise tab</div></div>
+          <div class="flow-row left"><div class="flow-av">💪</div><div><div class="flow-bubble">With diabetes and a weight loss goal, walking after meals is the single highest-ROI exercise you can do — 10 minutes post-meal reduces post-prandial glucose spikes by up to 30%. Are you able to walk after dinner?</div></div></div>
+          <div class="flow-row right"><div class="flow-bubble">What about my diet and exercise together — is there an optimal combination?</div></div>
+          <div class="flow-row redirect"><div class="flow-bubble">↪ Cross AI triggered (diet + exercise keywords in same message)</div></div>
+          <div class="flow-row left"><div class="flow-av">🔀</div><div><div class="flow-bubble">For T2D weight loss, the sequence matters: low-GI eating stabilizes your baseline, post-meal walks blunt the spikes, and resistance training 2x/week increases insulin sensitivity in muscle tissue. The compounding effect means your metformin works harder. Start with the food swaps and evening walk for two weeks — that's the foundation everything else builds on.</div></div></div>
+        </div>
+      </div>
+      <div class="ex-footer">
+        <div class="ex-footer-group"><div class="ex-footer-label">Profile updated</div><div class="tag-row"><span class="tag profile">health_conditions</span><span class="tag profile">medications</span><span class="tag profile">diet_type</span><span class="tag profile">goals</span></div></div>
+        <div class="ex-footer-group"><div class="ex-footer-label">History tracked</div><div class="tag-row"><span class="tag history">weight · weekly</span><span class="tag history">diet_notes · daily</span><span class="tag history">exercise_minutes · daily</span></div></div>
+        <div class="ex-footer-group"><div class="ex-footer-label">Daily notifications</div><div class="tag-row"><span class="tag notif">🥗 "How was your blood sugar today?"</span><span class="tag notif">💪 "Did you get your post-meal walk in?"</span></div></div>
+      </div>
+    </div>
+
+    <!-- ══ 3 ══ -->
+    <div class="ex-card">
+      <div class="ex-header">
+        <div class="ex-num">3</div>
+        <div>
+          <div class="ex-title">Burnout and the mind-body connection</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:2px">Stress, no exercise, worsening mood — Cross AI finds the pattern</div>
+        </div>
+        <div class="ex-agents"><span class="agent-badge">🌿 Doc</span><span class="agent-badge">🧠 Mind</span><span class="agent-badge">💪 Exercise</span><span class="agent-badge">🔀 Cross AI</span></div>
+      </div>
+      <div class="ex-body">
+        <div class="ex-context">Priya, 29, is a software engineer. She's been working 60-hour weeks and feels completely hollowed out.</div>
+        <div class="flow">
+          <div class="flow-row right"><div class="flow-bubble">I'm completely burnt out. Can't focus, feel flat, just going through the motions.</div></div>
+          <div class="flow-row redirect"><div class="flow-bubble">↪ Doc → Mind tab</div></div>
+          <div class="flow-row left"><div class="flow-av">🧠</div><div><div class="flow-bubble">Burnout has three dimensions: emotional exhaustion, depersonalization, and reduced efficacy. Which is loudest for you right now?</div></div></div>
+          <div class="flow-row right"><div class="flow-bubble">The flatness. Like nothing matters. I used to love my work.</div></div>
+          <div class="flow-row left"><div class="flow-av">🧠</div><div><div class="flow-bubble">That's anhedonia — a classic burnout symptom, and sometimes an early depression signal. How's your physical activity been? Exercise is one of the most effective interventions here and people almost always drop it first when overwhelmed.</div></div></div>
+          <div class="flow-row right"><div class="flow-bubble">Zero. Haven't moved much in months. And I'm sleeping badly too.</div></div>
+          <div class="flow-row redirect"><div class="flow-bubble">↪ Cross AI triggered (mind + exercise + sleep)</div></div>
+          <div class="flow-row left"><div class="flow-av">🔀</div><div><div class="flow-bubble">This is a classic burnout spiral: high stress → no movement → worse sleep → worse mood → even less motivation to move. The entry point that breaks this loop fastest is movement — not because you'll enjoy it at first, but because even a 20-minute walk raises BDNF and shifts cortisol rhythm, which improves sleep within days, which makes everything else easier. One walk today, no performance expectations. Can you do that?</div></div></div>
+          <div class="flow-row right"><div class="flow-bubble">I can probably manage a walk tonight.</div></div>
+          <div class="flow-row event"><div class="flow-bubble">⏰ Next morning — dual notifications fire</div></div>
+          <div class="flow-row left"><div class="flow-av">🧠</div><div><div class="flow-bubble">Mood check: 1-10, how are you feeling this morning?</div></div></div>
+          <div class="flow-row left"><div class="flow-av">💪</div><div><div class="flow-bubble">Did you get out for that walk yesterday?</div></div></div>
+        </div>
+      </div>
+      <div class="ex-footer">
+        <div class="ex-footer-group"><div class="ex-footer-label">Profile updated</div><div class="tag-row"><span class="tag profile">stress_level</span><span class="tag profile">mental_health_concerns</span></div></div>
+        <div class="ex-footer-group"><div class="ex-footer-label">History tracked</div><div class="tag-row"><span class="tag history">mood · daily</span><span class="tag history">stress_level · daily</span><span class="tag history">exercise_minutes · daily</span></div></div>
+        <div class="ex-footer-group"><div class="ex-footer-label">After 30 days</div><div class="tag-row"><span class="tag notif">🔀 Cross AI weekly: "Mood avg 6.2 on exercise days vs 3.8 on rest days"</span></div></div>
+      </div>
+    </div>
+
+    <!-- ══ 4 ══ -->
+    <div class="ex-card">
+      <div class="ex-header">
+        <div class="ex-num">4</div>
+        <div>
+          <div class="ex-title">New parent surviving sleep deprivation</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:2px">Optimizing fragmented sleep when you can't change the baby's schedule</div>
+        </div>
+        <div class="ex-agents"><span class="agent-badge">😴 Sleep</span><span class="agent-badge">💞 Relationships</span><span class="agent-badge">🔀 Cross AI</span></div>
+      </div>
+      <div class="ex-body">
+        <div class="ex-context">Tom, 31, has a 7-week-old baby. He and his partner are taking turns on night feeds. He's running on 4 hours a night.</div>
+        <div class="flow">
+          <div class="flow-row right"><div class="flow-bubble">I have a newborn and I'm getting maybe 4 broken hours of sleep a night. I know I can't change that but I need to survive it.</div></div>
+          <div class="flow-row left"><div class="flow-av">😴</div><div><div class="flow-bubble">You're in survival mode — and you're right that you can't fix the quantity. The goal is maximizing recovery from what you have. Are your sleep chunks consolidated (2-3 hour blocks) or truly fragmented throughout the night?</div></div></div>
+          <div class="flow-row right"><div class="flow-bubble">Two chunks of about 2 hours each. Partner takes the 2am feed.</div></div>
+          <div class="flow-row left"><div class="flow-av">😴</div><div><div class="flow-bubble">Two 2-hour blocks is workable. Key levers: keep your first sleep block dark and cool — that's when you get the most slow-wave sleep. For your second block, a 10-minute strategic nap when the baby naps mid-morning pays outsized dividends. Avoid caffeine after 1pm so it doesn't block sleep onset when your next window comes.</div></div></div>
+          <div class="flow-row right"><div class="flow-bubble">My relationship with my partner is also strained. We're both exhausted and snapping at each other.</div></div>
+          <div class="flow-row redirect"><div class="flow-bubble">↪ Cross AI triggered (sleep + relationships)</div></div>
+          <div class="flow-row left"><div class="flow-av">🔀</div><div><div class="flow-bubble">Sleep deprivation literally reduces prefrontal cortex function — the part of your brain that regulates emotional responses. What reads as "we're arguing more" is often just two depleted people with no emotional buffer. Three things that help: brief daily check-ins that aren't about logistics, explicit acknowledgment of what each person did right today, and a scheduled handoff so each person gets one uninterrupted 3-hour sleep block. The biology improves when the structure does.</div></div></div>
+        </div>
+      </div>
+      <div class="ex-footer">
+        <div class="ex-footer-group"><div class="ex-footer-label">History tracked</div><div class="tag-row"><span class="tag history">sleep_hours · daily</span><span class="tag history">mood · daily</span><span class="tag history">energy_level · daily</span></div></div>
+        <div class="ex-footer-group"><div class="ex-footer-label">Daily notification</div><div class="tag-row"><span class="tag notif">😴 "How many total hours did you get last night?"</span></div></div>
+      </div>
+    </div>
+
+    <!-- ══ 5 ══ -->
+    <div class="ex-card">
+      <div class="ex-header">
+        <div class="ex-num">5</div>
+        <div>
+          <div class="ex-title">Knee surgery recovery</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:2px">Graduated return to movement after ACL reconstruction</div>
+        </div>
+        <div class="ex-agents"><span class="agent-badge">💪 Exercise</span><span class="agent-badge">🛡️ Protect</span><span class="agent-badge">🔀 Cross AI</span></div>
+      </div>
+      <div class="ex-body">
+        <div class="ex-context">Sara, 26, is 6 weeks post-ACL surgery. Her physical therapist cleared her for "light activity" but she wants more specific guidance.</div>
+        <div class="flow">
+          <div class="flow-row right"><div class="flow-bubble">I'm 6 weeks out from ACL surgery. PT cleared me for light activity. What can I actually do?</div></div>
+          <div class="flow-row left"><div class="flow-av">💪</div><div><div class="flow-bubble">Six weeks post-ACL, you're in phase two of standard rehab protocol. What you can do: stationary cycling (no resistance), pool walking, seated leg press at very low weight, straight-leg raises. What you can't do yet: pivoting, jumping, running, lateral movements. What equipment do you have access to?</div></div></div>
+          <div class="flow-row right"><div class="flow-bubble">I have a gym membership. How do I know if I'm overdoing it?</div></div>
+          <div class="flow-row left"><div class="flow-av">💪</div><div><div class="flow-bubble">Three signals to stop immediately: swelling that doesn't resolve within an hour, sharp pain (dull ache during exercise is fine), and any instability or giving-way sensation. The graft is at its weakest between weeks 6-12 — this is "the danger zone" in ACL rehab. Progressive load matters; sudden load does not.</div></div></div>
+          <div class="flow-row event"><div class="flow-bubble">↪ User asks about inflammation</div></div>
+          <div class="flow-row left"><div class="flow-av">🛡️</div><div><div class="flow-bubble">Post-surgical inflammation follows a predictable curve. Omega-3s (2-3g EPA/DHA daily) and tart cherry extract have solid evidence for reducing exercise-induced inflammation. Avoid NSAIDs chronically — they inhibit the prostaglandins that also drive tissue remodeling. Ice and elevation after sessions, not before.</div></div></div>
+          <div class="flow-row event"><div class="flow-bubble">⏰ Daily check-in from Exercise Coach</div></div>
+          <div class="flow-row left"><div class="flow-av">💪</div><div><div class="flow-bubble">Recovery check: any swelling or pain today? What did you do for movement?</div></div></div>
+        </div>
+      </div>
+      <div class="ex-footer">
+        <div class="ex-footer-group"><div class="ex-footer-label">History tracked</div><div class="tag-row"><span class="tag history">exercise_minutes · daily</span><span class="tag history">symptom_notes · daily</span></div></div>
+        <div class="ex-footer-group"><div class="ex-footer-label">Profile updated</div><div class="tag-row"><span class="tag profile">exercise_limitations</span><span class="tag profile">health_conditions</span><span class="tag profile">supplements</span></div></div>
+        <div class="ex-footer-group"><div class="ex-footer-label">After 12 weeks</div><div class="tag-row"><span class="tag notif">🔀 "Your symptom notes have been clear for 3 weeks — ready to progress?"</span></div></div>
+      </div>
+    </div>
+
+    <!-- ══ 6 ══ -->
+    <div class="ex-card">
+      <div class="ex-header">
+        <div class="ex-num">6</div>
+        <div>
+          <div class="ex-title">Building a Blue Zones longevity practice</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:2px">A custom agent built around evidence from the world's longest-lived populations</div>
+        </div>
+        <div class="ex-agents"><span class="agent-badge">🌿 Doc</span><span class="agent-badge">⚙️ Custom</span><span class="agent-badge">🔀 Cross AI</span></div>
+      </div>
+      <div class="ex-body">
+        <div class="ex-context">James, 58, has been reading about the Blue Zones. He wants a daily practice built around the habits that correlate with living past 100.</div>
+        <div class="flow">
+          <div class="flow-row event"><div class="flow-bubble">James opens Settings → Daily Notifications → Custom Agent → writes his prompt</div></div>
+          <div class="flow-row left" style="align-items:flex-start;gap:10px"><div style="background:rgba(255,255,255,0.06);border-radius:8px;padding:10px 14px;font-size:12px;font-family:'Monaco','Menlo',monospace;color:#d1fae5;width:100%">"You are a longevity coach for GreenDial, expert in Blue Zones research. Focus on: plant-slant diet (95% plants), daily movement woven into life (not gym), purpose (ikigai), stress downshift practices, belonging to a community, and family first. Reference Okinawa, Sardinia, Loma Linda, Nicoya, and Ikaria as needed. Be specific and culturally grounded."</div></div>
+          <div class="flow-row right"><div class="flow-bubble">I'm 58, retired, eat mostly meat-based American diet, exercise sporadically.</div></div>
+          <div class="flow-row left"><div class="flow-av">⚙️</div><div><div class="flow-bubble">Good baseline. Blue Zones research shows the single biggest dietary shift is moving from meat as the center to legumes as the center — Okinawans eat tofu daily, Sardinians build meals around fava beans and chickpeas. The meat doesn't disappear — it becomes a condiment. What's one meal per week where you could make beans the main protein?</div></div></div>
+          <div class="flow-row right"><div class="flow-bubble">Maybe Sunday dinner. What about exercise — I hate gyms.</div></div>
+          <div class="flow-row left"><div class="flow-av">⚙️</div><div><div class="flow-bubble">None of the Blue Zone populations use gyms. They move because life requires it — Sardinian shepherds walk 5 miles daily with flocks, Okinawans garden until their 90s. The research term is "nudged movement." What's something in your daily life you could do on foot that you currently don't?</div></div></div>
+          <div class="flow-row event"><div class="flow-bubble">⏰ Daily custom check-ins fire across the 9 Blue Zone factors</div></div>
+          <div class="flow-row left"><div class="flow-av">⚙️</div><div><div class="flow-bubble">Ikigai check: did you do anything today that felt purposeful — something that made you feel like it mattered that you were alive to do it?</div></div></div>
+        </div>
+      </div>
+      <div class="ex-footer">
+        <div class="ex-footer-group"><div class="ex-footer-label">History tracked</div><div class="tag-row"><span class="tag history">diet_notes · daily</span><span class="tag history">steps_per_day · daily</span><span class="tag history">mood · daily</span></div></div>
+        <div class="ex-footer-group"><div class="ex-footer-label">Daily notifications</div><div class="tag-row"><span class="tag notif">⚙️ Custom daily check on each Blue Zone factor in rotation</span></div></div>
+      </div>
+    </div>
+
+    <!-- ══ 7 ══ -->
+    <div class="ex-card">
+      <div class="ex-header">
+        <div class="ex-num">7</div>
+        <div>
+          <div class="ex-title">Catching preventable disease early at 45</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:2px">Protect AI builds a screening schedule based on family history</div>
+        </div>
+        <div class="ex-agents"><span class="agent-badge">🌿 Doc</span><span class="agent-badge">🛡️ Protect</span></div>
+      </div>
+      <div class="ex-body">
+        <div class="ex-context">Carlos, 45, is healthy but hasn't seen a doctor since his 30s. His father had colon cancer at 58, his mother has hypertension.</div>
+        <div class="flow">
+          <div class="flow-row right"><div class="flow-bubble">I'm 45, feel healthy, but I haven't had any kind of checkup in years. Should I be worried?</div></div>
+          <div class="flow-row redirect"><div class="flow-bubble">↪ Doc → Protect AI</div></div>
+          <div class="flow-row left"><div class="flow-av">🛡️</div><div><div class="flow-bubble">45 with no recent care is exactly the right moment to do a baseline. Before I build your screening schedule, I need your family history — any heart disease, cancer, or diabetes in first-degree relatives?</div></div></div>
+          <div class="flow-row right"><div class="flow-bubble">Dad had colon cancer at 58. Mom has high blood pressure. I smoke occasionally, maybe 5 cigarettes a week.</div></div>
+          <div class="flow-row left"><div class="flow-av">🛡️</div><div><div class="flow-bubble">That family history changes your colorectal cancer screening timeline. Standard guidelines say first colonoscopy at 45 — but with a first-degree relative diagnosed before 60, you should have had one at 40 and the current guidance is every 5 years, not 10. You're overdue. For cardiovascular: with maternal hypertension and your smoking, a lipid panel and blood pressure measurement are essential — these are the two most actionable numbers you don't know. Here's your priority list: 1) Colonoscopy scheduled this month, 2) Blood pressure checked this week, 3) Fasting lipid panel at the same appointment.</div></div></div>
+          <div class="flow-row right"><div class="flow-bubble">What about the smoking?</div></div>
+          <div class="flow-row left"><div class="flow-av">🛡️</div><div><div class="flow-bubble">Even 5 cigarettes/week is not "safe" — there's no dose below which cardiovascular risk disappears. Varenicline (Chantix) has a 2x success rate over patches for light smokers. The good news: light smokers recover baseline cardiovascular risk within 5-10 years of stopping completely.</div></div></div>
+          <div class="flow-row event"><div class="flow-bubble">⏰ Weekly cron reminder</div></div>
+          <div class="flow-row left"><div class="flow-av">🛡️</div><div><div class="flow-bubble">Have you scheduled your colonoscopy yet? It's been 3 weeks since we identified this as priority one.</div></div></div>
+        </div>
+      </div>
+      <div class="ex-footer">
+        <div class="ex-footer-group"><div class="ex-footer-label">Profile updated</div><div class="tag-row"><span class="tag profile">family_history</span><span class="tag profile">smoking_status</span><span class="tag profile">screenings_due</span></div></div>
+        <div class="ex-footer-group"><div class="ex-footer-label">Weekly notification</div><div class="tag-row"><span class="tag notif">🛡️ "Have you scheduled your colonoscopy?"</span></div></div>
+      </div>
+    </div>
+
+    <!-- ══ 8 ══ -->
+    <div class="ex-card">
+      <div class="ex-header">
+        <div class="ex-num">8</div>
+        <div>
+          <div class="ex-title">Managing allergies and indoor air quality</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:2px">Environment Advisor + Protect AI address seasonal suffering at the source</div>
+        </div>
+        <div class="ex-agents"><span class="agent-badge">🌍 Environment</span><span class="agent-badge">🛡️ Protect</span><span class="agent-badge">🔀 Cross AI</span></div>
+      </div>
+      <div class="ex-body">
+        <div class="ex-context">Leila, 38, has severe seasonal allergies and asthma. She's been symptomatic indoors even when the pollen count is low.</div>
+        <div class="flow">
+          <div class="flow-row right"><div class="flow-bubble">My allergies are terrible this year even when I'm inside. Sneezing constantly, eyes watering.</div></div>
+          <div class="flow-row left"><div class="flow-av">🌍</div><div><div class="flow-bubble">Indoor allergy symptoms despite low outdoor pollen usually points to one of five sources: dust mites, mold, pet dander, VOCs from cleaning products, or HVAC recirculating outdoor particles. Do you have carpet, a pet, or central air conditioning?</div></div></div>
+          <div class="flow-row right"><div class="flow-bubble">Yes to all three. Old carpet, two cats, and central AC that hasn't been serviced in years.</div></div>
+          <div class="flow-row left"><div class="flow-av">🌍</div><div><div class="flow-bubble">That's a perfect storm. Cats produce Fel d 1 allergen — it's airborne, sticks to walls, and a HEPA filter running in the bedroom is the single highest-impact intervention. Your HVAC filter is likely full of allergen load being recirculated — a MERV 13 filter change plus professional duct cleaning should show results within a week. Old carpet in a damp climate is a dust mite breeding ground; if you can't replace it, weekly hot-water washing of bedding at 130°F kills mites effectively.</div></div></div>
+          <div class="flow-row right"><div class="flow-bubble">Can anything help my immune system be less reactive to all this?</div></div>
+          <div class="flow-row redirect"><div class="flow-bubble">↪ Cross AI (environment + immunity)</div></div>
+          <div class="flow-row left"><div class="flow-av">🔀</div><div><div class="flow-bubble">Allergy is immune overreactivity — a Th2-dominant immune response. Reducing the allergen load (Environment's plan) is the primary intervention. Complementary immune support: vitamin D deficiency correlates with increased atopy severity, and your gut microbiome diversity directly modulates Th1/Th2 balance. Probiotic-rich foods and reduced ultra-processed intake have shown measurable reduction in seasonal allergy symptom scores. The environmental fixes + microbiome support together address both the trigger and the threshold.</div></div></div>
+          <div class="flow-row event"><div class="flow-bubble">⏰ Daily symptom tracking check-in</div></div>
+          <div class="flow-row left"><div class="flow-av">🌍</div><div><div class="flow-bubble">Symptom check: sneezing and eye symptoms today, 1-10? Note what you did differently.</div></div></div>
+        </div>
+      </div>
+      <div class="ex-footer">
+        <div class="ex-footer-group"><div class="ex-footer-label">History tracked</div><div class="tag-row"><span class="tag history">symptom_notes · daily</span></div></div>
+        <div class="ex-footer-group"><div class="ex-footer-label">Profile updated</div><div class="tag-row"><span class="tag profile">living_environment</span><span class="tag profile">environmental_concerns</span><span class="tag profile">immune_concerns</span></div></div>
+        <div class="ex-footer-group"><div class="ex-footer-label">After 30 days</div><div class="tag-row"><span class="tag notif">🌍 Symptom score avg dropped from 7.2 to 2.8</span></div></div>
+      </div>
+    </div>
+
+    <!-- ══ 9 ══ -->
+    <div class="ex-card">
+      <div class="ex-header">
+        <div class="ex-num">9</div>
+        <div>
+          <div class="ex-title">Rebuilding after social isolation</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:2px">Relationships + Mind working together on loneliness and reconnection</div>
+        </div>
+        <div class="ex-agents"><span class="agent-badge">🌿 Doc</span><span class="agent-badge">💞 Relationships</span><span class="agent-badge">🧠 Mind</span></div>
+      </div>
+      <div class="ex-body">
+        <div class="ex-context">Wei, 42, moved to a new city two years ago and realizes he has almost no social connections. He's started to feel the health effects.</div>
+        <div class="flow">
+          <div class="flow-row right"><div class="flow-bubble">I moved cities two years ago and I don't really have any friends here. I've noticed it's affecting my sleep and I just feel kind of hollow.</div></div>
+          <div class="flow-row redirect"><div class="flow-bubble">↪ Doc → Relationships tab</div></div>
+          <div class="flow-row left"><div class="flow-av">💞</div><div><div class="flow-bubble">Two years of social isolation is a significant stressor — the evidence on loneliness and mortality risk is comparable to smoking 15 cigarettes a day. The hollowness you're describing is a physiological state, not a personality trait. Before we talk about building connections: do you have any existing relationships you've let go quiet — from before you moved?</div></div></div>
+          <div class="flow-row right"><div class="flow-bubble">Yeah, a few old friends from college. We text occasionally but haven't talked in months.</div></div>
+          <div class="flow-row left"><div class="flow-av">💞</div><div><div class="flow-bubble">Rekindling existing relationships requires dramatically less energy than building new ones, and the bond quality is higher. Text one of those friends today — not a long message, just "been thinking of you, let's catch up." That's the whole task. What happens next is usually: they've been thinking of you too. Who's the easiest one to reach?</div></div></div>
+          <div class="flow-row right"><div class="flow-bubble">Probably James. We used to talk every week.</div></div>
+          <div class="flow-row left"><div class="flow-av">💞</div><div><div class="flow-bubble">Text James today. For building new local connections: activities that create repeated proximity with shared purpose are the most reliable friendship seeds — running clubs, cooking classes, volunteer work. Not "events," but recurring things. What do you genuinely enjoy that could be done with other people?</div></div></div>
+          <div class="flow-row event"><div class="flow-bubble">⏰ Following day — Relationships notification</div></div>
+          <div class="flow-row left"><div class="flow-av">💞</div><div><div class="flow-bubble">Did you reach out to James yesterday?</div></div></div>
+        </div>
+      </div>
+      <div class="ex-footer">
+        <div class="ex-footer-group"><div class="ex-footer-label">Profile updated</div><div class="tag-row"><span class="tag profile">loneliness_level</span><span class="tag profile">social_support</span><span class="tag profile">relationship_goals</span></div></div>
+        <div class="ex-footer-group"><div class="ex-footer-label">History tracked</div><div class="tag-row"><span class="tag history">mood · daily</span><span class="tag history">sleep_hours · daily</span></div></div>
+        <div class="ex-footer-group"><div class="ex-footer-label">Daily notification</div><div class="tag-row"><span class="tag notif">💞 "Did you talk with James?"</span></div></div>
+      </div>
+    </div>
+
+    <!-- ══ 10 ══ -->
+    <div class="ex-card">
+      <div class="ex-header">
+        <div class="ex-num">10</div>
+        <div>
+          <div class="ex-title">A complete health overhaul from scratch</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:2px">How Doc builds a full profile across all domains in the first 30 days</div>
+        </div>
+        <div class="ex-agents"><span class="agent-badge">🌿 Doc</span><span class="agent-badge">All agents</span><span class="agent-badge">🔀 Cross AI</span></div>
+      </div>
+      <div class="ex-body">
+        <div class="ex-context">Alex, 37, signs up for GreenDial with no prior health tracking. Over 30 days, the system builds a complete picture through natural conversation.</div>
+        <div class="flow">
+          <div class="flow-row event"><div class="flow-bubble">Day 1 — Account created · Doc starts profile build</div></div>
+          <div class="flow-row left"><div class="flow-av">🌿</div><div><div class="flow-bubble">Welcome, Alex. I'm Doc. What's your main health focus right now — what brought you here?</div></div></div>
+          <div class="flow-row right"><div class="flow-bubble">I want to lose weight and have more energy. I'm tired all the time.</div></div>
+          <div class="flow-row event"><div class="flow-bubble">↪ Doc builds: primary_concern, goals · routes to Diet and Sleep</div></div>
+          <div class="flow-row event"><div class="flow-bubble">Days 2-7 — Diet and Sleep onboarding interviews</div></div>
+          <div class="flow-row left"><div class="flow-av">🥗</div><div><div class="flow-bubble">Walk me through a typical day of eating...</div></div></div>
+          <div class="flow-row left"><div class="flow-av">😴</div><div><div class="flow-bubble">You mentioned fatigue — how many hours are you sleeping and how would you rate the quality?</div></div></div>
+          <div class="flow-row event"><div class="flow-bubble">Days 8-14 — Exercise and Mind onboarding · history starts accumulating</div></div>
+          <div class="flow-row left"><div class="flow-av">💪</div><div><div class="flow-bubble">What's your current activity level?</div></div></div>
+          <div class="flow-row left"><div class="flow-av">🧠</div><div><div class="flow-bubble">You mentioned energy — stress plays a big role. What's your stress load like right now?</div></div></div>
+          <div class="flow-row event"><div class="flow-bubble">Day 21 — Cross AI weekly synthesis fires</div></div>
+          <div class="flow-row left"><div class="flow-av">🔀</div><div><div class="flow-bubble">Three weeks of data: your energy is lowest on days when you slept under 6.5 hours AND skipped breakfast. Your mood scores are a full point higher on days you had any movement. The clearest intervention: protect your sleep window and don't skip breakfast. These two things are upstream of almost everything else you're trying to change.</div></div></div>
+          <div class="flow-row event"><div class="flow-bubble">Day 30 — Profile spans 14 fields · history has 30 data points per metric</div></div>
+          <div class="flow-row left"><div class="flow-av">🌿</div><div><div class="flow-bubble">Here's what your first 30 days look like: sleep avg 6.8h (up from 5.9), exercise 4x/week (up from 0), mood avg 6.4 (up from 4.1). Weight down 4 lbs. You've built real data on yourself. What do you want to focus on in month two?</div></div></div>
+        </div>
+      </div>
+      <div class="ex-footer">
+        <div class="ex-footer-group"><div class="ex-footer-label">Profile after 30 days</div><div class="tag-row"><span class="tag profile">14 fields populated</span></div></div>
+        <div class="ex-footer-group"><div class="ex-footer-label">History after 30 days</div><div class="tag-row"><span class="tag history">sleep_hours</span><span class="tag history">mood</span><span class="tag history">stress_level</span><span class="tag history">exercise_minutes</span><span class="tag history">weight</span><span class="tag history">diet_notes</span><span class="tag history">energy_level</span></div></div>
+        <div class="ex-footer-group"><div class="ex-footer-label">Weekly</div><div class="tag-row"><span class="tag notif">🔀 Cross AI synthesis with correlations across all metrics</span></div></div>
+      </div>
+    </div>
+
+  </div><!-- /examples -->
+
+  <hr style="margin-top:56px">
+  <div style="display:flex;gap:20px;justify-content:center;flex-wrap:wrap;padding-bottom:8px">
+    <a href="/" style="color:rgba(255,255,255,0.5);font-size:13px;text-decoration:none">🌿 Open GreenDial</a>
+    <a href="/docs" style="color:rgba(255,255,255,0.5);font-size:13px;text-decoration:none">API Reference</a>
+    <a href="/spec/openapi.yaml" style="color:rgba(255,255,255,0.5);font-size:13px;text-decoration:none">OpenAPI Spec</a>
+    <a href="/spec/arazzo.yaml" style="color:rgba(255,255,255,0.5);font-size:13px;text-decoration:none">Arazzo YAML</a>
+  </div>
+</div>
+
+</body>
+</html>
