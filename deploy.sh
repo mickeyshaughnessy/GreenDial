@@ -26,6 +26,11 @@ git stash 2>/dev/null || true
 git pull origin main
 git stash pop 2>/dev/null || true
 echo "Code updated: $(git rev-parse --short HEAD)"
+# Sync web-served files to nginx webroot
+cp index.html /var/www/greendial/index.html
+cp api_server.py /var/www/greendial/api_server.py
+cp handlers.py /var/www/greendial/handlers.py
+echo "Static files synced to /var/www/greendial/"
 ENDSSH
 
 # 3. Restart service
