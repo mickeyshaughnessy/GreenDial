@@ -489,6 +489,11 @@
     .task-tools-badge {
       font-size: 10px; color: rgba(16,185,129,0.7); margin-left: 4px;
     }
+    .msg-model {
+      font-size: 9px; color: rgba(255,255,255,0.22);
+      font-family: 'Monaco','Menlo',monospace;
+      margin-top: 3px; padding: 0 2px;
+    }
 
     /* Agent chat tabs */
     .agent-tabs-row {
@@ -951,7 +956,7 @@
         const data = await res.json();
         if (data.response) {
           if (!agentChats[agentId]) agentChats[agentId] = [];
-          agentChats[agentId].push({ role: agentId, text: data.response });
+          agentChats[agentId].push({ role: agentId, text: data.response, model: data.model_used || null });
         }
         if (data.session_id) agentSessionIds[agentId] = data.session_id;
         if (data.profile_updated && data.profile) { userProfile = data.profile; updateAllProfileDisplays(); }
@@ -1076,9 +1081,10 @@
           : `<span style="font-size:17px;line-height:1">${av || '🤖'}</span>`;
         const content = isUser ? escapeHtml(m.text) : renderMarkdown(m.text);
         const msgCls = isUser ? 'user' : (m.role === 'doc' ? 'doc' : 'agent-msg');
+        const modelBadge = (!isUser && m.model) ? `<div class="msg-model">${escapeHtml(formatModel(m.model))}</div>` : '';
         return `<div class="msg-row ${isUser?'user':'agent'}">
           ${!isUser ? `<div class="msg-avatar">${avEl}</div>` : ''}
-          <div class="msg ${msgCls}">${content}</div>
+          <div><div class="msg ${msgCls}">${content}</div>${modelBadge}</div>
           ${isUser ? `<div class="msg-avatar user-av">${avEl}</div>` : ''}
         </div>`;
       }).join('');
@@ -1093,6 +1099,13 @@
       container.scrollTop = container.scrollHeight;
     }
     
+    function formatModel(model) {
+      if (!model) return '';
+      return model
+        .replace('google/', '').replace('meta-llama/', '')
+        .replace('anthropic/', '').replace(':free', ' (free)');
+    }
+
     function escapeHtml(text) {
       const div = document.createElement('div');
       div.textContent = text;
@@ -1166,7 +1179,7 @@
 
         if (data.response) {
           if (!agentChats[activeAgent]) agentChats[activeAgent] = [];
-          agentChats[activeAgent].push({ role: activeAgent, text: data.response });
+          agentChats[activeAgent].push({ role: activeAgent, text: data.response, model: data.model_used || null });
           if (currentAgent === activeAgent) renderMessages();
         }
         if (data.profile_updated && data.profile) { userProfile = data.profile; updateAllProfileDisplays(); }

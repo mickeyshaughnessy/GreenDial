@@ -6,6 +6,13 @@ import json
 import requests
 import config
 
+# Module-level tracker — set after each successful completion call
+_last_used_model = None
+
+
+def get_last_model_used():
+    return _last_used_model
+
 
 def completion(prompt, model=None, temperature=None, max_tokens=None, system_prompt=None, use_fallback=False):
     """
@@ -51,6 +58,7 @@ def completion(prompt, model=None, temperature=None, max_tokens=None, system_pro
     }
     
     try:
+        global _last_used_model
         print(f"[LLM] Calling {model}...")
         response = requests.post(
             config.OPENROUTER_API_URL,
@@ -80,6 +88,7 @@ def completion(prompt, model=None, temperature=None, max_tokens=None, system_pro
         result = response.json()
         
         if 'choices' in result and len(result['choices']) > 0:
+            _last_used_model = model
             return result['choices'][0]['message']['content']
         
         print(f"[LLM] Unexpected response: {result}")
@@ -197,11 +206,13 @@ def completion_with_tools(messages, tools=None, system_prompt=None, model=None,
         if raw_tool_calls:
             raw_content["tool_calls"] = raw_tool_calls
 
+        _last_used_model = model
         return {
             "stop_reason": "tool_calls" if (finish_reason == "tool_calls" or tool_uses) else "end_turn",
             "text": text,
             "tool_uses": tool_uses,
             "raw_content": raw_content,
+            "model_used": model,
             "error": None,
         }
 

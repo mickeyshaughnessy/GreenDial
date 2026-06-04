@@ -567,10 +567,11 @@ def _execute_health_tool(name, inputs, user_id, agent_id):
 def _run_agentic_loop(messages, system_prompt, user_id, agent_id, max_steps=6):
     """
     Core agentic loop: call LLM with tools, execute tool calls, repeat until
-    end_turn or max_steps. Returns (final_text, profile_updates_dict).
+    end_turn or max_steps. Returns (final_text, profile_updates_dict, model_used).
     """
     final_text = ""
     profile_updates = {}
+    model_used = config.OPENROUTER_TOOLS_MODEL
 
     for step in range(max_steps):
         resp = utils.completion_with_tools(
@@ -580,7 +581,6 @@ def _run_agentic_loop(messages, system_prompt, user_id, agent_id, max_steps=6):
         )
 
         if resp.get("error"):
-            # Hard failure — fall back to simple conversational completion
             print(f"[AgentLoop] Error at step {step}: {resp['error']} — falling back")
             last_user_content = next(
                 (m["content"] for m in reversed(messages) if m.get("role") == "user"), ""
@@ -590,7 +590,11 @@ def _run_agentic_loop(messages, system_prompt, user_id, agent_id, max_steps=6):
                 system_prompt=system_prompt,
                 temperature=config.LLM_TEMPERATURE
             )
+            model_used = utils.get_last_model_used() or config.OPENROUTER_MODEL
             break
+
+        if resp.get("model_used"):
+            model_used = resp["model_used"]
 
         if resp.get("text"):
             final_text = resp["text"]
@@ -620,7 +624,6 @@ def _run_agentic_loop(messages, system_prompt, user_id, agent_id, max_steps=6):
 
         messages.extend(tool_results)
 
-    # If the loop ended on a tool call with no text, do one final turn
     if not final_text:
         resp = utils.completion_with_tools(
             messages=messages,
@@ -628,8 +631,10 @@ def _run_agentic_loop(messages, system_prompt, user_id, agent_id, max_steps=6):
             system_prompt=system_prompt
         )
         final_text = resp.get("text") or "Done."
+        if resp.get("model_used"):
+            model_used = resp["model_used"]
 
-    return final_text, profile_updates
+    return final_text, profile_updates, model_used
 
 
 def _save_profile_updates_from_tools(user_id, updates):
@@ -1035,7 +1040,7 @@ def handle_agent_chat(agent_id, request):
     messages = [{"role": "user", "content": init_user_msg}]
 
     # Run the agentic loop
-    final_text, tool_profile_updates = _run_agentic_loop(
+    final_text, tool_profile_updates, model_used = _run_agentic_loop(
         messages=messages,
         system_prompt=full_system,
         user_id=user_id,
@@ -1076,7 +1081,8 @@ def handle_agent_chat(agent_id, request):
         "response": clean_response,
         "session_id": session_id,
         "agent_id": agent_id,
-        "user_id": user_id
+        "user_id": user_id,
+        "model_used": model_used
     }
     if updated_profile:
         result["profile_updated"] = True
@@ -1105,7 +1111,7 @@ Be concise and direct — this is task mode, not open-ended chat."""
 
     messages = [{"role": "user", "content": task_text}]
 
-    final_text, tool_updates = _run_agentic_loop(
+    final_text, tool_updates, model_used = _run_agentic_loop(
         messages=messages,
         system_prompt=DOC_TASK_SYSTEM,
         user_id=user_id,
@@ -1122,7 +1128,7 @@ Be concise and direct — this is task mode, not open-ended chat."""
     if user_id:
         _update_transcript(user_id, task_text, clean)
 
-    result = {"response": clean, "user_id": user_id}
+    result = {"response": clean, "user_id": user_id, "model_used": model_used}
     if updated_profile:
         result["profile_updated"] = True
         result["profile"] = updated_profile
@@ -1671,7 +1677,8 @@ def handle_chat(request):
     response_data = {
         "response": clean_response,
         "session_id": session_id,
-        "user_id": user_id
+        "user_id": user_id,
+        "model_used": utils.get_last_model_used() or config.OPENROUTER_MODEL
     }
     if updated_profile:
         response_data["profile_updated"] = True
