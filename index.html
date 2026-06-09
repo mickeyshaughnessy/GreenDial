@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GreenDial - Health Assistant</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'><text y='32' font-size='32'>🌿</text></svg>">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -160,13 +161,43 @@
     .view { display: none; }
     .view.active { display: flex; flex-direction: column; }
     
+    #view-chat { flex: 1; }
+    .chat-hero {
+      padding: 14px 2px 4px;
+      color: rgba(255,255,255,0.45);
+      font-size: 13px;
+      line-height: 1.6;
+      max-width: 700px;
+    }
+    .starter-prompts {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 8px 0 12px;
+    }
+    .starter-btn {
+      padding: 7px 14px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 20px;
+      color: rgba(255,255,255,0.65);
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .starter-btn:hover {
+      background: rgba(16,185,129,0.15);
+      border-color: rgba(16,185,129,0.35);
+      color: white;
+    }
     .chat-container {
       background: rgba(255,255,255,0.05);
       border-radius: 16px;
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      height: calc(100vh - 100px);
+      flex: 1;
+      min-height: 0;
     }
     .chat-header {
       padding: 14px 20px;
@@ -633,6 +664,15 @@
   
   <div class="main">
     <div class="view active" id="view-chat">
+      <div class="chat-hero">
+        GreenDial is a free AI health companion. Chat with Doc to get personalized guidance on sleep, diet, exercise, stress, and more. Your health profile builds automatically as you talk — no forms, no appointments.
+      </div>
+      <div class="starter-prompts">
+        <button class="starter-btn" onclick="sendMessage('Help me sleep better')">😴 Help me sleep better</button>
+        <button class="starter-btn" onclick="sendMessage('I want to lose 15 lbs')">⚖️ I want to lose 15 lbs</button>
+        <button class="starter-btn" onclick="sendMessage('I\'m stressed about work')">😤 I'm stressed about work</button>
+        <button class="starter-btn" onclick="sendMessage('What should I eat today?')">🥗 What should I eat today?</button>
+      </div>
       <div class="chat-container">
         <div class="chat-header"><span id="chat-agent-header">🌿 Chat with Doc</span></div>
         <div class="agent-tabs-row" id="agent-tabs-row">
@@ -1299,7 +1339,7 @@
       const p = userProfile || {};
       
       if (!Object.keys(p).length) {
-        panel.innerHTML = '<div class="profile-empty">Your profile is empty. Chat with Doc to start building it!</div>';
+        panel.innerHTML = '<div class="profile-empty" style="padding:32px 20px;font-size:14px;line-height:1.7">🌿 Tell Doc about yourself and your profile will build automatically.</div>';
         return;
       }
       
