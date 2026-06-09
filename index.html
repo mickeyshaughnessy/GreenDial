@@ -613,7 +613,6 @@
     <div class="nav-tabs">
       <button class="nav-tab active" onclick="switchView('chat')">💬 Chat</button>
       <button class="nav-tab" onclick="switchView('history')">📜 History</button>
-      <button class="nav-tab" onclick="switchView('user')">👤 User</button>
       <button class="nav-tab" onclick="switchView('feedback')">📣 Feedback</button>
       <button class="nav-tab" id="admin-tab" style="display:none" onclick="switchView('admin')">🛡️ Admin</button>
       <a class="nav-tab" href="/docs" target="_blank" style="text-decoration:none">📄 Docs</a>
@@ -651,16 +650,16 @@
     <div class="view" id="view-user">
       <div style="display:flex;flex-direction:column;gap:20px;max-width:900px;width:100%;margin:0 auto;padding-bottom:40px">
         <div class="panel">
+          <div class="panel-header">⚙️ Settings</div>
+          <div class="panel-content" id="settings-panel"><div class="profile-empty">Sign in to manage settings</div></div>
+        </div>
+        <div class="panel">
           <div class="panel-header"><span>📋 Health Profile</span><button class="btn btn-secondary btn-sm" onclick="refreshUserTab()">Refresh</button></div>
           <div class="panel-content" id="full-profile-panel"><div class="profile-empty">Sign in to view your health profile</div></div>
         </div>
         <div class="panel">
           <div class="panel-header">📊 Profile JSON</div>
           <div class="panel-content"><div class="json-view" id="json-profile">{}</div></div>
-        </div>
-        <div class="panel">
-          <div class="panel-header">⚙️ Settings</div>
-          <div class="panel-content" id="settings-panel"><div class="profile-empty">Sign in to manage settings</div></div>
         </div>
       </div>
     </div>
@@ -1101,7 +1100,8 @@
       document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
       document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
       document.getElementById(`view-${view}`).classList.add('active');
-      document.querySelector(`.nav-tab[onclick="switchView('${view}')"]`).classList.add('active');
+      const activeTab = document.querySelector(`.nav-tab[onclick="switchView('${view}')"]`);
+      if (activeTab) activeTab.classList.add('active');
       
       if (view === 'user') refreshUserTab();
       if (view === 'history') refreshHistory();
