@@ -377,6 +377,49 @@ def api_update_profile():
     return Response(result, mimetype='application/json')
 
 
+# ============ FEEDBACK ============
+
+@app.route("/feedback", methods=['GET', 'OPTIONS'])
+def get_feedback():
+    if request.method == 'OPTIONS':
+        return Response('', status=200)
+    result = handlers.handle_get_feedback()
+    return Response(result, mimetype='application/json')
+
+
+@app.route("/feedback", methods=['POST', 'OPTIONS'])
+def post_feedback():
+    if request.method == 'OPTIONS':
+        return Response('', status=200)
+    req = request.get_json() or {}
+    result = handlers.handle_post_feedback(req)
+    if isinstance(result, tuple):
+        return Response(result[0], status=result[1], mimetype='application/json')
+    return Response(result, mimetype='application/json')
+
+
+@app.route("/feedback/<post_id>", methods=['DELETE', 'OPTIONS'])
+def delete_feedback_post(post_id):
+    if request.method == 'OPTIONS':
+        return Response('', status=200)
+    user_id = request.args.get('user_id', '')
+    result = handlers.handle_delete_feedback_post(post_id, user_id)
+    if isinstance(result, tuple):
+        return Response(result[0], status=result[1], mimetype='application/json')
+    return Response(result, mimetype='application/json')
+
+
+@app.route("/feedback/<post_id>", methods=['PATCH', 'OPTIONS'])
+def update_feedback_post(post_id):
+    if request.method == 'OPTIONS':
+        return Response('', status=200)
+    req = request.get_json() or {}
+    result = handlers.handle_update_feedback_post(post_id, req)
+    if isinstance(result, tuple):
+        return Response(result[0], status=result[1], mimetype='application/json')
+    return Response(result, mimetype='application/json')
+
+
 # ============ ADMIN ============
 
 @app.route("/admin/balances", methods=['GET', 'OPTIONS'])

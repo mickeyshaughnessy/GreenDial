@@ -2277,3 +2277,72 @@ def handle_admin_stats(requesting_user_id):
         'with_profile': with_profile,
         'users': users_out,
     })
+
+
+# ============ FEEDBACK ============
+
+def handle_get_feedback():
+    try:
+        posts = s3_storage.get_feedback()
+        return json.dumps({"posts": posts})
+    except Exception as e:
+        return json.dumps({"posts": [], "error": str(e)})
+
+
+def handle_post_feedback(req):
+    message = (req.get('message') or '').strip()
+    if not message:
+        return (json.dumps({"error": "Message required"}), 400)
+    username = (req.get('username') or 'Guest').strip() or 'Guest'
+    try:
+        posts = s3_storage.get_feedback()
+        post = {
+            "id": str(uuid.uuid4()),
+            "username": username[:40],
+            "message": message[:2000],
+            "created": datetime.utcnow().isoformat(),
+            "status": "new",
+        }
+        posts.insert(0, post)
+        posts = posts[:500]
+        s3_storage.save_feedback(posts)
+        return json.dumps({"post": post})
+    except Exception as e:
+        return (json.dumps({"error": str(e)}), 500)
+
+
+def _is_mickey(user_id):
+    try:
+        u = s3_storage.get_user(user_id)
+        return u and u.get('username', '').lower() == 'mickey'
+    except Exception:
+        return False
+
+
+def handle_delete_feedback_post(post_id, user_id):
+    if not _is_mickey(user_id):
+        return (json.dumps({"error": "Unauthorized"}), 403)
+    try:
+        posts = s3_storage.get_feedback()
+        posts = [p for p in posts if p.get('id') != post_id]
+        s3_storage.save_feedback(posts)
+        return json.dumps({"ok": True})
+    except Exception as e:
+        return (json.dumps({"error": str(e)}), 500)
+
+
+def handle_update_feedback_post(post_id, req):
+    user_id = req.get('user_id', '')
+    if not _is_mickey(user_id):
+        return (json.dumps({"error": "Unauthorized"}), 403)
+    try:
+        posts = s3_storage.get_feedback()
+        for p in posts:
+            if p.get('id') == post_id:
+                if 'status' in req:
+                    p['status'] = req['status']
+                break
+        s3_storage.save_feedback(posts)
+        return json.dumps({"ok": True})
+    except Exception as e:
+        return (json.dumps({"error": str(e)}), 500)

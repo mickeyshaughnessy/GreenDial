@@ -234,3 +234,31 @@ def save_unprompted_group(group):
         Body=json.dumps(group, indent=2),
         ContentType='application/json'
     )
+
+
+# ============ FEEDBACK ============
+
+def get_feedback():
+    """Get all public feedback posts"""
+    _check_client()
+    try:
+        resp = s3_client.get_object(
+            Bucket=config.DO_SPACES_BUCKET,
+            Key=_key("feedback/posts.json")
+        )
+        return json.loads(resp['Body'].read().decode('utf-8'))
+    except ClientError as e:
+        if e.response['Error']['Code'] == 'NoSuchKey':
+            return []
+        raise
+
+
+def save_feedback(posts):
+    """Persist feedback posts list"""
+    _check_client()
+    s3_client.put_object(
+        Bucket=config.DO_SPACES_BUCKET,
+        Key=_key("feedback/posts.json"),
+        Body=json.dumps(posts, indent=2),
+        ContentType='application/json'
+    )

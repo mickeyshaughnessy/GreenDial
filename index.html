@@ -149,17 +149,12 @@
     }
     
     .main {
-      display: grid;
-      grid-template-columns: 1fr 380px;
-      gap: 20px;
+      display: flex;
+      flex-direction: column;
       padding: 20px;
       max-width: 1400px;
       margin: 0 auto;
       min-height: calc(100vh - 60px);
-    }
-    @media (max-width: 1000px) {
-      .main { grid-template-columns: 1fr; }
-      .sidebar { display: none; }
     }
     
     .view { display: none; }
@@ -551,6 +546,55 @@
     }
     .custom-prompt-textarea:focus { outline: none; border-color: rgba(16,185,129,0.5); }
 
+    /* Feedback admin board */
+    .feedback-board {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    @media (max-width: 700px) { .feedback-board { grid-template-columns: 1fr; } }
+    .feedback-col {
+      background: rgba(255,255,255,0.03);
+      border-radius: 10px;
+      border: 2px solid rgba(255,255,255,0.07);
+      min-height: 100px;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .feedback-col.drag-over {
+      border-color: #10b981;
+      background: rgba(16,185,129,0.06);
+    }
+    .feedback-col-hdr {
+      padding: 10px 14px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: rgba(255,255,255,0.4);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .feedback-card {
+      position: relative;
+      padding: 12px 38px 12px 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      cursor: grab;
+      transition: background 0.1s;
+    }
+    .feedback-card:hover { background: rgba(255,255,255,0.04); }
+    .feedback-card:active { cursor: grabbing; }
+    .feedback-card-del {
+      position: absolute;
+      top: 9px; right: 8px;
+      background: none; border: none;
+      color: transparent;
+      font-size: 15px; cursor: pointer;
+      padding: 2px 5px; border-radius: 4px;
+      line-height: 1;
+      transition: color 0.15s, background 0.15s;
+    }
+    .feedback-card:hover .feedback-card-del { color: rgba(255,255,255,0.3); }
+    .feedback-card-del:hover { color: #ef4444 !important; background: rgba(239,68,68,0.12); }
+
     /* Mobile header fix */
     @media (max-width: 700px) {
       .header { flex-wrap: wrap; gap: 8px; padding: 10px 14px; }
@@ -566,12 +610,11 @@
 <body>
   <div class="header">
     <div class="logo" onclick="switchView('chat')" style="cursor:pointer" title="Home"><span>🌿</span><span>GreenDial</span></div>
-    <div class="user-count" id="userCount" title="Registered users"></div>
     <div class="nav-tabs">
       <button class="nav-tab active" onclick="switchView('chat')">💬 Chat</button>
-      <button class="nav-tab" onclick="switchView('profile')">📋 Profile</button>
       <button class="nav-tab" onclick="switchView('history')">📜 History</button>
-      <button class="nav-tab" onclick="switchView('settings')">⚙️ Settings</button>
+      <button class="nav-tab" onclick="switchView('user')">👤 User</button>
+      <button class="nav-tab" onclick="switchView('feedback')">📣 Feedback</button>
       <button class="nav-tab" id="admin-tab" style="display:none" onclick="switchView('admin')">🛡️ Admin</button>
       <a class="nav-tab" href="/docs" target="_blank" style="text-decoration:none">📄 Docs</a>
     </div>
@@ -605,10 +648,20 @@
       </div>
     </div>
     
-    <div class="view" id="view-profile">
-      <div class="panel" style="flex:1">
-        <div class="panel-header"><span>📋 Health Profile</span><button class="btn btn-secondary btn-sm" onclick="refreshProfile()">Refresh</button></div>
-        <div class="panel-content" id="full-profile-panel"><div class="profile-empty">Sign in to view your health profile</div></div>
+    <div class="view" id="view-user">
+      <div style="display:flex;flex-direction:column;gap:20px;max-width:900px;width:100%;margin:0 auto;padding-bottom:40px">
+        <div class="panel">
+          <div class="panel-header"><span>📋 Health Profile</span><button class="btn btn-secondary btn-sm" onclick="refreshUserTab()">Refresh</button></div>
+          <div class="panel-content" id="full-profile-panel"><div class="profile-empty">Sign in to view your health profile</div></div>
+        </div>
+        <div class="panel">
+          <div class="panel-header">📊 Profile JSON</div>
+          <div class="panel-content"><div class="json-view" id="json-profile">{}</div></div>
+        </div>
+        <div class="panel">
+          <div class="panel-header">⚙️ Settings</div>
+          <div class="panel-content" id="settings-panel"><div class="profile-empty">Sign in to manage settings</div></div>
+        </div>
       </div>
     </div>
     
@@ -627,12 +680,6 @@
       </div>
     </div>
     
-    <div class="view" id="view-settings">
-      <div class="panel" style="flex:1">
-        <div class="panel-header">⚙️ Settings</div>
-        <div class="panel-content" id="settings-panel"><div class="profile-empty">Sign in to manage settings</div></div>
-      </div>
-    </div>
 
     <div class="view" id="view-admin">
       <div class="admin-view" style="width:100%">
@@ -664,14 +711,28 @@
       </div>
     </div>
     
-    <div class="sidebar">
-      <div class="panel">
-        <div class="panel-header">👤 Quick Profile</div>
-        <div class="panel-content" id="sidebar-profile"><div class="profile-empty">Sign in to see profile</div></div>
-      </div>
-      <div class="panel">
-        <div class="panel-header">📊 Profile JSON</div>
-        <div class="panel-content"><div class="json-view" id="json-profile">{}</div></div>
+    <div class="view" id="view-feedback">
+      <div style="max-width:800px;width:100%;margin:0 auto;padding-bottom:40px">
+        <div class="panel" style="margin-bottom:16px">
+          <div class="panel-header">📣 Post Feedback</div>
+          <div class="panel-content">
+            <p style="color:rgba(255,255,255,0.5);font-size:13px;margin-bottom:14px">Share feedback, report bugs, or suggest features. No sign-in required.</p>
+            <div class="form-group">
+              <label>Your name (optional)</label>
+              <input type="text" id="feedback-name" placeholder="Anonymous" maxlength="40">
+            </div>
+            <div class="form-group">
+              <label>Message</label>
+              <textarea id="feedback-message" class="custom-prompt-textarea" style="min-height:80px" placeholder="What's on your mind?" maxlength="2000"></textarea>
+            </div>
+            <div id="feedback-error" class="form-error" style="margin-bottom:8px"></div>
+            <button class="btn btn-primary" onclick="postFeedback()">Post</button>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-header"><span>💬 Community Board</span><button class="btn btn-secondary btn-sm" onclick="loadFeedback()">Refresh</button></div>
+          <div class="panel-content" id="feedback-list"><div class="profile-empty">Loading…</div></div>
+        </div>
       </div>
     </div>
   </div>
@@ -839,15 +900,6 @@
     let currentHistoryAgent = 'doc';
     let taskMode = false; // task mode uses agentic Gemini Flash loop for Doc
 
-    // Fetch user count on load
-    fetch(API + '/stats')
-      .then(r => r.json())
-      .then(data => {
-        if (data.user_count > 0) {
-          document.getElementById('userCount').textContent = data.user_count + ' users';
-        }
-      })
-      .catch(() => {});
     let isLoading = false;
     let currentView = 'chat';
     
@@ -1051,14 +1103,14 @@
       document.getElementById(`view-${view}`).classList.add('active');
       document.querySelector(`.nav-tab[onclick="switchView('${view}')"]`).classList.add('active');
       
-      if (view === 'profile') refreshProfile();
+      if (view === 'user') refreshUserTab();
       if (view === 'history') refreshHistory();
-      if (view === 'settings') refreshSettings();
+      if (view === 'feedback') loadFeedback();
       if (view === 'admin') loadAdminStats();
     }
     
     function goToSettings() {
-      if (currentUser) switchView('settings');
+      switchView('user');
     }
     
     function addMessage(role, text) {
@@ -1209,35 +1261,8 @@
     }
     
     function updateAllProfileDisplays() {
-      updateSidebarProfile();
       updateJsonProfile();
-      if (currentView === 'profile') renderFullProfile();
-    }
-    
-    function updateSidebarProfile() {
-      const panel = document.getElementById('sidebar-profile');
-      if (!currentUser) {
-        panel.innerHTML = '<div class="profile-empty">Sign in to see profile</div>';
-        return;
-      }
-      
-      const p = userProfile || {};
-      const fieldMap = {
-        'primary_concern': 'Focus', 'age': 'Age', 'location': 'Location', 'weight': 'Weight',
-        'height': 'Height', 'health_conditions': 'Conditions', 'medications': 'Medications',
-        'allergies': 'Allergies', 'goals': 'Goals', 'diet_type': 'Diet',
-        'exercise_frequency': 'Exercise', 'sleep_hours': 'Sleep', 'stress_level': 'Stress'
-      };
-      
-      let html = '';
-      for (const [key, label] of Object.entries(fieldMap)) {
-        if (p[key]) {
-          let value = Array.isArray(p[key]) ? p[key].join(', ') : String(p[key]);
-          html += `<div class="profile-field"><span class="label">${label}</span><span class="value">${escapeHtml(value)}</span></div>`;
-        }
-      }
-      
-      panel.innerHTML = html || '<div class="profile-empty">Chat with Doc to build your profile</div>';
+      if (currentView === 'user') renderFullProfile();
     }
     
     function updateJsonProfile() {
@@ -1267,7 +1292,6 @@
         renderFullProfile({});
       }
       updateJsonProfile();
-      updateSidebarProfile();
     }
     
     function renderFullProfile(historyData = {}) {
@@ -1515,6 +1539,133 @@
           <div class="settings-item"><div><div class="settings-label">Sign Out</div></div><button class="btn btn-danger btn-sm" onclick="logout()">Sign Out</button></div>
         </div>
       `;
+    }
+
+    async function refreshUserTab() {
+      await Promise.allSettled([refreshProfile(), refreshSettings()]);
+    }
+
+    let _feedbackDragId = null;
+
+    function _feedbackCard(p) {
+      const id = escapeHtml(p.id);
+      const status = p.status || 'new';
+      return `<div class="feedback-card" draggable="true" data-id="${id}" data-status="${status}"
+          ondragstart="feedbackDragStart(event)">
+        <button class="feedback-card-del" onclick="deleteFeedbackPost('${id}')" title="Delete">✕</button>
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+          <span style="font-weight:600;font-size:13px;color:#10b981">${escapeHtml(p.username || 'Guest')}</span>
+          <span style="font-size:11px;color:rgba(255,255,255,0.35)">${formatTime(p.created)}</span>
+        </div>
+        <div style="font-size:13px;line-height:1.5;color:rgba(255,255,255,0.85)">${escapeHtml(p.message)}</div>
+      </div>`;
+    }
+
+    function _feedbackColHtml(colStatus, label, posts) {
+      const items = posts.filter(p => (p.status || 'new') === colStatus);
+      const empty = colStatus === 'new'
+        ? '<div style="padding:20px;text-align:center;color:rgba(255,255,255,0.25);font-size:12px">All clear!</div>'
+        : '<div style="padding:20px;text-align:center;color:rgba(255,255,255,0.25);font-size:12px">Drag items here</div>';
+      return `<div class="feedback-col" id="feedback-col-${colStatus}"
+          ondragover="event.preventDefault()"
+          ondragenter="this.classList.add('drag-over')"
+          ondragleave="if(!this.contains(event.relatedTarget))this.classList.remove('drag-over')"
+          ondrop="feedbackDrop(event,'${colStatus}')">
+        <div class="feedback-col-hdr">${label} (${items.length})</div>
+        ${items.length ? items.map(_feedbackCard).join('') : empty}
+      </div>`;
+    }
+
+    async function loadFeedback() {
+      const list = document.getElementById('feedback-list');
+      if (!list) return;
+      list.innerHTML = '<div class="profile-empty">Loading…</div>';
+      try {
+        const res = await fetch(`${API}/feedback`);
+        const data = await res.json();
+        const posts = data.posts || [];
+        const isMickey = currentUser && currentUser.username.toLowerCase() === 'mickey';
+
+        if (!posts.length) {
+          list.innerHTML = '<div class="profile-empty">No posts yet. Be the first to leave feedback!</div>';
+          return;
+        }
+
+        if (isMickey) {
+          list.innerHTML = `<div class="feedback-board">
+            ${_feedbackColHtml('new', '📥 Incoming', posts)}
+            ${_feedbackColHtml('todo', '📋 To-Do', posts)}
+          </div>`;
+        } else {
+          list.innerHTML = posts.map(p => `
+            <div style="padding:14px 0;border-bottom:1px solid rgba(255,255,255,0.07)">
+              <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+                <span style="font-weight:600;font-size:13px;color:#10b981">${escapeHtml(p.username || 'Guest')}</span>
+                <span style="font-size:11px;color:rgba(255,255,255,0.35)">${formatTime(p.created)}</span>
+              </div>
+              <div style="font-size:13px;line-height:1.6;color:rgba(255,255,255,0.85)">${escapeHtml(p.message)}</div>
+            </div>`).join('');
+        }
+      } catch (e) {
+        list.innerHTML = '<div class="profile-empty">Could not load feedback</div>';
+      }
+    }
+
+    function feedbackDragStart(event) {
+      _feedbackDragId = event.currentTarget.dataset.id;
+      event.dataTransfer.effectAllowed = 'move';
+    }
+
+    async function feedbackDrop(event, targetStatus) {
+      event.preventDefault();
+      const col = document.getElementById(`feedback-col-${targetStatus}`);
+      if (col) col.classList.remove('drag-over');
+      if (!_feedbackDragId || !currentUser) return;
+      const card = document.querySelector(`[data-id="${_feedbackDragId}"]`);
+      if (card && card.dataset.status === targetStatus) { _feedbackDragId = null; return; }
+      try {
+        await fetch(`${API}/feedback/${_feedbackDragId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: currentUser.user_id, status: targetStatus })
+        });
+        await loadFeedback();
+      } catch (e) {}
+      _feedbackDragId = null;
+    }
+
+    async function deleteFeedbackPost(postId) {
+      if (!currentUser) return;
+      try {
+        await fetch(`${API}/feedback/${postId}?user_id=${encodeURIComponent(currentUser.user_id)}`, {
+          method: 'DELETE'
+        });
+        await loadFeedback();
+      } catch (e) {}
+    }
+
+    async function postFeedback() {
+      const msgEl = document.getElementById('feedback-message');
+      const nameEl = document.getElementById('feedback-name');
+      const errEl = document.getElementById('feedback-error');
+      const message = (msgEl.value || '').trim();
+      if (!message) { errEl.textContent = 'Please enter a message'; return; }
+      errEl.textContent = '';
+      const username = (nameEl.value.trim() || (currentUser ? currentUser.username : '')) || 'Guest';
+      try {
+        const res = await fetch(`${API}/feedback`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message, username })
+        });
+        const data = await res.json();
+        if (data.error) { errEl.textContent = data.error; return; }
+        msgEl.value = '';
+        nameEl.value = '';
+        await loadFeedback();
+      } catch (e) {
+        errEl.textContent = 'Could not post feedback. Try again.';
+      }
     }
 
     async function toggleAgentSub(agentId, toggleEl) {
