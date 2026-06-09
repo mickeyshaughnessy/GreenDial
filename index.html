@@ -1124,15 +1124,67 @@
       renderMessages();
     }
 
-    function init() {
+    // ── SESSION PERSISTENCE ──────────────────────────────────────────────────
+    function saveSession() {
+      if (currentUser) localStorage.setItem('gd_session', JSON.stringify(currentUser));
+    }
+    function clearSession() {
+      localStorage.removeItem('gd_session');
+    }
+    async function restoreSession() {
+      const raw = localStorage.getItem('gd_session');
+      if (!raw) return false;
+      try {
+        const saved = JSON.parse(raw);
+        if (!saved.user_id || !saved.username) return false;
+        const res = await fetch(`${API}/user/${saved.user_id}`);
+        if (!res.ok) { clearSession(); return false; }
+        const data = await res.json();
+        if (data.error) { clearSession(); return false; }
+        currentUser = saved;
+        userProfile = data.profile || {};
+        userSettings = data.settings || userSettings;
+        updateUserUI();
+        updateAllProfileDisplays();
+        agentChats = { doc: [] };
+        agentSessionIds = {};
+        currentAgent = 'doc';
+        try {
+          const ar = await fetch(`${API}/agents/${saved.user_id}`);
+          const ad = await ar.json();
+          availableAgents = ad.available_agents || [];
+          userSettings.agent_subscriptions = ad.subscriptions || [];
+        } catch (e) {}
+        updateAgentTabs();
+        await loadAgentChats(saved.user_id);
+        if (!agentChats.doc || agentChats.doc.length === 0) {
+          agentChats.doc = [{ role: 'doc', text: `Welcome back, ${saved.username}! Let's continue building your health profile.` }];
+        }
+        renderMessages();
+        fetchNotifications();
+        if (window._notifInterval) clearInterval(window._notifInterval);
+        window._notifInterval = setInterval(fetchNotifications, 120000);
+        return true;
+      } catch (e) {
+        clearSession();
+        return false;
+      }
+    }
+
+    async function init() {
       const allIds = ['diet','exercise','protect','sleep','mental_health','relationships','environment','custom','cross_ai'];
-      agentChats = { doc: [{ role: 'doc', text: "Hi! I'm Doc. I'll help you build your health profile. What brings you here today?" }] };
+      agentChats = { doc: [] };
       for (const aid of allIds) agentChats[aid] = [];
       agentSessionIds = {};
       updateAgentTabs();
       renderMessages();
       document.getElementById('chat-input').focus();
       updateAllProfileDisplays();
+      const restored = await restoreSession();
+      if (!restored) {
+        agentChats.doc = [{ role: 'doc', text: "Hi! I'm Doc. I'll help you build your health profile. What brings you here today?" }];
+        renderMessages();
+      }
     }
     
     function switchView(view) {
@@ -1907,6 +1959,7 @@
           currentUser = { user_id: data.user_id, username: data.username };
           userProfile = data.profile || {};
           userSettings = data.settings || userSettings;
+          saveSession();
 
           hideAuthPopup();
           updateUserUI();
@@ -1977,6 +2030,7 @@
         } else {
           currentUser = { user_id: data.user_id, username: data.username };
           userProfile = {};
+          saveSession();
 
           hideAuthPopup();
           updateUserUI();
@@ -1995,6 +2049,7 @@
     }
     
     function logout() {
+      clearSession();
       currentUser = null;
       userProfile = {};
       notifications = [];
