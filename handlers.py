@@ -2213,18 +2213,19 @@ def handle_admin_balances(requesting_user_id):
     except Exception as e:
         print(f"[Admin] BTC balance fetch failed: {e}")
 
-    # ETH: sum balances on mainnet and Base L2
+    # ETH: sum balances on mainnet and Base L2 via public JSON-RPC
     eth_total_wei = 0
-    for label, api_url in [
-        ("mainnet", f"https://api.etherscan.io/api?module=account&action=balance&address={ETH_ADDRESS}&tag=latest"),
-        ("base",    f"https://api.basescan.org/api?module=account&action=balance&address={ETH_ADDRESS}&tag=latest"),
+    rpc_payload = {"jsonrpc": "2.0", "method": "eth_getBalance", "params": [ETH_ADDRESS, "latest"], "id": 1}
+    for label, rpc_url in [
+        ("mainnet", "https://ethereum.publicnode.com"),
+        ("base",    "https://mainnet.base.org"),
     ]:
         try:
-            r = _requests.get(api_url, timeout=5)
+            r = _requests.post(rpc_url, json=rpc_payload, timeout=5)
             if r.status_code == 200:
                 data = r.json()
-                if data.get("status") == "1":
-                    eth_total_wei += int(data.get("result", "0"))
+                if "result" in data:
+                    eth_total_wei += int(data["result"], 16)
         except Exception as e:
             print(f"[Admin] ETH balance fetch failed ({label}): {e}")
     result["eth"] = round(eth_total_wei / 1e18, 6)
