@@ -2213,10 +2213,10 @@ def handle_admin_balances(requesting_user_id):
     except Exception as e:
         print(f"[Admin] BTC balance fetch failed: {e}")
 
-    # ETH via etherscan (no key needed for single address)
+    # ETH via basescan (Base L2 network)
     try:
         r = _requests.get(
-            f"https://api.etherscan.io/api?module=account&action=balance"
+            f"https://api.basescan.org/api?module=account&action=balance"
             f"&address={ETH_ADDRESS}&tag=latest",
             timeout=5
         )
