@@ -2168,9 +2168,9 @@
         if (balRes.status === 'fulfilled') {
           const bal = await balRes.value.json();
           document.getElementById('admin-btc-balance').textContent =
-            bal.btc !== null && bal.btc !== undefined ? bal.btc + ' BTC' : 'unavailable';
+            parseFloat(bal.btc ?? 0).toFixed(2) + ' BTC';
           document.getElementById('admin-eth-balance').textContent =
-            bal.eth !== null && bal.eth !== undefined ? bal.eth + ' ETH' : 'unavailable';
+            parseFloat(bal.eth ?? 0).toFixed(2) + ' ETH';
         }
       } catch (e) {
         document.getElementById('admin-btc-balance').textContent = 'error';
