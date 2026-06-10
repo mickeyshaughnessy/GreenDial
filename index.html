@@ -480,6 +480,45 @@
     }
     .btn-copy:hover { background: rgba(255,255,255,0.2); color: white; }
     .btn-copy.copied { background: rgba(16,185,129,0.2); color: #10b981; border-color: #10b981; }
+    .phantom-row {
+      background: rgba(171,114,255,0.08);
+      border: 1px solid rgba(171,114,255,0.25);
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-bottom: 14px;
+    }
+    .btn-phantom {
+      width: 100%;
+      padding: 10px 16px;
+      background: linear-gradient(135deg, #ab72ff, #8c44f7);
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .btn-phantom:hover { opacity: 0.85; }
+    .phantom-wallet-addr {
+      font-family: 'Monaco','Menlo',monospace;
+      font-size: 11px;
+      color: #ab72ff;
+      word-break: break-all;
+      margin-bottom: 10px;
+    }
+    .phantom-send-row { display: flex; gap: 8px; align-items: center; }
+    .phantom-amount-input {
+      flex: 1;
+      padding: 7px 10px;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(171,114,255,0.3);
+      border-radius: 6px;
+      color: white;
+      font-size: 13px;
+    }
+    .phantom-amount-input::placeholder { color: rgba(255,255,255,0.35); }
+    .phantom-status { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 8px; }
 
     /* Admin view */
     .admin-view { padding: 24px; max-width: 1200px; margin: 0 auto; }
@@ -789,6 +828,17 @@
         <div class="crypto-label">Ξ Ethereum (ETH)</div>
         <div class="crypto-addr" id="eth-addr">0x58ed1da7a1A58DaB2Fb8d21317725D8760C816Fe</div>
         <button class="btn-copy" onclick="copyAddr('eth-addr', this)">Copy address</button>
+      </div>
+      <div class="phantom-row">
+        <button class="btn-phantom" id="phantom-connect-btn" onclick="connectPhantom()">👻 Connect Phantom to send ETH</button>
+        <div id="phantom-connected" style="display:none">
+          <div class="phantom-wallet-addr" id="phantom-wallet-addr"></div>
+          <div class="phantom-send-row">
+            <input class="phantom-amount-input" type="number" id="phantom-amount" placeholder="Amount in ETH" step="0.001" min="0.0001">
+            <button class="btn btn-primary btn-sm" onclick="sendPhantomDonation()">Send</button>
+          </div>
+          <div class="phantom-status" id="phantom-status"></div>
+        </div>
       </div>
       <div class="popup-buttons">
         <button type="button" class="btn btn-primary" onclick="hideDonateModal()">Close</button>
@@ -2118,6 +2168,57 @@
         btn.classList.add('copied');
         setTimeout(() => { btn.textContent = 'Copy address'; btn.classList.remove('copied'); }, 2000);
       });
+    }
+
+    const DONATION_ETH_ADDRESS = '0x58ed1da7a1A58DaB2Fb8d21317725D8760C816Fe';
+    const BASE_CHAIN_ID = '0x2105'; // 8453
+
+    async function connectPhantom() {
+      const provider = window.phantom?.ethereum ?? window.ethereum;
+      if (!provider) {
+        window.open('https://phantom.app', '_blank');
+        return;
+      }
+      try {
+        const accounts = await provider.request({ method: 'eth_requestAccounts' });
+        // Switch to Base
+        try {
+          await provider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: BASE_CHAIN_ID }] });
+        } catch (switchErr) {
+          if (switchErr.code === 4902) {
+            await provider.request({
+              method: 'wallet_addEthereumChain',
+              params: [{ chainId: BASE_CHAIN_ID, chainName: 'Base', nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 }, rpcUrls: ['https://mainnet.base.org'], blockExplorerUrls: ['https://basescan.org'] }]
+            });
+          }
+        }
+        document.getElementById('phantom-connect-btn').style.display = 'none';
+        document.getElementById('phantom-connected').style.display = 'block';
+        document.getElementById('phantom-wallet-addr').textContent = accounts[0];
+      } catch (e) {
+        if (e.code !== 4001) console.error('Phantom connect error:', e);
+      }
+    }
+
+    async function sendPhantomDonation() {
+      const provider = window.phantom?.ethereum ?? window.ethereum;
+      const amount = parseFloat(document.getElementById('phantom-amount').value);
+      const status = document.getElementById('phantom-status');
+      if (!provider || !amount || amount <= 0) return;
+      const weiHex = '0x' + BigInt(Math.round(amount * 1e18)).toString(16);
+      try {
+        status.textContent = 'Waiting for confirmation…';
+        const accounts = await provider.request({ method: 'eth_accounts' });
+        const txHash = await provider.request({
+          method: 'eth_sendTransaction',
+          params: [{ from: accounts[0], to: DONATION_ETH_ADDRESS, value: weiHex }]
+        });
+        status.textContent = 'Sent! Tx: ' + txHash.slice(0, 18) + '…';
+        status.style.color = '#10b981';
+      } catch (e) {
+        status.textContent = e.code === 4001 ? 'Cancelled.' : 'Error: ' + e.message;
+        status.style.color = '#ef4444';
+      }
     }
 
     // ---- Admin ----
