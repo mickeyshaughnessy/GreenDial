@@ -683,6 +683,14 @@
     .feedback-card-btn.complete:hover { color: #10b981; border-color: #10b981; background: rgba(16,185,129,0.1); }
     .feedback-col-done .feedback-card { opacity: 0.6; }
     .feedback-col-done .feedback-card:hover { opacity: 1; }
+    .suggestion-banner {
+      max-width: 800px; width: 100%; margin: 0 auto 10px;
+      padding: 10px 16px; border-radius: 10px; cursor: pointer;
+      background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.3);
+      color: #10b981; font-size: 13px; font-weight: 500;
+      transition: background 0.15s;
+    }
+    .suggestion-banner:hover { background: rgba(16,185,129,0.15); }
 
     /* Identity fields */
     .identity-field {
@@ -779,6 +787,9 @@
         <button class="starter-btn" onclick="sendMessage('I\'m stressed about work')">😤 I'm stressed about work</button>
         <button class="starter-btn" onclick="sendMessage('What should I eat today?')">🥗 What should I eat today?</button>
       </div>
+      <div class="suggestion-banner" id="suggestion-banner" style="display:none" onclick="switchView('user')">
+        💡 <span id="suggestion-banner-text">You have suggestions waiting</span> <span style="text-decoration:underline">View →</span>
+      </div>
       <div class="chat-container">
         <div class="chat-header"><span id="chat-agent-header">🌿 Chat with Doc</span></div>
         <div class="agent-tabs-row" id="agent-tabs-row">
@@ -864,6 +875,28 @@
             </tr></thead>
             <tbody id="admin-user-tbody">
               <tr><td colspan="5" style="padding:24px;text-align:center;color:rgba(255,255,255,0.4)">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <h3 style="margin:28px 0 10px">💸 Pending Payments</h3>
+        <div class="admin-table-wrap">
+          <table class="admin-table">
+            <thead><tr>
+              <th>User</th><th>Activity</th><th>Amount</th><th>Wallet</th><th>Completed</th><th></th>
+            </tr></thead>
+            <tbody id="admin-payments-tbody">
+              <tr><td colspan="6" style="padding:24px;text-align:center;color:rgba(255,255,255,0.4)">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <h3 style="margin:28px 0 10px">🎯 Bounties</h3>
+        <div class="admin-table-wrap">
+          <table class="admin-table">
+            <thead><tr>
+              <th>Activity</th><th>Area</th><th>Price</th><th>Targets</th><th>Expires</th><th>Status</th>
+            </tr></thead>
+            <tbody id="admin-bounties-tbody">
+              <tr><td colspan="6" style="padding:24px;text-align:center;color:rgba(255,255,255,0.4)">Loading…</td></tr>
             </tbody>
           </table>
         </div>
@@ -1042,6 +1075,15 @@
   <script>
     // ── CONSTANTS ────────────────────────────────────────────────────────────
     const API = window.location.origin;
+
+    // Inject session token on every API request (server requires it for user-scoped routes)
+    const _origFetch = window.fetch.bind(window);
+    window.fetch = (url, opts = {}) => {
+      if (typeof url === 'string' && url.startsWith(API) && currentUser && currentUser.token) {
+        opts.headers = { ...(opts.headers || {}), 'X-Session-Token': currentUser.token };
+      }
+      return _origFetch(url, opts);
+    };
 
     const AGENT_META = {
       doc:           { emoji: '🌿', name: 'Doc' },
@@ -1268,12 +1310,12 @@
       if (!raw) return false;
       try {
         const saved = JSON.parse(raw);
-        if (!saved.user_id || !saved.username) return false;
+        if (!saved.user_id || !saved.username || !saved.token) { clearSession(); return false; }
+        currentUser = saved; // set before fetch so the token header is attached
         const res = await fetch(`${API}/user/${saved.user_id}`);
-        if (!res.ok) { clearSession(); return false; }
+        if (!res.ok) { clearSession(); currentUser = null; return false; }
         const data = await res.json();
-        if (data.error) { clearSession(); return false; }
-        currentUser = saved;
+        if (data.error) { clearSession(); currentUser = null; return false; }
         userProfile = data.profile || {};
         userSettings = data.settings || userSettings;
         updateUserUI();
@@ -1789,34 +1831,58 @@
         <div style="margin-top:12px">
           <button class="btn btn-primary btn-sm" onclick="saveIdentity()">Save</button>
           <span id="identity-save-msg" style="margin-left:10px;font-size:12px;color:#10b981;display:none">Saved!</span>
+          <span id="identity-error" class="form-error" style="margin-left:10px;font-size:12px"></span>
         </div>`;
     }
 
     async function saveIdentity() {
       if (!currentUser) return;
+      const errEl = document.getElementById('identity-error');
+      errEl.textContent = '';
+      const email = document.getElementById('id-email').value.trim();
+      const eth = document.getElementById('id-eth').value.trim();
+      const sol = document.getElementById('id-sol').value.trim();
+      if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { errEl.textContent = 'Invalid email address'; return; }
+      if (eth && !/^0x[a-fA-F0-9]{40}$/.test(eth)) { errEl.textContent = 'Invalid ETH address (0x + 40 hex chars)'; return; }
+      if (sol && !/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(sol)) { errEl.textContent = 'Invalid Solana address'; return; }
       const payload = {
         first_name: document.getElementById('id-first').value.trim(),
         last_name: document.getElementById('id-last').value.trim(),
-        email: document.getElementById('id-email').value.trim(),
-        wallets: {
-          eth: document.getElementById('id-eth').value.trim(),
-          sol: document.getElementById('id-sol').value.trim()
-        }
+        email,
+        wallets: { eth, sol }
       };
       try {
-        await fetch(`${API}/user/${currentUser.user_id}`, {
+        const res = await fetch(`${API}/user/${currentUser.user_id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
+        const data = await res.json();
+        if (data.error) { errEl.textContent = data.error; return; }
+        userData = { ...userData, ...payload };
         const msg = document.getElementById('identity-save-msg');
         if (msg) { msg.style.display = 'inline'; setTimeout(() => msg.style.display = 'none', 2000); }
-      } catch (e) {}
+      } catch (e) {
+        errEl.textContent = 'Could not save';
+      }
     }
 
     // ── SUGGESTIONS ──────────────────────────────────────────────────────────
 
     let _suggestions = [];
+
+    function updateSuggestionBanner() {
+      const banner = document.getElementById('suggestion-banner');
+      if (!banner) return;
+      const n = _suggestions.filter(s => s.status === 'pending').length;
+      if (n > 0 && currentUser) {
+        document.getElementById('suggestion-banner-text').textContent =
+          `You have ${n} suggestion${n > 1 ? 's' : ''} waiting for you today`;
+        banner.style.display = '';
+      } else {
+        banner.style.display = 'none';
+      }
+    }
 
     async function loadSuggestions() {
       if (!currentUser) return;
@@ -1825,6 +1891,7 @@
         const data = await res.json();
         _suggestions = (data.suggestions || []).filter(s => s.status === 'pending');
         renderSuggestions(_suggestions);
+        updateSuggestionBanner();
       } catch (e) {}
     }
 
@@ -1841,6 +1908,7 @@
         const data = await res.json();
         _suggestions = data.suggestions || [];
         renderSuggestions(_suggestions);
+        updateSuggestionBanner();
       } catch (e) {
         if (force && panel) panel.innerHTML = '<div class="profile-empty">Could not generate suggestions</div>';
       }
@@ -1871,9 +1939,14 @@
       }).join('');
     }
 
-    function dismissSuggestion(id) {
+    async function dismissSuggestion(id) {
       _suggestions = _suggestions.filter(s => s.id !== id);
       renderSuggestions(_suggestions);
+      updateSuggestionBanner();
+      if (!currentUser) return;
+      try {
+        await fetch(`${API}/suggestions/${currentUser.user_id}/${id}/dismiss`, { method: 'POST' });
+      } catch (e) {}
     }
 
     async function acceptSuggestion(suggestionId) {
@@ -1885,6 +1958,7 @@
       // Remove from suggestions panel immediately
       _suggestions = _suggestions.filter(s => s.id !== suggestionId);
       renderSuggestions(_suggestions);
+      updateSuggestionBanner();
       // Persist accept + create activity
       try {
         await fetch(`${API}/suggestions/${currentUser.user_id}/${suggestionId}/accept`, { method: 'POST' });
@@ -1918,12 +1992,12 @@
     function renderActivities(acts) {
       const panel = document.getElementById('activities-panel');
       if (!panel) return;
-      if (!acts.length) {
+      const active = acts.filter(a => a.status === 'active');
+      const done = acts.filter(a => a.status === 'completed');
+      if (!active.length && !done.length) {
         panel.innerHTML = '<div class="profile-empty">Accept a suggestion to start an activity.</div>';
         return;
       }
-      const active = acts.filter(a => a.status === 'active');
-      const done = acts.filter(a => a.status === 'completed');
       let html = '';
       if (active.length) {
         html += active.map(a => {
@@ -1933,6 +2007,7 @@
             <div class="activity-meta"><span class="activity-agent">${meta.emoji} ${meta.name}</span>${priceTag}</div>
             <div class="activity-text">${escapeHtml(a.text)}</div>
             <button class="btn-complete" onclick="completeActivity('${a.id}')">✓ Mark Complete</button>
+            <button class="btn-dismiss" onclick="abandonActivity('${a.id}')" style="margin-left:6px">Abandon</button>
           </div>`;
         }).join('');
       }
@@ -1954,6 +2029,16 @@
 
     async function completeActivity(activityId) {
       if (!currentUser) return;
+      const act = _activities.find(a => a.id === activityId);
+      // Paid activity with no wallet on file → warn before snapshotting nothing
+      if (act && act.price) {
+        const w = userData.wallets || {};
+        if (!w.eth && !w.sol) {
+          if (!confirm(`This activity pays ${act.price} ${act.currency || 'ETH'}, but you have no wallet on file. Add one in the Identity section first to receive payment.\n\nComplete anyway without payment?`)) {
+            return;
+          }
+        }
+      }
       const card = document.getElementById(`acard-${activityId}`);
       if (card) { const btn = card.querySelector('.btn-complete'); if (btn) btn.disabled = true; }
       try {
@@ -1966,6 +2051,19 @@
       } catch (e) {
         if (card) { const btn = card.querySelector('.btn-complete'); if (btn) btn.disabled = false; }
       }
+    }
+
+    async function abandonActivity(activityId) {
+      if (!currentUser) return;
+      if (!confirm('Abandon this activity? It will be removed from your list.')) return;
+      try {
+        await fetch(`${API}/activities/${currentUser.user_id}/${activityId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'abandoned' })
+        });
+        await loadActivities();
+      } catch (e) {}
     }
 
     let _feedbackDragId = null;
@@ -2327,7 +2425,7 @@
         if (data.error) {
           errorEl.textContent = data.error;
         } else {
-          currentUser = { user_id: data.user_id, username: data.username };
+          currentUser = { user_id: data.user_id, username: data.username, token: data.token };
           userProfile = data.profile || {};
           userSettings = data.settings || userSettings;
           saveSession();
@@ -2401,7 +2499,7 @@
         if (data.error) {
           errorEl.textContent = data.error;
         } else {
-          currentUser = { user_id: data.user_id, username: data.username };
+          currentUser = { user_id: data.user_id, username: data.username, token: data.token };
           userProfile = {};
           saveSession();
 
@@ -2431,6 +2529,10 @@
       currentAgent = 'doc';
       currentHistoryAgent = 'doc';
       if (window._notifInterval) { clearInterval(window._notifInterval); window._notifInterval = null; }
+      _suggestions = [];
+      _activities = [];
+      userData = {};
+      updateSuggestionBanner();
 
       updateUserUI();
       updateAllProfileDisplays();
@@ -2600,6 +2702,67 @@
       } catch (e) {
         document.getElementById('admin-btc-balance').textContent = 'error';
         document.getElementById('admin-eth-balance').textContent = 'error';
+      }
+
+      loadAdminPayments();
+      loadAdminBounties();
+    }
+
+    async function loadAdminPayments() {
+      const tbody = document.getElementById('admin-payments-tbody');
+      if (!tbody || !currentUser) return;
+      try {
+        const res = await fetch(`${API}/admin/payments?user_id=${encodeURIComponent(currentUser.user_id)}`);
+        const data = await res.json();
+        const payments = data.payments || [];
+        if (!payments.length) {
+          tbody.innerHTML = '<tr><td colspan="6" style="padding:18px;text-align:center;color:rgba(255,255,255,0.35)">No pending payments</td></tr>';
+          return;
+        }
+        tbody.innerHTML = payments.map(p => `
+          <tr>
+            <td><strong>${escapeHtml(p.username)}</strong></td>
+            <td style="font-size:12px;max-width:280px">${escapeHtml(p.text || '')}</td>
+            <td style="color:#f59e0b;white-space:nowrap">${p.price} ${escapeHtml(p.currency || 'ETH')}</td>
+            <td style="font-size:11px;font-family:monospace;max-width:140px;overflow:hidden;text-overflow:ellipsis">${escapeHtml(p.wallet || '⚠️ none')}</td>
+            <td style="font-size:12px;color:rgba(255,255,255,0.5)">${p.completed_at ? p.completed_at.slice(0,10) : '—'}</td>
+            <td><button class="btn btn-primary btn-sm" onclick="markPaid('${escapeHtml(p.user_id)}','${escapeHtml(p.activity_id)}')">Mark Paid</button></td>
+          </tr>`).join('');
+      } catch (e) {
+        tbody.innerHTML = '<tr><td colspan="6" style="padding:18px;color:#ef4444">Could not load payments</td></tr>';
+      }
+    }
+
+    async function markPaid(targetUserId, activityId) {
+      if (!currentUser || !confirm('Confirm this payment has been sent to the user\'s wallet?')) return;
+      try {
+        await fetch(`${API}/admin/payments/${targetUserId}/${activityId}/paid?user_id=${encodeURIComponent(currentUser.user_id)}`, { method: 'POST' });
+        await loadAdminPayments();
+      } catch (e) {}
+    }
+
+    async function loadAdminBounties() {
+      const tbody = document.getElementById('admin-bounties-tbody');
+      if (!tbody || !currentUser) return;
+      try {
+        const res = await fetch(`${API}/admin/bounties?user_id=${encodeURIComponent(currentUser.user_id)}`);
+        const data = await res.json();
+        const bounties = data.bounties || [];
+        if (!bounties.length) {
+          tbody.innerHTML = '<tr><td colspan="6" style="padding:18px;text-align:center;color:rgba(255,255,255,0.35)">No bounties posted</td></tr>';
+          return;
+        }
+        tbody.innerHTML = bounties.map(b => `
+          <tr>
+            <td style="font-size:12px;max-width:280px">${escapeHtml(b.activity || '')}</td>
+            <td>${escapeHtml(b.health_area || '')}</td>
+            <td style="color:#f59e0b;white-space:nowrap">${b.price != null ? b.price + ' ' + escapeHtml(b.currency || 'ETH') : '—'}</td>
+            <td style="font-size:12px">${(b.user_ids || []).length} user(s)</td>
+            <td style="font-size:12px;color:rgba(255,255,255,0.5)">${escapeHtml(b.expires || '—')}</td>
+            <td>${escapeHtml(b.status || '')}</td>
+          </tr>`).join('');
+      } catch (e) {
+        tbody.innerHTML = '<tr><td colspan="6" style="padding:18px;color:#ef4444">Could not load bounties</td></tr>';
       }
     }
 

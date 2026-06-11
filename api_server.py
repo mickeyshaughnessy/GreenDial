@@ -13,9 +13,28 @@ app = Flask(__name__, static_folder='.')
 @app.after_request
 def add_cors_headers(response):
     response.headers['Access-Control-Allow-Origin'] = '*'
-    response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
-    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-Session-Token, X-API-Key'
+    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, PATCH, DELETE, OPTIONS'
     return response
+
+
+def _session_token():
+    return request.headers.get('X-Session-Token', '')
+
+
+def _api_key():
+    return request.headers.get('X-API-Key', '')
+
+
+def _unauthorized():
+    return Response(json.dumps({"error": "Unauthorized"}), status=401, mimetype='application/json')
+
+
+def _require_session(user_id):
+    """Returns a 401 response if the session token doesn't match, else None."""
+    if not handlers.session_ok(user_id, _session_token()):
+        return _unauthorized()
+    return None
 
 
 # ============ STATIC ============
@@ -88,6 +107,9 @@ def chat():
         return Response('', status=200)
     
     req = request.get_json() or {}
+    uid = req.get('user_id', '')
+    if uid and not handlers.session_ok(uid, _session_token()):
+        return _unauthorized()
     result = handlers.handle_chat(req)
     return Response(result, mimetype='application/json')
 
@@ -98,7 +120,9 @@ def chat():
 def get_user(user_id):
     if request.method == 'OPTIONS':
         return Response('', status=200)
-    
+    denied = _require_session(user_id)
+    if denied: return denied
+
     result = handlers.handle_get_user(user_id)
     if isinstance(result, tuple):
         return Response(result[0], status=result[1], mimetype='application/json')
@@ -109,7 +133,9 @@ def get_user(user_id):
 def update_user(user_id):
     if request.method == 'OPTIONS':
         return Response('', status=200)
-    
+    denied = _require_session(user_id)
+    if denied: return denied
+
     req = request.get_json() or {}
     result = handlers.handle_update_user(user_id, req)
     if isinstance(result, tuple):
@@ -123,7 +149,9 @@ def update_user(user_id):
 def get_settings(user_id):
     if request.method == 'OPTIONS':
         return Response('', status=200)
-    
+    denied = _require_session(user_id)
+    if denied: return denied
+
     result = handlers.handle_get_settings(user_id)
     if isinstance(result, tuple):
         return Response(result[0], status=result[1], mimetype='application/json')
@@ -134,7 +162,9 @@ def get_settings(user_id):
 def update_settings(user_id):
     if request.method == 'OPTIONS':
         return Response('', status=200)
-    
+    denied = _require_session(user_id)
+    if denied: return denied
+
     req = request.get_json() or {}
     result = handlers.handle_update_settings(user_id, req)
     if isinstance(result, tuple):
@@ -148,7 +178,9 @@ def update_settings(user_id):
 def get_notifications(user_id):
     if request.method == 'OPTIONS':
         return Response('', status=200)
-    
+    denied = _require_session(user_id)
+    if denied: return denied
+
     result = handlers.handle_get_notifications(user_id)
     return Response(result, mimetype='application/json')
 
@@ -157,7 +189,9 @@ def get_notifications(user_id):
 def generate_notification(user_id):
     if request.method == 'OPTIONS':
         return Response('', status=200)
-    
+    denied = _require_session(user_id)
+    if denied: return denied
+
     result = handlers.handle_generate_notification(user_id)
     return Response(result, mimetype='application/json')
 
@@ -166,7 +200,9 @@ def generate_notification(user_id):
 def dismiss_notification(user_id, notification_id):
     if request.method == 'OPTIONS':
         return Response('', status=200)
-    
+    denied = _require_session(user_id)
+    if denied: return denied
+
     result = handlers.handle_dismiss_notification(user_id, notification_id)
     if isinstance(result, tuple):
         return Response(result[0], status=result[1], mimetype='application/json')
@@ -180,6 +216,9 @@ def task():
     if request.method == 'OPTIONS':
         return Response('', status=200)
     req = request.get_json() or {}
+    uid = req.get('user_id', '')
+    if uid and not handlers.session_ok(uid, _session_token()):
+        return _unauthorized()
     result = handlers.handle_task(req)
     if isinstance(result, tuple):
         return Response(result[0], status=result[1], mimetype='application/json')
@@ -191,6 +230,9 @@ def agent_chat(agent_id):
     if request.method == 'OPTIONS':
         return Response('', status=200)
     req = request.get_json() or {}
+    uid = req.get('user_id', '')
+    if uid and not handlers.session_ok(uid, _session_token()):
+        return _unauthorized()
     result = handlers.handle_agent_chat(agent_id, req)
     if isinstance(result, tuple):
         return Response(result[0], status=result[1], mimetype='application/json')
@@ -201,6 +243,8 @@ def agent_chat(agent_id):
 def get_agent_transcripts(user_id):
     if request.method == 'OPTIONS':
         return Response('', status=200)
+    denied = _require_session(user_id)
+    if denied: return denied
     result = handlers.handle_get_agent_transcripts(user_id)
     return Response(result, mimetype='application/json')
 
@@ -209,6 +253,8 @@ def get_agent_transcripts(user_id):
 def clear_agent_transcript(user_id, agent_id):
     if request.method == 'OPTIONS':
         return Response('', status=200)
+    denied = _require_session(user_id)
+    if denied: return denied
     result = handlers.handle_clear_agent_transcript(user_id, agent_id)
     if isinstance(result, tuple):
         return Response(result[0], status=result[1], mimetype='application/json')
@@ -219,7 +265,9 @@ def clear_agent_transcript(user_id, agent_id):
 def get_conversations(user_id):
     if request.method == 'OPTIONS':
         return Response('', status=200)
-    
+    denied = _require_session(user_id)
+    if denied: return denied
+
     result = handlers.handle_get_conversations(user_id)
     return Response(result, mimetype='application/json')
 
@@ -228,7 +276,9 @@ def get_conversations(user_id):
 def clear_conversations(user_id):
     if request.method == 'OPTIONS':
         return Response('', status=200)
-    
+    denied = _require_session(user_id)
+    if denied: return denied
+
     result = handlers.handle_clear_transcript(user_id)
     if isinstance(result, tuple):
         return Response(result[0], status=result[1], mimetype='application/json')
@@ -239,7 +289,9 @@ def clear_conversations(user_id):
 def get_conversation(user_id, conversation_id):
     if request.method == 'OPTIONS':
         return Response('', status=200)
-    
+    denied = _require_session(user_id)
+    if denied: return denied
+
     result = handlers.handle_get_conversation(user_id, conversation_id)
     if isinstance(result, tuple):
         return Response(result[0], status=result[1], mimetype='application/json')
@@ -319,6 +371,8 @@ def unprompted_sms():
 def get_history(user_id):
     if request.method == 'OPTIONS':
         return Response('', status=200)
+    denied = _require_session(user_id)
+    if denied: return denied
     field = request.args.get('field')
     days = int(request.args.get('days', 30))
     result = handlers.handle_get_history(user_id, field=field, days=days)
@@ -331,6 +385,8 @@ def get_history(user_id):
 def get_agent_subscriptions(user_id):
     if request.method == 'OPTIONS':
         return Response('', status=200)
+    denied = _require_session(user_id)
+    if denied: return denied
     result = handlers.handle_get_agent_subscriptions(user_id)
     if isinstance(result, tuple):
         return Response(result[0], status=result[1], mimetype='application/json')
@@ -341,6 +397,8 @@ def get_agent_subscriptions(user_id):
 def update_agent_subscriptions(user_id):
     if request.method == 'OPTIONS':
         return Response('', status=200)
+    denied = _require_session(user_id)
+    if denied: return denied
     req = request.get_json() or {}
     result = handlers.handle_update_agent_subscriptions(user_id, req)
     if isinstance(result, tuple):
@@ -403,7 +461,7 @@ def delete_feedback_post(post_id):
     if request.method == 'OPTIONS':
         return Response('', status=200)
     user_id = request.args.get('user_id', '')
-    result = handlers.handle_delete_feedback_post(post_id, user_id)
+    result = handlers.handle_delete_feedback_post(post_id, user_id, token=_session_token())
     if isinstance(result, tuple):
         return Response(result[0], status=result[1], mimetype='application/json')
     return Response(result, mimetype='application/json')
@@ -414,7 +472,7 @@ def update_feedback_post(post_id):
     if request.method == 'OPTIONS':
         return Response('', status=200)
     req = request.get_json() or {}
-    result = handlers.handle_update_feedback_post(post_id, req)
+    result = handlers.handle_update_feedback_post(post_id, req, token=_session_token())
     if isinstance(result, tuple):
         return Response(result[0], status=result[1], mimetype='application/json')
     return Response(result, mimetype='application/json')
@@ -426,6 +484,8 @@ def update_feedback_post(post_id):
 def get_suggestions(user_id):
     if request.method == 'OPTIONS':
         return Response('', status=200)
+    denied = _require_session(user_id)
+    if denied: return denied
     result = handlers.handle_get_suggestions(user_id)
     if isinstance(result, tuple):
         return Response(result[0], status=result[1], mimetype='application/json')
@@ -436,6 +496,8 @@ def get_suggestions(user_id):
 def generate_suggestions(user_id):
     if request.method == 'OPTIONS':
         return Response('', status=200)
+    denied = _require_session(user_id)
+    if denied: return denied
     req = request.get_json(silent=True) or {}
     result = handlers.handle_generate_suggestions(user_id, force=bool(req.get('force')))
     if isinstance(result, tuple):
@@ -447,7 +509,21 @@ def generate_suggestions(user_id):
 def accept_suggestion(user_id, suggestion_id):
     if request.method == 'OPTIONS':
         return Response('', status=200)
+    denied = _require_session(user_id)
+    if denied: return denied
     result = handlers.handle_accept_suggestion(user_id, suggestion_id)
+    if isinstance(result, tuple):
+        return Response(result[0], status=result[1], mimetype='application/json')
+    return Response(result, mimetype='application/json')
+
+
+@app.route("/suggestions/<user_id>/<suggestion_id>/dismiss", methods=['POST', 'OPTIONS'])
+def dismiss_suggestion(user_id, suggestion_id):
+    if request.method == 'OPTIONS':
+        return Response('', status=200)
+    denied = _require_session(user_id)
+    if denied: return denied
+    result = handlers.handle_dismiss_suggestion(user_id, suggestion_id)
     if isinstance(result, tuple):
         return Response(result[0], status=result[1], mimetype='application/json')
     return Response(result, mimetype='application/json')
@@ -459,6 +535,8 @@ def accept_suggestion(user_id, suggestion_id):
 def get_activities(user_id):
     if request.method == 'OPTIONS':
         return Response('', status=200)
+    denied = _require_session(user_id)
+    if denied: return denied
     result = handlers.handle_get_activities(user_id)
     if isinstance(result, tuple):
         return Response(result[0], status=result[1], mimetype='application/json')
@@ -469,6 +547,8 @@ def get_activities(user_id):
 def update_activity(user_id, activity_id):
     if request.method == 'OPTIONS':
         return Response('', status=200)
+    denied = _require_session(user_id)
+    if denied: return denied
     req = request.get_json() or {}
     result = handlers.handle_update_activity(user_id, activity_id, req)
     if isinstance(result, tuple):
@@ -483,20 +563,27 @@ def bounty():
     if request.method == 'OPTIONS':
         return Response('', status=200)
     if request.method == 'GET':
+        if not handlers.demand_key_ok(_api_key()):
+            return _unauthorized()
         result = handlers.handle_list_bounties()
         return Response(result, mimetype='application/json')
     req = request.get_json() or {}
-    result = handlers.handle_create_bounty(req)
+    result = handlers.handle_create_bounty(req, api_key=_api_key())
     if isinstance(result, tuple):
         return Response(result[0], status=result[1], mimetype='application/json')
     return Response(result, mimetype='application/json')
 
 
-@app.route("/bounty/<bounty_id>", methods=['GET', 'OPTIONS'])
+@app.route("/bounty/<bounty_id>", methods=['GET', 'DELETE', 'OPTIONS'])
 def get_bounty(bounty_id):
     if request.method == 'OPTIONS':
         return Response('', status=200)
-    result = handlers.handle_get_bounty(bounty_id)
+    if not handlers.demand_key_ok(_api_key()):
+        return _unauthorized()
+    if request.method == 'DELETE':
+        result = handlers.handle_delete_bounty(bounty_id, api_key=_api_key())
+    else:
+        result = handlers.handle_get_bounty(bounty_id)
     if isinstance(result, tuple):
         return Response(result[0], status=result[1], mimetype='application/json')
     return Response(result, mimetype='application/json')
@@ -509,7 +596,7 @@ def generate_demand():
     if request.method == 'OPTIONS':
         return Response('', status=200)
     req = request.get_json() or {}
-    result = handlers.handle_generate_demand(req)
+    result = handlers.handle_generate_demand(req, api_key=_api_key())
     if isinstance(result, tuple):
         return Response(result[0], status=result[1], mimetype='application/json')
     return Response(result, mimetype='application/json')
@@ -522,7 +609,7 @@ def admin_balances():
     if request.method == 'OPTIONS':
         return Response('', status=200)
     user_id = request.args.get('user_id', '')
-    result = handlers.handle_admin_balances(user_id)
+    result = handlers.handle_admin_balances(user_id, token=_session_token())
     if isinstance(result, tuple):
         return Response(result[0], status=result[1], mimetype='application/json')
     return Response(result, mimetype='application/json')
@@ -533,9 +620,42 @@ def admin_stats():
     if request.method == 'OPTIONS':
         return Response('', status=200)
     user_id = request.args.get('user_id', '')
-    result = handlers.handle_admin_stats(user_id)
+    result = handlers.handle_admin_stats(user_id, token=_session_token())
     if isinstance(result, tuple):
         return Response(result[0], status=result[1], mimetype='application/json')
+    return Response(result, mimetype='application/json')
+
+
+@app.route("/admin/payments", methods=['GET', 'OPTIONS'])
+def admin_payments():
+    if request.method == 'OPTIONS':
+        return Response('', status=200)
+    user_id = request.args.get('user_id', '')
+    result = handlers.handle_admin_payments(user_id, token=_session_token())
+    if isinstance(result, tuple):
+        return Response(result[0], status=result[1], mimetype='application/json')
+    return Response(result, mimetype='application/json')
+
+
+@app.route("/admin/payments/<target_user_id>/<activity_id>/paid", methods=['POST', 'OPTIONS'])
+def admin_mark_paid(target_user_id, activity_id):
+    if request.method == 'OPTIONS':
+        return Response('', status=200)
+    user_id = request.args.get('user_id', '')
+    result = handlers.handle_admin_mark_paid(user_id, _session_token(), target_user_id, activity_id)
+    if isinstance(result, tuple):
+        return Response(result[0], status=result[1], mimetype='application/json')
+    return Response(result, mimetype='application/json')
+
+
+@app.route("/admin/bounties", methods=['GET', 'OPTIONS'])
+def admin_bounties():
+    if request.method == 'OPTIONS':
+        return Response('', status=200)
+    user_id = request.args.get('user_id', '')
+    if not handlers._admin_ok(user_id, _session_token()):
+        return _unauthorized()
+    result = handlers.handle_list_bounties()
     return Response(result, mimetype='application/json')
 
 

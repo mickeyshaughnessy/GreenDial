@@ -111,6 +111,15 @@ def handle_auth(request):
     if not request.get('create_new'):
         if user:
             if user.get('passphrase') == passphrase:
+                # Issue session token for authenticated requests
+                token = uuid.uuid4().hex
+                user['session_token'] = token
+                try:
+                    s3_storage.save_user(user_id, user)
+                    _cache_user(user_id, user)
+                except Exception as e:
+                    print(f"[Auth] Token save failed: {e}")
+
                 # Generate notifications and daily suggestions in background on login
                 threading.Thread(target=generate_login_notifications, args=(user_id,)).start()
                 threading.Thread(target=generate_login_suggestions, args=(user_id,)).start()
@@ -119,7 +128,8 @@ def handle_auth(request):
                     "user_id": user_id,
                     "username": user.get('username', username),
                     "settings": user.get('settings', {}),
-                    "profile": user.get('profile', {})
+                    "profile": user.get('profile', {}),
+                    "token": token
                 })
             return json.dumps({"error": "Invalid passphrase"}), 401
         return json.dumps({"error": "User not found"}), 404
@@ -132,10 +142,12 @@ def handle_auth(request):
         return json.dumps({"error": "HIPAA waiver must be accepted"}), 400
     
     profile = request.get('profile', {})
+    signup_token = uuid.uuid4().hex
     new_user = {
         "user_id": user_id,
         "username": username,
         "passphrase": passphrase,
+        "session_token": signup_token,
         "created": datetime.utcnow().isoformat(),
         "hipaa_waiver_accepted": True,
         "transcript": "",
@@ -164,7 +176,8 @@ def handle_auth(request):
         "username": username,
         "new_user": True,
         "settings": new_user["settings"],
-        "profile": new_user["profile"]
+        "profile": new_user["profile"],
+        "token": signup_token
     })
 
 
@@ -211,14 +224,51 @@ def get_user_data(user_id):
     return {}
 
 
+_PRIVATE_FIELDS = ('passphrase', 'session_token')
+
+
+def session_ok(user_id, token):
+    """Check that the supplied session token matches the user record."""
+    if not user_id or not token:
+        return False
+    user = get_user_data(user_id)
+    return bool(user) and user.get('session_token') == token
+
+
+def demand_key_ok(key):
+    """Check demand-side API key (POST /bounty, /generate). Fails closed if unconfigured."""
+    expected = getattr(config, 'DEMAND_API_KEY', '')
+    return bool(expected) and key == expected
+
+
 def handle_get_user(user_id):
-    """Get user profile (excludes passphrase)"""
+    """Get user profile (excludes private fields)"""
     user = get_user_data(user_id)
     if not user:
         return json.dumps({"error": "User not found"}), 404
-    
-    safe_user = {k: v for k, v in user.items() if k != 'passphrase'}
+
+    safe_user = {k: v for k, v in user.items() if k not in _PRIVATE_FIELDS}
     return json.dumps(safe_user)
+
+
+_EMAIL_RE = re.compile(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
+_ETH_ADDR_RE = re.compile(r'^0x[a-fA-F0-9]{40}$')
+_SOL_ADDR_RE = re.compile(r'^[1-9A-HJ-NP-Za-km-z]{32,44}$')
+
+
+def _validate_identity(data):
+    """Validate identity fields. Returns error string or None. Empty values are allowed (clearing)."""
+    email = (data.get('email') or '').strip()
+    if email and not _EMAIL_RE.match(email):
+        return "Invalid email address"
+    wallets = data.get('wallets') or {}
+    eth = (wallets.get('eth') or '').strip()
+    if eth and not _ETH_ADDR_RE.match(eth):
+        return "Invalid ETH address (expected 0x + 40 hex chars)"
+    sol = (wallets.get('sol') or '').strip()
+    if sol and not _SOL_ADDR_RE.match(sol):
+        return "Invalid Solana address"
+    return None
 
 
 def handle_update_user(user_id, data):
@@ -226,7 +276,11 @@ def handle_update_user(user_id, data):
     user = get_user_data(user_id)
     if not user:
         return json.dumps({"error": "User not found"}), 404
-    
+
+    err = _validate_identity(data)
+    if err:
+        return json.dumps({"error": err}), 400
+
     allowed = ['username', 'settings', 'profile', 'first_name', 'last_name', 'email', 'wallets']
     for key in allowed:
         if key in data:
@@ -243,7 +297,7 @@ def handle_update_user(user_id, data):
     except Exception as e:
         print(f"[User] Failed to update: {e}")
     
-    safe_user = {k: v for k, v in user.items() if k != 'passphrase'}
+    safe_user = {k: v for k, v in user.items() if k not in _PRIVATE_FIELDS}
     return json.dumps({"success": True, "user": safe_user})
 
 
@@ -2193,9 +2247,14 @@ BTC_ADDRESS = '139VrBnUEB3UgzwGCQwLxDHnDTUWoE96Y8'
 ETH_ADDRESS = '0x58ed1da7a1A58DaB2Fb8d21317725D8760C816Fe'
 
 
-def handle_admin_balances(requesting_user_id):
+def _admin_ok(user_id, token):
+    """Admin check: known admin user AND valid session token."""
+    return user_id in ADMIN_USER_IDS and session_ok(user_id, token)
+
+
+def handle_admin_balances(requesting_user_id, token=None):
     """Fetch public crypto wallet balances for admin display"""
-    if requesting_user_id not in ADMIN_USER_IDS:
+    if not _admin_ok(requesting_user_id, token):
         return json.dumps({"error": "Unauthorized"}), 403
 
     import requests as _requests
@@ -2235,9 +2294,9 @@ def handle_admin_balances(requesting_user_id):
     return json.dumps(result)
 
 
-def handle_admin_stats(requesting_user_id):
+def handle_admin_stats(requesting_user_id, token=None):
     """Return site stats for admin users only"""
-    if requesting_user_id not in ADMIN_USER_IDS:
+    if not _admin_ok(requesting_user_id, token):
         return json.dumps({"error": "Unauthorized"}), 403
 
     try:
@@ -2323,8 +2382,8 @@ def _is_mickey(user_id):
         return False
 
 
-def handle_delete_feedback_post(post_id, user_id):
-    if not _is_mickey(user_id):
+def handle_delete_feedback_post(post_id, user_id, token=None):
+    if not (_is_mickey(user_id) and session_ok(user_id, token)):
         return (json.dumps({"error": "Unauthorized"}), 403)
     try:
         posts = s3_storage.get_feedback()
@@ -2335,9 +2394,9 @@ def handle_delete_feedback_post(post_id, user_id):
         return (json.dumps({"error": str(e)}), 500)
 
 
-def handle_update_feedback_post(post_id, req):
+def handle_update_feedback_post(post_id, req, token=None):
     user_id = req.get('user_id', '')
-    if not _is_mickey(user_id):
+    if not (_is_mickey(user_id) and session_ok(user_id, token)):
         return (json.dumps({"error": "Unauthorized"}), 403)
     try:
         posts = s3_storage.get_feedback()
@@ -2354,7 +2413,9 @@ def handle_update_feedback_post(post_id, req):
 
 # ============ BOUNTIES ============
 
-def handle_create_bounty(req):
+def handle_create_bounty(req, api_key=None):
+    if not demand_key_ok(api_key):
+        return (json.dumps({"error": "Unauthorized — valid API key required"}), 401)
     activity = (req.get('activity') or '').strip()
     if not activity:
         return (json.dumps({"error": "activity required"}), 400)
@@ -2398,6 +2459,20 @@ def handle_get_bounty(bounty_id):
             if b.get('id') == bounty_id:
                 return json.dumps({"bounty": b})
         return (json.dumps({"error": "Not found"}), 404)
+    except Exception as e:
+        return (json.dumps({"error": str(e)}), 500)
+
+
+def handle_delete_bounty(bounty_id, api_key=None):
+    if not demand_key_ok(api_key):
+        return (json.dumps({"error": "Unauthorized — valid API key required"}), 401)
+    try:
+        bounties = s3_storage.get_bounties()
+        remaining = [b for b in bounties if b.get('id') != bounty_id]
+        if len(remaining) == len(bounties):
+            return (json.dumps({"error": "Not found"}), 404)
+        s3_storage.save_bounties(remaining)
+        return json.dumps({"ok": True})
     except Exception as e:
         return (json.dumps({"error": str(e)}), 500)
 
@@ -2472,26 +2547,39 @@ def generate_suggestions(user_id):
             "status": "pending"
         })
 
-    # Fill remaining slots with LLM suggestions
+    # Fill remaining slots with LLM suggestions (parallel calls)
     used_areas = {s['type'] for s in suggestions}
-    for area_label, agent_id, agent_name in _SUGGESTION_AREAS:
-        if len(suggestions) >= 3:
-            break
-        if area_label in used_areas:
-            continue
-        text = _generate_suggestion_text(area_label, agent_name, profile)
-        if text:
-            suggestions.append({
-                "id": f"sug_{uuid.uuid4().hex[:12]}",
-                "type": area_label,
-                "agent_id": agent_id,
-                "text": text,
-                "bounty_id": None,
-                "price": None,
-                "currency": None,
-                "created": datetime.utcnow().isoformat(),
-                "status": "pending"
-            })
+    slots = 3 - len(suggestions)
+    areas_to_fill = [a for a in _SUGGESTION_AREAS if a[0] not in used_areas][:max(slots, 0)]
+    if areas_to_fill:
+        import concurrent.futures
+        with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+            futures = {
+                executor.submit(_generate_suggestion_text, area_label, agent_name, profile): (area_label, agent_id)
+                for area_label, agent_id, agent_name in areas_to_fill
+            }
+            results = {}
+            for future in concurrent.futures.as_completed(futures, timeout=30):
+                area_label, agent_id = futures[future]
+                try:
+                    results[area_label] = (agent_id, future.result())
+                except Exception as e:
+                    print(f"[Suggestions] {area_label} generation failed: {e}")
+        # Preserve exercise/diet/social ordering
+        for area_label, agent_id, _ in areas_to_fill:
+            agent_id_r, text = results.get(area_label, (agent_id, None))
+            if text:
+                suggestions.append({
+                    "id": f"sug_{uuid.uuid4().hex[:12]}",
+                    "type": area_label,
+                    "agent_id": agent_id_r,
+                    "text": text,
+                    "bounty_id": None,
+                    "price": None,
+                    "currency": None,
+                    "created": datetime.utcnow().isoformat(),
+                    "status": "pending"
+                })
 
     # Replace only pending suggestions; keep last 30 accepted/rejected for history
     existing = [s for s in user.get('suggestions', []) if s.get('status') != 'pending'][-30:]
@@ -2582,6 +2670,24 @@ def handle_accept_suggestion(user_id, suggestion_id):
     return json.dumps({"activity": activity})
 
 
+def handle_dismiss_suggestion(user_id, suggestion_id):
+    user = get_user_data(user_id)
+    if not user:
+        return (json.dumps({"error": "User not found"}), 404)
+
+    suggestion = next((s for s in user.get('suggestions', []) if s.get('id') == suggestion_id), None)
+    if not suggestion:
+        return (json.dumps({"error": "Suggestion not found"}), 404)
+
+    suggestion['status'] = 'dismissed'
+    _cache_user(user_id, user)
+    try:
+        s3_storage.save_user(user_id, user)
+    except Exception as e:
+        return (json.dumps({"error": str(e)}), 500)
+    return json.dumps({"ok": True})
+
+
 # ============ ACTIVITIES ============
 
 def handle_get_activities(user_id):
@@ -2607,6 +2713,11 @@ def handle_update_activity(user_id, activity_id, req):
         activity['wallet_snapshot'] = wallets.get('eth') or wallets.get('sol') or None
         if activity.get('price'):
             activity['payment_pending'] = True
+    elif req.get('status') == 'abandoned':
+        if activity.get('status') != 'active':
+            return (json.dumps({"error": "Only active activities can be abandoned"}), 400)
+        activity['status'] = 'abandoned'
+        activity['abandoned_at'] = datetime.utcnow().isoformat()
 
     _cache_user(user_id, user)
     try:
@@ -2618,7 +2729,9 @@ def handle_update_activity(user_id, activity_id, req):
 
 # ============ DEMAND-SIDE /generate ============
 
-def handle_generate_demand(req):
+def handle_generate_demand(req, api_key=None):
+    if not demand_key_ok(api_key):
+        return (json.dumps({"error": "Unauthorized — valid API key required"}), 401)
     user_id = (req.get('user_id') or '').strip()
     if not user_id:
         return (json.dumps({"error": "user_id required"}), 400)
@@ -2657,3 +2770,63 @@ def handle_generate_demand(req):
         "bounty_payload": bounty_payload,
         "bounty_post_url": "/bounty"
     })
+
+
+# ============ ADMIN PAYMENTS ============
+
+def handle_admin_payments(requesting_user_id, token=None):
+    """List all payment_pending activities across users (admin only)."""
+    if not _admin_ok(requesting_user_id, token):
+        return (json.dumps({"error": "Unauthorized"}), 403)
+    try:
+        user_ids = s3_storage.list_users()
+    except Exception as e:
+        return (json.dumps({"error": str(e)}), 500)
+
+    pending = []
+    for uid in user_ids:
+        try:
+            u = s3_storage.get_user(uid)
+            if not u:
+                continue
+            for a in u.get('activities', []):
+                if a.get('payment_pending'):
+                    pending.append({
+                        "user_id": uid,
+                        "username": u.get('username', uid),
+                        "activity_id": a.get('id'),
+                        "text": a.get('text'),
+                        "price": a.get('price'),
+                        "currency": a.get('currency'),
+                        "wallet": a.get('wallet_snapshot'),
+                        "completed_at": a.get('completed_at'),
+                        "bounty_id": a.get('bounty_id'),
+                    })
+        except Exception:
+            continue
+
+    pending.sort(key=lambda x: x.get('completed_at') or '', reverse=True)
+    return json.dumps({"payments": pending})
+
+
+def handle_admin_mark_paid(requesting_user_id, token, target_user_id, activity_id):
+    """Mark a payment_pending activity as paid (admin only)."""
+    if not _admin_ok(requesting_user_id, token):
+        return (json.dumps({"error": "Unauthorized"}), 403)
+    user = get_user_data(target_user_id)
+    if not user:
+        return (json.dumps({"error": "User not found"}), 404)
+    activity = next((a for a in user.get('activities', []) if a.get('id') == activity_id), None)
+    if not activity:
+        return (json.dumps({"error": "Activity not found"}), 404)
+    if not activity.get('payment_pending'):
+        return (json.dumps({"error": "Activity is not pending payment"}), 400)
+
+    activity['payment_pending'] = False
+    activity['paid_at'] = datetime.utcnow().isoformat()
+    _cache_user(target_user_id, user)
+    try:
+        s3_storage.save_user(target_user_id, user)
+    except Exception as e:
+        return (json.dumps({"error": str(e)}), 500)
+    return json.dumps({"ok": True, "activity": activity})
