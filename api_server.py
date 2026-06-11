@@ -129,6 +129,18 @@ def get_user(user_id):
     return Response(result, mimetype='application/json')
 
 
+@app.route("/user/<user_id>", methods=['DELETE', 'OPTIONS'])
+def delete_user(user_id):
+    if request.method == 'OPTIONS':
+        return Response('', status=200)
+    denied = _require_session(user_id)
+    if denied: return denied
+    result = handlers.handle_delete_user(user_id)
+    if isinstance(result, tuple):
+        return Response(result[0], status=result[1], mimetype='application/json')
+    return Response(result, mimetype='application/json')
+
+
 @app.route("/user/<user_id>", methods=['PUT', 'OPTIONS'])
 def update_user(user_id):
     if request.method == 'OPTIONS':

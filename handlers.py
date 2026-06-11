@@ -282,6 +282,19 @@ def _validate_identity(data):
     return None
 
 
+def handle_delete_user(user_id):
+    """Delete the user's own account (route enforces session token)."""
+    user = get_user_data(user_id)
+    if not user:
+        return json.dumps({"error": "User not found"}), 404
+    try:
+        s3_storage.delete_user(user_id)
+        _cache_del('user', user_id)
+        return json.dumps({"ok": True})
+    except Exception as e:
+        return json.dumps({"error": str(e)}), 500
+
+
 def handle_update_user(user_id, data):
     """Update user profile"""
     user = get_user_data(user_id)
@@ -1284,19 +1297,28 @@ def generate_login_notifications(user_id):
         new_notes = data.get('notifications', [])
         
         if new_notes:
+            # Re-fetch before save: the LLM call takes seconds and another
+            # request (e.g. login rotating the session token) may have written
+            # the user record since we loaded it. Merge onto the fresh copy.
+            try:
+                fresh = s3_storage.get_user(user_id)
+                if fresh:
+                    user = fresh
+            except Exception:
+                pass
             current_notes = user.get('notifications', [])
-            
+
             # Add IDs and timestamps
             for note in new_notes:
                 note['id'] = str(uuid.uuid4())
                 note['created'] = datetime.utcnow().isoformat()
                 note['read'] = False
                 current_notes.append(note)
-            
+
             # Limit to 20
             user['notifications'] = current_notes[-20:]
             user['last_notification_gen'] = datetime.utcnow().isoformat()
-            
+
             s3_storage.save_user(user_id, user)
             _cache_user(user_id, user)
             print(f"[Notifications] Generated {len(new_notes)} for {user_id}")
@@ -2594,6 +2616,16 @@ def generate_suggestions(user_id):
                     "created": datetime.utcnow().isoformat(),
                     "status": "pending"
                 })
+
+    # Re-fetch before save: LLM generation takes seconds and another request
+    # (e.g. login rotating the session token) may have written the user record
+    # since we loaded it. Merge suggestions onto the fresh copy.
+    try:
+        fresh = s3_storage.get_user(user_id)
+        if fresh:
+            user = fresh
+    except Exception:
+        pass
 
     # Replace only pending suggestions; keep last 30 accepted/rejected for history
     existing = [s for s in user.get('suggestions', []) if s.get('status') != 'pending'][-30:]

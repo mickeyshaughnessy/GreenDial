@@ -560,6 +560,37 @@ class IntegrationTests:
         self.errors.append("Activity flow failed")
         return False
 
+    def test_15_delete_user(self):
+        """Test self-service account deletion (also cleans up the test user)"""
+        log_test("Delete Test User")
+        if not self.test_user_id:
+            log_error("Skipped - no test user")
+            return False
+
+        try:
+            r = requests.delete(
+                f"{self.base_url}/user/{self.test_user_id}",
+                headers=self._headers(), timeout=10
+            )
+            if not self.assert_response(r, 200, should_have=["ok"]):
+                raise Exception("Delete failed")
+            # Record should now be gone (401 without valid token, since token was deleted with it)
+            r = requests.get(
+                f"{self.base_url}/user/{self.test_user_id}",
+                headers=self._headers(), timeout=10
+            )
+            if r.status_code not in (401, 404):
+                raise Exception(f"User still accessible after delete: {r.status_code}")
+            log_success("Test user deleted and no longer accessible")
+            self.passed += 1
+            return True
+        except Exception as e:
+            log_error(f"Delete user error: {e}")
+
+        self.failed += 1
+        self.errors.append("User deletion failed")
+        return False
+
     def run_all(self):
         """Run all tests in sequence"""
         print("\n" + "="*60)
@@ -583,7 +614,8 @@ class IntegrationTests:
             self.test_11_auth_enforcement,
             self.test_12_identity_validation,
             self.test_13_bounty_flow,
-            self.test_14_activity_flow
+            self.test_14_activity_flow,
+            self.test_15_delete_user
         ]
         
         for test in tests:

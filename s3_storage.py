@@ -62,6 +62,22 @@ def save_user(user_id, data):
     )
 
 
+def delete_user(user_id):
+    """Delete a user record and their conversation objects"""
+    _check_client()
+    s3_client.delete_object(
+        Bucket=config.DO_SPACES_BUCKET,
+        Key=_key(f"users/{user_id}.json")
+    )
+    # Remove any conversation objects under this user's prefix
+    resp = s3_client.list_objects_v2(
+        Bucket=config.DO_SPACES_BUCKET,
+        Prefix=_key(f"conversations/{user_id}/")
+    )
+    for obj in resp.get('Contents', []):
+        s3_client.delete_object(Bucket=config.DO_SPACES_BUCKET, Key=obj['Key'])
+
+
 def list_users():
     """List all user IDs"""
     _check_client()

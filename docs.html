@@ -136,6 +136,58 @@
     }
     .ping-result.ok  { display: block; color: #6ee7b7; border-left: 3px solid #10b981; }
     .ping-result.err { display: block; color: #fca5a5; border-left: 3px solid #ef4444; }
+
+    /* API Health Check */
+    .healthcheck {
+      background: rgba(16,185,129,0.05);
+      border: 1px solid rgba(16,185,129,0.25);
+      border-radius: 14px;
+      padding: 22px 24px;
+      margin: 28px 0 8px;
+    }
+    .hc-top { display: flex; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
+    .hc-top h2 { margin: 0 0 6px; }
+    .hc-top p { margin: 0; font-size: 13px; }
+    .hc-run-btn {
+      margin-left: auto; flex-shrink: 0;
+      padding: 10px 24px; border: none; border-radius: 8px;
+      background: #10b981; color: #04221a; font-weight: 700;
+      font-size: 14px; cursor: pointer; transition: opacity 0.15s;
+    }
+    .hc-run-btn:hover { opacity: 0.85; }
+    .hc-run-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .hc-key-row { margin-top: 14px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .hc-key-row label { font-size: 12px; color: rgba(255,255,255,0.45); }
+    .hc-key-row input {
+      flex: 1; min-width: 240px;
+      background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 6px; color: #eee; font-size: 12px; padding: 7px 10px;
+      font-family: 'Monaco','Menlo',monospace;
+    }
+    .hc-key-row input:focus { outline: none; border-color: #10b981; }
+    .hc-results { margin-top: 16px; display: none; flex-direction: column; gap: 2px; }
+    .hc-results.show { display: flex; }
+    .hc-row {
+      display: flex; align-items: baseline; gap: 10px;
+      padding: 7px 12px; border-radius: 6px;
+      font-size: 13px; font-family: 'Monaco','Menlo',monospace;
+    }
+    .hc-row:nth-child(odd) { background: rgba(255,255,255,0.025); }
+    .hc-row .hc-icon { width: 18px; flex-shrink: 0; }
+    .hc-row .hc-name { color: rgba(255,255,255,0.85); }
+    .hc-row .hc-ms { color: rgba(255,255,255,0.3); font-size: 11px; }
+    .hc-row .hc-detail { color: rgba(255,255,255,0.45); font-size: 11px; margin-left: auto; text-align: right; max-width: 50%; }
+    .hc-row.pass .hc-icon { color: #10b981; }
+    .hc-row.fail .hc-icon { color: #ef4444; }
+    .hc-row.fail .hc-detail { color: #fca5a5; }
+    .hc-row.skip .hc-icon { color: rgba(255,255,255,0.3); }
+    .hc-row.running .hc-icon { color: #fcd34d; }
+    .hc-summary {
+      margin-top: 14px; padding: 12px 16px; border-radius: 8px;
+      font-size: 14px; font-weight: 600; display: none;
+    }
+    .hc-summary.pass { display: block; background: rgba(16,185,129,0.12); color: #6ee7b7; border: 1px solid rgba(16,185,129,0.3); }
+    .hc-summary.fail { display: block; background: rgba(239,68,68,0.12); color: #fca5a5; border: 1px solid rgba(239,68,68,0.3); }
   </style>
 </head>
 <body>
@@ -154,6 +206,23 @@
     <a class="spec-link" href="/spec/openapi.yaml" target="_blank">📄 OpenAPI 3.1 Spec</a>
     <a class="spec-link" href="/spec/arazzo.yaml"  target="_blank">🔀 Arazzo Workflow Spec</a>
     <a class="spec-link" href="https://github.com/mickeyshaughnessy/GreenDial" target="_blank">⚙️ Source on GitHub</a>
+  </div>
+
+  <!-- ===== API HEALTH CHECK ===== -->
+  <div class="healthcheck">
+    <div class="hc-top">
+      <div>
+        <h2>🩺 API Health Check</h2>
+        <p>Runs the live integration suite against this server: signup → login → chat → profile → settings → suggestions → activities → auth enforcement → cleanup. Creates a throwaway test account and deletes it at the end. Takes ~30–60 seconds (real LLM calls).</p>
+      </div>
+      <button class="hc-run-btn" id="hc-run" onclick="runHealthCheck()">▶ Run all tests</button>
+    </div>
+    <div class="hc-key-row">
+      <label for="hc-api-key">Demand-side API key (optional — unlocks bounty &amp; payment tests):</label>
+      <input id="hc-api-key" type="password" placeholder="X-API-Key value" autocomplete="off">
+    </div>
+    <div class="hc-results" id="hc-results"></div>
+    <div class="hc-summary" id="hc-summary"></div>
   </div>
 
   <!-- ===== OVERVIEW ===== -->
@@ -323,7 +392,7 @@ POST /chat/agent/protect
       <span class="method get">GET</span>
       <span class="path">/user/{user_id}</span>
     </div>
-    <div class="endpoint-desc">Fetch a user's full record (passphrase excluded).</div>
+    <div class="endpoint-desc">Fetch a user's full record (passphrase and session token excluded). Requires <code>X-Session-Token</code> header from <code>/auth</code>.</div>
   </div>
 
   <div class="endpoint">
@@ -332,10 +401,18 @@ POST /chat/agent/protect
       <span class="path">/user/{user_id}</span>
     </div>
     <div class="endpoint-desc">
-      Partial update. Allowed top-level keys: <code>username</code>, <code>settings</code>, <code>profile</code>. Nested objects are merged.
+      Partial update. Requires <code>X-Session-Token</code>. Allowed top-level keys: <code>username</code>, <code>settings</code>, <code>profile</code>, <code>first_name</code>, <code>last_name</code>, <code>email</code>, <code>wallets</code>. Nested objects are merged.
       <div class="code-block">PUT /user/user_alice
 {"profile": {"weight": "165 lbs", "goals": "lose 20 lbs", "avatar": "🧑"}}</div>
     </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method delete">DELETE</span>
+      <span class="path">/user/{user_id}</span>
+    </div>
+    <div class="endpoint-desc">Delete your own account and conversation data. Requires <code>X-Session-Token</code>.</div>
   </div>
 
   <h3>Core profile fields</h3>
@@ -659,6 +736,267 @@ Profile updates extracted from any response → saved to S3 → sidebar refreshe
     }
     btn.disabled = false;
     btn.textContent = '▶ Try it live';
+  }
+
+  // ───────────────────────── API HEALTH CHECK ─────────────────────────
+  // Browser port of test_integration.py — runs the full suite live.
+
+  const hc = { userId: null, token: null, suggestions: [], bountyId: null, passed: 0, failed: 0 };
+
+  function hcFetch(path, opts = {}, timeoutMs = 15000) {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), timeoutMs);
+    const headers = { ...(opts.headers || {}) };
+    if (hc.token && !('X-Session-Token' in headers)) headers['X-Session-Token'] = hc.token;
+    return fetch(path, { ...opts, headers, signal: ctrl.signal }).finally(() => clearTimeout(t));
+  }
+
+  function hcRow(name) {
+    const row = document.createElement('div');
+    row.className = 'hc-row running';
+    row.innerHTML = `<span class="hc-icon">⏳</span><span class="hc-name">${name}</span><span class="hc-ms"></span><span class="hc-detail"></span>`;
+    document.getElementById('hc-results').appendChild(row);
+    return row;
+  }
+
+  function hcFinish(row, status, ms, detail) {
+    row.className = `hc-row ${status}`;
+    row.querySelector('.hc-icon').textContent = status === 'pass' ? '✓' : status === 'skip' ? '–' : '✗';
+    row.querySelector('.hc-ms').textContent = ms != null ? `${ms}ms` : '';
+    row.querySelector('.hc-detail').textContent = detail || '';
+    if (status === 'pass') hc.passed++;
+    if (status === 'fail') hc.failed++;
+  }
+
+  async function hcTest(name, fn, timeoutMs = 15000) {
+    const row = hcRow(name);
+    const t0 = performance.now();
+    try {
+      const detail = await fn(timeoutMs);
+      hcFinish(row, detail === '__skip__' ? 'skip' : 'pass', Math.round(performance.now() - t0),
+               detail === '__skip__' ? 'skipped' : (detail || ''));
+      return true;
+    } catch (e) {
+      hcFinish(row, 'fail', Math.round(performance.now() - t0), e.message);
+      return false;
+    }
+  }
+
+  function hcAssert(cond, msg) { if (!cond) throw new Error(msg); }
+
+  async function runHealthCheck() {
+    const btn = document.getElementById('hc-run');
+    const results = document.getElementById('hc-results');
+    const summary = document.getElementById('hc-summary');
+    const apiKey = document.getElementById('hc-api-key').value.trim();
+    btn.disabled = true;
+    btn.textContent = '⏳ Running…';
+    results.innerHTML = '';
+    results.classList.add('show');
+    summary.className = 'hc-summary';
+    Object.assign(hc, { userId: null, token: null, suggestions: [], bountyId: null, passed: 0, failed: 0 });
+
+    const username = `webtest_${Date.now()}`;
+    const password = 'webtest-pass';
+    const TEST_ETH = '0x' + 'ab'.repeat(20);
+
+    await hcTest('GET /ping', async (t) => {
+      const r = await hcFetch('/ping', {}, t);
+      hcAssert(r.ok, `HTTP ${r.status}`);
+      const d = await r.json();
+      hcAssert(d.status === 'ok', 'bad payload');
+    });
+
+    await hcTest('GET /stats', async (t) => {
+      const r = await hcFetch('/stats', {}, t);
+      hcAssert(r.ok, `HTTP ${r.status}`);
+      const d = await r.json();
+      hcAssert(typeof d.user_count === 'number', 'no user_count');
+      return `${d.user_count} users`;
+    });
+
+    const signedUp = await hcTest('POST /auth — signup + session token', async (t) => {
+      const r = await hcFetch('/auth', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password, create_new: true, hipaa_waiver_accepted: true })
+      }, t);
+      hcAssert(r.ok, `HTTP ${r.status}`);
+      const d = await r.json();
+      hcAssert(d.user_id && d.token, 'missing user_id/token');
+      hc.userId = d.user_id; hc.token = d.token;
+      return d.user_id;
+    });
+
+    if (!signedUp) return hcDone(btn, summary, 'Signup failed — remaining tests aborted');
+
+    await hcTest('POST /auth — login rotates token', async (t) => {
+      const r = await hcFetch('/auth', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      }, t);
+      hcAssert(r.ok, `HTTP ${r.status}`);
+      const d = await r.json();
+      hcAssert(d.token, 'no token');
+      hc.token = d.token;
+    });
+
+    await hcTest('POST /chat — Doc responds (LLM)', async (t) => {
+      const r = await hcFetch('/chat', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: hc.userId, text: 'Hello, I want to improve my sleep.' })
+      }, t);
+      hcAssert(r.ok, `HTTP ${r.status}`);
+      const d = await r.json();
+      hcAssert((d.response || '').length > 10, 'empty response');
+      return `${d.response.length} chars`;
+    }, 60000);
+
+    await hcTest('GET /user — profile readable with token', async (t) => {
+      const r = await hcFetch(`/user/${hc.userId}`, {}, t);
+      hcAssert(r.ok, `HTTP ${r.status}`);
+      const d = await r.json();
+      hcAssert(d.user_id === hc.userId, 'wrong record');
+      hcAssert(!('session_token' in d) && !('passphrase' in d), 'private fields leaked!');
+    });
+
+    await hcTest('GET+PUT /settings', async (t) => {
+      let r = await hcFetch(`/settings/${hc.userId}`, {}, t);
+      hcAssert(r.ok, `GET ${r.status}`);
+      r = await hcFetch(`/settings/${hc.userId}`, {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ theme: 'light' })
+      }, t);
+      hcAssert(r.ok, `PUT ${r.status}`);
+    });
+
+    await hcTest('GET /conversations', async (t) => {
+      const r = await hcFetch(`/conversations/${hc.userId}`, {}, t);
+      hcAssert(r.ok, `HTTP ${r.status}`);
+    });
+
+    await hcTest('GET /notifications', async (t) => {
+      const r = await hcFetch(`/notifications/${hc.userId}`, {}, t);
+      hcAssert(r.ok, `HTTP ${r.status}`);
+      const d = await r.json();
+      hcAssert(Array.isArray(d.notifications), 'no notifications array');
+    });
+
+    await hcTest('Auth enforcement — 401 without/with bad token', async (t) => {
+      let r = await fetch(`/user/${hc.userId}`);
+      hcAssert(r.status === 401, `no-token: expected 401, got ${r.status}`);
+      r = await fetch(`/user/${hc.userId}`, { headers: { 'X-Session-Token': 'bogus' } });
+      hcAssert(r.status === 401, `bad-token: expected 401, got ${r.status}`);
+      r = await fetch('/bounty', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{"activity":"x"}' });
+      hcAssert(r.status === 401, `bounty-no-key: expected 401, got ${r.status}`);
+    });
+
+    await hcTest('Identity validation — bad input rejected, valid saved', async (t) => {
+      let r = await hcFetch(`/user/${hc.userId}`, {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: 'not-an-email' })
+      }, t);
+      hcAssert(r.status === 400, `bad email: expected 400, got ${r.status}`);
+      r = await hcFetch(`/user/${hc.userId}`, {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ wallets: { eth: '0x123' } })
+      }, t);
+      hcAssert(r.status === 400, `bad wallet: expected 400, got ${r.status}`);
+      r = await hcFetch(`/user/${hc.userId}`, {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ first_name: 'Web', last_name: 'Test', email: 'webtest@example.com', wallets: { eth: TEST_ETH } })
+      }, t);
+      hcAssert(r.ok, `valid identity: HTTP ${r.status}`);
+    });
+
+    if (apiKey) {
+      await hcTest('POST /bounty — demand-side bounty accepted', async (t) => {
+        const r = await hcFetch('/bounty', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-API-Key': apiKey },
+          body: JSON.stringify({
+            activity: 'Health-check test: walk 5,000 steps', health_area: 'exercise',
+            price: 0.001, currency: 'ETH', user_ids: [hc.userId]
+          })
+        }, t);
+        hcAssert(r.ok, `HTTP ${r.status}${r.status === 401 ? ' (wrong key?)' : ''}`);
+        const d = await r.json();
+        hcAssert(d.bounty_id, 'no bounty_id');
+        hc.bountyId = d.bounty_id;
+        return d.bounty_id;
+      });
+    } else {
+      await hcTest('POST /bounty — demand-side flow', async () => '__skip__');
+    }
+
+    await hcTest('POST /suggestions/generate — daily batch (LLM ×3)', async (t) => {
+      const r = await hcFetch(`/suggestions/${hc.userId}/generate`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ force: true })
+      }, t);
+      hcAssert(r.ok, `HTTP ${r.status}`);
+      const d = await r.json();
+      hc.suggestions = d.suggestions || [];
+      hcAssert(hc.suggestions.length >= 1, 'no suggestions generated');
+      if (hc.bountyId) {
+        hcAssert(hc.suggestions.some(s => s.bounty_id === hc.bountyId), 'bounty suggestion not served');
+        return `${hc.suggestions.length} suggestions incl. bounty`;
+      }
+      return `${hc.suggestions.length} suggestions`;
+    }, 90000);
+
+    await hcTest('Accept → complete activity' + (hc.bountyId ? ' → payment pending' : ''), async (t) => {
+      const sugg = hc.suggestions.find(s => s.bounty_id === hc.bountyId) || hc.suggestions[0];
+      hcAssert(sugg, 'no suggestion to accept');
+      let r = await hcFetch(`/suggestions/${hc.userId}/${sugg.id}/accept`, { method: 'POST' }, t);
+      hcAssert(r.ok, `accept: HTTP ${r.status}`);
+      const activity = (await r.json()).activity;
+      hcAssert(activity && activity.status === 'active', 'activity not active');
+      r = await hcFetch(`/activities/${hc.userId}/${activity.id}`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'completed' })
+      }, t);
+      hcAssert(r.ok, `complete: HTTP ${r.status}`);
+      const done = (await r.json()).activity;
+      hcAssert(done.status === 'completed', 'not completed');
+      if (sugg.bounty_id) {
+        hcAssert(done.payment_pending === true, 'payment_pending not set');
+        hcAssert(done.wallet_snapshot === TEST_ETH, 'wallet not snapshotted');
+        return 'paid activity, wallet snapshotted';
+      }
+    });
+
+    if (hc.bountyId) {
+      await hcTest('DELETE /bounty — cleanup', async (t) => {
+        const r = await hcFetch(`/bounty/${hc.bountyId}`, {
+          method: 'DELETE', headers: { 'X-API-Key': apiKey }
+        }, t);
+        hcAssert(r.ok, `HTTP ${r.status}`);
+      });
+    }
+
+    await hcTest('DELETE /user — test account cleanup', async (t) => {
+      const r = await hcFetch(`/user/${hc.userId}`, { method: 'DELETE' }, t);
+      hcAssert(r.ok, `HTTP ${r.status}`);
+      hc.token = null;
+    });
+
+    hcDone(btn, summary);
+  }
+
+  function hcDone(btn, summary, abortMsg) {
+    btn.disabled = false;
+    btn.textContent = '▶ Run all tests';
+    const total = hc.passed + hc.failed;
+    if (abortMsg) {
+      summary.className = 'hc-summary fail';
+      summary.textContent = `✗ ${abortMsg}`;
+    } else if (hc.failed === 0) {
+      summary.className = 'hc-summary pass';
+      summary.textContent = `✓ All ${total} tests passed — the API is healthy.`;
+    } else {
+      summary.className = 'hc-summary fail';
+      summary.textContent = `✗ ${hc.failed} of ${total} tests failed.`;
+    }
   }
 </script>
 
