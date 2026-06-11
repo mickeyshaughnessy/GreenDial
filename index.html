@@ -619,9 +619,10 @@
     /* Feedback admin board */
     .feedback-board {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1fr 1fr 1fr;
       gap: 16px;
     }
+    @media (max-width: 900px) { .feedback-board { grid-template-columns: 1fr 1fr; } }
     @media (max-width: 700px) { .feedback-board { grid-template-columns: 1fr; } }
     .feedback-col {
       background: rgba(255,255,255,0.03);
@@ -664,6 +665,24 @@
     }
     .feedback-card:hover .feedback-card-del { color: rgba(255,255,255,0.3); }
     .feedback-card-del:hover { color: #ef4444 !important; background: rgba(239,68,68,0.12); }
+    .feedback-card-actions {
+      display: none;
+      gap: 4px;
+      margin-top: 8px;
+    }
+    .feedback-card:hover .feedback-card-actions { display: flex; }
+    .feedback-card-btn {
+      background: none; border: 1px solid rgba(255,255,255,0.12);
+      color: rgba(255,255,255,0.45);
+      font-size: 11px; cursor: pointer;
+      padding: 3px 8px; border-radius: 4px;
+      line-height: 1.4;
+      transition: color 0.15s, background 0.15s, border-color 0.15s;
+    }
+    .feedback-card-btn:hover { color: #fff; border-color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.07); }
+    .feedback-card-btn.complete:hover { color: #10b981; border-color: #10b981; background: rgba(16,185,129,0.1); }
+    .feedback-col-done .feedback-card { opacity: 0.6; }
+    .feedback-col-done .feedback-card:hover { opacity: 1; }
 
     /* Mobile header fix */
     @media (max-width: 700px) {
@@ -1692,6 +1711,11 @@
     function _feedbackCard(p) {
       const id = escapeHtml(p.id);
       const status = p.status || 'new';
+      const todoActions = status === 'todo' ? `
+        <div class="feedback-card-actions">
+          <button class="feedback-card-btn" onclick="copyFeedbackText(event,'${id}')" title="Copy to clipboard">📋 Copy</button>
+          <button class="feedback-card-btn complete" onclick="completeFeedbackPost(event,'${id}')" title="Mark as completed">✓ Done</button>
+        </div>` : '';
       return `<div class="feedback-card" draggable="true" data-id="${id}" data-status="${status}"
           ondragstart="feedbackDragStart(event)">
         <button class="feedback-card-del" onclick="deleteFeedbackPost('${id}')" title="Delete">✕</button>
@@ -1700,15 +1724,17 @@
           <span style="font-size:11px;color:rgba(255,255,255,0.35)">${formatTime(p.created)}</span>
         </div>
         <div style="font-size:13px;line-height:1.5;color:rgba(255,255,255,0.85)">${escapeHtml(p.message)}</div>
+        ${todoActions}
       </div>`;
     }
 
-    function _feedbackColHtml(colStatus, label, posts) {
+    function _feedbackColHtml(colStatus, label, posts, extraClass) {
       const items = posts.filter(p => (p.status || 'new') === colStatus);
       const empty = colStatus === 'new'
         ? '<div style="padding:20px;text-align:center;color:rgba(255,255,255,0.25);font-size:12px">All clear!</div>'
         : '<div style="padding:20px;text-align:center;color:rgba(255,255,255,0.25);font-size:12px">Drag items here</div>';
-      return `<div class="feedback-col" id="feedback-col-${colStatus}"
+      const cls = extraClass ? ` ${extraClass}` : '';
+      return `<div class="feedback-col${cls}" id="feedback-col-${colStatus}"
           ondragover="event.preventDefault()"
           ondragenter="this.classList.add('drag-over')"
           ondragleave="if(!this.contains(event.relatedTarget))this.classList.remove('drag-over')"
@@ -1737,6 +1763,7 @@
           list.innerHTML = `<div class="feedback-board">
             ${_feedbackColHtml('new', '📥 Incoming', posts)}
             ${_feedbackColHtml('todo', '📋 To-Do', posts)}
+            ${_feedbackColHtml('completed', '✅ Completed', posts, 'feedback-col-done')}
           </div>`;
         } else {
           list.innerHTML = posts.map(p => `
@@ -1781,6 +1808,33 @@
       try {
         await fetch(`${API}/feedback/${postId}?user_id=${encodeURIComponent(currentUser.user_id)}`, {
           method: 'DELETE'
+        });
+        await loadFeedback();
+      } catch (e) {}
+    }
+
+    async function copyFeedbackText(event, postId) {
+      event.stopPropagation();
+      const card = document.querySelector(`[data-id="${postId}"]`);
+      if (!card) return;
+      const msg = card.querySelector('div[style*="line-height"]');
+      const text = msg ? msg.textContent : '';
+      try {
+        await navigator.clipboard.writeText(text);
+        const btn = event.currentTarget;
+        btn.textContent = '✓ Copied';
+        setTimeout(() => { btn.textContent = '📋 Copy'; }, 1500);
+      } catch (e) {}
+    }
+
+    async function completeFeedbackPost(event, postId) {
+      event.stopPropagation();
+      if (!currentUser) return;
+      try {
+        await fetch(`${API}/feedback/${postId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: currentUser.user_id, status: 'completed' })
         });
         await loadFeedback();
       } catch (e) {}
