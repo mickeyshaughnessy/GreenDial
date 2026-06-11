@@ -84,7 +84,10 @@ When the user shares info, emit:
 
 Protect AI (onboarding):"""
 
-CRON_PROMPT_TEMPLATE = """You are Protect AI for GreenDial. Generate a short, practical protection health tip (max 20 words) for this user, drawing on either immune health or disease prevention — whichever is most relevant.
+# Weekly cadence — screening/prevention reminders don't need daily repetition
+CRON_CADENCE_HOURS = 164
+
+CRON_PROMPT_TEMPLATE = """You are Protect AI for GreenDial. Generate a short, practical protection health reminder (max 20 words) for this user, drawing on either immune health or disease prevention — whichever is most relevant. If their profile shows overdue screenings or pending action items, follow up on those first.
 
 USER PROFILE:
 {profile_json}

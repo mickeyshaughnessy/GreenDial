@@ -347,12 +347,14 @@ Profile complete. Check on progress, changes, and goals. Update profile if anyth
 }
 
 
-def build_doc_prompt(user_input, profile, recent_transcript="", username="Guest", agent_context=None):
+def build_doc_prompt(user_input, profile, recent_transcript="", username="Guest", agent_context=None, history_summary=None):
     """Build the complete prompt for Doc.
 
     agent_context: optional string containing a specialist agent's response,
                    pre-fetched by handlers.py when a previous Doc turn emitted
                    **CALL_AGENT**.  Doc uses this to enrich its answer.
+    history_summary: optional compact summary of the user's tracked health
+                     history, so Doc can reference real trends in plain chat.
     """
 
     # Determine conversation stage
@@ -388,6 +390,16 @@ Treat it as your own synthesized knowledge:
 {agent_context}
 """
 
+    # Tracked history section — lets Doc cite real trends and progress
+    history_section = ""
+    if history_summary:
+        history_section = f"""
+## TRACKED HEALTH HISTORY (last 14 days)
+{history_summary}
+
+If the user asks about progress or trends, use these real numbers. You may proactively mention a clear trend when relevant.
+"""
+
     # Construct the full prompt
     prompt = f"""{CORE_IDENTITY}
 
@@ -403,7 +415,7 @@ Treat it as your own synthesized knowledge:
 
 ## RECENT CONVERSATION
 {recent_text}
-{agent_section}
+{agent_section}{history_section}
 ## CRITICAL INSTRUCTIONS
 
 1. **CHECK THE CURRENT PROFILE** — Don't ask about info you already have

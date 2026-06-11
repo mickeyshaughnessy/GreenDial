@@ -5,9 +5,40 @@ LLM completion via OpenRouter API
 import json
 import requests
 import config
+from datetime import datetime, timedelta
 
 # Module-level tracker — set after each successful completion call
 _last_used_model = None
+
+
+def summarize_history(user, days=14, max_fields=8):
+    """Compact text summary of a user's profile_history for LLM context.
+
+    One line per tracked field: entry count, average (numeric) or latest value.
+    Returns '' if there is no history in the window.
+    """
+    history = (user or {}).get('profile_history', {})
+    if not history:
+        return ""
+    cutoff = (datetime.utcnow() - timedelta(days=days)).strftime('%Y-%m-%d')
+    lines = []
+    for field, entries in list(history.items())[:max_fields]:
+        recent = [e for e in entries if e.get('ts', '') >= cutoff]
+        if not recent:
+            continue
+        values = [e.get('v') for e in recent]
+        nums = []
+        for v in values:
+            try:
+                nums.append(float(str(v).split()[0]))
+            except (ValueError, IndexError):
+                pass
+        if nums and len(nums) == len(values):
+            avg = sum(nums) / len(nums)
+            lines.append(f"- {field}: {len(recent)} entries, avg {avg:.1f}, latest {values[-1]}")
+        else:
+            lines.append(f"- {field}: {len(recent)} entries, latest \"{values[-1]}\"")
+    return "\n".join(lines)
 
 
 def get_last_model_used():

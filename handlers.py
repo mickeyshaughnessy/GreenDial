@@ -1596,7 +1596,8 @@ def _build_prompt(user_id=None, session_id=None, user_input=""):
         user_input=user_input,
         profile=profile,
         recent_transcript=recent_transcript,
-        username=username
+        username=username,
+        history_summary=utils.summarize_history(user)
     )
 
 
@@ -1682,7 +1683,8 @@ def handle_chat(request):
                         prompt_with_agent = doc_v2.build_doc_prompt(
                             user_input=user_input, profile=profile,
                             recent_transcript=recent_transcript, username=username,
-                            agent_context=cross_context
+                            agent_context=cross_context,
+                            history_summary=utils.summarize_history(user)
                         )
                         doc_response = utils.completion(prompt=prompt_with_agent, temperature=0.7, max_tokens=config.LLM_MAX_TOKENS)
                     except Exception as e:
@@ -1697,7 +1699,8 @@ def handle_chat(request):
                             prompt_with_agent = doc_v2.build_doc_prompt(
                                 user_input=user_input, profile=profile,
                                 recent_transcript=recent_transcript, username=username,
-                                agent_context=agent_context
+                                agent_context=agent_context,
+                                history_summary=utils.summarize_history(user)
                             )
                             doc_response = utils.completion(prompt=prompt_with_agent, temperature=0.7, max_tokens=config.LLM_MAX_TOKENS)
                         except Exception as e:

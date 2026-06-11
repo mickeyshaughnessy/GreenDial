@@ -72,6 +72,13 @@ def _was_run_recently(user, agent_id, hours=20):
         return False
 
 
+def _agent_cadence_hours(agent_id):
+    """Debounce window for this agent. Agents may declare CRON_CADENCE_HOURS
+    (e.g. 164 for weekly synthesis); default is 20h (daily check-ins)."""
+    module = REGISTRY.get(agent_id)
+    return getattr(module, "CRON_CADENCE_HOURS", 20) if module else 20
+
+
 def run_agent_for_user(user_id, user, agent_id, dry_run=False):
     """Run a single agent for a single user; append notification to user record."""
     module = REGISTRY.get(agent_id)
@@ -101,6 +108,12 @@ def run_agent_for_user(user_id, user, agent_id, dry_run=False):
             profile_json=json.dumps(profile, indent=2),
             transcript=transcript[-1500:] if transcript else ""
         )
+
+    # Ground the check-in in tracked data so agents can reference real trends
+    # ("your sleep has averaged 6.4h this week") instead of generic tips
+    history_summary = utils.summarize_history(user, days=14)
+    if history_summary:
+        prompt += f"\n\nRECENT HEALTH HISTORY (last 14 days, tracked data):\n{history_summary}\n\nIf the history shows a clear trend or correlation, reference it specifically in your message."
 
     system_prompt = getattr(module, "SYSTEM_PROMPT", None)
 
@@ -200,8 +213,8 @@ def main():
             if target_agent and agent_id != target_agent:
                 continue
 
-            if _was_run_recently(user, agent_id, hours=20):
-                print(f"[Runner] Skipping {agent_id} for {user_id} — ran recently")
+            if _was_run_recently(user, agent_id, hours=_agent_cadence_hours(agent_id)):
+                print(f"[Runner] Skipping {agent_id} for {user_id} — ran within cadence window")
                 skipped += 1
                 continue
 

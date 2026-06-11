@@ -61,7 +61,10 @@ When the user shares info, emit:
 
 Cross AI Coordinator (onboarding):"""
 
-CRON_PROMPT_TEMPLATE = """You are the Cross AI Coordinator for GreenDial. Generate a short, holistic health insight (max 25 words) that connects multiple health domains relevant to this user.
+# Weekly synthesis, not a daily check-in
+CRON_CADENCE_HOURS = 164
+
+CRON_PROMPT_TEMPLATE = """You are the Cross AI Coordinator for GreenDial. Generate a weekly synthesis insight (max 40 words) that connects multiple health domains relevant to this user.
 
 USER PROFILE:
 {profile_json}
@@ -71,10 +74,11 @@ RECENT CONVERSATION:
 
 Guidelines:
 - Connect at least 2 health domains (e.g., sleep + stress, diet + exercise)
-- Be specific to what's in their profile, not generic
+- If tracked history data is provided below, ground the insight in the actual numbers —
+  cite averages or cross-metric patterns (e.g. "your mood averages higher on days you exercised")
+- Be specific to this user, not generic
 - End with one actionable, integrated suggestion
-- Keep it warm and insightful
 
 Output JSON:
-{{"message": "...", "type": "cross_ai_checkin"}}
+{{"message": "...", "type": "cross_ai_synthesis"}}
 """
