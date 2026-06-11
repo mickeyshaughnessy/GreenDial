@@ -684,6 +684,53 @@
     .feedback-col-done .feedback-card { opacity: 0.6; }
     .feedback-col-done .feedback-card:hover { opacity: 1; }
 
+    /* Identity fields */
+    .identity-field {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .identity-field:last-of-type { border-bottom: none; }
+    .identity-field label { color: rgba(255,255,255,0.5); font-size: 12px; width: 90px; flex-shrink: 0; }
+    .identity-field input {
+      flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 6px; color: white; font-size: 13px; padding: 5px 10px;
+      font-family: inherit;
+    }
+    .identity-field input:focus { outline: none; border-color: #10b981; }
+    /* Suggestion cards */
+    .suggestion-card {
+      padding: 14px; border-bottom: 1px solid rgba(255,255,255,0.06);
+      transition: background 0.1s;
+    }
+    .suggestion-card:hover { background: rgba(255,255,255,0.03); }
+    .suggestion-card:last-child { border-bottom: none; }
+    .suggestion-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .suggestion-agent { font-size: 11px; font-weight: 600; color: #10b981; text-transform: uppercase; letter-spacing: .04em; }
+    .suggestion-price { font-size: 11px; font-weight: 600; color: #f59e0b; background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.3); padding: 1px 7px; border-radius: 10px; }
+    .suggestion-text { font-size: 13px; line-height: 1.55; color: rgba(255,255,255,0.85); margin-bottom: 10px; }
+    .suggestion-actions { display: flex; gap: 6px; }
+    .btn-accept { background: #10b981; border: none; color: #000; font-size: 12px; font-weight: 600; padding: 5px 14px; border-radius: 6px; cursor: pointer; transition: opacity 0.15s; }
+    .btn-accept:hover { opacity: 0.85; }
+    .btn-dismiss { background: none; border: 1px solid rgba(255,255,255,0.15); color: rgba(255,255,255,0.4); font-size: 12px; padding: 5px 10px; border-radius: 6px; cursor: pointer; transition: border-color 0.15s, color 0.15s; }
+    .btn-dismiss:hover { border-color: rgba(255,255,255,0.3); color: rgba(255,255,255,0.7); }
+    /* Activity cards */
+    .activity-card {
+      padding: 14px; border-bottom: 1px solid rgba(255,255,255,0.06);
+      transition: background 0.1s;
+    }
+    .activity-card:hover { background: rgba(255,255,255,0.03); }
+    .activity-card:last-child { border-bottom: none; }
+    .activity-card.completed { opacity: 0.55; }
+    .activity-card.completed:hover { opacity: 0.8; }
+    .activity-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; flex-wrap: wrap; }
+    .activity-agent { font-size: 11px; font-weight: 600; color: #10b981; text-transform: uppercase; letter-spacing: .04em; }
+    .activity-price { font-size: 11px; font-weight: 600; color: #f59e0b; background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.3); padding: 1px 7px; border-radius: 10px; }
+    .activity-payment-badge { font-size: 11px; color: #a78bfa; background: rgba(167,139,250,0.1); border: 1px solid rgba(167,139,250,0.3); padding: 1px 7px; border-radius: 10px; }
+    .activity-text { font-size: 13px; line-height: 1.55; color: rgba(255,255,255,0.85); margin-bottom: 8px; }
+    .activity-date { font-size: 11px; color: rgba(255,255,255,0.3); }
+    .btn-complete { background: none; border: 1px solid #10b981; color: #10b981; font-size: 12px; padding: 4px 12px; border-radius: 6px; cursor: pointer; transition: background 0.15s, color 0.15s; }
+    .btn-complete:hover { background: #10b981; color: #000; }
+
     /* Mobile header fix */
     @media (max-width: 700px) {
       .header { flex-wrap: wrap; gap: 8px; padding: 10px 14px; }
@@ -748,8 +795,22 @@
     <div class="view" id="view-user">
       <div style="display:flex;flex-direction:column;gap:20px;max-width:900px;width:100%;margin:0 auto;padding-bottom:40px">
         <div class="panel">
+          <div class="panel-header">👤 Identity</div>
+          <div class="panel-content" id="identity-panel">
+            <div class="profile-empty">Sign in to manage your identity</div>
+          </div>
+        </div>
+        <div class="panel">
           <div class="panel-header">⚙️ Settings</div>
           <div class="panel-content" id="settings-panel"><div class="profile-empty">Sign in to manage settings</div></div>
+        </div>
+        <div class="panel">
+          <div class="panel-header"><span>💡 Today's Suggestions</span><button class="btn btn-secondary btn-sm" onclick="generateSuggestions()">Refresh</button></div>
+          <div class="panel-content" id="suggestions-panel"><div class="profile-empty">Sign in to see suggestions</div></div>
+        </div>
+        <div class="panel">
+          <div class="panel-header"><span>🏃 My Activities</span></div>
+          <div class="panel-content" id="activities-panel"><div class="profile-empty">Accepted suggestions appear here</div></div>
         </div>
         <div class="panel">
           <div class="panel-header"><span>📋 Health Profile</span><button class="btn btn-secondary btn-sm" onclick="refreshUserTab()">Refresh</button></div>
@@ -1010,6 +1071,7 @@
 
     let isLoading = false;
     let currentView = 'chat';
+    let userData = {};
     
     // ── AVATAR ───────────────────────────────────────────────────────────────
     function getUserAvatar() {
@@ -1434,6 +1496,7 @@
     async function refreshProfile() {
       if (!currentUser) {
         document.getElementById('full-profile-panel').innerHTML = '<div class="profile-empty">Sign in to view your health profile</div>';
+        document.getElementById('identity-panel').innerHTML = '<div class="profile-empty">Sign in to manage your identity</div>';
         return;
       }
       try {
@@ -1443,7 +1506,9 @@
         ]);
         if (userRes.status === 'fulfilled') {
           const data = await userRes.value.json();
+          userData = data;
           if (data.profile) userProfile = data.profile;
+          renderIdentity(data);
         }
         let historyData = {};
         if (histRes.status === 'fulfilled') historyData = await histRes.value.json();
@@ -1703,7 +1768,193 @@
     }
 
     async function refreshUserTab() {
-      await Promise.allSettled([refreshProfile(), refreshSettings()]);
+      await Promise.allSettled([refreshProfile(), refreshSettings(), loadSuggestions(), loadActivities()]);
+    }
+
+    // ── IDENTITY ─────────────────────────────────────────────────────────────
+
+    function renderIdentity(data) {
+      const panel = document.getElementById('identity-panel');
+      if (!panel) return;
+      const v = s => escapeHtml(s || '');
+      panel.innerHTML = `
+        <div class="identity-field"><label>First name</label><input id="id-first" value="${v(data.first_name)}" placeholder="First"></div>
+        <div class="identity-field"><label>Last name</label><input id="id-last" value="${v(data.last_name)}" placeholder="Last"></div>
+        <div class="identity-field"><label>Email</label><input id="id-email" type="email" value="${v(data.email)}" placeholder="you@example.com"></div>
+        <div class="identity-field"><label>ETH wallet</label><input id="id-eth" value="${v((data.wallets||{}).eth)}" placeholder="0x…"></div>
+        <div class="identity-field"><label>SOL wallet</label><input id="id-sol" value="${v((data.wallets||{}).sol)}" placeholder="Solana address"></div>
+        <div style="margin-top:12px">
+          <button class="btn btn-primary btn-sm" onclick="saveIdentity()">Save</button>
+          <span id="identity-save-msg" style="margin-left:10px;font-size:12px;color:#10b981;display:none">Saved!</span>
+        </div>`;
+    }
+
+    async function saveIdentity() {
+      if (!currentUser) return;
+      const payload = {
+        first_name: document.getElementById('id-first').value.trim(),
+        last_name: document.getElementById('id-last').value.trim(),
+        email: document.getElementById('id-email').value.trim(),
+        wallets: {
+          eth: document.getElementById('id-eth').value.trim(),
+          sol: document.getElementById('id-sol').value.trim()
+        }
+      };
+      try {
+        await fetch(`${API}/user/${currentUser.user_id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const msg = document.getElementById('identity-save-msg');
+        if (msg) { msg.style.display = 'inline'; setTimeout(() => msg.style.display = 'none', 2000); }
+      } catch (e) {}
+    }
+
+    // ── SUGGESTIONS ──────────────────────────────────────────────────────────
+
+    let _suggestions = [];
+
+    async function loadSuggestions() {
+      if (!currentUser) return;
+      try {
+        const res = await fetch(`${API}/suggestions/${currentUser.user_id}`);
+        const data = await res.json();
+        _suggestions = (data.suggestions || []).filter(s => s.status === 'pending');
+        renderSuggestions(_suggestions);
+      } catch (e) {}
+    }
+
+    async function generateSuggestions() {
+      if (!currentUser) return;
+      const panel = document.getElementById('suggestions-panel');
+      if (panel) panel.innerHTML = '<div class="profile-empty">Generating…</div>';
+      try {
+        const res = await fetch(`${API}/suggestions/${currentUser.user_id}/generate`, { method: 'POST' });
+        const data = await res.json();
+        _suggestions = data.suggestions || [];
+        renderSuggestions(_suggestions);
+      } catch (e) {
+        if (panel) panel.innerHTML = '<div class="profile-empty">Could not generate suggestions</div>';
+      }
+    }
+
+    function renderSuggestions(suggs) {
+      const panel = document.getElementById('suggestions-panel');
+      if (!panel) return;
+      const pending = suggs.filter(s => s.status === 'pending');
+      if (!pending.length) {
+        panel.innerHTML = '<div class="profile-empty">No suggestions yet — click Refresh to generate today\'s suggestions.</div>';
+        return;
+      }
+      panel.innerHTML = pending.map(s => {
+        const meta = getAgentMeta(s.agent_id);
+        const priceTag = s.price ? `<span class="suggestion-price">💰 ${s.price} ${s.currency || 'ETH'}</span>` : '';
+        return `<div class="suggestion-card" id="scard-${s.id}">
+          <div class="suggestion-header">
+            <span class="suggestion-agent">${meta.emoji} ${meta.name}</span>
+            ${priceTag}
+          </div>
+          <div class="suggestion-text">${escapeHtml(s.text)}</div>
+          <div class="suggestion-actions">
+            <button class="btn-accept" onclick="acceptSuggestion('${s.id}','${s.agent_id}','${escapeHtml(s.text).replace(/'/g,"\\'")}')">✓ Accept</button>
+            <button class="btn-dismiss" onclick="dismissSuggestion('${s.id}')">Dismiss</button>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    function dismissSuggestion(id) {
+      _suggestions = _suggestions.filter(s => s.id !== id);
+      renderSuggestions(_suggestions);
+    }
+
+    async function acceptSuggestion(suggestionId, agentId, text) {
+      if (!currentUser) return;
+      // Remove from suggestions panel immediately
+      _suggestions = _suggestions.filter(s => s.id !== suggestionId);
+      renderSuggestions(_suggestions);
+      // Persist accept + create activity
+      try {
+        await fetch(`${API}/suggestions/${currentUser.user_id}/${suggestionId}/accept`, { method: 'POST' });
+        await loadActivities();
+      } catch (e) {}
+      // Navigate to agent chat with suggestion text pre-filled
+      switchView('chat');
+      if (agentId && agentId !== 'doc' && AGENT_META[agentId]) {
+        await triggerAgentFollowup(agentId, text);
+      } else {
+        await switchChatAgent('doc');
+        const input = document.getElementById('chat-input');
+        if (input) { input.value = text; input.focus(); }
+      }
+    }
+
+    // ── ACTIVITIES ───────────────────────────────────────────────────────────
+
+    let _activities = [];
+
+    async function loadActivities() {
+      if (!currentUser) return;
+      try {
+        const res = await fetch(`${API}/activities/${currentUser.user_id}`);
+        const data = await res.json();
+        _activities = data.activities || [];
+        renderActivities(_activities);
+      } catch (e) {}
+    }
+
+    function renderActivities(acts) {
+      const panel = document.getElementById('activities-panel');
+      if (!panel) return;
+      if (!acts.length) {
+        panel.innerHTML = '<div class="profile-empty">Accept a suggestion to start an activity.</div>';
+        return;
+      }
+      const active = acts.filter(a => a.status === 'active');
+      const done = acts.filter(a => a.status === 'completed');
+      let html = '';
+      if (active.length) {
+        html += active.map(a => {
+          const meta = getAgentMeta(a.agent_id);
+          const priceTag = a.price ? `<span class="activity-price">💰 ${a.price} ${a.currency || 'ETH'}</span>` : '';
+          return `<div class="activity-card" id="acard-${a.id}">
+            <div class="activity-meta"><span class="activity-agent">${meta.emoji} ${meta.name}</span>${priceTag}</div>
+            <div class="activity-text">${escapeHtml(a.text)}</div>
+            <button class="btn-complete" onclick="completeActivity('${a.id}')">✓ Mark Complete</button>
+          </div>`;
+        }).join('');
+      }
+      if (done.length) {
+        html += `<div style="padding:10px 14px 4px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,0.3)">Completed</div>`;
+        html += done.map(a => {
+          const meta = getAgentMeta(a.agent_id);
+          const payBadge = a.payment_pending ? `<span class="activity-payment-badge">💜 Payment pending</span>` : '';
+          const priceTag = a.price ? `<span class="activity-price">💰 ${a.price} ${a.currency || 'ETH'}</span>` : '';
+          return `<div class="activity-card completed">
+            <div class="activity-meta"><span class="activity-agent">${meta.emoji} ${meta.name}</span>${priceTag}${payBadge}</div>
+            <div class="activity-text">${escapeHtml(a.text)}</div>
+            <div class="activity-date">Completed ${formatTime(a.completed_at)}</div>
+          </div>`;
+        }).join('');
+      }
+      panel.innerHTML = html;
+    }
+
+    async function completeActivity(activityId) {
+      if (!currentUser) return;
+      const card = document.getElementById(`acard-${activityId}`);
+      if (card) { const btn = card.querySelector('.btn-complete'); if (btn) btn.disabled = true; }
+      try {
+        await fetch(`${API}/activities/${currentUser.user_id}/${activityId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'completed' })
+        });
+        await loadActivities();
+      } catch (e) {
+        if (card) { const btn = card.querySelector('.btn-complete'); if (btn) btn.disabled = false; }
+      }
     }
 
     let _feedbackDragId = null;

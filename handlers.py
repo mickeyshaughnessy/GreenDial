@@ -225,10 +225,10 @@ def handle_update_user(user_id, data):
     if not user:
         return json.dumps({"error": "User not found"}), 404
     
-    allowed = ['username', 'settings', 'profile']
+    allowed = ['username', 'settings', 'profile', 'first_name', 'last_name', 'email', 'wallets']
     for key in allowed:
         if key in data:
-            if key in ('settings', 'profile') and isinstance(data[key], dict):
+            if key in ('settings', 'profile', 'wallets') and isinstance(data[key], dict):
                 user.setdefault(key, {}).update(data[key])
             else:
                 user[key] = data[key]
@@ -2348,3 +2348,278 @@ def handle_update_feedback_post(post_id, req):
         return json.dumps({"ok": True})
     except Exception as e:
         return (json.dumps({"error": str(e)}), 500)
+
+
+# ============ BOUNTIES ============
+
+def handle_create_bounty(req):
+    activity = (req.get('activity') or '').strip()
+    if not activity:
+        return (json.dumps({"error": "activity required"}), 400)
+    health_area = (req.get('health_area') or 'exercise').strip()
+    price = req.get('price')
+    currency = (req.get('currency') or 'ETH').strip()
+    user_ids = req.get('user_ids', [])
+    expires = req.get('expires', '')
+    try:
+        bounties = s3_storage.get_bounties()
+        bounty = {
+            "id": f"bty_{uuid.uuid4().hex[:12]}",
+            "activity": activity[:500],
+            "health_area": health_area,
+            "price": price,
+            "currency": currency,
+            "user_ids": user_ids,
+            "expires": expires,
+            "created": datetime.utcnow().isoformat(),
+            "status": "active"
+        }
+        bounties.append(bounty)
+        s3_storage.save_bounties(bounties)
+        return json.dumps({"bounty_id": bounty["id"], "status": "active"})
+    except Exception as e:
+        return (json.dumps({"error": str(e)}), 500)
+
+
+def handle_list_bounties():
+    try:
+        bounties = s3_storage.get_bounties()
+        return json.dumps({"bounties": bounties})
+    except Exception as e:
+        return json.dumps({"bounties": [], "error": str(e)})
+
+
+def handle_get_bounty(bounty_id):
+    try:
+        bounties = s3_storage.get_bounties()
+        for b in bounties:
+            if b.get('id') == bounty_id:
+                return json.dumps({"bounty": b})
+        return (json.dumps({"error": "Not found"}), 404)
+    except Exception as e:
+        return (json.dumps({"error": str(e)}), 500)
+
+
+# ============ SUGGESTIONS ============
+
+_SUGGESTION_AREAS = [
+    ("exercise", "exercise", "Exercise Coach"),
+    ("diet", "diet", "Diet Advisor"),
+    ("social", "relationships", "Relationships Advisor"),
+]
+
+
+def _generate_suggestion_text(area_label, agent_name, profile):
+    """Call LLM to produce one specific, actionable suggestion for the given health area."""
+    prompt = (
+        f"You are a {agent_name}. Based on this user's health profile, generate ONE specific, "
+        f"actionable suggestion for them today in the area of {area_label}.\n\n"
+        f"Health profile:\n{json.dumps(profile, indent=2) if profile else '{}'}\n\n"
+        "Respond with ONLY the suggestion text (1-2 sentences, specific and actionable). "
+        "No preamble, no explanation."
+    )
+    try:
+        return utils.completion(prompt=prompt, temperature=0.8, max_tokens=100).strip()
+    except Exception as e:
+        print(f"[Suggestions] LLM failed for {area_label}: {e}")
+        return None
+
+
+def _get_active_bounties_for_user(user_id):
+    """Return active, non-expired bounties that list this user_id."""
+    try:
+        bounties = s3_storage.get_bounties()
+    except Exception:
+        return []
+    today = datetime.utcnow().strftime('%Y-%m-%d')
+    result = []
+    for b in bounties:
+        if b.get('status') != 'active':
+            continue
+        expires = b.get('expires', '')
+        if expires and expires < today:
+            continue
+        if user_id in b.get('user_ids', []):
+            result.append(b)
+    return result
+
+
+def generate_suggestions(user_id):
+    """Generate up to 3 suggestions (bounty-backed first, then LLM-personalized)."""
+    user = get_user_data(user_id)
+    if not user:
+        return []
+    profile = user.get('profile', {})
+    suggestions = []
+
+    # Bounty-backed suggestions
+    bounties = _get_active_bounties_for_user(user_id)
+    _area_to_agent = {'exercise': 'exercise', 'diet': 'diet', 'social': 'relationships'}
+    for b in bounties[:3]:
+        area = b.get('health_area', 'exercise')
+        suggestions.append({
+            "id": f"sug_{uuid.uuid4().hex[:12]}",
+            "type": area,
+            "agent_id": _area_to_agent.get(area, 'exercise'),
+            "text": b.get('activity', ''),
+            "bounty_id": b.get('id'),
+            "price": b.get('price'),
+            "currency": b.get('currency'),
+            "created": datetime.utcnow().isoformat(),
+            "status": "pending"
+        })
+
+    # Fill remaining slots with LLM suggestions
+    used_areas = {s['type'] for s in suggestions}
+    for area_label, agent_id, agent_name in _SUGGESTION_AREAS:
+        if len(suggestions) >= 3:
+            break
+        if area_label in used_areas:
+            continue
+        text = _generate_suggestion_text(area_label, agent_name, profile)
+        if text:
+            suggestions.append({
+                "id": f"sug_{uuid.uuid4().hex[:12]}",
+                "type": area_label,
+                "agent_id": agent_id,
+                "text": text,
+                "bounty_id": None,
+                "price": None,
+                "currency": None,
+                "created": datetime.utcnow().isoformat(),
+                "status": "pending"
+            })
+
+    # Replace only pending suggestions; keep accepted/rejected ones
+    existing = [s for s in user.get('suggestions', []) if s.get('status') != 'pending']
+    user['suggestions'] = existing + suggestions
+    user['last_suggestion_gen'] = datetime.utcnow().isoformat()
+    _cache_user(user_id, user)
+    try:
+        s3_storage.save_user(user_id, user)
+    except Exception as e:
+        print(f"[Suggestions] Save failed: {e}")
+    return suggestions
+
+
+def handle_get_suggestions(user_id):
+    user = get_user_data(user_id)
+    if not user:
+        return (json.dumps({"error": "User not found"}), 404)
+    return json.dumps({"suggestions": user.get('suggestions', [])})
+
+
+def handle_generate_suggestions(user_id):
+    suggestions = generate_suggestions(user_id)
+    return json.dumps({"suggestions": suggestions})
+
+
+def handle_accept_suggestion(user_id, suggestion_id):
+    user = get_user_data(user_id)
+    if not user:
+        return (json.dumps({"error": "User not found"}), 404)
+
+    suggestion = next((s for s in user.get('suggestions', []) if s.get('id') == suggestion_id), None)
+    if not suggestion:
+        return (json.dumps({"error": "Suggestion not found"}), 404)
+
+    suggestion['status'] = 'accepted'
+    activity = {
+        "id": f"act_{uuid.uuid4().hex[:12]}",
+        "suggestion_id": suggestion_id,
+        "type": suggestion.get('type'),
+        "agent_id": suggestion.get('agent_id'),
+        "text": suggestion.get('text'),
+        "bounty_id": suggestion.get('bounty_id'),
+        "price": suggestion.get('price'),
+        "currency": suggestion.get('currency'),
+        "accepted_at": datetime.utcnow().isoformat(),
+        "status": "active",
+        "completed_at": None,
+        "wallet_snapshot": None,
+        "payment_pending": False
+    }
+    user.setdefault('activities', []).append(activity)
+    _cache_user(user_id, user)
+    try:
+        s3_storage.save_user(user_id, user)
+    except Exception as e:
+        return (json.dumps({"error": str(e)}), 500)
+    return json.dumps({"activity": activity})
+
+
+# ============ ACTIVITIES ============
+
+def handle_get_activities(user_id):
+    user = get_user_data(user_id)
+    if not user:
+        return (json.dumps({"error": "User not found"}), 404)
+    return json.dumps({"activities": user.get('activities', [])})
+
+
+def handle_update_activity(user_id, activity_id, req):
+    user = get_user_data(user_id)
+    if not user:
+        return (json.dumps({"error": "User not found"}), 404)
+
+    activity = next((a for a in user.get('activities', []) if a.get('id') == activity_id), None)
+    if not activity:
+        return (json.dumps({"error": "Activity not found"}), 404)
+
+    if req.get('status') == 'completed':
+        activity['status'] = 'completed'
+        activity['completed_at'] = datetime.utcnow().isoformat()
+        wallets = user.get('wallets', {})
+        activity['wallet_snapshot'] = wallets.get('eth') or wallets.get('sol') or None
+        if activity.get('price'):
+            activity['payment_pending'] = True
+
+    _cache_user(user_id, user)
+    try:
+        s3_storage.save_user(user_id, user)
+    except Exception as e:
+        return (json.dumps({"error": str(e)}), 500)
+    return json.dumps({"activity": activity})
+
+
+# ============ DEMAND-SIDE /generate ============
+
+def handle_generate_demand(req):
+    user_id = (req.get('user_id') or '').strip()
+    if not user_id:
+        return (json.dumps({"error": "user_id required"}), 400)
+
+    health_area = (req.get('health_area') or '').strip()
+    price = req.get('price')
+
+    user = get_user_data(user_id)
+    if not user:
+        return (json.dumps({"error": "User not found"}), 404)
+
+    profile = user.get('profile', {})
+    if not health_area:
+        health_area = random.choice(['exercise', 'diet', 'social'])
+
+    _area_map = {
+        'exercise': ('exercise', 'Exercise Coach'),
+        'diet': ('diet', 'Diet Advisor'),
+        'social': ('relationships', 'Relationships Advisor'),
+    }
+    agent_id, agent_name = _area_map.get(health_area, ('exercise', 'Exercise Coach'))
+
+    text = _generate_suggestion_text(health_area, agent_name, profile)
+    if not text:
+        return (json.dumps({"error": "Could not generate suggestion"}), 500)
+
+    bounty_payload = {
+        "activity": text,
+        "health_area": health_area,
+        "price": price,
+        "currency": "ETH",
+        "user_ids": [user_id]
+    }
+    return json.dumps({
+        "suggestion": {"text": text, "agent_id": agent_id, "health_area": health_area},
+        "bounty_payload": bounty_payload,
+        "bounty_post_url": "/bounty"
+    })

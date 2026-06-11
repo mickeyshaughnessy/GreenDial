@@ -420,6 +420,98 @@ def update_feedback_post(post_id):
     return Response(result, mimetype='application/json')
 
 
+# ============ SUGGESTIONS ============
+
+@app.route("/suggestions/<user_id>", methods=['GET', 'OPTIONS'])
+def get_suggestions(user_id):
+    if request.method == 'OPTIONS':
+        return Response('', status=200)
+    result = handlers.handle_get_suggestions(user_id)
+    if isinstance(result, tuple):
+        return Response(result[0], status=result[1], mimetype='application/json')
+    return Response(result, mimetype='application/json')
+
+
+@app.route("/suggestions/<user_id>/generate", methods=['POST', 'OPTIONS'])
+def generate_suggestions(user_id):
+    if request.method == 'OPTIONS':
+        return Response('', status=200)
+    result = handlers.handle_generate_suggestions(user_id)
+    return Response(result, mimetype='application/json')
+
+
+@app.route("/suggestions/<user_id>/<suggestion_id>/accept", methods=['POST', 'OPTIONS'])
+def accept_suggestion(user_id, suggestion_id):
+    if request.method == 'OPTIONS':
+        return Response('', status=200)
+    result = handlers.handle_accept_suggestion(user_id, suggestion_id)
+    if isinstance(result, tuple):
+        return Response(result[0], status=result[1], mimetype='application/json')
+    return Response(result, mimetype='application/json')
+
+
+# ============ ACTIVITIES ============
+
+@app.route("/activities/<user_id>", methods=['GET', 'OPTIONS'])
+def get_activities(user_id):
+    if request.method == 'OPTIONS':
+        return Response('', status=200)
+    result = handlers.handle_get_activities(user_id)
+    if isinstance(result, tuple):
+        return Response(result[0], status=result[1], mimetype='application/json')
+    return Response(result, mimetype='application/json')
+
+
+@app.route("/activities/<user_id>/<activity_id>", methods=['PATCH', 'OPTIONS'])
+def update_activity(user_id, activity_id):
+    if request.method == 'OPTIONS':
+        return Response('', status=200)
+    req = request.get_json() or {}
+    result = handlers.handle_update_activity(user_id, activity_id, req)
+    if isinstance(result, tuple):
+        return Response(result[0], status=result[1], mimetype='application/json')
+    return Response(result, mimetype='application/json')
+
+
+# ============ BOUNTIES ============
+
+@app.route("/bounty", methods=['GET', 'POST', 'OPTIONS'])
+def bounty():
+    if request.method == 'OPTIONS':
+        return Response('', status=200)
+    if request.method == 'GET':
+        result = handlers.handle_list_bounties()
+        return Response(result, mimetype='application/json')
+    req = request.get_json() or {}
+    result = handlers.handle_create_bounty(req)
+    if isinstance(result, tuple):
+        return Response(result[0], status=result[1], mimetype='application/json')
+    return Response(result, mimetype='application/json')
+
+
+@app.route("/bounty/<bounty_id>", methods=['GET', 'OPTIONS'])
+def get_bounty(bounty_id):
+    if request.method == 'OPTIONS':
+        return Response('', status=200)
+    result = handlers.handle_get_bounty(bounty_id)
+    if isinstance(result, tuple):
+        return Response(result[0], status=result[1], mimetype='application/json')
+    return Response(result, mimetype='application/json')
+
+
+# ============ DEMAND-SIDE GENERATE ============
+
+@app.route("/generate", methods=['POST', 'OPTIONS'])
+def generate_demand():
+    if request.method == 'OPTIONS':
+        return Response('', status=200)
+    req = request.get_json() or {}
+    result = handlers.handle_generate_demand(req)
+    if isinstance(result, tuple):
+        return Response(result[0], status=result[1], mimetype='application/json')
+    return Response(result, mimetype='application/json')
+
+
 # ============ ADMIN ============
 
 @app.route("/admin/balances", methods=['GET', 'OPTIONS'])

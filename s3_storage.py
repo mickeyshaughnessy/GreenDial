@@ -262,3 +262,31 @@ def save_feedback(posts):
         Body=json.dumps(posts, indent=2),
         ContentType='application/json'
     )
+
+
+# ============ BOUNTIES ============
+
+def get_bounties():
+    """Get all bounties"""
+    _check_client()
+    try:
+        resp = s3_client.get_object(
+            Bucket=config.DO_SPACES_BUCKET,
+            Key=_key("bounties/bounties.json")
+        )
+        return json.loads(resp['Body'].read().decode('utf-8'))
+    except ClientError as e:
+        if e.response['Error']['Code'] == 'NoSuchKey':
+            return []
+        raise
+
+
+def save_bounties(bounties):
+    """Persist bounties list"""
+    _check_client()
+    s3_client.put_object(
+        Bucket=config.DO_SPACES_BUCKET,
+        Key=_key("bounties/bounties.json"),
+        Body=json.dumps(bounties, indent=2),
+        ContentType='application/json'
+    )
