@@ -436,7 +436,10 @@ def get_suggestions(user_id):
 def generate_suggestions(user_id):
     if request.method == 'OPTIONS':
         return Response('', status=200)
-    result = handlers.handle_generate_suggestions(user_id)
+    req = request.get_json(silent=True) or {}
+    result = handlers.handle_generate_suggestions(user_id, force=bool(req.get('force')))
+    if isinstance(result, tuple):
+        return Response(result[0], status=result[1], mimetype='application/json')
     return Response(result, mimetype='application/json')
 
 

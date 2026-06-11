@@ -111,9 +111,10 @@ def handle_auth(request):
     if not request.get('create_new'):
         if user:
             if user.get('passphrase') == passphrase:
-                # Generate notifications in background on login
+                # Generate notifications and daily suggestions in background on login
                 threading.Thread(target=generate_login_notifications, args=(user_id,)).start()
-                
+                threading.Thread(target=generate_login_suggestions, args=(user_id,)).start()
+
                 return json.dumps({
                     "user_id": user_id,
                     "username": user.get('username', username),
@@ -151,8 +152,9 @@ def handle_auth(request):
         s3_storage.save_user(user_id, new_user)
         _cache_user(user_id, new_user)
         
-        # Generate initial notifications in background
+        # Generate initial notifications and suggestions in background
         threading.Thread(target=generate_login_notifications, args=(user_id,)).start()
+        threading.Thread(target=generate_login_suggestions, args=(user_id,)).start()
     except Exception as e:
         print(f"[Auth] Failed to save user: {e}")
         return json.dumps({"error": "Failed to create account"}), 500
@@ -2452,8 +2454,9 @@ def generate_suggestions(user_id):
     profile = user.get('profile', {})
     suggestions = []
 
-    # Bounty-backed suggestions
-    bounties = _get_active_bounties_for_user(user_id)
+    # Bounty-backed suggestions — skip bounties the user already accepted
+    accepted_bounty_ids = {a.get('bounty_id') for a in user.get('activities', []) if a.get('bounty_id')}
+    bounties = [b for b in _get_active_bounties_for_user(user_id) if b.get('id') not in accepted_bounty_ids]
     _area_to_agent = {'exercise': 'exercise', 'diet': 'diet', 'social': 'relationships'}
     for b in bounties[:3]:
         area = b.get('health_area', 'exercise')
@@ -2490,8 +2493,8 @@ def generate_suggestions(user_id):
                 "status": "pending"
             })
 
-    # Replace only pending suggestions; keep accepted/rejected ones
-    existing = [s for s in user.get('suggestions', []) if s.get('status') != 'pending']
+    # Replace only pending suggestions; keep last 30 accepted/rejected for history
+    existing = [s for s in user.get('suggestions', []) if s.get('status') != 'pending'][-30:]
     user['suggestions'] = existing + suggestions
     user['last_suggestion_gen'] = datetime.utcnow().isoformat()
     _cache_user(user_id, user)
@@ -2502,6 +2505,23 @@ def generate_suggestions(user_id):
     return suggestions
 
 
+def generate_login_suggestions(user_id):
+    """Background task: generate daily suggestions on login (24h debounce)."""
+    time.sleep(2)
+    user = get_user_data(user_id)
+    if not user:
+        return
+    last_gen = user.get('last_suggestion_gen')
+    if last_gen:
+        try:
+            last_dt = datetime.fromisoformat(last_gen.replace('Z', '+00:00'))
+            if (datetime.utcnow() - last_dt.replace(tzinfo=None)).total_seconds() < 86400:
+                return
+        except Exception:
+            pass
+    generate_suggestions(user_id)
+
+
 def handle_get_suggestions(user_id):
     user = get_user_data(user_id)
     if not user:
@@ -2509,7 +2529,21 @@ def handle_get_suggestions(user_id):
     return json.dumps({"suggestions": user.get('suggestions', [])})
 
 
-def handle_generate_suggestions(user_id):
+def handle_generate_suggestions(user_id, force=False):
+    user = get_user_data(user_id)
+    if not user:
+        return (json.dumps({"error": "User not found"}), 404)
+    # Without force, respect the 24h daily cadence and return the existing batch
+    if not force:
+        last_gen = user.get('last_suggestion_gen')
+        if last_gen:
+            try:
+                last_dt = datetime.fromisoformat(last_gen.replace('Z', '+00:00'))
+                if (datetime.utcnow() - last_dt.replace(tzinfo=None)).total_seconds() < 86400:
+                    pending = [s for s in user.get('suggestions', []) if s.get('status') == 'pending']
+                    return json.dumps({"suggestions": pending})
+            except Exception:
+                pass
     suggestions = generate_suggestions(user_id)
     return json.dumps({"suggestions": suggestions})
 

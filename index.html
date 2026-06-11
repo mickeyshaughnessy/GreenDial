@@ -701,6 +701,7 @@
     .suggestion-card {
       padding: 14px; border-bottom: 1px solid rgba(255,255,255,0.06);
       transition: background 0.1s;
+      cursor: pointer;
     }
     .suggestion-card:hover { background: rgba(255,255,255,0.03); }
     .suggestion-card:last-child { border-bottom: none; }
@@ -1295,6 +1296,8 @@
         fetchNotifications();
         if (window._notifInterval) clearInterval(window._notifInterval);
         window._notifInterval = setInterval(fetchNotifications, 120000);
+        // Daily suggestion check (server debounces to once per 24h)
+        generateSuggestions(false);
         return true;
       } catch (e) {
         clearSession();
@@ -1825,17 +1828,21 @@
       } catch (e) {}
     }
 
-    async function generateSuggestions() {
+    async function generateSuggestions(force = true) {
       if (!currentUser) return;
       const panel = document.getElementById('suggestions-panel');
-      if (panel) panel.innerHTML = '<div class="profile-empty">Generating…</div>';
+      if (force && panel) panel.innerHTML = '<div class="profile-empty">Generating…</div>';
       try {
-        const res = await fetch(`${API}/suggestions/${currentUser.user_id}/generate`, { method: 'POST' });
+        const res = await fetch(`${API}/suggestions/${currentUser.user_id}/generate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ force })
+        });
         const data = await res.json();
         _suggestions = data.suggestions || [];
         renderSuggestions(_suggestions);
       } catch (e) {
-        if (panel) panel.innerHTML = '<div class="profile-empty">Could not generate suggestions</div>';
+        if (force && panel) panel.innerHTML = '<div class="profile-empty">Could not generate suggestions</div>';
       }
     }
 
@@ -1850,15 +1857,15 @@
       panel.innerHTML = pending.map(s => {
         const meta = getAgentMeta(s.agent_id);
         const priceTag = s.price ? `<span class="suggestion-price">💰 ${s.price} ${s.currency || 'ETH'}</span>` : '';
-        return `<div class="suggestion-card" id="scard-${s.id}">
+        return `<div class="suggestion-card" id="scard-${s.id}" onclick="acceptSuggestion('${s.id}')" title="Accept and discuss with ${meta.name}">
           <div class="suggestion-header">
             <span class="suggestion-agent">${meta.emoji} ${meta.name}</span>
             ${priceTag}
           </div>
           <div class="suggestion-text">${escapeHtml(s.text)}</div>
           <div class="suggestion-actions">
-            <button class="btn-accept" onclick="acceptSuggestion('${s.id}','${s.agent_id}','${escapeHtml(s.text).replace(/'/g,"\\'")}')">✓ Accept</button>
-            <button class="btn-dismiss" onclick="dismissSuggestion('${s.id}')">Dismiss</button>
+            <button class="btn-accept" onclick="event.stopPropagation(); acceptSuggestion('${s.id}')">✓ Accept</button>
+            <button class="btn-dismiss" onclick="event.stopPropagation(); dismissSuggestion('${s.id}')">Dismiss</button>
           </div>
         </div>`;
       }).join('');
@@ -1869,8 +1876,12 @@
       renderSuggestions(_suggestions);
     }
 
-    async function acceptSuggestion(suggestionId, agentId, text) {
+    async function acceptSuggestion(suggestionId) {
       if (!currentUser) return;
+      const sugg = _suggestions.find(s => s.id === suggestionId);
+      if (!sugg) return;
+      const agentId = sugg.agent_id;
+      const text = sugg.text;
       // Remove from suggestions panel immediately
       _suggestions = _suggestions.filter(s => s.id !== suggestionId);
       renderSuggestions(_suggestions);
@@ -2351,11 +2362,13 @@
           fetchNotifications();
           if (window._notifInterval) clearInterval(window._notifInterval);
           window._notifInterval = setInterval(fetchNotifications, 120000);
+          // Daily suggestions generate server-side ~2s after login; fetch shortly after
+          setTimeout(loadSuggestions, 5000);
         }
       } catch (error) {
         errorEl.textContent = 'Connection error.';
       }
-      
+
       btn.disabled = false;
       btn.textContent = 'Sign In';
     }
@@ -2399,6 +2412,7 @@
 
           if (window._notifInterval) clearInterval(window._notifInterval);
           window._notifInterval = setInterval(fetchNotifications, 120000);
+          setTimeout(loadSuggestions, 5000);
         }
       } catch (error) {
         errorEl.textContent = 'Connection error.';
