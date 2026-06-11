@@ -1766,14 +1766,19 @@
             ${_feedbackColHtml('completed', '✅ Completed', posts, 'feedback-col-done')}
           </div>`;
         } else {
-          list.innerHTML = posts.map(p => `
+          const statusLabel = { new: null, todo: ['📋 To-Do', '#f59e0b'], completed: ['✅ Done', '#10b981'] };
+          list.innerHTML = posts.map(p => {
+            const st = statusLabel[p.status || 'new'];
+            const badge = st ? `<span style="font-size:10px;font-weight:600;color:${st[1]};background:${st[1]}18;border:1px solid ${st[1]}44;padding:1px 7px;border-radius:10px;margin-left:8px">${st[0]}</span>` : '';
+            return `
             <div style="padding:14px 0;border-bottom:1px solid rgba(255,255,255,0.07)">
-              <div style="display:flex;justify-content:space-between;margin-bottom:5px">
-                <span style="font-weight:600;font-size:13px;color:#10b981">${escapeHtml(p.username || 'Guest')}</span>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+                <span style="display:flex;align-items:center"><span style="font-weight:600;font-size:13px;color:#10b981">${escapeHtml(p.username || 'Guest')}</span>${badge}</span>
                 <span style="font-size:11px;color:rgba(255,255,255,0.35)">${formatTime(p.created)}</span>
               </div>
               <div style="font-size:13px;line-height:1.6;color:rgba(255,255,255,0.85)">${escapeHtml(p.message)}</div>
-            </div>`).join('');
+            </div>`;
+          }).join('');
         }
       } catch (e) {
         list.innerHTML = '<div class="profile-empty">Could not load feedback</div>';
