@@ -232,7 +232,18 @@ def session_ok(user_id, token):
     if not user_id or not token:
         return False
     user = get_user_data(user_id)
-    return bool(user) and user.get('session_token') == token
+    if user and user.get('session_token') == token:
+        return True
+    # Token rotates at login; another gunicorn worker may hold a stale cached
+    # copy for up to the cache TTL. On mismatch, re-check against S3 directly.
+    try:
+        fresh = s3_storage.get_user(user_id)
+        if fresh:
+            _cache_user(user_id, fresh)
+            return fresh.get('session_token') == token
+    except Exception:
+        pass
+    return False
 
 
 def demand_key_ok(key):
