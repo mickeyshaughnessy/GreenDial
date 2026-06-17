@@ -12,8 +12,12 @@ from datetime import datetime
 import config
 import utils
 import s3_storage
-from prompts import doc, doc_v2, notifications, facilitator
+from prompts import doc_v2, notifications, facilitator, supervisor as supervisor_module
 from prompts import agents as agent_registry
+from prompts.agents import base as agent_base
+from prompts.shared.tools import TOOL_USE_INSTRUCTIONS
+from prompts.shared.profile import PROFILE_UPDATE_SYNTAX
+from prompts.shared import style as style_module
 import threading
 
 # In-memory TTL cache
@@ -506,19 +510,6 @@ HEALTH_TOOLS = [
     }
 ]
 
-TOOL_USE_INSTRUCTIONS = """
-## TOOL USE RULES
-You have real tools — use them, don't simulate them.
-
-- **read_profile** — call this FIRST when opening a conversation; don't ask for info already in the profile
-- **log_health_data** — call this immediately when the user reports a daily metric (sleep, weight, mood, exercise, etc.); don't wait to be asked
-- **update_profile** — call this to save stable health facts (conditions, goals, preferences)
-- **read_history** — call this before giving trend advice ("your sleep has been averaging 6.2h this week")
-- **call_specialist** — call this to get expert input from another domain agent
-- **queue_notification** — call this to set reminders the user asked for, or proactive check-ins you think would help
-
-Always confirm tool actions in your reply: "Logged: 7 hours sleep for tonight."
-"""
 
 
 def _is_numeric(s):
@@ -773,20 +764,12 @@ def _run_agent(agent_id, user_input, profile, recent_transcript):
         return None
     system_prompt = getattr(module, 'SYSTEM_PROMPT', None)
 
-    # Build a focused agent prompt
-    agent_prompt = f"""A user needs help with the following. Provide a focused, helpful expert response.
-
-USER PROFILE:
-{json.dumps(profile, indent=2) if profile else "{}"}
-
-RECENT CONVERSATION:
-{recent_transcript or "(start of conversation)"}
-
-USER MESSAGE:
-{user_input}
-
-Respond as the {getattr(module, 'AGENT_NAME', agent_id)}. Be kind, helpful, and truthful.
-Keep your response to 2-4 sentences. Emit **PROFILE_UPDATE** if the user shared relevant data."""
+    agent_prompt = (
+        f"Profile:\n{json.dumps(profile, indent=2) if profile else '{}'}\n\n"
+        f"Recent:\n{recent_transcript or '(start of conversation)'}\n\n"
+        f"User: {user_input}\n\n"
+        f"Respond in 2-4 sentences. Use **PROFILE_UPDATE** if the user shared health info."
+    )
 
     try:
         return utils.completion(
@@ -821,20 +804,12 @@ def _run_agent_onboarding(agent_id, user_input, profile, transcript, turn_number
     if not module:
         return None
 
-    template = getattr(module, 'ONBOARDING_PROMPT_TEMPLATE', None)
-    if not template:
-        return None
-
-    missing = agent_registry.get_missing_onboarding_fields(agent_id, profile)
-    missing_str = ', '.join(missing) if missing else 'none — profile is complete'
-
-    prompt = template.format(
-        profile_json=json.dumps(profile, indent=2) if profile else '{}',
-        missing_fields=missing_str,
-        transcript=transcript[-1000:] if transcript else '(first conversation)',
+    prompt = agent_base.build_onboarding_prompt(
+        module=module,
+        profile=profile,
+        transcript=transcript[-1000:] if transcript else '',
         turn_number=turn_number
     )
-
     system_prompt = getattr(module, 'SYSTEM_PROMPT', None)
     try:
         return utils.completion(
@@ -1034,27 +1009,6 @@ def handle_dismiss_notification(user_id, notification_id):
     return json.dumps({"success": True})
 
 
-def _detect_style(text):
-    """Return a style-mirroring instruction based on the user's message."""
-    words = text.split()
-    n = len(words)
-    text_lower = text.lower()
-    if n <= 4:
-        length_hint = "very short (1-4 words). Respond in 1-2 sentences max."
-    elif n <= 15:
-        length_hint = "brief (5-15 words). Respond in 2-3 sentences."
-    elif n <= 40:
-        length_hint = "moderate (15-40 words). Respond conversationally in 3-5 sentences."
-    else:
-        length_hint = "detailed (40+ words). You can be thorough."
-    casual = (
-        text == text_lower and n > 2
-        or any(w in {'hey', 'hi', 'yeah', 'yep', 'nope', 'nah', 'ok', 'okay',
-                     'lol', 'tbh', 'idk', 'omg', 'btw', 'gonna', 'wanna', 'kinda',
-                     'sorta', 'bc', 'cuz', 'tho'} for w in words)
-    )
-    tone = "casual and conversational" if casual else "neutral"
-    return f"The user's message is {length_hint} Tone is {tone}. Mirror their style closely."
 
 
 def _get_agent_transcript(user, agent_id):
@@ -1096,8 +1050,8 @@ def handle_agent_chat(agent_id, request):
     agent_intro = getattr(module, 'ONBOARDING_INTRO', '')
     agent_system = getattr(module, 'SYSTEM_PROMPT', '')
 
-    # Combine agent persona with tool use instructions
-    full_system = f"{agent_system}\n\n{TOOL_USE_INSTRUCTIONS}"
+    # Combine agent persona with shared profile syntax and tool rules
+    full_system = f"{agent_system}\n\n{PROFILE_UPDATE_SYNTAX}\n\n{TOOL_USE_INSTRUCTIONS}"
 
     # Build initial user message for the loop
     if is_init and followup_context:
@@ -1113,9 +1067,9 @@ def handle_agent_chat(agent_id, request):
             f"Then introduce yourself in 1 sentence and ask your most important opening question."
         )
     else:
-        style = _detect_style(user_input)
+        style_hint = style_module.build_style_instruction(user_input, transcript)
         recent_block = f"Recent conversation:\n{recent}\n\n" if recent else ""
-        init_user_msg = f"{recent_block}STYLE HINT: {style}\n\nUser says: {user_input}"
+        init_user_msg = f"{recent_block}STYLE: {style_hint}\n\nUser says: {user_input}"
 
     messages = [{"role": "user", "content": init_user_msg}]
 
@@ -1385,7 +1339,7 @@ def generate_notification(user_id):
             "read": False
         }
     else:
-        tip = random.choice(doc.HEALTH_TIPS)
+        tip = random.choice(doc_v2.HEALTH_TIPS)
         notification = {
             "id": str(uuid.uuid4()),
             "type": "tip",
@@ -1609,28 +1563,24 @@ def _get_summary(transcript, max_chars=2000):
     return f"[Earlier conversation covered various health topics]"
 
 
-def _build_prompt(user_id=None, session_id=None, user_input=""):
-    """Build Doc's prompt using Unprompted-style guided conversation"""
+def _build_prompt(user_id=None, session_id=None, user_input="", style_hint=None, focus=None):
+    """Build Doc's prompt with optional supervisor hints."""
     user = get_user_data(user_id) if user_id else {}
     session = _sessions.get(session_id, {})
-    
-    # Get transcript
+
     transcript = user.get('transcript', '') or session.get('transcript', '')
-    
-    # Split into recent
     recent_transcript = _get_recent_transcript(transcript, max_lines=10)
-    
-    # Get user info
     username = user.get('username', 'Guest')
     profile = user.get('profile', {})
-    
-    # Use the new Unprompted-style prompt builder
+
     return doc_v2.build_doc_prompt(
         user_input=user_input,
         profile=profile,
         recent_transcript=recent_transcript,
         username=username,
-        history_summary=utils.summarize_history(user)
+        history_summary=utils.summarize_history(user),
+        style_hint=style_hint,
+        focus=focus
     )
 
 
@@ -1685,13 +1635,23 @@ def handle_chat(request):
         # Check keyword matches — 2+ means Cross AI, 1 means specialist, 0 means Doc alone
         keyword_agents = agent_registry.agents_for_message(user_input)
 
-        # Stage 1: Doc generates initial response (may include **CALL_AGENT**)
+        # Stage 0: Supervisor analysis — style + focus hints
+        style_hint = style_module.build_style_instruction(user_input, recent_transcript)
+        sup_hints = supervisor_module.analyze(
+            user_input, profile, recent_transcript,
+            utils_module=utils, config_module=config
+        )
+        focus = sup_hints.get("focus") or None
+
+        # Stage 1: Doc generates initial response
         agent_context = None
         try:
             prompt = _build_prompt(
                 user_id=user_id,
                 session_id=session_id,
-                user_input=user_input
+                user_input=user_input,
+                style_hint=style_hint,
+                focus=focus
             )
             doc_response = utils.completion(
                 prompt=prompt,
@@ -1717,7 +1677,8 @@ def handle_chat(request):
                             user_input=user_input, profile=profile,
                             recent_transcript=recent_transcript, username=username,
                             agent_context=cross_context,
-                            history_summary=utils.summarize_history(user)
+                            history_summary=utils.summarize_history(user),
+                            style_hint=style_hint, focus=focus
                         )
                         doc_response = utils.completion(prompt=prompt_with_agent, temperature=0.7, max_tokens=config.LLM_MAX_TOKENS)
                     except Exception as e:
@@ -1733,7 +1694,8 @@ def handle_chat(request):
                                 user_input=user_input, profile=profile,
                                 recent_transcript=recent_transcript, username=username,
                                 agent_context=agent_context,
-                                history_summary=utils.summarize_history(user)
+                                history_summary=utils.summarize_history(user),
+                                style_hint=style_hint, focus=focus
                             )
                             doc_response = utils.completion(prompt=prompt_with_agent, temperature=0.7, max_tokens=config.LLM_MAX_TOKENS)
                         except Exception as e:

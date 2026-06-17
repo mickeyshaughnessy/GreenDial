@@ -6,12 +6,9 @@ AGENT_ID = "custom"
 AGENT_NAME = "Custom Agent"
 AGENT_EMOJI = "⚙️"
 
-CHAT_KEYWORDS = []  # Custom agent is invoked explicitly, not by keyword matching
+CHAT_KEYWORDS = []  # Invoked explicitly, not by keyword matching
 
-DEFAULT_SYSTEM_PROMPT = """You are a personalized health assistant for GreenDial.
-You have been configured by the user with specific instructions.
-Always be kind, helpful, and truthful.
-"""
+DEFAULT_SYSTEM_PROMPT = """You are a personalized health assistant for GreenDial, configured by the user with specific instructions. Follow those instructions precisely."""
 
 
 def get_system_prompt(user_settings: dict) -> str:
@@ -20,21 +17,14 @@ def get_system_prompt(user_settings: dict) -> str:
     return custom if custom else DEFAULT_SYSTEM_PROMPT
 
 
-SYSTEM_PROMPT = DEFAULT_SYSTEM_PROMPT  # used as fallback by agent runner
+SYSTEM_PROMPT = DEFAULT_SYSTEM_PROMPT  # fallback for agent runner
 
-CRON_PROMPT_TEMPLATE = """You are a personalized health assistant configured by the user.
+ONBOARDING_FIELDS = []
+ONBOARDING_INTRO = "I'm your custom assistant — configured exactly to your needs."
+ONBOARDING_FOCUS = "their specific needs as defined in the custom prompt"
+ONBOARDING_PRIORITY = None
 
-CUSTOM INSTRUCTIONS FROM USER:
-{custom_prompt}
+CRON_DESCRIPTION = "personalized check-in message"
+CRON_GUIDELINES = "- Follow the custom instructions from the user\n- Be specific to their profile"
 
-USER PROFILE:
-{profile_json}
-
-RECENT CONVERSATION:
-{transcript}
-
-Generate a short, helpful check-in message (max 20 words) tailored to the user's custom instructions and profile.
-
-Output JSON:
-{{"message": "...", "type": "custom_checkin"}}
-"""
+CRON_CADENCE_HOURS = 20

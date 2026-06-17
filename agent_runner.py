@@ -26,6 +26,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import s3_storage
 import utils
 from prompts.agents import REGISTRY, ALL_AGENT_IDS
+from prompts.agents import base as agent_base
 
 
 def _now_iso():
@@ -90,24 +91,13 @@ def run_agent_for_user(user_id, user, agent_id, dry_run=False):
     transcript = user.get("transcript", "")
     settings = user.get("settings", {})
 
-    # Build the cron prompt
-    template = getattr(module, "CRON_PROMPT_TEMPLATE", None)
-    if not template:
-        print(f"[Runner] Agent {agent_id} has no CRON_PROMPT_TEMPLATE — skipping")
-        return
-
-    if agent_id == "custom":
-        custom_prompt = settings.get("custom_agent_prompt", "")
-        prompt = template.format(
-            custom_prompt=custom_prompt,
-            profile_json=json.dumps(profile, indent=2),
-            transcript=transcript[-1500:] if transcript else ""
-        )
-    else:
-        prompt = template.format(
-            profile_json=json.dumps(profile, indent=2),
-            transcript=transcript[-1500:] if transcript else ""
-        )
+    # Build the cron prompt via shared builder
+    prompt = agent_base.build_cron_prompt(
+        module=module,
+        profile=profile,
+        transcript=transcript[-1500:] if transcript else "",
+        settings=settings
+    )
 
     # Ground the check-in in tracked data so agents can reference real trends
     # ("your sleep has averaged 6.4h this week") instead of generic tips
