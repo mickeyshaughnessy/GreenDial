@@ -1343,13 +1343,14 @@
     }
 
     async function setChatOnlyMode(enabled) {
-      userSettings.chat_only_mode = enabled;
-      applyChatOnlyMode(enabled);
+      const val = !!enabled;
+      userSettings.chat_only_mode = val;
+      applyChatOnlyMode(val);
       if (currentUser) {
         try {
           await fetch(`${API}/settings/${currentUser.user_id}`, {
             method: 'PUT', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ chat_only_mode: enabled })
+            body: JSON.stringify({ chat_only_mode: val })
           });
         } catch (e) {}
       }
@@ -1403,7 +1404,7 @@
           if (window._notifInterval) clearInterval(window._notifInterval);
           window._notifInterval = setInterval(fetchNotifications, 120000);
           setTimeout(loadSuggestions, 5000);
-          applyChatOnlyMode(userSettings.chat_only_mode !== false);
+          applyChatOnlyMode(!!userSettings.chat_only_mode);
         }
       } catch (e) {
         errorEl.textContent = 'Connection error.';
@@ -1504,7 +1505,7 @@
         window._notifInterval = setInterval(fetchNotifications, 120000);
         // Daily suggestion check (server debounces to once per 24h)
         generateSuggestions(false);
-        applyChatOnlyMode(userSettings.chat_only_mode !== false);
+        applyChatOnlyMode(!!userSettings.chat_only_mode);
         return true;
       } catch (e) {
         clearSession();
@@ -1982,7 +1983,7 @@
           <div class="settings-group-title">Interface</div>
           <div class="settings-item">
             <div><div class="settings-label">Chat-only mode</div><div class="settings-desc">Use only the chat interface — hides other panels</div></div>
-            <div class="settings-toggle ${userSettings.chat_only_mode !== false ? 'on' : ''}" onclick="setChatOnlyMode(${userSettings.chat_only_mode === false ? 1 : 0})"></div>
+            <div class="settings-toggle ${userSettings.chat_only_mode ? 'on' : ''}" onclick="setChatOnlyMode(${userSettings.chat_only_mode ? 0 : 1})"></div>
           </div>
         </div>
         <div class="settings-group">
@@ -2668,7 +2669,7 @@
           window._notifInterval = setInterval(fetchNotifications, 120000);
           // Daily suggestions generate server-side ~2s after login; fetch shortly after
           setTimeout(loadSuggestions, 5000);
-          applyChatOnlyMode(userSettings.chat_only_mode !== false);
+          applyChatOnlyMode(!!userSettings.chat_only_mode);
         }
       } catch (error) {
         errorEl.textContent = 'Connection error.';
@@ -2719,7 +2720,7 @@
           if (window._notifInterval) clearInterval(window._notifInterval);
           window._notifInterval = setInterval(fetchNotifications, 120000);
           setTimeout(loadSuggestions, 5000);
-          applyChatOnlyMode(userSettings.chat_only_mode !== false);
+          applyChatOnlyMode(!!userSettings.chat_only_mode);
         }
       } catch (error) {
         errorEl.textContent = 'Connection error.';
