@@ -121,8 +121,11 @@ A HIPAA-waived personal health assistant with AI chat interface, user profile ma
   ],
   "transcript": "User: Hi...\nDoc: Hello...",
   "settings": {
-    "doc_style": "default",
-    "theme": "green"
+    "doc_style": "questioning",
+    "theme": "dark",
+    "notifications_enabled": true,
+    "chat_only_mode": true,
+    "agent_subscriptions": []
   }
 }
 ```

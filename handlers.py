@@ -18,6 +18,7 @@ from prompts.agents import base as agent_base
 from prompts.shared.tools import TOOL_USE_INSTRUCTIONS
 from prompts.shared.profile import PROFILE_UPDATE_SYNTAX
 from prompts.shared import style as style_module
+from prompts.shared import chat_only as chat_only_module
 import threading
 
 # In-memory TTL cache
@@ -340,7 +341,8 @@ def handle_get_settings(user_id):
     default_settings = {
         "doc_style": "questioning",
         "theme": "dark",
-        "notifications_enabled": True
+        "notifications_enabled": True,
+        "chat_only_mode": True
     }
     
     settings = {**default_settings, **user.get('settings', {})}
@@ -755,6 +757,111 @@ def _clean_agent_directive(response):
     cleaned = re.sub(r'\*\*CALL_AGENT\*\*\s*\{[^{}]*\}', '', response, flags=re.IGNORECASE)
     cleaned = re.sub(r'\*\*REDIRECT_TO\*\*\s*\{[^{}]*\}', '', cleaned, flags=re.IGNORECASE)
     return cleaned.strip()
+
+
+def _parse_action_markers(response):
+    """Extract **ACTION** directives from Doc's response."""
+    actions = []
+    for match in re.finditer(r'\*\*ACTION\*\*\s*(\{[^{}]*\})', response, re.IGNORECASE):
+        try:
+            actions.append(json.loads(match.group(1)))
+        except json.JSONDecodeError:
+            pass
+    return actions
+
+
+def _clean_action_markers(response):
+    """Remove **ACTION** markers from response text."""
+    cleaned = re.sub(r'\*\*ACTION\*\*\s*\{[^{}]*\}', '', response, flags=re.IGNORECASE)
+    return cleaned.strip()
+
+
+def _execute_chat_actions(user_id, actions):
+    """Execute a list of ACTION dicts from Doc; return list of result strings."""
+    results = []
+    for action in actions:
+        action_type = action.get('type')
+        try:
+            if action_type == 'accept_suggestion':
+                handle_accept_suggestion(user_id, action.get('id', ''))
+                results.append('suggestion_accepted')
+            elif action_type == 'dismiss_suggestion':
+                handle_dismiss_suggestion(user_id, action.get('id', ''))
+                results.append('suggestion_dismissed')
+            elif action_type == 'complete_activity':
+                handle_update_activity(user_id, action.get('id', ''), {'status': 'completed'})
+                results.append('activity_completed')
+            elif action_type == 'abandon_activity':
+                handle_update_activity(user_id, action.get('id', ''), {'status': 'abandoned'})
+                results.append('activity_abandoned')
+            elif action_type == 'dismiss_notification':
+                handle_dismiss_notification(user_id, action.get('id', ''))
+                results.append('notification_dismissed')
+            elif action_type == 'update_settings':
+                key = action.get('key', '')
+                value = action.get('value')
+                if key and value is not None:
+                    handle_update_settings(user_id, {key: value})
+                    results.append(f'settings_updated:{key}:{json.dumps(value)}')
+            elif action_type == 'clear_history':
+                handle_clear_transcript(user_id)
+                results.append('history_cleared')
+        except Exception as e:
+            print(f"[Chat] Action failed: {action_type} — {e}")
+    return results
+
+
+def _build_injected_context(user, user_input_lower):
+    """Inject live data into Doc's prompt based on message keywords."""
+    parts = []
+
+    if any(kw in user_input_lower for kw in ('suggest', 'idea', 'recommend', 'tip', 'show')):
+        suggestions = [s for s in user.get('suggestions', []) if s.get('status') == 'pending']
+        if suggestions:
+            lines = ['## SUGGESTIONS (pending)']
+            for i, s in enumerate(suggestions[:5], 1):
+                agent = s.get('agent_id', '')
+                text = s.get('text', '')
+                sid = s.get('id', '')
+                price = f" 💰{s['price']} {s.get('currency','ETH')}" if s.get('price') else ''
+                lines.append(f"{i}. [{agent}]{price} {text} (id: {sid})")
+            parts.append('\n'.join(lines))
+
+    if any(kw in user_input_lower for kw in ('activit', 'task', 'todo', 'to-do', 'done', 'finish', 'complet', 'abandon', 'log')):
+        activities = [a for a in user.get('activities', []) if a.get('status') == 'active']
+        if activities:
+            lines = ['## ACTIVITIES (active)']
+            for i, a in enumerate(activities[:5], 1):
+                agent = a.get('agent_id', '')
+                text = a.get('text', '')
+                aid = a.get('id', '')
+                lines.append(f"{i}. [{agent}] {text} (id: {aid})")
+            parts.append('\n'.join(lines))
+
+    if any(kw in user_input_lower for kw in ('notif', 'reminder', 'alert', 'message', 'dismiss', 'unread')):
+        notifs = [n for n in user.get('notifications', []) if not n.get('read')]
+        if notifs:
+            lines = ['## NOTIFICATIONS (unread)']
+            for i, n in enumerate(notifs[:5], 1):
+                agent = n.get('agent', '')
+                msg = n.get('message', '')
+                nid = n.get('id', '')
+                lines.append(f"{i}. [{agent}] {msg} (id: {nid})")
+            parts.append('\n'.join(lines))
+
+    if any(kw in user_input_lower for kw in ('setting', 'preference', 'notification', 'style', 'tone', 'mode')):
+        settings = user.get('settings', {})
+        s_parts = [
+            f"notifications: {'on' if settings.get('notifications_enabled', True) else 'off'}",
+            f"doc_style: {settings.get('doc_style', 'questioning')}",
+            f"chat_only_mode: {settings.get('chat_only_mode', True)}",
+        ]
+        parts.append('## SETTINGS\n' + ', '.join(s_parts))
+
+    if any(kw in user_input_lower for kw in ('help', 'what can you', 'how do i', 'what can i', 'how does', 'what is chat')):
+        parts.append(f"## CHAT-ONLY HELP\n{chat_only_module.HELP_TEXT}")
+
+    return '\n\n'.join(parts) if parts else None
 
 
 def _run_agent(agent_id, user_input, profile, recent_transcript):
@@ -1572,6 +1679,11 @@ def _build_prompt(user_id=None, session_id=None, user_input="", style_hint=None,
     recent_transcript = _get_recent_transcript(transcript, max_lines=10)
     username = user.get('username', 'Guest')
     profile = user.get('profile', {})
+    settings = user.get('settings', {})
+    chat_only = settings.get('chat_only_mode', True)
+
+    chat_only_instructions = chat_only_module.CHAT_ONLY_INSTRUCTIONS if chat_only else None
+    injected_context = _build_injected_context(user, user_input.lower()) if (user_id and chat_only) else None
 
     return doc_v2.build_doc_prompt(
         user_input=user_input,
@@ -1580,7 +1692,9 @@ def _build_prompt(user_id=None, session_id=None, user_input="", style_hint=None,
         username=username,
         history_summary=utils.summarize_history(user),
         style_hint=style_hint,
-        focus=focus
+        focus=focus,
+        chat_only_instructions=chat_only_instructions,
+        injected_context=injected_context
     )
 
 
@@ -1704,6 +1818,15 @@ def handle_chat(request):
     # Remove any residual markers from the response
     doc_response = _clean_agent_directive(doc_response)
 
+    # Execute and strip ACTION markers (chat-only mode)
+    action_results = []
+    if user_id:
+        actions = _parse_action_markers(doc_response)
+        if actions:
+            action_results = _execute_chat_actions(user_id, actions)
+            doc_response = _clean_action_markers(doc_response)
+            print(f"[Chat] Action results: {action_results}")
+
     # Extract and apply profile updates (with history tracking)
     profile_updates = _parse_profile_updates(doc_response)
     updated_profile = None
@@ -1739,6 +1862,8 @@ def handle_chat(request):
         response_data["profile"] = updated_profile
     if redirect_agent:
         response_data["redirect_to_agent"] = redirect_agent
+    if action_results:
+        response_data["action_results"] = action_results
 
     return json.dumps(response_data)
 

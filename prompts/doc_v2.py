@@ -101,13 +101,16 @@ STAGE_INSTRUCTIONS = {
 
 def build_doc_prompt(user_input, profile, recent_transcript="", username="Guest",
                      agent_context=None, history_summary=None,
-                     style_hint=None, focus=None):
+                     style_hint=None, focus=None,
+                     chat_only_instructions=None, injected_context=None):
     """Build the complete prompt for Doc.
 
-    style_hint: optional string from prompts.shared.style (cross-conversation style)
-    focus:      optional string from supervisor analysis (what to address)
-    agent_context: optional specialist response to weave in
-    history_summary: optional compact summary of tracked health history (14 days)
+    style_hint:             optional string from prompts.shared.style
+    focus:                  optional string from supervisor analysis
+    agent_context:          optional specialist response to weave in
+    history_summary:        optional compact summary of tracked health history
+    chat_only_instructions: optional CHAT_ONLY_INSTRUCTIONS block when mode is active
+    injected_context:       optional live data (suggestions, activities, notifications)
     """
     stage = get_conversation_stage(profile)
     stage_instruction = STAGE_INSTRUCTIONS.get(stage, STAGE_INSTRUCTIONS["introduction"])
@@ -123,6 +126,7 @@ def build_doc_prompt(user_input, profile, recent_transcript="", username="Guest"
     # Optional sections
     style_section = f"\n## STYLE\n{style_hint}" if style_hint else ""
     focus_section = f"\n## FOCUS\n{focus}" if focus else ""
+    chat_only_section = f"\n{chat_only_instructions}" if chat_only_instructions else ""
 
     agent_section = ""
     if agent_context:
@@ -142,15 +146,19 @@ def build_doc_prompt(user_input, profile, recent_transcript="", username="Guest"
             "Mention a clear trend proactively when relevant."
         )
 
+    context_section = f"\n{injected_context}" if injected_context else ""
+
     return (
         f"{CORE_IDENTITY}\n\n"
-        f"{AGENT_DISPATCH_INSTRUCTIONS}\n\n"
+        f"{AGENT_DISPATCH_INSTRUCTIONS}"
+        f"{chat_only_section}\n\n"
         f"## STAGE: {stage_instruction}\n\n"
         f"## CURRENT PROFILE\n{profile_summary}\n\n"
         f"## STATUS\n{missing_text}\n\n"
         f"## RECENT CONVERSATION\n{recent_text}"
         f"{agent_section}"
         f"{history_section}"
+        f"{context_section}"
         f"{style_section}"
         f"{focus_section}\n\n"
         f"## INSTRUCTIONS\n"
