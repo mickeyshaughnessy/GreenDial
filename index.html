@@ -148,9 +148,6 @@
       transition: background 0.15s;
     }
     .ci-opt:hover { background: rgba(88,166,255,0.2); border-color: rgba(88,166,255,0.4); }
-    .ci-custom { display: flex; gap: 4px; margin-top: 5px; }
-    .ci-custom input { flex:1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius:5px; padding: 3px 7px; color:#e6edf3; font-size:12px; }
-    .ci-custom button { background: rgba(88,166,255,0.2); border: 1px solid rgba(88,166,255,0.3); border-radius:5px; padding:3px 9px; color:#58a6ff; cursor:pointer; font-size:12px; }
     .ci-answered {
       padding: 6px 16px;
       display: flex; align-items: center; gap: 8px;
@@ -2219,38 +2216,28 @@
         const msg = escapeHtml(ci.message || '');
         const safemsg = msg.replace(/'/g, "\\'");
         const opts = (ci.emoji_options || []).map(o =>
-          `<button class="ci-opt" onclick="answerCheckin('${ci.area}','${o.emoji}','${escapeHtml(o.label||'').replace(/'/g,"\\'")}','${safemsg}')">${o.emoji}</button>`
+          `<button class="ci-opt" onclick="event.stopPropagation(); answerCheckin('${ci.area}','${o.emoji}','${escapeHtml(o.label||'').replace(/'/g,"\\'")}','${safemsg}')">${o.emoji}</button>`
         ).join('');
         return `<div class="ci-card" id="ci-card-${ci.area}">
           <div class="ci-question"><span class="ci-icon">${icon}</span>${msg}</div>
           <div class="ci-opts">${opts}</div>
-          <div class="ci-custom">
-            <input type="text" id="ci-inp-${ci.area}" placeholder="other emoji…" maxlength="10">
-            <button onclick="answerCheckinCustom('${ci.area}','${safemsg}')">✓</button>
-          </div>
         </div>`;
       }).join('');
     }
 
     async function answerCheckin(area, emoji, label, question) {
       if (!currentUser) return;
-      // Optimistic update
-      if (_todayData) {
-        const ci = (_todayData.check_ins || []).find(c => c.area === area);
-        if (ci) { ci.answered = true; ci.emoji = emoji; }
-        _todayData.badge_count = Math.max(0, (_todayData.badge_count || 1) - 1);
-        renderToday(_todayData);
-      }
+      // Defer DOM update so the click event finishes propagating before innerHTML changes
+      setTimeout(() => {
+        if (_todayData) {
+          const ci = (_todayData.check_ins || []).find(c => c.area === area);
+          if (ci) { ci.answered = true; ci.emoji = emoji; }
+          _todayData.badge_count = Math.max(0, (_todayData.badge_count || 1) - 1);
+          renderToday(_todayData);
+        }
+      }, 0);
       await _submitSticker(area, emoji, question, label);
       if (currentView === 'stickers') setTimeout(loadStickerBoard, 600);
-    }
-
-    async function answerCheckinCustom(area, question) {
-      const input = document.getElementById(`ci-inp-${area}`);
-      const val = (input?.value || '').trim();
-      if (!val) return;
-      const emoji = val.match(/\p{Emoji}/u)?.[0] || val[0] || '✏️';
-      await answerCheckin(area, emoji, val, question);
     }
 
     function renderDropdownSuggestions(suggestions) {

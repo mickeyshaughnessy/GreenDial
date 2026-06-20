@@ -2968,6 +2968,8 @@ _SUGGESTION_AREAS = [
 ]
 
 
+_ERROR_PHRASES = ("having trouble", "please try again", "i'm sorry", "i cannot", "error")
+
 def _generate_suggestion_text(area_label, agent_name, profile):
     """Call LLM to produce one specific, actionable suggestion for the given health area."""
     prompt = (
@@ -2978,7 +2980,11 @@ def _generate_suggestion_text(area_label, agent_name, profile):
         "No preamble, no explanation."
     )
     try:
-        return utils.completion(prompt=prompt, temperature=0.8, max_tokens=100).strip()
+        result = utils.completion(prompt=prompt, temperature=0.8, max_tokens=100).strip()
+        if not result or len(result) < 15 or any(p in result.lower() for p in _ERROR_PHRASES):
+            print(f"[Suggestions] LLM returned error/empty for {area_label}: {result[:60]!r}")
+            return None
+        return result
     except Exception as e:
         print(f"[Suggestions] LLM failed for {area_label}: {e}")
         return None
@@ -3096,7 +3102,11 @@ def generate_login_suggestions(user_id):
         try:
             last_dt = datetime.fromisoformat(last_gen.replace('Z', '+00:00'))
             if (datetime.utcnow() - last_dt.replace(tzinfo=None)).total_seconds() < 86400:
-                return
+                # Still regenerate if stored suggestions look like error messages
+                pending = [s for s in user.get('suggestions', []) if s.get('status') == 'pending']
+                has_bad = any(any(p in s.get('text', '').lower() for p in _ERROR_PHRASES) for s in pending)
+                if not has_bad:
+                    return
         except Exception:
             pass
     generate_suggestions(user_id)
