@@ -45,97 +45,83 @@ def get_last_model_used():
     return _last_used_model
 
 
-def completion(prompt, model=None, temperature=None, max_tokens=None, system_prompt=None, use_fallback=False):
-    """
-    Call OpenRouter API for LLM completion with fallback support.
-    
-    Args:
-        prompt: User message content
-        model: Model to use (default from config)
-        temperature: Sampling temperature
-        max_tokens: Max response tokens
-        system_prompt: Optional system message (for two-stage calls)
-        use_fallback: If True, use paid fallback model
-    """
-    # Use fallback model if requested, otherwise use primary free model
-    if model is None:
-        model = config.OPENROUTER_FALLBACK_MODEL if use_fallback else config.OPENROUTER_MODEL
-    
-    temperature = temperature if temperature is not None else config.LLM_TEMPERATURE
-    max_tokens = max_tokens or config.LLM_MAX_TOKENS
-    
-    # Build messages array
-    messages = []
-    if system_prompt:
-        messages.append({"role": "system", "content": system_prompt})
-    messages.append({"role": "user", "content": prompt})
-    
+def _completion_once(model, messages, temperature, max_tokens):
+    """Single attempt against one model. Returns (text, error_str)."""
+    global _last_used_model
     if not config.OPENROUTER_API_KEY:
-        print("[LLM] No API key configured")
-        return "I'm having trouble connecting. Please configure an API key."
-    
+        return None, "no_api_key"
+
     headers = {
         'Authorization': f"Bearer {config.OPENROUTER_API_KEY}",
         'Content-Type': 'application/json',
         'HTTP-Referer': 'https://greendial.org',
-        'X-Title': 'GreenDial'
+        'X-Title': 'GreenDial',
     }
-    
-    payload = {
-        'model': model,
-        'messages': messages,
-        'temperature': temperature,
-        'max_tokens': max_tokens
-    }
-    
+    payload = {'model': model, 'messages': messages, 'temperature': temperature, 'max_tokens': max_tokens}
+
     try:
-        global _last_used_model
         print(f"[LLM] Calling {model}...")
-        response = requests.post(
-            config.OPENROUTER_API_URL,
-            headers=headers,
-            json=payload,
-            timeout=15
-        )
-        
-        # Handle rate limiting - fallback to paid model
-        if response.status_code == 429 and not use_fallback:
-            print(f"[LLM] Rate limited on {model}, falling back to {config.OPENROUTER_FALLBACK_MODEL}")
-            return completion(prompt, model=None, temperature=temperature, max_tokens=max_tokens, 
-                            system_prompt=system_prompt, use_fallback=True)
-        
-        if response.status_code >= 400:
-            err_msg = f"[LLM] Error: {response.status_code} - {response.text[:200]}"
-            print(err_msg)
+        resp = requests.post(config.OPENROUTER_API_URL, headers=headers, json=payload, timeout=20)
+
+        if resp.status_code == 429:
+            print(f"[LLM] Rate limited on {model}")
+            return None, "rate_limited"
+
+        if resp.status_code >= 400:
+            snippet = resp.text[:200]
+            print(f"[LLM] Error {resp.status_code} from {model}: {snippet}")
             with open("/tmp/llm_debug.log", "a") as f:
-                f.write(err_msg + "\n")
-            # Try fallback if not already using it
-            if not use_fallback:
-                print(f"[LLM] Retrying with fallback model {config.OPENROUTER_FALLBACK_MODEL}...")
-                return completion(prompt, model=None, temperature=temperature, max_tokens=max_tokens,
-                                system_prompt=system_prompt, use_fallback=True)
-            return "I'm having trouble responding right now. Please try again."
-        
-        result = response.json()
-        
-        if 'choices' in result and len(result['choices']) > 0:
+                f.write(f"{datetime.utcnow().isoformat()} {model} {resp.status_code}: {snippet}\n")
+            return None, f"http_{resp.status_code}"
+
+        result = resp.json()
+        choices = result.get('choices') or []
+        if choices:
             _last_used_model = model
-            return result['choices'][0]['message']['content']
-        
-        print(f"[LLM] Unexpected response: {result}")
-        return "I'm having trouble responding right now."
-        
+            return choices[0]['message']['content'], None
+
+        print(f"[LLM] No choices in response from {model}: {result}")
+        return None, "no_choices"
+
     except requests.exceptions.Timeout:
-        print("[LLM] Timeout")
-        return "The request timed out. Please try again."
-        
+        print(f"[LLM] Timeout on {model}")
+        return None, "timeout"
     except requests.exceptions.RequestException as e:
-        print(f"[LLM] Connection error: {e}")
-        return "I'm having trouble connecting right now. Please try again."
-        
+        print(f"[LLM] Connection error on {model}: {e}")
+        return None, "connection_error"
     except Exception as e:
-        print(f"[LLM] Unexpected error: {e}")
-        return "Something went wrong. Please try again."
+        print(f"[LLM] Unexpected error on {model}: {e}")
+        return None, str(e)
+
+
+def completion(prompt, model=None, temperature=None, max_tokens=None, system_prompt=None, use_fallback=False):
+    """Call OpenRouter with automatic fallback through OPENROUTER_FALLBACK_MODELS."""
+    temperature = temperature if temperature is not None else config.LLM_TEMPERATURE
+    max_tokens = max_tokens or config.LLM_MAX_TOKENS
+
+    messages = []
+    if system_prompt:
+        messages.append({"role": "system", "content": system_prompt})
+    messages.append({"role": "user", "content": prompt})
+
+    if not config.OPENROUTER_API_KEY:
+        print("[LLM] No API key configured")
+        return "I'm having trouble connecting. Please configure an API key."
+
+    # Build the model sequence to try
+    primary = model or (config.OPENROUTER_FALLBACK_MODEL if use_fallback else config.OPENROUTER_MODEL)
+    fallbacks = getattr(config, 'OPENROUTER_FALLBACK_MODELS', [config.OPENROUTER_FALLBACK_MODEL])
+    sequence = [primary] + [m for m in fallbacks if m != primary]
+
+    for attempt, m in enumerate(sequence):
+        text, err = _completion_once(m, messages, temperature, max_tokens)
+        if text is not None:
+            if attempt > 0:
+                print(f"[LLM] Succeeded on fallback model {m} (attempt {attempt+1})")
+            return text
+        print(f"[LLM] Model {m} failed ({err}), {'trying next' if attempt + 1 < len(sequence) else 'no more fallbacks'}")
+
+    return "I'm having trouble responding right now. Please try again."
 
 
 def completion_with_tools(messages, tools=None, system_prompt=None, model=None,
@@ -192,22 +178,23 @@ def completion_with_tools(messages, tools=None, system_prompt=None, model=None,
         resp = requests.post(config.OPENROUTER_API_URL, headers=headers, json=payload, timeout=30)
 
         if resp.status_code == 429:
-            # Rate-limited on tools model → retry with fallback (also supports tools)
-            if model != config.OPENROUTER_FALLBACK_MODEL:
-                print(f"[LLM Tools] Rate limited, retrying with {config.OPENROUTER_FALLBACK_MODEL}")
+            print(f"[LLM Tools] Rate limited on {model}")
+            fallbacks = getattr(config, 'OPENROUTER_FALLBACK_MODELS', [config.OPENROUTER_FALLBACK_MODEL])
+            next_models = [m for m in fallbacks if m != model]
+            if next_models:
+                print(f"[LLM Tools] Retrying with {next_models[0]}")
                 return completion_with_tools(messages, tools=tools, system_prompt=system_prompt,
-                                             model=config.OPENROUTER_FALLBACK_MODEL,
-                                             temperature=temperature, max_tokens=max_tokens)
+                                             model=next_models[0], temperature=temperature, max_tokens=max_tokens)
             return _err("rate_limited")
 
         if resp.status_code >= 400:
-            print(f"[LLM Tools] Error {resp.status_code}: {resp.text[:300]}")
-            # Hard errors: try fallback once
-            if model != config.OPENROUTER_FALLBACK_MODEL:
-                print(f"[LLM Tools] Falling back to {config.OPENROUTER_FALLBACK_MODEL}")
+            print(f"[LLM Tools] Error {resp.status_code} on {model}: {resp.text[:200]}")
+            fallbacks = getattr(config, 'OPENROUTER_FALLBACK_MODELS', [config.OPENROUTER_FALLBACK_MODEL])
+            next_models = [m for m in fallbacks if m != model]
+            if next_models:
+                print(f"[LLM Tools] Falling back to {next_models[0]}")
                 return completion_with_tools(messages, tools=tools, system_prompt=system_prompt,
-                                             model=config.OPENROUTER_FALLBACK_MODEL,
-                                             temperature=temperature, max_tokens=max_tokens)
+                                             model=next_models[0], temperature=temperature, max_tokens=max_tokens)
             return _err(f"http_{resp.status_code}")
 
         data = resp.json()
