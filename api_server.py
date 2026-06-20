@@ -59,6 +59,11 @@ def arazzo():
     return send_from_directory('.', 'arazzo.html')
 
 
+@app.route("/stickers/<token>", methods=['GET'])
+def sticker_board_public(token):
+    return send_from_directory('.', 'stickers.html')
+
+
 @app.route("/ping", methods=['GET'])
 def ping():
     return Response(json.dumps({"status": "ok", "service": "greendial"}), mimetype='application/json')
@@ -596,6 +601,53 @@ def get_bounty(bounty_id):
         result = handlers.handle_delete_bounty(bounty_id, api_key=_api_key())
     else:
         result = handlers.handle_get_bounty(bounty_id)
+    if isinstance(result, tuple):
+        return Response(result[0], status=result[1], mimetype='application/json')
+    return Response(result, mimetype='application/json')
+
+
+# ============ STICKER BOARD ============
+
+@app.route("/sticker-board/<user_id>", methods=['GET', 'OPTIONS'])
+def get_sticker_board(user_id):
+    if request.method == 'OPTIONS':
+        return Response('', status=200)
+    denied = _require_session(user_id)
+    if denied: return denied
+    result = handlers.handle_get_sticker_board(user_id)
+    if isinstance(result, tuple):
+        return Response(result[0], status=result[1], mimetype='application/json')
+    return Response(result, mimetype='application/json')
+
+
+@app.route("/sticker-board/<user_id>", methods=['POST', 'OPTIONS'])
+def write_sticker(user_id):
+    if request.method == 'OPTIONS':
+        return Response('', status=200)
+    denied = _require_session(user_id)
+    if denied: return denied
+    req = request.get_json() or {}
+    result = handlers.handle_write_sticker(user_id, req)
+    if isinstance(result, tuple):
+        return Response(result[0], status=result[1], mimetype='application/json')
+    return Response(result, mimetype='application/json')
+
+
+@app.route("/sticker-board/<user_id>/token", methods=['POST', 'OPTIONS'])
+def get_share_token(user_id):
+    if request.method == 'OPTIONS':
+        return Response('', status=200)
+    denied = _require_session(user_id)
+    if denied: return denied
+    result = handlers.handle_get_share_token(user_id)
+    return Response(result, mimetype='application/json')
+
+
+@app.route("/sticker-board/public/<token>", methods=['GET', 'OPTIONS'])
+def public_sticker_board(token):
+    if request.method == 'OPTIONS':
+        return Response('', status=200)
+    result = handlers.handle_public_sticker_board(token)
     if isinstance(result, tuple):
         return Response(result[0], status=result[1], mimetype='application/json')
     return Response(result, mimetype='application/json')

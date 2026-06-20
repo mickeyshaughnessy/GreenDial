@@ -5,6 +5,7 @@ Builds the context-aware prompt for Doc, GreenDial's primary health coordinator.
 
 import json
 from prompts.shared.profile import PROFILE_UPDATE_SYNTAX
+from prompts.shared.stickers import STICKER_UPDATE_SYNTAX
 
 # ============ CORE IDENTITY ============
 
@@ -54,8 +55,8 @@ PROFILE_FIELDS = {
     "goals":              {"priority": 2, "category": "Objectives"},
     "exercise_frequency": {"priority": 3, "category": "Lifestyle"},
     "diet_type":          {"priority": 3, "category": "Lifestyle"},
-    "sleep_hours":        {"priority": 3, "category": "Lifestyle"},
-    "stress_level":       {"priority": 3, "category": "Mental"},
+    "sleep_issues":       {"priority": 3, "category": "Lifestyle"},
+    "mental_health_concerns": {"priority": 3, "category": "Mental"},
     "previous_treatments":{"priority": 3, "category": "History"},
     "age":                {"priority": 4, "category": "Demographics"},
     "family_history":     {"priority": 4, "category": "Background"},
@@ -102,7 +103,8 @@ STAGE_INSTRUCTIONS = {
 def build_doc_prompt(user_input, profile, recent_transcript="", username="Guest",
                      agent_context=None, history_summary=None,
                      style_hint=None, focus=None,
-                     chat_only_instructions=None, injected_context=None):
+                     chat_only_instructions=None, injected_context=None,
+                     sticker_context=None):
     """Build the complete prompt for Doc.
 
     style_hint:             optional string from prompts.shared.style
@@ -111,6 +113,7 @@ def build_doc_prompt(user_input, profile, recent_transcript="", username="Guest"
     history_summary:        optional compact summary of tracked health history
     chat_only_instructions: optional CHAT_ONLY_INSTRUCTIONS block when mode is active
     injected_context:       optional live data (suggestions, activities, notifications)
+    sticker_context:        optional sticker board summary for today
     """
     stage = get_conversation_stage(profile)
     stage_instruction = STAGE_INSTRUCTIONS.get(stage, STAGE_INSTRUCTIONS["introduction"])
@@ -148,6 +151,10 @@ def build_doc_prompt(user_input, profile, recent_transcript="", username="Guest"
 
     context_section = f"\n{injected_context}" if injected_context else ""
 
+    sticker_section = ""
+    if sticker_context:
+        sticker_section = f"\n## TODAY'S STICKER BOARD\n{sticker_context}\nAsk about unfilled areas when relevant. Use **STICKER_UPDATE** to record how things went."
+
     return (
         f"{CORE_IDENTITY}\n\n"
         f"{AGENT_DISPATCH_INSTRUCTIONS}"
@@ -158,14 +165,17 @@ def build_doc_prompt(user_input, profile, recent_transcript="", username="Guest"
         f"## RECENT CONVERSATION\n{recent_text}"
         f"{agent_section}"
         f"{history_section}"
+        f"{sticker_section}"
         f"{context_section}"
         f"{style_section}"
         f"{focus_section}\n\n"
         f"## INSTRUCTIONS\n"
         f"- End with one short question.\n"
-        f"- Use the profile update syntax below when the user shares health info.\n"
+        f"- Use the profile update syntax below when the user shares stable health info.\n"
+        f"- Use the sticker update syntax below when the user shares how they're doing today.\n"
         f"- Redirect to a specialist when the question is clearly one domain's territory.\n\n"
         f"{PROFILE_UPDATE_SYNTAX}\n\n"
+        f"{STICKER_UPDATE_SYNTAX}\n\n"
         f"---\n"
         f"User ({username}): {user_input}\n\n"
         f"Doc:"

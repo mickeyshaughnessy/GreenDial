@@ -11,27 +11,27 @@ SERVICE_NAME="greendial.service"
 
 echo "Deploying GreenDial to $SERVER..."
 
-# 1. Sync config
-if [ -f "config.py" ]; then
-    echo "Syncing config.py..."
-    scp -i "$SSH_KEY" config.py "$SERVER:$DEPLOY_PATH/config.py"
-fi
-
-# 2. Push local commits then pull on server
+# 1. Pull latest code on server (config.py is untracked there, so git won't touch it)
 echo "Pulling latest code..."
 ssh -i "$SSH_KEY" "$SERVER" << 'ENDSSH'
 set -e
 cd /root/GreenDial
-git stash 2>/dev/null || true
-git pull origin main
-git stash pop 2>/dev/null || true
+git fetch origin main
+git reset --hard origin/main
 echo "Code updated: $(git rev-parse --short HEAD)"
 # Sync web-served files to nginx webroot
 cp index.html /var/www/greendial/index.html
+cp stickers.html /var/www/greendial/stickers.html
 cp api_server.py /var/www/greendial/api_server.py
 cp handlers.py /var/www/greendial/handlers.py
 echo "Static files synced to /var/www/greendial/"
 ENDSSH
+
+# 2. Sync config (after pull, so it can't be stomped)
+if [ -f "config.py" ]; then
+    echo "Syncing config.py..."
+    scp -i "$SSH_KEY" config.py "$SERVER:$DEPLOY_PATH/config.py"
+fi
 
 # 3. Restart service
 echo "Restarting $SERVICE_NAME..."

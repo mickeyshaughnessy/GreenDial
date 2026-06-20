@@ -280,6 +280,61 @@ def save_feedback(posts):
     )
 
 
+# ============ STICKER BOARD ============
+
+def get_sticker_board(user_id):
+    """Retrieve a user's sticker board."""
+    _check_client()
+    try:
+        resp = s3_client.get_object(
+            Bucket=config.DO_SPACES_BUCKET,
+            Key=_key(f"stickers/{user_id}.json")
+        )
+        return json.loads(resp['Body'].read().decode('utf-8'))
+    except ClientError as e:
+        if e.response['Error']['Code'] == 'NoSuchKey':
+            return None
+        raise
+
+
+def save_sticker_board(user_id, data):
+    """Save a user's sticker board."""
+    _check_client()
+    s3_client.put_object(
+        Bucket=config.DO_SPACES_BUCKET,
+        Key=_key(f"stickers/{user_id}.json"),
+        Body=json.dumps(data, indent=2),
+        ContentType='application/json'
+    )
+
+
+def get_sticker_token(token):
+    """Look up user_id from a share token."""
+    _check_client()
+    try:
+        resp = s3_client.get_object(
+            Bucket=config.DO_SPACES_BUCKET,
+            Key=_key(f"stickers/tokens/{token}.json")
+        )
+        data = json.loads(resp['Body'].read().decode('utf-8'))
+        return data.get('user_id')
+    except ClientError as e:
+        if e.response['Error']['Code'] == 'NoSuchKey':
+            return None
+        raise
+
+
+def save_sticker_token(token, user_id):
+    """Store a share token → user_id mapping."""
+    _check_client()
+    s3_client.put_object(
+        Bucket=config.DO_SPACES_BUCKET,
+        Key=_key(f"stickers/tokens/{token}.json"),
+        Body=json.dumps({'user_id': user_id}),
+        ContentType='application/json'
+    )
+
+
 # ============ BOUNTIES ============
 
 def get_bounties():

@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GreenDial Health Board</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #0d1117;
+      color: #e6edf3;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      padding: 24px 16px 48px;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 32px;
+    }
+    .logo { font-size: 28px; }
+    .header h1 { font-size: 20px; font-weight: 600; color: #58a6ff; }
+    .header p { font-size: 13px; color: rgba(230,237,243,0.5); margin-top: 2px; }
+    .board-wrap {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    table {
+      border-collapse: collapse;
+      min-width: 600px;
+    }
+    th, td {
+      padding: 6px 8px;
+      text-align: center;
+      white-space: nowrap;
+    }
+    thead th {
+      font-size: 11px;
+      color: rgba(230,237,243,0.4);
+      font-weight: 500;
+      padding-bottom: 10px;
+    }
+    thead th.today-col { color: #58a6ff; font-weight: 700; }
+    .area-label {
+      text-align: left;
+      font-size: 13px;
+      color: rgba(230,237,243,0.7);
+      padding-right: 16px;
+      white-space: nowrap;
+    }
+    .area-icon { font-size: 16px; margin-right: 4px; }
+    .cell {
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      font-size: 22px;
+      line-height: 38px;
+      position: relative;
+      cursor: default;
+      transition: transform 0.1s;
+    }
+    .cell.filled { background: rgba(88,166,255,0.08); cursor: help; }
+    .cell.filled:hover { transform: scale(1.2); }
+    .cell.empty { color: rgba(230,237,243,0.1); font-size: 10px; }
+    .cell.today-col { border: 1px solid rgba(88,166,255,0.25); }
+    .tooltip {
+      display: none;
+      position: absolute;
+      bottom: calc(100% + 6px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: #161b22;
+      border: 1px solid rgba(88,166,255,0.2);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 12px;
+      color: #e6edf3;
+      text-align: left;
+      width: 200px;
+      z-index: 10;
+      white-space: normal;
+      line-height: 1.5;
+    }
+    .cell.filled:hover .tooltip { display: block; }
+    .tooltip .t-prompt { color: rgba(230,237,243,0.5); margin-bottom: 4px; }
+    .tooltip .t-response { font-weight: 500; }
+    .loading { text-align: center; padding: 60px 0; color: rgba(230,237,243,0.4); }
+    .error { text-align: center; padding: 60px 0; color: #f85149; }
+    .footer { margin-top: 32px; font-size: 12px; color: rgba(230,237,243,0.25); text-align: center; }
+    .footer a { color: #58a6ff; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">🌿</div>
+    <div>
+      <h1>GreenDial Health Board</h1>
+      <p>Daily wellness check-ins</p>
+    </div>
+  </div>
+
+  <div id="content"><div class="loading">Loading board…</div></div>
+
+  <div class="footer">
+    Powered by <a href="/">GreenDial</a> · Data is shared anonymously by the user
+  </div>
+
+  <script>
+    const token = location.pathname.replace(/^\/stickers\//, '').replace(/\.html$/, '');
+    const API = location.origin;
+
+    function pad2(n) { return String(n).padStart(2, '0'); }
+    function isoDate(d) {
+      return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
+    }
+    function fmtDate(iso) {
+      const [, m, d] = iso.split('-');
+      return `${parseInt(m)}/${parseInt(d)}`;
+    }
+
+    async function load() {
+      if (!token) {
+        document.getElementById('content').innerHTML = '<div class="error">No board token in URL.</div>';
+        return;
+      }
+      try {
+        const resp = await fetch(`${API}/sticker-board/public/${token}`);
+        if (!resp.ok) throw new Error('Board not found');
+        const data = await resp.json();
+        render(data);
+      } catch (e) {
+        document.getElementById('content').innerHTML = `<div class="error">Board not found or unavailable.</div>`;
+      }
+    }
+
+    function render(data) {
+      const { rows, areas, area_labels, area_emojis } = data;
+      const today = isoDate(new Date());
+
+      // Build last 30 days, newest first (left = today)
+      const days = [];
+      for (let i = 0; i < 30; i++) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        days.push(isoDate(d));
+      }
+
+      // Check if any data exists
+      const hasData = areas.some(a => Object.keys(rows[a] || {}).length > 0);
+      if (!hasData) {
+        document.getElementById('content').innerHTML = '<div class="loading">No stickers yet — check back soon!</div>';
+        return;
+      }
+
+      let html = '<div class="board-wrap"><table><thead><tr><th></th>';
+      for (const day of days) {
+        const isToday = day === today;
+        html += `<th class="${isToday ? 'today-col' : ''}">${isToday ? 'Today' : fmtDate(day)}</th>`;
+      }
+      html += '</tr></thead><tbody>';
+
+      for (const area of areas) {
+        const label = area_labels[area] || area;
+        const icon = area_emojis[area] || '•';
+        const areaRows = rows[area] || {};
+
+        html += `<tr><td class="area-label"><span class="area-icon">${icon}</span>${label}</td>`;
+        for (const day of days) {
+          const isToday = day === today;
+          const entry = areaRows[day];
+          if (entry) {
+            const prompt = (entry.prompt || '').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+            const response = (entry.response || '').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+            const tip = prompt
+              ? `<div class="tooltip"><div class="t-prompt">${prompt}</div>${response ? `<div class="t-response">${response}</div>` : ''}</div>`
+              : '';
+            html += `<td><div class="cell filled${isToday?' today-col':''}">${entry.emoji}${tip}</div></td>`;
+          } else {
+            html += `<td><div class="cell empty${isToday?' today-col':''}">·</div></td>`;
+          }
+        }
+        html += '</tr>';
+      }
+      html += '</tbody></table></div>';
+      document.getElementById('content').innerHTML = html;
+    }
+
+    load();
+  </script>
+</body>
+</html>

@@ -20,19 +20,19 @@ Only save what the user explicitly stated. Don't infer."""
 ALL_PROFILE_FIELDS = frozenset({
     # Core
     "primary_concern", "health_conditions", "medications", "allergies",
-    "symptoms", "age", "weight", "height", "goals", "notes",
+    "symptoms", "age", "height", "goals", "notes",
     "location", "previous_treatments",
     # Diet
     "diet_type", "dietary_restrictions", "nutrition_goals", "meal_frequency",
-    "calorie_target", "food_allergies", "supplements",
+    "food_allergies", "supplements",
     # Exercise
     "exercise_frequency", "exercise_type", "fitness_goals", "exercise_limitations",
-    "preferred_workout_time", "fitness_level", "steps_per_day", "exercise_minutes",
+    "preferred_workout_time", "fitness_level",
     # Sleep
-    "sleep_hours", "sleep_quality", "sleep_issues", "bedtime", "wake_time",
+    "sleep_quality", "sleep_issues", "bedtime", "wake_time",
     "sleep_environment", "sleep_aids", "sleep_disorders",
     # Mental health
-    "stress_level", "mental_health_concerns", "therapy_status", "mood_notes",
+    "mental_health_concerns", "therapy_status", "mood_notes",
     "mindfulness_practice", "mental_health_history", "coping_strategies",
     # Relationships
     "relationship_status", "social_support", "loneliness_level",
@@ -45,7 +45,4 @@ ALL_PROFILE_FIELDS = frozenset({
     "vaccination_status", "gut_health_notes", "family_history", "smoking_status",
     "alcohol_use", "last_checkup", "screenings_completed", "screenings_due",
     "cardiovascular_risk_factors",
-    # Trackable time-series (mirrors handlers.TRACKABLE_FIELDS)
-    "mood", "energy_level", "water_intake_liters", "diet_notes", "symptom_notes",
-    "resting_heart_rate", "blood_pressure_systolic", "blood_pressure_diastolic",
 })

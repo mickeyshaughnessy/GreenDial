@@ -19,6 +19,7 @@ from prompts.shared.tools import TOOL_USE_INSTRUCTIONS
 from prompts.shared.profile import PROFILE_UPDATE_SYNTAX
 from prompts.shared import style as style_module
 from prompts.shared import chat_only as chat_only_module
+from prompts.shared import stickers as stickers_module
 import threading
 
 # In-memory TTL cache
@@ -125,9 +126,10 @@ def handle_auth(request):
                 except Exception as e:
                     print(f"[Auth] Token save failed: {e}")
 
-                # Generate notifications and daily suggestions in background on login
+                # Generate notifications, polls, and daily suggestions in background on login
                 threading.Thread(target=generate_login_notifications, args=(user_id,)).start()
                 threading.Thread(target=generate_login_suggestions, args=(user_id,)).start()
+                threading.Thread(target=generate_login_polls, args=(user_id,)).start()
 
                 return json.dumps({
                     "user_id": user_id,
@@ -169,9 +171,10 @@ def handle_auth(request):
         s3_storage.save_user(user_id, new_user)
         _cache_user(user_id, new_user)
         
-        # Generate initial notifications and suggestions in background
+        # Generate initial notifications, polls, and suggestions in background
         threading.Thread(target=generate_login_notifications, args=(user_id,)).start()
         threading.Thread(target=generate_login_suggestions, args=(user_id,)).start()
+        threading.Thread(target=generate_login_polls, args=(user_id,)).start()
     except Exception as e:
         print(f"[Auth] Failed to save user: {e}")
         return json.dumps({"error": "Failed to create account"}), 500
@@ -509,6 +512,42 @@ HEALTH_TOOLS = [
                 "required": ["message"]
             }
         }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "read_sticker_board",
+            "description": "Read the user's emoji sticker board showing recent daily check-ins across health areas (sleep, diet, exercise, mental_health, relationships, environment, protect).",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "days": {"type": "integer", "description": "How many recent days to include (default 14)", "default": 14}
+                },
+                "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "write_sticker",
+            "description": "Record an emoji sticker on the user's health board for a specific area and date. Use when the user shares how they're doing in a health area — after a poll answer or when they volunteer info conversationally.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "area": {
+                        "type": "string",
+                        "enum": ["sleep", "diet", "exercise", "mental_health", "relationships", "environment", "protect"],
+                        "description": "Health area for the sticker"
+                    },
+                    "emoji": {"type": "string", "description": "The emoji reflecting how things went"},
+                    "prompt": {"type": "string", "description": "The question asked or context (stored hidden under sticker)"},
+                    "response": {"type": "string", "description": "User's text response if any (stored hidden, can be empty)"},
+                    "date": {"type": "string", "description": "Date in YYYY-MM-DD format (defaults to today)"}
+                },
+                "required": ["area", "emoji"]
+            }
+        }
     }
 ]
 
@@ -576,7 +615,7 @@ def _execute_health_tool(name, inputs, user_id, agent_id):
                 u = get_user_data(user_id)
                 if u:
                     _append_history(u, field, value)
-                    u.setdefault('profile', {})[field] = value
+                    # Do NOT write to profile — trackable data lives in profile_history and sticker board
                     u['last_updated'] = datetime.utcnow().isoformat()
                     _cache_user(user_id, u)
                     s3_storage.save_user(user_id, u)
@@ -628,6 +667,26 @@ def _execute_health_tool(name, inputs, user_id, agent_id):
                     _cache_user(user_id, u)
                     s3_storage.save_user(user_id, u)
             return f"Notification queued: {message!r}"
+
+        elif name == "read_sticker_board":
+            days = int(inputs.get("days") or 14)
+            if not user_id:
+                return "User ID required to read sticker board."
+            return _read_sticker_board_for_tool(user_id, days)
+
+        elif name == "write_sticker":
+            area = (inputs.get("area") or "").strip()
+            emoji = (inputs.get("emoji") or "").strip()
+            prompt = (inputs.get("prompt") or "").strip()
+            response = (inputs.get("response") or "").strip()
+            date = (inputs.get("date") or datetime.utcnow().strftime('%Y-%m-%d')).strip()
+            if not area or not emoji:
+                return "Error: area and emoji are required."
+            if area not in stickers_module.STICKER_AREAS:
+                return f"Error: area must be one of {stickers_module.STICKER_AREAS}"
+            if user_id:
+                _write_sticker_entry(user_id, area, date, emoji, prompt, response)
+            return f"Sticker recorded: {area} {emoji} on {date}"
 
         else:
             return f"Unknown tool: {name!r}"
@@ -1476,6 +1535,234 @@ def handle_generate_notification(user_id):
     return json.dumps({"notification": None})
 
 
+# ============ STICKER BOARD ============
+
+def _get_or_create_sticker_board(user_id):
+    """Load sticker board from S3, creating an empty one if absent."""
+    try:
+        board = s3_storage.get_sticker_board(user_id)
+    except Exception as e:
+        print(f"[Stickers] Load error for {user_id}: {e}")
+        board = None
+    if not board:
+        board = {
+            "user_id": user_id,
+            "token": None,
+            "rows": {area: {} for area in stickers_module.STICKER_AREAS}
+        }
+    return board
+
+
+def _write_sticker_entry(user_id, area, date, emoji, prompt, response):
+    """Write a single sticker entry to the user's board."""
+    board = _get_or_create_sticker_board(user_id)
+    board.setdefault('rows', {}).setdefault(area, {})[date] = {
+        "emoji": emoji,
+        "prompt": prompt,
+        "response": response,
+        "ts": datetime.utcnow().isoformat()
+    }
+    try:
+        s3_storage.save_sticker_board(user_id, board)
+    except Exception as e:
+        print(f"[Stickers] Save error for {user_id}: {e}")
+
+
+def _read_sticker_board_for_tool(user_id, days=14):
+    """Return a compact text summary of the sticker board for LLM context."""
+    from datetime import timedelta
+    board = _get_or_create_sticker_board(user_id)
+    rows = board.get('rows', {})
+    if not any(rows.get(a) for a in stickers_module.STICKER_AREAS):
+        return "Sticker board is empty — no daily check-ins recorded yet."
+
+    cutoff = (datetime.utcnow() - timedelta(days=days)).strftime('%Y-%m-%d')
+    lines = [f"Sticker board (last {days} days):"]
+    for area in stickers_module.STICKER_AREAS:
+        entries = {d: e for d, e in rows.get(area, {}).items() if d >= cutoff}
+        if not entries:
+            lines.append(f"  {stickers_module.AREA_LABELS[area]}: (no data)")
+        else:
+            recent = sorted(entries.items())[-7:]
+            dots = "  ".join(f"{d}:{e['emoji']}" for d, e in recent)
+            lines.append(f"  {stickers_module.AREA_LABELS[area]}: {dots}")
+    return "\n".join(lines)
+
+
+def _build_sticker_context_for_doc(user_id):
+    """Build a brief sticker board summary to inject into Doc's prompt."""
+    today = datetime.utcnow().strftime('%Y-%m-%d')
+    board = _get_or_create_sticker_board(user_id)
+    rows = board.get('rows', {})
+
+    filled_today = []
+    missing_today = []
+    for area in stickers_module.STICKER_AREAS:
+        entry = rows.get(area, {}).get(today)
+        label = stickers_module.AREA_LABELS[area]
+        if entry:
+            filled_today.append(f"{label}: {entry['emoji']}")
+        else:
+            missing_today.append(label)
+
+    parts = []
+    if filled_today:
+        parts.append("Today filled: " + ", ".join(filled_today))
+    if missing_today:
+        parts.append("Not yet filled: " + ", ".join(missing_today))
+    return "\n".join(parts) if parts else None
+
+
+def _get_or_create_share_token(user_id):
+    """Return existing share token for user, creating one if needed."""
+    board = _get_or_create_sticker_board(user_id)
+    token = board.get('token')
+    if not token:
+        import secrets
+        token = secrets.token_urlsafe(9)  # ~12 chars, URL-safe
+        board['token'] = token
+        try:
+            s3_storage.save_sticker_board(user_id, board)
+            s3_storage.save_sticker_token(token, user_id)
+        except Exception as e:
+            print(f"[Stickers] Token create error: {e}")
+    return token
+
+
+def handle_get_sticker_board(user_id):
+    """Authenticated: return the user's sticker board + share token."""
+    board = _get_or_create_sticker_board(user_id)
+    token = board.get('token') or _get_or_create_share_token(user_id)
+    board_data = {
+        "rows": board.get('rows', {}),
+        "token": token,
+        "share_url": f"/stickers/{token}"
+    }
+    return json.dumps(board_data)
+
+
+def handle_write_sticker(user_id, data):
+    """Authenticated: write a sticker entry."""
+    area = (data.get('area') or '').strip()
+    emoji = (data.get('emoji') or '').strip()
+    prompt = (data.get('prompt') or '').strip()
+    response = (data.get('response') or '').strip()
+    date = (data.get('date') or datetime.utcnow().strftime('%Y-%m-%d')).strip()
+
+    if not area or not emoji:
+        return json.dumps({"error": "area and emoji are required"}), 400
+    if area not in stickers_module.STICKER_AREAS:
+        return json.dumps({"error": f"area must be one of {stickers_module.STICKER_AREAS}"}), 400
+
+    _write_sticker_entry(user_id, area, date, emoji, prompt, response)
+    return json.dumps({"ok": True, "area": area, "date": date, "emoji": emoji})
+
+
+def handle_get_share_token(user_id):
+    """Return or generate share token for this user."""
+    token = _get_or_create_share_token(user_id)
+    return json.dumps({"token": token, "share_url": f"/stickers/{token}"})
+
+
+def handle_public_sticker_board(token):
+    """Public (no auth): return sticker board data by share token."""
+    try:
+        user_id = s3_storage.get_sticker_token(token)
+    except Exception as e:
+        print(f"[Stickers] Token lookup error: {e}")
+        return json.dumps({"error": "Not found"}), 404
+    if not user_id:
+        return json.dumps({"error": "Not found"}), 404
+
+    board = _get_or_create_sticker_board(user_id)
+    # Return board without user_id
+    return json.dumps({
+        "rows": board.get('rows', {}),
+        "areas": stickers_module.STICKER_AREAS,
+        "area_labels": stickers_module.AREA_LABELS,
+        "area_emojis": stickers_module.AREA_EMOJIS,
+    })
+
+
+def generate_login_polls(user_id):
+    """Background task: generate sticker_poll notifications for areas not yet filled today."""
+    import time
+    time.sleep(3)
+
+    user = get_user_data(user_id)
+    if not user:
+        return
+    if not user.get('settings', {}).get('notifications_enabled', True):
+        return
+
+    # Debounce: only once per day
+    last_poll = user.get('last_poll_gen')
+    if last_poll:
+        try:
+            last_date = last_poll[:10]  # YYYY-MM-DD
+            if last_date == datetime.utcnow().strftime('%Y-%m-%d'):
+                return
+        except Exception:
+            pass
+
+    today = datetime.utcnow().strftime('%Y-%m-%d')
+    board = _get_or_create_sticker_board(user_id)
+    rows = board.get('rows', {})
+
+    # Find areas with no sticker today
+    unfilled = [a for a in stickers_module.STICKER_AREAS if not rows.get(a, {}).get(today)]
+    if not unfilled:
+        return  # Board is complete for today
+
+    # Pick 1-2 areas to ask about (rotate: use last asked area to avoid repetition)
+    last_areas = user.get('last_poll_areas', [])
+    candidates = [a for a in unfilled if a not in last_areas] or unfilled
+    to_ask = candidates[:2]
+
+    new_polls = []
+    for area in to_ask:
+        template = stickers_module.POLL_TEMPLATES.get(area, {})
+        if not template:
+            continue
+        poll = {
+            "id": str(uuid.uuid4()),
+            "type": "sticker_poll",
+            "area": area,
+            "message": template["question"],
+            "emoji_options": template["options"],
+            "area_label": stickers_module.AREA_LABELS.get(area, area),
+            "created": datetime.utcnow().isoformat(),
+            "read": False
+        }
+        new_polls.append(poll)
+
+    if not new_polls:
+        return
+
+    # Re-fetch fresh copy before writing
+    try:
+        fresh = s3_storage.get_user(user_id)
+        if fresh:
+            user = fresh
+    except Exception:
+        pass
+
+    current_notifs = user.get('notifications', [])
+    # Remove any old sticker_polls (replace with fresh ones)
+    current_notifs = [n for n in current_notifs if n.get('type') != 'sticker_poll']
+    current_notifs.extend(new_polls)
+    user['notifications'] = current_notifs[-20:]
+    user['last_poll_gen'] = datetime.utcnow().isoformat()
+    user['last_poll_areas'] = to_ask
+
+    try:
+        s3_storage.save_user(user_id, user)
+        _cache_user(user_id, user)
+        print(f"[Polls] Generated {len(new_polls)} poll(s) for {user_id}")
+    except Exception as e:
+        print(f"[Polls] Save error: {e}")
+
+
 # ============ THIRD-PARTY API ============
 
 def handle_api_profile_update(auth_header, data):
@@ -1612,6 +1899,24 @@ def _apply_profile_updates_with_history(user, updates):
     return profile
 
 
+def _parse_sticker_updates(response):
+    """Extract **STICKER_UPDATE** entries from response text."""
+    updates = []
+    for match in re.finditer(r'\*\*STICKER_UPDATE\*\*\s*(\{[^{}]*\})', response, re.IGNORECASE):
+        try:
+            data = json.loads(match.group(1))
+            if data.get('area') and data.get('emoji'):
+                updates.append(data)
+        except json.JSONDecodeError:
+            pass
+    return updates
+
+
+def _clean_sticker_markers(response):
+    """Remove **STICKER_UPDATE** markers from response text."""
+    return re.sub(r'\*\*STICKER_UPDATE\*\*\s*\{[^{}]*\}', '', response, flags=re.IGNORECASE).strip()
+
+
 def _clean_profile_markers(response):
     """Remove profile update markers from response"""
     # Remove both **PROFILE_UPDATE** and **PROFILE UPDATE** variants
@@ -1684,6 +1989,7 @@ def _build_prompt(user_id=None, session_id=None, user_input="", style_hint=None,
 
     chat_only_instructions = chat_only_module.CHAT_ONLY_INSTRUCTIONS if chat_only else None
     injected_context = _build_injected_context(user, user_input.lower()) if (user_id and chat_only) else None
+    sticker_context = _build_sticker_context_for_doc(user_id) if user_id else None
 
     return doc_v2.build_doc_prompt(
         user_input=user_input,
@@ -1694,7 +2000,8 @@ def _build_prompt(user_id=None, session_id=None, user_input="", style_hint=None,
         style_hint=style_hint,
         focus=focus,
         chat_only_instructions=chat_only_instructions,
-        injected_context=injected_context
+        injected_context=injected_context,
+        sticker_context=sticker_context
     )
 
 
@@ -1826,6 +2133,21 @@ def handle_chat(request):
             action_results = _execute_chat_actions(user_id, actions)
             doc_response = _clean_action_markers(doc_response)
             print(f"[Chat] Action results: {action_results}")
+
+    # Process sticker updates
+    if user_id:
+        sticker_updates = _parse_sticker_updates(doc_response)
+        for su in sticker_updates:
+            area = su.get('area', '')
+            emoji = su.get('emoji', '')
+            date = su.get('date') or datetime.utcnow().strftime('%Y-%m-%d')
+            prompt = su.get('prompt', '')
+            response_text = su.get('response', '')
+            if area in stickers_module.STICKER_AREAS and emoji:
+                _write_sticker_entry(user_id, area, date, emoji, prompt, response_text)
+                print(f"[Chat] Sticker: {area} {emoji} on {date}")
+        if sticker_updates:
+            doc_response = _clean_sticker_markers(doc_response)
 
     # Extract and apply profile updates (with history tracking)
     profile_updates = _parse_profile_updates(doc_response)
