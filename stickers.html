@@ -138,17 +138,16 @@
       const { rows, areas, area_labels, area_emojis } = data;
       const today = isoDate(new Date());
 
-      // Build last 30 days, newest first (left = today)
-      const days = [];
-      for (let i = 0; i < 30; i++) {
+      // Build last 30 days oldest→newest (today on right); skip days with no stickers
+      const candidates = [];
+      for (let i = 29; i >= 0; i--) {
         const d = new Date();
         d.setDate(d.getDate() - i);
-        days.push(isoDate(d));
+        candidates.push(isoDate(d));
       }
+      const days = candidates.filter(day => areas.some(a => (rows[a] || {})[day]));
 
-      // Check if any data exists
-      const hasData = areas.some(a => Object.keys(rows[a] || {}).length > 0);
-      if (!hasData) {
+      if (days.length === 0) {
         document.getElementById('content').innerHTML = '<div class="loading">No stickers yet — check back soon!</div>';
         return;
       }

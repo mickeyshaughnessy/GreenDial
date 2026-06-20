@@ -2731,14 +2731,17 @@
       const areas = ['sleep','diet','exercise','mental_health','relationships','environment','protect'];
       const areaLabels = {sleep:'🌙 Sleep',diet:'🥗 Diet',exercise:'💪 Exercise',mental_health:'🧠 Mental',relationships:'❤️ Relationships',environment:'🌿 Environment',protect:'🛡️ Protect'};
 
-      // Build 30 days newest first
-      const days = [];
-      for (let i = 0; i < 30; i++) {
+      // Build last 30 days oldest→newest (today on the right); skip days with no stickers
+      const candidates = [];
+      for (let i = 29; i >= 0; i--) {
         const d = new Date(); d.setDate(d.getDate() - i);
         const iso = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
         const label = i === 0 ? 'Today' : `${d.getMonth()+1}/${d.getDate()}`;
-        days.push({ iso, label, isToday: i === 0 });
+        candidates.push({ iso, label, isToday: i === 0 });
       }
+      const days = candidates.filter(day =>
+        day.isToday || areas.some(a => (rows || {})[a]?.[day.iso])
+      );
 
       let html = '<table class="sb-table"><thead><tr><th></th>';
       for (const day of days) {
