@@ -3035,39 +3035,24 @@ def generate_suggestions(user_id):
             "status": "pending"
         })
 
-    # Fill remaining slots with LLM suggestions (parallel calls)
+    # Fill remaining slots with LLM suggestions — sequential to avoid simultaneous rate limits
     used_areas = {s['type'] for s in suggestions}
     slots = 3 - len(suggestions)
     areas_to_fill = [a for a in _SUGGESTION_AREAS if a[0] not in used_areas][:max(slots, 0)]
-    if areas_to_fill:
-        import concurrent.futures
-        with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
-            futures = {
-                executor.submit(_generate_suggestion_text, area_label, agent_name, profile): (area_label, agent_id)
-                for area_label, agent_id, agent_name in areas_to_fill
-            }
-            results = {}
-            for future in concurrent.futures.as_completed(futures, timeout=30):
-                area_label, agent_id = futures[future]
-                try:
-                    results[area_label] = (agent_id, future.result())
-                except Exception as e:
-                    print(f"[Suggestions] {area_label} generation failed: {e}")
-        # Preserve exercise/diet/social ordering
-        for area_label, agent_id, _ in areas_to_fill:
-            agent_id_r, text = results.get(area_label, (agent_id, None))
-            if text:
-                suggestions.append({
-                    "id": f"sug_{uuid.uuid4().hex[:12]}",
-                    "type": area_label,
-                    "agent_id": agent_id_r,
-                    "text": text,
-                    "bounty_id": None,
-                    "price": None,
-                    "currency": None,
-                    "created": datetime.utcnow().isoformat(),
-                    "status": "pending"
-                })
+    for area_label, agent_id, agent_name in areas_to_fill:
+        text = _generate_suggestion_text(area_label, agent_name, profile)
+        if text:
+            suggestions.append({
+                "id": f"sug_{uuid.uuid4().hex[:12]}",
+                "type": area_label,
+                "agent_id": agent_id,
+                "text": text,
+                "bounty_id": None,
+                "price": None,
+                "currency": None,
+                "created": datetime.utcnow().isoformat(),
+                "status": "pending"
+            })
 
     # Re-fetch before save: LLM generation takes seconds and another request
     # (e.g. login rotating the session token) may have written the user record
