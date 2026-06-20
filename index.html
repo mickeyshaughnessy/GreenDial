@@ -1385,7 +1385,7 @@
       const chatOnly = !!enabled;
 
       // Nav tab visibility
-      ['nav-history-tab', 'nav-feedback-tab', 'nav-docs-tab'].forEach(id => {
+      ['nav-history-tab', 'nav-docs-tab'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.display = chatOnly ? 'none' : '';
       });
@@ -1400,7 +1400,7 @@
       updateUserUI();
 
       // If we hid the current view's tab, go back to chat
-      if (chatOnly && currentView !== 'chat' && currentView !== 'admin' && currentView !== 'stickers') {
+      if (chatOnly && currentView !== 'chat' && currentView !== 'admin' && currentView !== 'stickers' && currentView !== 'feedback') {
         switchView('chat');
       }
     }

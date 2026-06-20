@@ -856,6 +856,15 @@ def _execute_chat_actions(user_id, actions):
             elif action_type == 'dismiss_notification':
                 handle_dismiss_notification(user_id, action.get('id', ''))
                 results.append('notification_dismissed')
+            elif action_type == 'submit_feedback':
+                message = (action.get('message') or '').strip()
+                username = (action.get('username') or '').strip()
+                if not username:
+                    u = get_user_data(user_id)
+                    username = (u or {}).get('username', 'Guest')
+                if message:
+                    handle_post_feedback({'message': message, 'username': username})
+                    results.append('feedback_submitted')
             elif action_type == 'update_settings':
                 key = action.get('key', '')
                 value = action.get('value')
