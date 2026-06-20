@@ -126,10 +126,8 @@ def handle_auth(request):
                 except Exception as e:
                     print(f"[Auth] Token save failed: {e}")
 
-                # Generate notifications, polls, and daily suggestions in background on login
-                threading.Thread(target=generate_login_notifications, args=(user_id,)).start()
+                # Generate daily suggestions in background on login
                 threading.Thread(target=generate_login_suggestions, args=(user_id,)).start()
-                threading.Thread(target=generate_login_polls, args=(user_id,)).start()
 
                 return json.dumps({
                     "user_id": user_id,
@@ -171,10 +169,8 @@ def handle_auth(request):
         s3_storage.save_user(user_id, new_user)
         _cache_user(user_id, new_user)
         
-        # Generate initial notifications, polls, and suggestions in background
-        threading.Thread(target=generate_login_notifications, args=(user_id,)).start()
+        # Generate initial suggestions in background
         threading.Thread(target=generate_login_suggestions, args=(user_id,)).start()
-        threading.Thread(target=generate_login_polls, args=(user_id,)).start()
     except Exception as e:
         print(f"[Auth] Failed to save user: {e}")
         return json.dumps({"error": "Failed to create account"}), 500
@@ -883,48 +879,41 @@ def _build_injected_context(user, user_input_lower):
     """Inject live data into Doc's prompt based on message keywords."""
     parts = []
 
-    if any(kw in user_input_lower for kw in ('suggest', 'idea', 'recommend', 'tip', 'show')):
-        suggestions = [s for s in user.get('suggestions', []) if s.get('status') == 'pending']
-        if suggestions:
-            lines = ['## SUGGESTIONS (pending)']
-            for i, s in enumerate(suggestions[:5], 1):
-                agent = s.get('agent_id', '')
-                text = s.get('text', '')
-                sid = s.get('id', '')
-                price = f" 💰{s['price']} {s.get('currency','ETH')}" if s.get('price') else ''
-                lines.append(f"{i}. [{agent}]{price} {text} (id: {sid})")
-            parts.append('\n'.join(lines))
+    # Always inject today's pending suggestions so Doc can proactively surface them
+    suggestions = [s for s in user.get('suggestions', []) if s.get('status') == 'pending'][:3]
+    if suggestions:
+        lines = ['## TODAY\'S SUGGESTIONS']
+        for i, s in enumerate(suggestions, 1):
+            agent = s.get('agent_id', '')
+            text = s.get('text', '')
+            sid = s.get('id', '')
+            price = f" 💰{s['price']} {s.get('currency','ETH')}" if s.get('price') else ''
+            lines.append(f"{i}. [{agent}]{price} {text} (id: {sid})")
+        parts.append('\n'.join(lines))
 
     if any(kw in user_input_lower for kw in ('activit', 'task', 'todo', 'to-do', 'done', 'finish', 'complet', 'abandon', 'log')):
         activities = [a for a in user.get('activities', []) if a.get('status') == 'active']
         if activities:
             lines = ['## ACTIVITIES (active)']
             for i, a in enumerate(activities[:5], 1):
-                agent = a.get('agent_id', '')
-                text = a.get('text', '')
-                aid = a.get('id', '')
-                lines.append(f"{i}. [{agent}] {text} (id: {aid})")
+                lines.append(f"{i}. [{a.get('agent_id','')}] {a.get('text','')} (id: {a.get('id','')})")
             parts.append('\n'.join(lines))
 
-    if any(kw in user_input_lower for kw in ('notif', 'reminder', 'alert', 'message', 'dismiss', 'unread')):
-        notifs = [n for n in user.get('notifications', []) if not n.get('read')]
+    if any(kw in user_input_lower for kw in ('notif', 'reminder', 'alert', 'dismiss', 'unread')):
+        notifs = [n for n in user.get('notifications', []) if not n.get('read') and n.get('type') != 'sticker_poll']
         if notifs:
-            lines = ['## NOTIFICATIONS (unread)']
+            lines = ['## TIPS & REMINDERS (unread)']
             for i, n in enumerate(notifs[:5], 1):
-                agent = n.get('agent', '')
-                msg = n.get('message', '')
-                nid = n.get('id', '')
-                lines.append(f"{i}. [{agent}] {msg} (id: {nid})")
+                lines.append(f"{i}. [{n.get('agent','')}] {n.get('message','')} (id: {n.get('id','')})")
             parts.append('\n'.join(lines))
 
     if any(kw in user_input_lower for kw in ('setting', 'preference', 'notification', 'style', 'tone', 'mode')):
         settings = user.get('settings', {})
-        s_parts = [
+        parts.append('## SETTINGS\n' + ', '.join([
             f"notifications: {'on' if settings.get('notifications_enabled', True) else 'off'}",
             f"doc_style: {settings.get('doc_style', 'questioning')}",
             f"chat_only_mode: {settings.get('chat_only_mode', True)}",
-        ]
-        parts.append('## SETTINGS\n' + ', '.join(s_parts))
+        ]))
 
     if any(kw in user_input_lower for kw in ('help', 'what can you', 'how do i', 'what can i', 'how does', 'what is chat')):
         parts.append(f"## CHAT-ONLY HELP\n{chat_only_module.HELP_TEXT}")
@@ -1184,6 +1173,45 @@ def handle_dismiss_notification(user_id, notification_id):
     return json.dumps({"success": True})
 
 
+def handle_get_today(user_id):
+    """Single endpoint returning check-ins (all 7 areas), pending suggestions, and tips."""
+    user = get_user_data(user_id)
+    if not user:
+        return json.dumps({"error": "User not found"}), 404
+
+    today = datetime.utcnow().strftime('%Y-%m-%d')
+    board = _get_or_create_sticker_board(user_id)
+    rows = board.get('rows', {})
+
+    check_ins = []
+    for area in stickers_module.STICKER_AREAS:
+        entry = rows.get(area, {}).get(today)
+        template = stickers_module.POLL_TEMPLATES.get(area, {})
+        area_label = stickers_module.AREA_LABELS.get(area, area)
+        if entry:
+            check_ins.append({
+                "area": area, "area_label": area_label,
+                "answered": True, "emoji": entry.get("emoji"), "prompt": entry.get("prompt"),
+            })
+        else:
+            check_ins.append({
+                "area": area, "area_label": area_label, "answered": False,
+                "message": template.get("question", f"How is your {area_label.lower()} today?"),
+                "emoji_options": template.get("options", []),
+            })
+
+    suggestions = [s for s in user.get('suggestions', []) if s.get('status') == 'pending'][:3]
+    other_notifs = [n for n in user.get('notifications', []) if n.get('type') != 'sticker_poll'][-10:]
+
+    unanswered = sum(1 for c in check_ins if not c['answered'])
+    badge = unanswered + len(suggestions)
+
+    return json.dumps({
+        "check_ins": check_ins,
+        "suggestions": suggestions,
+        "notifications": other_notifs,
+        "badge_count": badge,
+    })
 
 
 def _get_agent_transcript(user, agent_id):

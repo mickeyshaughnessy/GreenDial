@@ -105,49 +105,108 @@
     .notification-dropdown {
       position: absolute;
       top: 100%; right: 0;
-      width: 320px;
+      width: 360px;
       background: #2a2a4e;
       border-radius: 12px;
       box-shadow: 0 10px 40px rgba(0,0,0,0.5);
       display: none;
       z-index: 100;
       overflow: hidden;
+      max-height: 85vh;
+      overflow-y: auto;
     }
     .notification-dropdown.show { display: block; }
     .notification-header {
-      padding: 14px 16px;
+      padding: 12px 16px;
       border-bottom: 1px solid rgba(255,255,255,0.1);
       font-weight: 600;
       font-size: 14px;
+      position: sticky; top: 0; background: #2a2a4e; z-index: 1;
     }
-    .notification-list { max-height: 300px; overflow-y: auto; }
+    .notif-section { border-bottom: 1px solid rgba(255,255,255,0.07); }
+    .notif-section-label {
+      padding: 8px 16px 4px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.35);
+    }
+    .notif-section-toggle { cursor: pointer; display: flex; justify-content: space-between; user-select: none; }
+    .notif-section-toggle:hover { color: rgba(255,255,255,0.6); }
+    /* Check-in cards inside dropdown */
+    .ci-card {
+      padding: 8px 16px 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .ci-question { font-size: 12px; color: rgba(255,255,255,0.7); margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+    .ci-icon { font-size: 14px; }
+    .ci-opts { display: flex; gap: 4px; flex-wrap: wrap; }
+    .ci-opt {
+      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 7px; padding: 3px 7px; cursor: pointer; font-size: 16px;
+      transition: background 0.15s;
+    }
+    .ci-opt:hover { background: rgba(88,166,255,0.2); border-color: rgba(88,166,255,0.4); }
+    .ci-custom { display: flex; gap: 4px; margin-top: 5px; }
+    .ci-custom input { flex:1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius:5px; padding: 3px 7px; color:#e6edf3; font-size:12px; }
+    .ci-custom button { background: rgba(88,166,255,0.2); border: 1px solid rgba(88,166,255,0.3); border-radius:5px; padding:3px 9px; color:#58a6ff; cursor:pointer; font-size:12px; }
+    .ci-answered {
+      padding: 6px 16px;
+      display: flex; align-items: center; gap: 8px;
+      font-size: 12px; color: rgba(255,255,255,0.4);
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .ci-answered .ci-emoji { font-size: 18px; margin-left: auto; }
+    .ci-answered .ci-check { font-size: 11px; color: #10b981; }
+    /* Suggestion items inside dropdown */
+    .sugg-item {
+      padding: 8px 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .sugg-item-header {
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 11px; color: rgba(255,255,255,0.5); margin-bottom: 4px;
+    }
+    .sugg-item-text { font-size: 12px; line-height: 1.4; color: rgba(255,255,255,0.85); }
+    .sugg-accept, .sugg-skip {
+      border: none; border-radius: 5px; padding: 2px 8px; cursor: pointer; font-size: 12px;
+    }
+    .sugg-accept { background: rgba(16,185,129,0.2); color: #10b981; margin-right: 3px; }
+    .sugg-accept:hover { background: rgba(16,185,129,0.35); }
+    .sugg-skip { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.4); }
+    .sugg-skip:hover { background: rgba(239,68,68,0.15); color: #ef4444; }
+    .sugg-price { color: #a78bfa; font-size: 10px; margin-left: 4px; }
+    /* Tips section */
     .notification-item {
-      padding: 12px 16px;
+      padding: 10px 16px;
       border-bottom: 1px solid rgba(255,255,255,0.05);
       display: flex;
-      gap: 12px;
+      gap: 10px;
       align-items: flex-start;
       cursor: pointer;
     }
     .notification-item:hover { background: rgba(255,255,255,0.05); }
-    .notification-icon { font-size: 20px; }
-    .notification-content { flex: 1; }
-    .notification-message { font-size: 13px; line-height: 1.4; }
-    .notification-time { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 4px; }
+    .notification-icon { font-size: 18px; flex-shrink: 0; }
+    .notification-content { flex: 1; min-width: 0; }
+    .notification-message { font-size: 12px; line-height: 1.4; }
+    .notification-time { font-size: 10px; color: rgba(255,255,255,0.35); margin-top: 3px; }
     .notification-dismiss {
       background: none;
       border: none;
-      color: rgba(255,255,255,0.4);
+      color: rgba(255,255,255,0.3);
       cursor: pointer;
-      font-size: 16px;
+      font-size: 15px;
+      flex-shrink: 0;
     }
     .notification-dismiss:hover { color: #ef4444; }
     .notification-empty {
-      padding: 24px;
+      padding: 16px;
       text-align: center;
-      color: rgba(255,255,255,0.4);
-      font-size: 13px;
+      color: rgba(255,255,255,0.35);
+      font-size: 12px;
     }
+    .notif-empty-sm { padding: 8px 16px; font-size: 12px; color: rgba(255,255,255,0.3); }
     
     .main {
       display: flex;
@@ -184,22 +243,6 @@
     .sb-tip-prompt { color: rgba(255,255,255,0.45); }
 
     /* Poll notification cards */
-    .poll-card {
-      background: rgba(255,255,255,0.04); border: 1px solid rgba(88,166,255,0.15);
-      border-radius: 10px; padding: 12px; margin-bottom: 8px;
-    }
-    .poll-question { font-size: 13px; margin-bottom: 10px; line-height: 1.4; }
-    .poll-options { display: flex; flex-wrap: wrap; gap: 6px; }
-    .poll-btn {
-      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 8px; padding: 5px 10px; cursor: pointer; font-size: 14px;
-      color: #e6edf3; transition: background 0.15s; white-space: nowrap;
-    }
-    .poll-btn:hover { background: rgba(88,166,255,0.2); border-color: rgba(88,166,255,0.4); }
-    .poll-btn.selected { background: rgba(88,166,255,0.25); border-color: #58a6ff; }
-    .poll-custom { display: flex; gap: 6px; margin-top: 8px; }
-    .poll-custom input { flex:1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius:6px; padding: 4px 8px; color:#e6edf3; font-size:13px; }
-    .poll-custom button { background: rgba(88,166,255,0.2); border: 1px solid rgba(88,166,255,0.3); border-radius:6px; padding:4px 10px; color:#58a6ff; cursor:pointer; font-size:13px; }
     .chat-hero {
       padding: 14px 2px 4px;
       color: rgba(255,255,255,0.45);
@@ -724,15 +767,6 @@
     .feedback-card-btn.complete:hover { color: #10b981; border-color: #10b981; background: rgba(16,185,129,0.1); }
     .feedback-col-done .feedback-card { opacity: 0.6; }
     .feedback-col-done .feedback-card:hover { opacity: 1; }
-    .suggestion-banner {
-      max-width: 800px; width: 100%; margin: 0 auto 10px;
-      padding: 10px 16px; border-radius: 10px; cursor: pointer;
-      background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.3);
-      color: #10b981; font-size: 13px; font-weight: 500;
-      transition: background 0.15s;
-    }
-    .suggestion-banner:hover { background: rgba(16,185,129,0.15); }
-
     /* Identity fields */
     .identity-field {
       display: flex; align-items: center; gap: 10px;
@@ -746,23 +780,6 @@
       font-family: inherit;
     }
     .identity-field input:focus { outline: none; border-color: #10b981; }
-    /* Suggestion cards */
-    .suggestion-card {
-      padding: 14px; border-bottom: 1px solid rgba(255,255,255,0.06);
-      transition: background 0.1s;
-      cursor: pointer;
-    }
-    .suggestion-card:hover { background: rgba(255,255,255,0.03); }
-    .suggestion-card:last-child { border-bottom: none; }
-    .suggestion-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
-    .suggestion-agent { font-size: 11px; font-weight: 600; color: #10b981; text-transform: uppercase; letter-spacing: .04em; }
-    .suggestion-price { font-size: 11px; font-weight: 600; color: #f59e0b; background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.3); padding: 1px 7px; border-radius: 10px; }
-    .suggestion-text { font-size: 13px; line-height: 1.55; color: rgba(255,255,255,0.85); margin-bottom: 10px; }
-    .suggestion-actions { display: flex; gap: 6px; }
-    .btn-accept { background: #10b981; border: none; color: #000; font-size: 12px; font-weight: 600; padding: 5px 14px; border-radius: 6px; cursor: pointer; transition: opacity 0.15s; }
-    .btn-accept:hover { opacity: 0.85; }
-    .btn-dismiss { background: none; border: 1px solid rgba(255,255,255,0.15); color: rgba(255,255,255,0.4); font-size: 12px; padding: 5px 10px; border-radius: 6px; cursor: pointer; transition: border-color 0.15s, color 0.15s; }
-    .btn-dismiss:hover { border-color: rgba(255,255,255,0.3); color: rgba(255,255,255,0.7); }
     /* Activity cards */
     .activity-card {
       padding: 14px; border-bottom: 1px solid rgba(255,255,255,0.06);
@@ -879,9 +896,6 @@
         <button class="starter-btn" onclick="sendMessage('I\'m stressed about work')">😤 I'm stressed about work</button>
         <button class="starter-btn" onclick="sendMessage('What should I eat today?')">🥗 What should I eat today?</button>
       </div>
-      <div class="suggestion-banner" id="suggestion-banner" style="display:none" onclick="switchView('user')">
-        💡 <span id="suggestion-banner-text">You have suggestions waiting</span> <span style="text-decoration:underline">View →</span>
-      </div>
       <div class="chat-container">
         <div class="chat-header">
           <span id="chat-agent-header">🌿 Chat with Doc</span>
@@ -921,10 +935,6 @@
         <div class="panel">
           <div class="panel-header">⚙️ Settings</div>
           <div class="panel-content" id="settings-panel"><div class="profile-empty">Sign in to manage settings</div></div>
-        </div>
-        <div class="panel">
-          <div class="panel-header"><span>💡 Today's Suggestions</span><button class="btn btn-secondary btn-sm" onclick="generateSuggestions()">Refresh</button></div>
-          <div class="panel-content" id="suggestions-panel"><div class="profile-empty">Sign in to see suggestions</div></div>
         </div>
         <div class="panel">
           <div class="panel-header"><span>🏃 My Activities</span></div>
@@ -1240,7 +1250,7 @@
     let agentSessionIds = {};
     let userProfile = {};
     let userSettings = { doc_style: 'questioning', notifications_enabled: true, chat_only_mode: true };
-    let notifications = [];
+    let notifications = []; // kept for legacy compat; use _todayData instead
     let availableAgents = [];
     let currentHistoryAgent = 'doc';
     let taskMode = false; // task mode uses agentic Gemini Flash loop for Doc
@@ -1463,10 +1473,8 @@
             agentChats.doc = [{ role: 'doc', text: `Welcome back, ${data.username}! What's on your mind today?` }];
           }
           renderMessages();
-          fetchNotifications();
           if (window._notifInterval) clearInterval(window._notifInterval);
-          window._notifInterval = setInterval(fetchNotifications, 120000);
-          setTimeout(loadSuggestions, 5000);
+          window._notifInterval = setInterval(fetchToday, 120000);
           applyChatOnlyMode(!!userSettings.chat_only_mode);
         }
       } catch (e) {
@@ -1563,11 +1571,8 @@
           agentChats.doc = [{ role: 'doc', text: `Welcome back, ${saved.username}! Let's continue building your health profile.` }];
         }
         renderMessages();
-        fetchNotifications();
         if (window._notifInterval) clearInterval(window._notifInterval);
-        window._notifInterval = setInterval(fetchNotifications, 120000);
-        // Daily suggestion check (server debounces to once per 24h)
-        generateSuggestions(false);
+        window._notifInterval = setInterval(fetchToday, 120000);
         applyChatOnlyMode(!!userSettings.chat_only_mode);
         return true;
       } catch (e) {
@@ -1739,9 +1744,9 @@
         // Handle server-executed actions (chat-only mode)
         if (data.action_results && data.action_results.length) {
           for (const result of data.action_results) {
-            if (result.startsWith('suggestion_')) setTimeout(loadSuggestions, 400);
+            if (result.startsWith('suggestion_')) setTimeout(fetchToday, 400);
             if (result.startsWith('activity_')) setTimeout(loadActivities, 400);
-            if (result.startsWith('notification_')) setTimeout(fetchNotifications, 400);
+            if (result.startsWith('notification_')) setTimeout(fetchToday, 400);
             if (result.startsWith('settings_updated:chat_only_mode:')) {
               const val = result.endsWith(':false') ? false : true;
               userSettings.chat_only_mode = val;
@@ -2085,11 +2090,11 @@
       `;
 
       // Populate the in-panel notifications list when in chat-only mode
-      if (!!userSettings.chat_only_mode) fetchNotifications();
+      if (!!userSettings.chat_only_mode) fetchToday();
     }
 
     async function refreshUserTab() {
-      await Promise.allSettled([refreshProfile(), refreshSettings(), loadSuggestions(), loadActivities()]);
+      await Promise.allSettled([refreshProfile(), refreshSettings(), loadActivities()]);
     }
 
     // ── IDENTITY ─────────────────────────────────────────────────────────────
@@ -2143,104 +2148,194 @@
       }
     }
 
-    // ── SUGGESTIONS ──────────────────────────────────────────────────────────
+    // ── TODAY (check-ins + suggestions + tips) ───────────────────────────────
 
-    let _suggestions = [];
+    let _todayData = null;
+    let _suggestions = []; // kept for legacy compat
 
-    function updateSuggestionBanner() {
-      const banner = document.getElementById('suggestion-banner');
-      if (!banner) return;
-      const n = _suggestions.filter(s => s.status === 'pending').length;
-      if (n > 0 && currentUser) {
-        document.getElementById('suggestion-banner-text').textContent =
-          `You have ${n} suggestion${n > 1 ? 's' : ''} waiting for you today`;
-        banner.style.display = '';
-      } else {
-        banner.style.display = 'none';
-      }
-    }
+    const AREA_ICONS = {
+      sleep: '🌙', diet: '🥗', exercise: '💪',
+      mental_health: '🧠', relationships: '❤️', environment: '🌿', protect: '🛡️'
+    };
 
-    async function loadSuggestions() {
-      if (!currentUser) return;
+    async function fetchToday() {
+      if (!currentUser) { renderToday(null); return; }
       try {
-        const res = await fetch(`${API}/suggestions/${currentUser.user_id}`);
-        const data = await res.json();
-        _suggestions = (data.suggestions || []).filter(s => s.status === 'pending');
-        renderSuggestions(_suggestions);
-        updateSuggestionBanner();
-      } catch (e) {}
-    }
-
-    async function generateSuggestions(force = true) {
-      if (!currentUser) return;
-      const panel = document.getElementById('suggestions-panel');
-      if (force && panel) panel.innerHTML = '<div class="profile-empty">Generating…</div>';
-      try {
-        const res = await fetch(`${API}/suggestions/${currentUser.user_id}/generate`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ force })
+        const r = await fetch(`${API}/today/${currentUser.user_id}`, {
+          headers: { 'X-Session-Token': currentUser.token || '' }
         });
-        const data = await res.json();
-        _suggestions = data.suggestions || [];
-        renderSuggestions(_suggestions);
-        updateSuggestionBanner();
-      } catch (e) {
-        if (force && panel) panel.innerHTML = '<div class="profile-empty">Could not generate suggestions</div>';
-      }
+        const data = await r.json();
+        _todayData = data;
+        _suggestions = (data.suggestions || []);
+        renderToday(data);
+      } catch (e) { renderToday(null); }
     }
 
-    function renderSuggestions(suggs) {
-      const panel = document.getElementById('suggestions-panel');
-      if (!panel) return;
-      const pending = suggs.filter(s => s.status === 'pending');
-      if (!pending.length) {
-        panel.innerHTML = '<div class="profile-empty">No suggestions yet — click Refresh to generate today\'s suggestions.</div>';
+    function renderToday(data) {
+      const badge = document.getElementById('notif-badge');
+      if (!data || !currentUser) {
+        const ci = document.getElementById('today-checkins-list');
+        const su = document.getElementById('today-suggestions-list');
+        if (ci) ci.innerHTML = '<div class="notif-empty-sm">Sign in to see check-ins</div>';
+        if (su) su.innerHTML = '<div class="notif-empty-sm">Sign in to see suggestions</div>';
+        if (badge) badge.style.display = 'none';
         return;
       }
-      panel.innerHTML = pending.map(s => {
-        const meta = getAgentMeta(s.agent_id);
-        const priceTag = s.price ? `<span class="suggestion-price">💰 ${s.price} ${s.currency || 'ETH'}</span>` : '';
-        return `<div class="suggestion-card" id="scard-${s.id}" onclick="acceptSuggestion('${s.id}')" title="Accept and discuss with ${meta.name}">
-          <div class="suggestion-header">
-            <span class="suggestion-agent">${meta.emoji} ${meta.name}</span>
-            ${priceTag}
-          </div>
-          <div class="suggestion-text">${escapeHtml(s.text)}</div>
-          <div class="suggestion-actions">
-            <button class="btn-accept" onclick="event.stopPropagation(); acceptSuggestion('${s.id}')">✓ Accept</button>
-            <button class="btn-dismiss" onclick="event.stopPropagation(); dismissSuggestion('${s.id}')">Dismiss</button>
+      renderCheckIns(data.check_ins || []);
+      renderDropdownSuggestions(data.suggestions || []);
+      renderTips(data.notifications || []);
+      const count = data.badge_count || 0;
+      if (badge) {
+        badge.textContent = count;
+        badge.style.display = count > 0 ? 'flex' : 'none';
+      }
+      // Settings panel mirror (chat-only mode)
+      const sp = document.getElementById('settings-notif-list');
+      if (sp) {
+        const tips = data.notifications || [];
+        sp.innerHTML = tips.length
+          ? '<div style="font-size:11px;color:rgba(255,255,255,0.4);padding:4px 0">Click 🔔 above to see your check-ins and suggestions.</div>'
+          : '';
+      }
+    }
+
+    function renderCheckIns(checkIns) {
+      const container = document.getElementById('today-checkins-list');
+      if (!container) return;
+      if (!checkIns.length) {
+        container.innerHTML = '<div class="notif-empty-sm">No areas configured</div>';
+        return;
+      }
+      container.innerHTML = checkIns.map(ci => {
+        const icon = AREA_ICONS[ci.area] || '●';
+        if (ci.answered) {
+          return `<div class="ci-answered">
+            <span class="ci-icon">${icon}</span>
+            <span style="font-size:12px">${escapeHtml(ci.area_label)}</span>
+            <span class="ci-emoji">${ci.emoji}</span>
+            <span class="ci-check">✓</span>
+          </div>`;
+        }
+        const msg = escapeHtml(ci.message || '');
+        const safemsg = msg.replace(/'/g, "\\'");
+        const opts = (ci.emoji_options || []).map(o =>
+          `<button class="ci-opt" onclick="answerCheckin('${ci.area}','${o.emoji}','${escapeHtml(o.label||'').replace(/'/g,"\\'")}','${safemsg}')">${o.emoji}</button>`
+        ).join('');
+        return `<div class="ci-card" id="ci-card-${ci.area}">
+          <div class="ci-question"><span class="ci-icon">${icon}</span>${msg}</div>
+          <div class="ci-opts">${opts}</div>
+          <div class="ci-custom">
+            <input type="text" id="ci-inp-${ci.area}" placeholder="other emoji…" maxlength="10">
+            <button onclick="answerCheckinCustom('${ci.area}','${safemsg}')">✓</button>
           </div>
         </div>`;
       }).join('');
     }
 
-    async function dismissSuggestion(id) {
-      _suggestions = _suggestions.filter(s => s.id !== id);
-      renderSuggestions(_suggestions);
-      updateSuggestionBanner();
+    async function answerCheckin(area, emoji, label, question) {
       if (!currentUser) return;
-      try {
-        await fetch(`${API}/suggestions/${currentUser.user_id}/${id}/dismiss`, { method: 'POST' });
-      } catch (e) {}
+      // Optimistic update
+      if (_todayData) {
+        const ci = (_todayData.check_ins || []).find(c => c.area === area);
+        if (ci) { ci.answered = true; ci.emoji = emoji; }
+        _todayData.badge_count = Math.max(0, (_todayData.badge_count || 1) - 1);
+        renderToday(_todayData);
+      }
+      await _submitSticker(area, emoji, question, label);
+      if (currentView === 'stickers') setTimeout(loadStickerBoard, 600);
+    }
+
+    async function answerCheckinCustom(area, question) {
+      const input = document.getElementById(`ci-inp-${area}`);
+      const val = (input?.value || '').trim();
+      if (!val) return;
+      const emoji = val.match(/\p{Emoji}/u)?.[0] || val[0] || '✏️';
+      await answerCheckin(area, emoji, val, question);
+    }
+
+    function renderDropdownSuggestions(suggestions) {
+      const container = document.getElementById('today-suggestions-list');
+      if (!container) return;
+      if (!suggestions.length) {
+        container.innerHTML = '<div class="notif-empty-sm">No suggestions today</div>';
+        return;
+      }
+      container.innerHTML = suggestions.map(s => {
+        const meta = getAgentMeta(s.agent_id);
+        const priceTag = s.price ? ` <span class="sugg-price">💰${s.price}</span>` : '';
+        return `<div class="sugg-item" id="dsugg-${s.id}">
+          <div class="sugg-item-header">
+            <span>${meta.emoji} ${meta.name}${priceTag}</span>
+            <div>
+              <button class="sugg-accept" onclick="acceptSuggestion('${s.id}')">✓ Accept</button>
+              <button class="sugg-skip" onclick="dismissSuggestion('${s.id}')">Skip</button>
+            </div>
+          </div>
+          <div class="sugg-item-text">${escapeHtml(s.text)}</div>
+        </div>`;
+      }).join('');
+    }
+
+    function renderTips(notifs) {
+      const section = document.getElementById('tips-section');
+      const container = document.getElementById('today-tips-list');
+      if (!container) return;
+      if (!notifs.length) { if (section) section.style.display = 'none'; return; }
+      if (section) section.style.display = '';
+      const icons = { tip: '💡', goal_reminder: '🎯', profile_incomplete: '📋', encouragement: '🌟' };
+      container.innerHTML = notifs.map(n => {
+        const agentId = n.agent || '';
+        const agentMeta = agentId ? getAgentMeta(agentId) : null;
+        const icon = agentMeta ? agentMeta.emoji : (icons[n.type] || '📬');
+        const safemsg = escapeHtml(n.message || '').replace(/'/g, "\\'");
+        return `<div class="notification-item" onclick="openNotificationInChat('${n.id}','${safemsg}','${agentId}')">
+          <span class="notification-icon">${icon}</span>
+          <div class="notification-content">
+            <div class="notification-message">${escapeHtml(n.message || '')}</div>
+            <div class="notification-time">${agentMeta ? agentMeta.name + ' · ' : ''}${formatTime(n.created)}</div>
+          </div>
+          <button class="notification-dismiss" onclick="event.stopPropagation(); dismissNotification('${n.id}')">&times;</button>
+        </div>`;
+      }).join('');
+    }
+
+    function toggleTipsSection() {
+      const container = document.getElementById('today-tips-list');
+      const toggle = document.getElementById('tips-toggle');
+      if (!container) return;
+      const showing = container.style.display !== 'none';
+      container.style.display = showing ? 'none' : '';
+      if (toggle) toggle.textContent = showing ? '▶' : '▼';
+    }
+
+    async function dismissSuggestion(id) {
+      if (_todayData) {
+        _todayData.suggestions = (_todayData.suggestions || []).filter(s => s.id !== id);
+        _todayData.badge_count = Math.max(0, (_todayData.badge_count || 1) - 1);
+        renderToday(_todayData);
+      }
+      _suggestions = _suggestions.filter(s => s.id !== id);
+      if (!currentUser) return;
+      try { await fetch(`${API}/suggestions/${currentUser.user_id}/${id}/dismiss`, { method: 'POST' }); } catch (e) {}
     }
 
     async function acceptSuggestion(suggestionId) {
       if (!currentUser) return;
-      const sugg = _suggestions.find(s => s.id === suggestionId);
+      const sugg = (_todayData?.suggestions || _suggestions).find(s => s.id === suggestionId);
       if (!sugg) return;
-      const agentId = sugg.agent_id;
-      const text = sugg.text;
-      // Remove from suggestions panel immediately
+      const { agent_id: agentId, text } = sugg;
+      // Optimistic removal
+      if (_todayData) {
+        _todayData.suggestions = (_todayData.suggestions || []).filter(s => s.id !== suggestionId);
+        _todayData.badge_count = Math.max(0, (_todayData.badge_count || 1) - 1);
+        renderToday(_todayData);
+      }
       _suggestions = _suggestions.filter(s => s.id !== suggestionId);
-      renderSuggestions(_suggestions);
-      updateSuggestionBanner();
-      // Persist accept + create activity
       try {
         await fetch(`${API}/suggestions/${currentUser.user_id}/${suggestionId}/accept`, { method: 'POST' });
         await loadActivities();
       } catch (e) {}
-      // Navigate to agent chat with suggestion text pre-filled
+      document.getElementById('notif-dropdown')?.classList.remove('show');
       switchView('chat');
       if (agentId && agentId !== 'doc' && AGENT_META[agentId]) {
         await triggerAgentFollowup(agentId, text);
@@ -2562,132 +2657,32 @@
     function toggleNotifications() {
       const dropdown = document.getElementById('notif-dropdown');
       dropdown.classList.toggle('show');
-      if (dropdown.classList.contains('show')) fetchNotifications();
-    }
-    
-    async function fetchNotifications() {
-      if (!currentUser) { renderNotifications([]); return; }
-      try {
-        const response = await fetch(`${API}/notifications/${currentUser.user_id}`);
-        const data = await response.json();
-        notifications = data.notifications || [];
-        renderNotifications(notifications);
-      } catch (e) {}
-    }
-    
-    function renderNotifications(notifs) {
-      const list = document.getElementById('notif-list');
-      const badge = document.getElementById('notif-badge');
-
-      const icons = { tip: '💡', goal_reminder: '🎯', profile_incomplete: '📋', encouragement: '🌟', sticker_poll: '🏷️' };
-
-      const itemsHtml = notifs.map(n => {
-        if (n.type === 'sticker_poll') {
-          return renderPollCard(n);
-        }
-        const agentId = n.agent || '';
-        const agentMeta = agentId ? getAgentMeta(agentId) : null;
-        const icon = agentMeta ? agentMeta.emoji : (icons[n.type] || '📬');
-        const safemsg = escapeHtml(n.message).replace(/'/g, "\\'");
-        return `
-        <div class="notification-item" onclick="openNotificationInChat('${n.id}', '${safemsg}', '${agentId}')">
-          <span class="notification-icon">${icon}</span>
-          <div class="notification-content">
-            <div class="notification-message">${escapeHtml(n.message)}</div>
-            <div class="notification-time">${agentMeta ? agentMeta.name + ' · ' : ''}${formatTime(n.created)}</div>
-          </div>
-          <button class="notification-dismiss" onclick="event.stopPropagation(); dismissNotification('${n.id}')">&times;</button>
-        </div>`;
-      }).join('');
-
-      // Dropdown bell (not visible in chat-only mode, but keep in sync in case mode changes)
-      if (list && badge) {
-        if (!notifs.length) {
-          list.innerHTML = '<div class="notification-empty">No notifications</div>';
-          badge.style.display = 'none';
-        } else {
-          badge.textContent = notifs.length;
-          badge.style.display = 'flex';
-          list.innerHTML = itemsHtml;
-        }
-      }
-
-      // Settings panel notifications list (shown in chat-only mode)
-      renderSettingsNotifications(notifs, itemsHtml);
+      if (dropdown.classList.contains('show')) fetchToday();
     }
 
-    function renderSettingsNotifications(notifs, itemsHtml) {
-      const settingsNotifList = document.getElementById('settings-notif-list');
-      if (!settingsNotifList) return;
-      if (!notifs || !notifs.length) {
-        settingsNotifList.innerHTML = '<div class="notification-empty" style="padding:8px 0">No unread notifications</div>';
-      } else {
-        settingsNotifList.innerHTML = itemsHtml;
-      }
-    }
-    
     async function openNotificationInChat(notifId, message, agentId) {
-      document.getElementById('notif-dropdown').classList.remove('show');
+      document.getElementById('notif-dropdown')?.classList.remove('show');
       switchView('chat');
       dismissNotification(notifId);
-
       if (agentId && agentId !== 'doc' && AGENT_META[agentId]) {
-        // Open the agent's chat and ask a specific follow-up based on the notification
         await triggerAgentFollowup(agentId, message);
       } else {
-        // Doc chat — put message in input for the user to send
         const input = document.getElementById('chat-input');
         await switchChatAgent('doc');
         input.value = message;
         input.focus();
       }
     }
-    
+
     async function dismissNotification(id) {
       if (!currentUser) return;
       try {
         await fetch(`${API}/notifications/${currentUser.user_id}/${id}`, { method: 'DELETE' });
-        notifications = notifications.filter(n => n.id !== id);
-        renderNotifications(notifications);
+        if (_todayData) {
+          _todayData.notifications = (_todayData.notifications || []).filter(n => n.id !== id);
+          renderTips(_todayData.notifications);
+        }
       } catch (e) {}
-    }
-
-    function renderPollCard(n) {
-      const opts = (n.emoji_options || []).map(o =>
-        `<button class="poll-btn" onclick="answerPoll('${n.id}','${n.area}','${o.emoji}','${escapeHtml(o.label).replace(/'/g,"\\'")}','${escapeHtml(n.message).replace(/'/g,"\\'")}')">
-          ${o.emoji} ${escapeHtml(o.label)}
-        </button>`
-      ).join('');
-      return `<div class="poll-card" id="poll-${n.id}">
-        <div class="poll-question">🏷️ ${escapeHtml(n.message)}</div>
-        <div class="poll-options">${opts}</div>
-        <div class="poll-custom">
-          <input type="text" id="poll-custom-${n.id}" placeholder="Or type your own emoji…" maxlength="20">
-          <button onclick="answerPollCustom('${n.id}','${n.area}','${escapeHtml(n.message).replace(/'/g,"\\'")}')">✓</button>
-        </div>
-      </div>`;
-    }
-
-    async function answerPoll(notifId, area, emoji, label, prompt) {
-      if (!currentUser) return;
-      const card = document.getElementById(`poll-${notifId}`);
-      if (card) {
-        card.querySelectorAll('.poll-btn').forEach(b => b.classList.remove('selected'));
-        event.target.closest('.poll-btn').classList.add('selected');
-      }
-      await _submitSticker(area, emoji, prompt, label);
-      setTimeout(() => dismissNotification(notifId), 400);
-      if (currentView === 'stickers') setTimeout(loadStickerBoard, 600);
-    }
-
-    async function answerPollCustom(notifId, area, prompt) {
-      const input = document.getElementById(`poll-custom-${notifId}`);
-      const val = (input?.value || '').trim();
-      if (!val) return;
-      const emoji = val.match(/\p{Emoji}/u)?.[0] || val[0] || '✏️';
-      await _submitSticker(area, emoji, prompt, val);
-      dismissNotification(notifId);
-      if (currentView === 'stickers') setTimeout(loadStickerBoard, 600);
     }
 
     async function _submitSticker(area, emoji, prompt, response) {
@@ -2906,11 +2901,8 @@
           }
           renderMessages();
 
-          fetchNotifications();
           if (window._notifInterval) clearInterval(window._notifInterval);
-          window._notifInterval = setInterval(fetchNotifications, 120000);
-          // Daily suggestions generate server-side ~2s after login; fetch shortly after
-          setTimeout(loadSuggestions, 5000);
+          window._notifInterval = setInterval(fetchToday, 120000);
           applyChatOnlyMode(!!userSettings.chat_only_mode);
         }
       } catch (error) {
@@ -2960,8 +2952,7 @@
           startFreshChat(`Welcome, ${data.username}! I'm Doc. I'll help you build your health profile. What's your main health focus right now?`);
 
           if (window._notifInterval) clearInterval(window._notifInterval);
-          window._notifInterval = setInterval(fetchNotifications, 120000);
-          setTimeout(loadSuggestions, 5000);
+          window._notifInterval = setInterval(fetchToday, 120000);
           applyChatOnlyMode(!!userSettings.chat_only_mode);
         }
       } catch (error) {
@@ -2977,15 +2968,14 @@
       currentUser = null;
       userProfile = {};
       userSettings = { doc_style: 'questioning', notifications_enabled: true, chat_only_mode: true };
-      notifications = [];
       availableAgents = [];
       currentAgent = 'doc';
       currentHistoryAgent = 'doc';
       if (window._notifInterval) { clearInterval(window._notifInterval); window._notifInterval = null; }
       _suggestions = [];
       _activities = [];
+      _todayData = null;
       userData = {};
-      updateSuggestionBanner();
 
       updateUserUI();
       updateAllProfileDisplays();
@@ -2999,33 +2989,46 @@
       const adminTab = document.getElementById('admin-tab');
       const chatOnly = !!userSettings.chat_only_mode;
 
+      const todayDropdownHtml = (signedIn) => `
+        <div style="position:relative">
+          <button class="notification-bell" onclick="toggleNotifications()">🔔<span class="notification-badge" id="notif-badge" style="display:none">0</span></button>
+          <div class="notification-dropdown" id="notif-dropdown">
+            <div class="notification-header">Today</div>
+            <div class="notif-section">
+              <div class="notif-section-label">Check-ins</div>
+              <div id="today-checkins-list"><div class="notif-empty-sm">${signedIn ? 'Loading…' : 'Sign in to see check-ins'}</div></div>
+            </div>
+            <div class="notif-section">
+              <div class="notif-section-label">Suggestions</div>
+              <div id="today-suggestions-list"><div class="notif-empty-sm">${signedIn ? 'Loading…' : 'Sign in to see suggestions'}</div></div>
+            </div>
+            <div class="notif-section" id="tips-section" style="display:none">
+              <div class="notif-section-label notif-section-toggle" onclick="toggleTipsSection()">Tips & Reminders <span id="tips-toggle">▶</span></div>
+              <div id="today-tips-list" style="display:none"></div>
+            </div>
+          </div>
+        </div>`;
+
       if (currentUser) {
         const isAdmin = currentUser.username.toLowerCase() === 'mickey';
-        // Admin tab visible only outside chat-only mode
         if (adminTab) adminTab.style.display = (isAdmin && !chatOnly) ? '' : 'none';
 
         if (chatOnly) {
-          // Minimal header: just the avatar/username badge linking to settings
           userArea.innerHTML = `
+            ${todayDropdownHtml(true)}
             <span class="user-badge" onclick="goToSettings()" style="display:flex;align-items:center;gap:6px;cursor:pointer" title="Open settings">
               <span style="font-size:16px">${getUserAvatar()}</span>${escapeHtml(currentUser.username)}
             </span>
           `;
         } else {
           userArea.innerHTML = `
-            <div style="position:relative">
-              <button class="notification-bell" onclick="toggleNotifications()">🔔<span class="notification-badge" id="notif-badge" style="display:none">0</span></button>
-              <div class="notification-dropdown" id="notif-dropdown">
-                <div class="notification-header">Notifications from Doc</div>
-                <div class="notification-list" id="notif-list"><div class="notification-empty">No notifications</div></div>
-              </div>
-            </div>
+            ${todayDropdownHtml(true)}
             <button class="btn btn-secondary btn-sm" onclick="showDonateModal()" title="Support GreenDial">💚 Donate</button>
             <span class="user-badge" onclick="goToSettings()" style="display:flex;align-items:center;gap:6px"><span style="font-size:16px">${getUserAvatar()}</span>${escapeHtml(currentUser.username)}</span>
             <button class="btn btn-secondary btn-sm" onclick="logout()">Sign Out</button>
           `;
-          fetchNotifications();
         }
+        fetchToday();
         updateAgentTabs();
       } else {
         taskMode = false;
@@ -3037,13 +3040,7 @@
           userArea.innerHTML = `<button class="btn btn-primary btn-sm" onclick="showAuthPopup()">Sign In</button>`;
         } else {
           userArea.innerHTML = `
-            <div style="position:relative">
-              <button class="notification-bell" onclick="toggleNotifications()">🔔</button>
-              <div class="notification-dropdown" id="notif-dropdown">
-                <div class="notification-header">Notifications</div>
-                <div class="notification-list" id="notif-list"><div class="notification-empty">Sign in for notifications</div></div>
-              </div>
-            </div>
+            ${todayDropdownHtml(false)}
             <button class="btn btn-secondary btn-sm" onclick="showDonateModal()" title="Support GreenDial">💚 Donate</button>
             <span class="user-badge">Guest</span>
             <button class="btn btn-primary btn-sm" onclick="showAuthPopup()">Sign In</button>

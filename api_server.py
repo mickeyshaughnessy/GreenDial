@@ -189,6 +189,21 @@ def update_settings(user_id):
     return Response(result, mimetype='application/json')
 
 
+# ============ TODAY (check-ins + suggestions + tips) ============
+
+@app.route("/today/<user_id>", methods=['GET', 'OPTIONS'])
+def get_today(user_id):
+    if request.method == 'OPTIONS':
+        return Response('', status=200)
+    denied = _require_session(user_id)
+    if denied: return denied
+
+    result = handlers.handle_get_today(user_id)
+    if isinstance(result, tuple):
+        return Response(result[0], status=result[1], mimetype='application/json')
+    return Response(result, mimetype='application/json')
+
+
 # ============ NOTIFICATIONS ============
 
 @app.route("/notifications/<user_id>", methods=['GET', 'OPTIONS'])
