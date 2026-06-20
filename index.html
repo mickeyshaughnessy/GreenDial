@@ -3031,8 +3031,7 @@
         if (adminTab) adminTab.style.display = 'none';
 
         if (chatOnly) {
-          // Login card in the chat handles sign-in; header stays clean
-          userArea.innerHTML = '';
+          userArea.innerHTML = `<button class="btn btn-primary btn-sm" onclick="showAuthPopup()">Sign In</button>`;
         } else {
           userArea.innerHTML = `
             <div style="position:relative">
