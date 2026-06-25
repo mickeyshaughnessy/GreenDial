@@ -46,20 +46,22 @@ Written 2026-06-25.
 
 ---
 
-## 2. To turn push ON in prod (one-time)
+## 2. Push is LIVE in prod ✅
 
-1. `pip install pywebpush` into the prod venv (already added to
-   `requirements.txt`).
-2. Confirm `VAPID_*` keys are present in the server's `config.py` (synced by
-   `deploy.sh`).
-3. Add a cron entry for the daily reminder, e.g.:
-   ```
-   0 15 * * *  cd /root/GreenDial && /root/GreenDial/venv/bin/python push_reminders.py
-   ```
-4. Add an "Enable daily reminders" control in Settings that calls
-   `enablePushNotifications()` (currently the function exists but is not yet
-   surfaced in the UI — we don't prompt for notification permission on load by
-   design). **This is the main remaining wiring task.**
+All wiring is done — users can opt in from **Settings → Notifications → Push
+reminders** (Chrome/Android/desktop today; iOS once installed to Home Screen).
+
+- `pywebpush==2.0.0` installed in the prod venv (`/root/GreenDial/venv`);
+  `push.push_configured()` returns `True`.
+- `VAPID_*` keys live in the server's `config.py` (synced by `deploy.sh`).
+- Daily reminder cron on the prod VM (alongside the 08:00 agent runner):
+  ```
+  0 15 * * *  /root/GreenDial/venv/bin/python /root/GreenDial/push_reminders.py >> /var/log/greendial_reminders.log 2>&1
+  ```
+  (15:00 UTC ≈ 10am ET / 7am PT — adjust to taste.)
+- Settings toggle calls `togglePush()` → `enablePushNotifications()` /
+  `disablePushNotifications()`. We still do **not** prompt for permission on
+  page load by design; users opt in explicitly.
 
 > Note: iOS only delivers web push to PWAs **installed to the Home Screen**
 > (iOS 16.4+). Android/desktop Chrome work from the browser tab.
@@ -72,7 +74,7 @@ Ranked by leverage.
 
 | # | Gap | Why it matters | Effort |
 |---|-----|----------------|--------|
-| 1 | **Surface push opt-in** | The retention loop (daily check-in) needs reminders; plumbing is done, UI isn't. | S |
+| 1 | ~~Surface push opt-in~~ ✅ done | Live in Settings → Push reminders; cron sends daily. | — |
 | 2 | **Capacitor wrapper** | Wrap the existing site to ship to App Store / Play Store with native push, no rewrite. The PWA work makes this mostly config. | M |
 | 3 | **Native push (APNs/FCM)** | iOS web push is install-gated and limited; native tokens via Capacitor are more reliable. | M |
 | 4 | **Health integrations** | Apple Health / Google Fit / wearables auto-fill the sticker board (sleep, steps, HR) instead of manual check-ins — the biggest product upgrade. | L |
