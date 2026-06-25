@@ -2113,6 +2113,10 @@
             <div><div class="settings-label">Enable Notifications</div><div class="settings-desc">Receive tips and reminders</div></div>
             <div class="settings-toggle ${userSettings.notifications_enabled ? 'on' : ''}" onclick="toggleNotificationSetting()"></div>
           </div>
+          <div class="settings-item">
+            <div><div class="settings-label">Push reminders</div><div class="settings-desc" id="push-desc">Daily check-in reminders on this device</div></div>
+            <div id="push-toggle-wrap"><span style="font-size:12px;color:rgba(255,255,255,0.35)">…</span></div>
+          </div>
           ${!!userSettings.chat_only_mode ? `<div id="settings-notif-list" style="margin-top:8px"></div>` : ''}
         </div>
         <div class="settings-group">
@@ -2143,6 +2147,9 @@
 
       // Populate the in-panel notifications list when in chat-only mode
       if (!!userSettings.chat_only_mode) fetchToday();
+
+      // Reflect current push-permission/subscription state
+      updatePushSettingUI();
     }
 
     async function refreshUserTab() {
@@ -3320,7 +3327,7 @@
       } catch (e) {}
     }
 
-    // Public hook for a future "Enable daily reminders" control in Settings.
+    // Requests permission + subscribes. Wired to the Settings "Push reminders" toggle.
     async function enablePushNotifications() {
       if (!('Notification' in window)) return 'unsupported';
       const perm = await Notification.requestPermission();
@@ -3328,6 +3335,65 @@
       return perm;
     }
     window.enablePushNotifications = enablePushNotifications;
+
+    async function disablePushNotifications() {
+      try {
+        const reg = swRegistration || (navigator.serviceWorker && await navigator.serviceWorker.getRegistration());
+        const sub = reg && await reg.pushManager.getSubscription();
+        if (sub) {
+          if (currentUser) {
+            await fetch(`${API}/push/unsubscribe/${currentUser.user_id}`, {
+              method: 'POST', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ endpoint: sub.endpoint })
+            });
+          }
+          await sub.unsubscribe();
+        }
+      } catch (e) {}
+    }
+
+    // 'unsupported' | 'denied' | 'on' | 'off'
+    async function pushState() {
+      if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window))
+        return 'unsupported';
+      if (Notification.permission === 'denied') return 'denied';
+      try {
+        const reg = swRegistration || await navigator.serviceWorker.getRegistration();
+        const sub = reg && await reg.pushManager.getSubscription();
+        return sub ? 'on' : 'off';
+      } catch (e) { return 'off'; }
+    }
+
+    async function updatePushSettingUI() {
+      const wrap = document.getElementById('push-toggle-wrap');
+      const desc = document.getElementById('push-desc');
+      if (!wrap) return;
+      const st = await pushState();
+      if (st === 'unsupported') {
+        wrap.innerHTML = '<span style="font-size:12px;color:rgba(255,255,255,0.35)">Not supported</span>';
+        if (desc) desc.textContent = 'This browser does not support push notifications';
+        return;
+      }
+      if (st === 'denied') {
+        wrap.innerHTML = '<span style="font-size:12px;color:#ef4444">Blocked</span>';
+        if (desc) desc.textContent = 'Notifications are blocked — re-enable them in your browser settings';
+        return;
+      }
+      const on = st === 'on';
+      wrap.innerHTML = `<div class="settings-toggle ${on ? 'on' : ''}" onclick="togglePush()"></div>`;
+      if (desc) desc.textContent = on
+        ? 'Daily check-in reminders are on for this device'
+        : 'Get daily check-in reminders on this device';
+    }
+
+    async function togglePush() {
+      const st = await pushState();
+      if (st === 'on') await disablePushNotifications();
+      else await enablePushNotifications();
+      updatePushSettingUI();
+    }
+    window.togglePush = togglePush;
+    window.updatePushSettingUI = updatePushSettingUI;
 
     init();
   </script>
