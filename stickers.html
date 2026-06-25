@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0d1117">
   <title>GreenDial Health Board</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -48,6 +49,15 @@
       color: rgba(230,237,243,0.7);
       padding-right: 16px;
       white-space: nowrap;
+      position: sticky;
+      left: 0;
+      z-index: 2;
+      background: #0d1117;
+    }
+    thead th:first-child { position: sticky; left: 0; z-index: 3; background: #0d1117; }
+    @media (max-width: 600px) {
+      .area-label { font-size: 12px; padding-right: 10px; }
+      .cell { width: 32px; height: 32px; font-size: 19px; line-height: 32px; }
     }
     .area-icon { font-size: 16px; margin-right: 4px; }
     .cell {
@@ -183,6 +193,9 @@
       }
       html += '</tbody></table></div>';
       document.getElementById('content').innerHTML = html;
+      // Scroll most-recent day into view; frozen label column stays put
+      const wrap = document.querySelector('.board-wrap');
+      if (wrap) requestAnimationFrame(() => { wrap.scrollLeft = wrap.scrollWidth; });
     }
 
     load();

@@ -367,6 +367,46 @@ def handle_update_settings(user_id, data):
     return json.dumps({"success": True, "settings": user['settings']})
 
 
+# ============ WEB PUSH ============
+
+def handle_push_subscribe(user_id, subscription):
+    """Store a browser PushSubscription on the user record (de-duped, capped)."""
+    user = get_user_data(user_id)
+    if not user:
+        return json.dumps({"error": "User not found"}), 404
+    if not isinstance(subscription, dict) or not subscription.get('endpoint'):
+        return json.dumps({"error": "Invalid subscription"}), 400
+
+    subs = [s for s in (user.get('push_subscriptions') or [])
+            if s.get('endpoint') != subscription['endpoint']]
+    subs.append(subscription)
+    user['push_subscriptions'] = subs[-10:]  # cap per user
+
+    try:
+        s3_storage.save_user(user_id, user)
+        _cache_user(user_id, user)
+    except Exception as e:
+        print(f"[Push] Failed to save subscription: {e}")
+        return json.dumps({"error": "Failed to save subscription"}), 500
+
+    return json.dumps({"success": True})
+
+
+def handle_push_unsubscribe(user_id, endpoint):
+    """Remove a single push endpoint from the user record."""
+    user = get_user_data(user_id)
+    if not user:
+        return json.dumps({"error": "User not found"}), 404
+    subs = [s for s in (user.get('push_subscriptions') or []) if s.get('endpoint') != endpoint]
+    user['push_subscriptions'] = subs
+    try:
+        s3_storage.save_user(user_id, user)
+        _cache_user(user_id, user)
+    except Exception:
+        return json.dumps({"error": "Failed to save"}), 500
+    return json.dumps({"success": True})
+
+
 # ============ AGENTS ============
 
 # Fields that are worth tracking historically (time-series)

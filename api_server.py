@@ -64,6 +64,59 @@ def sticker_board_public(token):
     return send_from_directory('.', 'stickers.html')
 
 
+# ---- PWA assets (served by nginx in prod; Flask serves them in dev) ----
+
+@app.route("/manifest.json", methods=['GET'])
+def pwa_manifest():
+    return send_from_directory('.', 'manifest.json', mimetype='application/manifest+json')
+
+
+@app.route("/sw.js", methods=['GET'])
+def pwa_service_worker():
+    resp = send_from_directory('.', 'sw.js', mimetype='application/javascript')
+    resp.headers['Service-Worker-Allowed'] = '/'
+    resp.headers['Cache-Control'] = 'no-cache'
+    return resp
+
+
+@app.route("/icons/<path:filename>", methods=['GET'])
+def pwa_icons(filename):
+    return send_from_directory('icons', filename)
+
+
+# ---- Web push ----
+
+@app.route("/push/vapid-public-key", methods=['GET'])
+def push_vapid_key():
+    return Response(json.dumps({"key": getattr(config, 'VAPID_PUBLIC_KEY', '')}),
+                    mimetype='application/json')
+
+
+@app.route("/push/subscribe/<user_id>", methods=['POST', 'OPTIONS'])
+def push_subscribe(user_id):
+    if request.method == 'OPTIONS':
+        return Response('', status=200)
+    denied = _require_session(user_id)
+    if denied: return denied
+    result = handlers.handle_push_subscribe(user_id, request.get_json() or {})
+    if isinstance(result, tuple):
+        return Response(result[0], status=result[1], mimetype='application/json')
+    return Response(result, mimetype='application/json')
+
+
+@app.route("/push/unsubscribe/<user_id>", methods=['POST', 'OPTIONS'])
+def push_unsubscribe(user_id):
+    if request.method == 'OPTIONS':
+        return Response('', status=200)
+    denied = _require_session(user_id)
+    if denied: return denied
+    endpoint = (request.get_json() or {}).get('endpoint', '')
+    result = handlers.handle_push_unsubscribe(user_id, endpoint)
+    if isinstance(result, tuple):
+        return Response(result[0], status=result[1], mimetype='application/json')
+    return Response(result, mimetype='application/json')
+
+
 @app.route("/ping", methods=['GET'])
 def ping():
     return Response(json.dumps({"status": "ok", "service": "greendial"}), mimetype='application/json')

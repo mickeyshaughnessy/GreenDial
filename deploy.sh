@@ -24,6 +24,11 @@ cp index.html /var/www/greendial/index.html
 cp stickers.html /var/www/greendial/stickers.html
 cp api_server.py /var/www/greendial/api_server.py
 cp handlers.py /var/www/greendial/handlers.py
+# PWA assets (manifest, service worker, icons) — served statically by nginx
+cp manifest.json /var/www/greendial/manifest.json
+cp sw.js /var/www/greendial/sw.js
+mkdir -p /var/www/greendial/icons
+cp icons/*.png /var/www/greendial/icons/
 echo "Static files synced to /var/www/greendial/"
 ENDSSH
 

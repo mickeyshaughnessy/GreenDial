@@ -2,9 +2,18 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>GreenDial - Health Assistant</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'><text y='32' font-size='32'>🌿</text></svg>">
+  <!-- PWA / mobile app -->
+  <meta name="theme-color" content="#1a1a2e">
+  <meta name="description" content="GreenDial is a free AI health companion. Chat with Doc for personalized guidance on sleep, diet, exercise, and stress.">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="GreenDial">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -12,6 +21,7 @@
       background: #1a1a2e;
       color: #eee;
       min-height: 100vh;
+      min-height: 100dvh;
     }
     
     .header {
@@ -212,6 +222,7 @@
       max-width: 1400px;
       margin: 0 auto;
       min-height: calc(100vh - 60px);
+      min-height: calc(100dvh - 60px);
     }
     
     .view { display: none; }
@@ -223,7 +234,13 @@
     .sb-table { border-collapse: collapse; min-width: 500px; }
     .sb-table th { font-size: 10px; color: rgba(255,255,255,0.35); padding: 4px 3px 8px; text-align: center; white-space: nowrap; }
     .sb-table th.sb-today { color: #58a6ff; font-weight: 700; }
-    .sb-area-label { text-align: left; font-size: 12px; color: rgba(255,255,255,0.6); padding-right: 12px; white-space: nowrap; }
+    /* Frozen topic-label column so it stays visible while days scroll */
+    .sb-table thead th:first-child { position: sticky; left: 0; z-index: 3; background: #20202f; }
+    .sb-area-label {
+      text-align: left; font-size: 12px; color: rgba(255,255,255,0.6);
+      padding-right: 12px; white-space: nowrap;
+      position: sticky; left: 0; z-index: 2; background: #20202f;
+    }
     .sb-cell { width: 34px; height: 34px; text-align: center; position: relative; }
     .sb-dot { width: 34px; height: 34px; border-radius: 7px; display: inline-flex; align-items: center; justify-content: center; font-size: 20px; transition: transform 0.1s; }
     .sb-dot.filled { background: rgba(88,166,255,0.08); cursor: help; }
@@ -845,15 +862,53 @@
     .chat-login-switch:hover { color: #10b981; text-decoration: underline; }
     .chat-login-error { font-size: 12px; color: #ef4444; margin-top: 6px; min-height: 16px; }
 
-    /* Mobile header fix */
+    /* ============ MOBILE ============ */
     @media (max-width: 700px) {
-      .header { flex-wrap: wrap; gap: 8px; padding: 10px 14px; }
-      .nav-tabs { order: 3; width: 100%; overflow-x: auto; }
+      /* Header: logo + bell/user on row 1, tabs scroll on row 2 */
+      .header {
+        flex-wrap: wrap; gap: 8px;
+        padding: 10px 12px;
+        padding-top: calc(10px + env(safe-area-inset-top));
+      }
+      .nav-tabs {
+        order: 3; width: 100%;
+        overflow-x: auto; flex-wrap: nowrap;
+        scrollbar-width: none; -webkit-overflow-scrolling: touch;
+      }
+      .nav-tabs::-webkit-scrollbar { display: none; }
+      .nav-tab { white-space: nowrap; flex-shrink: 0; }
       .user-count { display: none; }
       .user-area { margin-left: auto; }
+
+      .main { padding: 12px 12px calc(20px + env(safe-area-inset-bottom)); }
+      .panel-content { padding: 12px; }
+
+      /* iOS zooms the page when a focused input is <16px — force 16px */
+      input, textarea, select,
+      .chat-input-area input, .form-group input, .identity-field input,
+      .custom-prompt-textarea, .settings-select { font-size: 16px; }
+
+      /* Chat fills the viewport, accounts for browser chrome */
+      .chat-input-area { padding: 12px; gap: 8px; }
+      .chat-input-area .btn { padding: 12px 16px; }
+      .msg { max-width: 90%; }
+      .chat-hero { font-size: 12px; padding-top: 10px; }
+
+      /* Notification / check-in dropdown must not overflow the screen */
+      .notification-dropdown {
+        width: calc(100vw - 20px);
+        max-width: 360px;
+        right: -4px;
+      }
+
+      /* Board: tighter cells, frozen label already sticky via base rule */
+      .sb-area-label { font-size: 11px; padding-right: 8px; }
+      .sb-cell, .sb-dot { width: 30px; height: 30px; }
+      .sb-dot { font-size: 18px; }
     }
     @media (max-width: 420px) {
       .nav-tab { padding: 6px 10px; font-size: 12px; }
+      .logo { font-size: 18px; }
     }
   </style>
 </head>
@@ -2750,7 +2805,10 @@
       }
       html += '</tbody></table>';
 
-      document.getElementById('sticker-board-content').innerHTML = html;
+      const scroller = document.getElementById('sticker-board-content');
+      scroller.innerHTML = html;
+      // Today is the rightmost column — scroll it into view (frozen labels stay put)
+      requestAnimationFrame(() => { scroller.scrollLeft = scroller.scrollWidth; });
 
       // Show share section
       if (share_url) {
@@ -3221,6 +3279,55 @@
         tbody.innerHTML = '<tr><td colspan="6" style="padding:18px;color:#ef4444">Could not load bounties</td></tr>';
       }
     }
+
+    // ---- PWA: service worker registration + web push ----
+    let swRegistration = null;
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').then(reg => {
+          swRegistration = reg;
+          // Already-permitted users get re-subscribed silently (e.g. new device session).
+          if (window.Notification && Notification.permission === 'granted') maybeSubscribePush();
+        }).catch(() => {});
+      });
+    }
+
+    function urlBase64ToUint8Array(b64) {
+      const padding = '='.repeat((4 - b64.length % 4) % 4);
+      const base64 = (b64 + padding).replace(/-/g, '+').replace(/_/g, '/');
+      const raw = atob(base64);
+      return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
+    }
+
+    async function maybeSubscribePush() {
+      try {
+        if (!swRegistration || !currentUser || !('PushManager' in window)) return;
+        const keyResp = await fetch(`${API}/push/vapid-public-key`);
+        const { key } = await keyResp.json();
+        if (!key) return; // push not configured on the server — no-op
+        let sub = await swRegistration.pushManager.getSubscription();
+        if (!sub) {
+          sub = await swRegistration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: urlBase64ToUint8Array(key)
+          });
+        }
+        // Session token is attached automatically by the fetch interceptor.
+        await fetch(`${API}/push/subscribe/${currentUser.user_id}`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(sub)
+        });
+      } catch (e) {}
+    }
+
+    // Public hook for a future "Enable daily reminders" control in Settings.
+    async function enablePushNotifications() {
+      if (!('Notification' in window)) return 'unsupported';
+      const perm = await Notification.requestPermission();
+      if (perm === 'granted') await maybeSubscribePush();
+      return perm;
+    }
+    window.enablePushNotifications = enablePushNotifications;
 
     init();
   </script>
