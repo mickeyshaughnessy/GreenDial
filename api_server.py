@@ -541,6 +541,17 @@ def post_feedback():
     return Response(result, mimetype='application/json')
 
 
+@app.route("/feedback/<post_id>/reply", methods=['POST', 'OPTIONS'])
+def reply_feedback_post(post_id):
+    if request.method == 'OPTIONS':
+        return Response('', status=200)
+    req = request.get_json() or {}
+    result = handlers.handle_reply_feedback(post_id, req)
+    if isinstance(result, tuple):
+        return Response(result[0], status=result[1], mimetype='application/json')
+    return Response(result, mimetype='application/json')
+
+
 @app.route("/feedback/<post_id>", methods=['DELETE', 'OPTIONS'])
 def delete_feedback_post(post_id):
     if request.method == 'OPTIONS':

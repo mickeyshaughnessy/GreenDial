@@ -2887,11 +2887,38 @@ def handle_post_feedback(req):
             "message": message[:2000],
             "created": datetime.utcnow().isoformat(),
             "status": "new",
+            "replies": [],
         }
         posts.insert(0, post)
         posts = posts[:500]
         s3_storage.save_feedback(posts)
         return json.dumps({"post": post})
+    except Exception as e:
+        return (json.dumps({"error": str(e)}), 500)
+
+
+def handle_reply_feedback(post_id, req):
+    """Append a threaded reply to a feedback post. Open to anyone (like posting)."""
+    message = (req.get('message') or '').strip()
+    if not message:
+        return (json.dumps({"error": "Message required"}), 400)
+    username = (req.get('username') or 'Guest').strip() or 'Guest'
+    try:
+        posts = s3_storage.get_feedback()
+        target = next((p for p in posts if p.get('id') == post_id), None)
+        if target is None:
+            return (json.dumps({"error": "Post not found"}), 404)
+        reply = {
+            "id": str(uuid.uuid4()),
+            "username": username[:40],
+            "message": message[:2000],
+            "created": datetime.utcnow().isoformat(),
+        }
+        replies = target.setdefault('replies', [])
+        replies.append(reply)
+        target['replies'] = replies[-200:]
+        s3_storage.save_feedback(posts)
+        return json.dumps({"reply": reply})
     except Exception as e:
         return (json.dumps({"error": str(e)}), 500)
 

@@ -2502,6 +2502,36 @@
 
     let _feedbackDragId = null;
 
+    function _feedbackThreadHtml(p) {
+      const id = escapeHtml(p.id);
+      const opName = p.username || 'Guest';
+      const replies = p.replies || [];
+      const repliesHtml = replies.map(r => {
+        const isOp = (r.username || '') === opName;
+        const badge = isOp ? ' <span style="font-size:9px;color:#10b981;border:1px solid rgba(16,185,129,0.4);border-radius:6px;padding:0 4px;vertical-align:middle">author</span>' : '';
+        return `<div style="margin-top:8px;padding-left:10px;border-left:2px solid rgba(255,255,255,0.1)">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">
+            <span style="font-size:12px;font-weight:600;color:#58a6ff">${escapeHtml(r.username || 'Guest')}${badge}</span>
+            <span style="font-size:10px;color:rgba(255,255,255,0.3)">${formatTime(r.created)}</span>
+          </div>
+          <div style="font-size:12px;line-height:1.5;color:rgba(255,255,255,0.8)">${escapeHtml(r.message)}</div>
+        </div>`;
+      }).join('');
+      const prefillName = escapeHtml((currentUser && currentUser.username) || '');
+      // onmousedown stop keeps the composer usable inside draggable admin cards
+      return `<div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.06)">
+        ${repliesHtml}
+        <div style="display:flex;gap:6px;margin-top:8px" onmousedown="event.stopPropagation()">
+          <input id="reply-name-${id}" placeholder="Name" value="${prefillName}" maxlength="40" draggable="false"
+            style="width:78px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:6px;color:#fff;font-size:12px;padding:6px 8px">
+          <input id="reply-msg-${id}" placeholder="Write a reply…" maxlength="2000" draggable="false"
+            onkeypress="if(event.key==='Enter')replyToFeedback('${id}')"
+            style="flex:1;min-width:0;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:6px;color:#fff;font-size:12px;padding:6px 9px">
+          <button class="btn btn-secondary btn-sm" onclick="replyToFeedback('${id}')">Reply</button>
+        </div>
+      </div>`;
+    }
+
     function _feedbackCard(p) {
       const id = escapeHtml(p.id);
       const status = p.status || 'new';
@@ -2519,6 +2549,7 @@
         </div>
         <div style="font-size:13px;line-height:1.5;color:rgba(255,255,255,0.85)">${escapeHtml(p.message)}</div>
         ${todoActions}
+        ${_feedbackThreadHtml(p)}
       </div>`;
     }
 
@@ -2571,6 +2602,7 @@
                 <span style="font-size:11px;color:rgba(255,255,255,0.35)">${formatTime(p.created)}</span>
               </div>
               <div style="font-size:13px;line-height:1.6;color:rgba(255,255,255,0.85)">${escapeHtml(p.message)}</div>
+              ${_feedbackThreadHtml(p)}
             </div>`;
           }).join('');
         }
@@ -2661,6 +2693,26 @@
       } catch (e) {
         errEl.textContent = 'Could not post feedback. Try again.';
       }
+    }
+
+    async function replyToFeedback(postId) {
+      const msgEl = document.getElementById(`reply-msg-${postId}`);
+      const nameEl = document.getElementById(`reply-name-${postId}`);
+      if (!msgEl) return;
+      const message = (msgEl.value || '').trim();
+      if (!message) return;
+      const username = ((nameEl && nameEl.value.trim()) || (currentUser ? currentUser.username : '')) || 'Guest';
+      try {
+        const res = await fetch(`${API}/feedback/${postId}/reply`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message, username })
+        });
+        const data = await res.json();
+        if (data.error) return;
+        msgEl.value = '';
+        await loadFeedback();
+      } catch (e) {}
     }
 
     async function toggleAgentSub(agentId, toggleEl) {
@@ -2779,8 +2831,9 @@
     }
 
     function isoToday() {
+      // UTC to match how the server keys sticker entries (datetime.utcnow)
       const d = new Date();
-      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      return `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}`;
     }
 
     function renderStickerBoard(data) {
@@ -2789,12 +2842,13 @@
       const areas = ['sleep','diet','exercise','mental_health','relationships','environment','protect'];
       const areaLabels = {sleep:'🌙 Sleep',diet:'🥗 Diet',exercise:'💪 Exercise',mental_health:'🧠 Mental',relationships:'❤️ Relationships',environment:'🌿 Environment',protect:'🛡️ Protect'};
 
-      // Build last 30 days oldest→newest (today on the right); skip days with no stickers
+      // Build last 30 days oldest→newest (today on the right); skip days with no stickers.
+      // Use UTC throughout so day keys match the server's utcnow-based storage.
       const candidates = [];
       for (let i = 29; i >= 0; i--) {
-        const d = new Date(); d.setDate(d.getDate() - i);
-        const iso = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-        const label = i === 0 ? 'Today' : `${d.getMonth()+1}/${d.getDate()}`;
+        const d = new Date(); d.setUTCDate(d.getUTCDate() - i);
+        const iso = `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}`;
+        const label = i === 0 ? 'Today' : `${d.getUTCMonth()+1}/${d.getUTCDate()}`;
         candidates.push({ iso, label, isToday: i === 0 });
       }
       const days = candidates.filter(day =>
