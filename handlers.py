@@ -1237,7 +1237,7 @@ def handle_get_today(user_id):
             check_ins.append({
                 "area": area, "area_label": area_label, "answered": False,
                 "message": template.get("question", f"How is your {area_label.lower()} today?"),
-                "emoji_options": template.get("options", []),
+                "emoji_options": stickers_module.build_poll_options(area, f"{user_id}:{area}:{today}"),
             })
 
     suggestions = [s for s in user.get('suggestions', []) if s.get('status') == 'pending'][:3]
@@ -1806,7 +1806,7 @@ def generate_login_polls(user_id):
             "type": "sticker_poll",
             "area": area,
             "message": template["question"],
-            "emoji_options": template["options"],
+            "emoji_options": stickers_module.build_poll_options(area, f"{user_id}:{area}:{today}"),
             "area_label": stickers_module.AREA_LABELS.get(area, area),
             "created": datetime.utcnow().isoformat(),
             "read": False

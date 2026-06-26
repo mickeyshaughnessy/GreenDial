@@ -158,6 +158,17 @@
       transition: background 0.15s;
     }
     .ci-opt:hover { background: rgba(88,166,255,0.2); border-color: rgba(88,166,255,0.4); }
+    /* Rare check-in option — a cool find for regular check-ins */
+    .ci-opt.rare {
+      background: linear-gradient(135deg, rgba(251,191,36,0.18), rgba(245,158,11,0.10));
+      border-color: rgba(251,191,36,0.55);
+      animation: rareGlow 1.8s ease-in-out infinite;
+    }
+    .ci-opt.rare:hover { background: rgba(251,191,36,0.3); border-color: #fbbf24; }
+    @keyframes rareGlow {
+      0%, 100% { box-shadow: 0 0 5px rgba(251,191,36,0.30); }
+      50% { box-shadow: 0 0 12px rgba(251,191,36,0.55); }
+    }
     .ci-answered {
       padding: 6px 16px;
       display: flex; align-items: center; gap: 8px;
@@ -2277,9 +2288,12 @@
         }
         const msg = escapeHtml(ci.message || '');
         const safemsg = msg.replace(/'/g, "\\'");
-        const opts = (ci.emoji_options || []).map(o =>
-          `<button class="ci-opt" onclick="event.stopPropagation(); answerCheckin('${ci.area}','${o.emoji}','${escapeHtml(o.label||'').replace(/'/g,"\\'")}','${safemsg}')">${o.emoji}</button>`
-        ).join('');
+        const opts = (ci.emoji_options || []).map(o => {
+          const lbl = escapeHtml(o.label || '');
+          const jsLbl = lbl.replace(/'/g, "\\'");
+          const title = o.rare ? `✨ Rare find — ${lbl}` : lbl;
+          return `<button class="ci-opt${o.rare ? ' rare' : ''}" title="${title}" onclick="event.stopPropagation(); answerCheckin('${ci.area}','${o.emoji}','${jsLbl}','${safemsg}')">${o.emoji}</button>`;
+        }).join('');
         return `<div class="ci-card" id="ci-card-${ci.area}">
           <div class="ci-question"><span class="ci-icon">${icon}</span>${msg}</div>
           <div class="ci-opts">${opts}</div>
