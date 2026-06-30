@@ -1139,17 +1139,17 @@
     <div class="donate-popup">
       <h3>💚 Support GreenDial</h3>
       <p class="subtitle">GreenDial is free and open-source. Donations help keep the AI running.</p>
-      <div class="crypto-row">
+      <div class="crypto-row" style="display:none">
         <div class="crypto-label">₿ Bitcoin (BTC)</div>
         <div class="crypto-addr" id="btc-addr">139VrBnUEB3UgzwGCQwLxDHnDTUWoE96Y8</div>
         <button class="btn-copy" onclick="copyAddr('btc-addr', this)">Copy address</button>
       </div>
-      <div class="crypto-row">
+      <div class="crypto-row" style="display:none">
         <div class="crypto-label">Ξ Ethereum (ETH)</div>
         <div class="crypto-addr" id="eth-addr">0x58ed1da7a1A58DaB2Fb8d21317725D8760C816Fe</div>
         <button class="btn-copy" onclick="copyAddr('eth-addr', this)">Copy address</button>
       </div>
-      <div class="phantom-row">
+      <div class="phantom-row" style="display:none">
         <button class="btn-phantom" id="phantom-connect-btn" onclick="connectPhantom()">👻 Connect Phantom to send ETH</button>
         <div id="phantom-connected" style="display:none">
           <div class="phantom-wallet-addr" id="phantom-wallet-addr"></div>
