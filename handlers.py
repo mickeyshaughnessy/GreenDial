@@ -353,7 +353,10 @@ def handle_update_settings(user_id, data):
     user = get_user_data(user_id)
     if not user:
         return json.dumps({"error": "User not found"}), 404
-    
+
+    if 'custom_agent_prompt' in data:
+        data['custom_agent_prompt'] = str(data['custom_agent_prompt'])[:2000]
+
     user.setdefault('settings', {}).update(data)
     user['last_updated'] = datetime.utcnow().isoformat()
     
@@ -1096,90 +1099,6 @@ Emit **PROFILE_UPDATE** if the user shared new health info."""
     except Exception as e:
         print(f"[CrossAI] Synthesis failed: {e}")
         return None
-
-
-def _migrate_legacy_subscriptions(user):
-    """Rewrite immunity/disease_prevention -> protect in user settings (in-place, saves if changed)."""
-    settings = user.get('settings', {})
-    subs = settings.get('agent_subscriptions', [])
-    new_subs = []
-    changed = False
-    for aid in subs:
-        mapped = agent_registry.LEGACY_ID_MAP.get(aid)
-        if mapped:
-            if mapped not in new_subs:
-                new_subs.append(mapped)
-            changed = True
-        else:
-            if aid not in new_subs:
-                new_subs.append(aid)
-    if changed:
-        settings['agent_subscriptions'] = new_subs
-        user['settings'] = settings
-        try:
-            s3_storage.save_user(user.get('user_id', ''), user)
-            _cache_user(user.get('user_id', ''), user)
-        except Exception:
-            pass
-
-
-def handle_get_agent_subscriptions(user_id):
-    """Get user's agent subscription settings."""
-    user = get_user_data(user_id)
-    if not user:
-        return json.dumps({"error": "User not found"}), 404
-
-    _migrate_legacy_subscriptions(user)
-
-    settings = user.get('settings', {})
-    subscriptions = settings.get('agent_subscriptions', [])
-    prefs = settings.get('agent_prefs', {})
-
-    available = [
-        {
-            "id": aid,
-            "name": getattr(module, 'AGENT_NAME', aid),
-            "emoji": getattr(module, 'AGENT_EMOJI', '🤖'),
-            "subscribed": aid in subscriptions
-        }
-        for aid, module in agent_registry.REGISTRY.items()
-    ]
-
-    return json.dumps({
-        "subscriptions": subscriptions,
-        "agent_prefs": prefs,
-        "available_agents": available
-    })
-
-
-def handle_update_agent_subscriptions(user_id, data):
-    """Update which agents a user is subscribed to."""
-    user = get_user_data(user_id)
-    if not user:
-        return json.dumps({"error": "User not found"}), 404
-
-    subscriptions = data.get('subscriptions', [])
-    # Validate against known agents
-    valid = [aid for aid in subscriptions if aid in agent_registry.REGISTRY]
-
-    user.setdefault('settings', {})['agent_subscriptions'] = valid
-
-    if 'agent_prefs' in data and isinstance(data['agent_prefs'], dict):
-        user['settings'].setdefault('agent_prefs', {}).update(data['agent_prefs'])
-
-    if 'custom_agent_prompt' in data:
-        user['settings']['custom_agent_prompt'] = str(data['custom_agent_prompt'])[:2000]
-
-    user['last_updated'] = datetime.utcnow().isoformat()
-
-    try:
-        s3_storage.save_user(user_id, user)
-        _cache_user(user_id, user)
-    except Exception as e:
-        print(f"[Agents] Failed to save subscriptions: {e}")
-        return json.dumps({"error": "Failed to save"}), 500
-
-    return json.dumps({"success": True, "subscriptions": valid})
 
 
 # ============ NOTIFICATIONS ============

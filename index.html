@@ -296,6 +296,22 @@
       border-color: rgba(16,185,129,0.35);
       color: white;
     }
+    /* Get Started walkthrough */
+    .gs-step {
+      display: flex; gap: 14px; align-items: flex-start;
+      padding: 14px 0; border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .gs-step:last-child { border-bottom: none; }
+    .gs-num {
+      width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+      background: rgba(16,185,129,0.18); color: #10b981;
+      font-size: 13px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      margin-top: 2px;
+    }
+    .gs-step h4 { font-size: 14px; color: white; margin-bottom: 4px; }
+    .gs-step p { font-size: 13px; color: rgba(255,255,255,0.6); line-height: 1.6; }
+    .gs-step p a { color: #10b981; }
     .chat-container {
       background: rgba(255,255,255,0.05);
       border-radius: 16px;
@@ -931,9 +947,10 @@
       <button class="nav-tab" id="nav-stickers-tab" onclick="switchView('stickers')">🏷️ Board</button>
       <button class="nav-tab" id="nav-history-tab" onclick="switchView('history')">📜 History</button>
       <button class="nav-tab" id="nav-feedback-tab" onclick="switchView('feedback')">📣 Feedback</button>
+      <button class="nav-tab" id="nav-getstarted-tab" onclick="switchView('getstarted')">🚀 Get Started</button>
       <button class="nav-tab" id="admin-tab" style="display:none" onclick="switchView('admin')">🛡️ Admin</button>
-      <a class="nav-tab" id="nav-docs-tab" href="/docs" target="_blank" style="text-decoration:none">📄 Docs</a>
       <a class="nav-tab" id="nav-about-tab" href="/about" target="_blank" style="text-decoration:none">ℹ️ About</a>
+      <a class="nav-tab" id="nav-docs-tab" href="/docs" target="_blank" style="text-decoration:none">📄 Docs</a>
     </div>
     <div class="user-area" id="user-area">
       <div style="position:relative">
@@ -953,6 +970,9 @@
     <div class="view active" id="view-chat">
       <div class="chat-hero">
         GreenDial is a free AI health companion. Chat with Doc to get personalized guidance on sleep, diet, exercise, stress, and more. Your health profile builds automatically as you talk — no forms, no appointments.
+        <div style="margin-top:6px">
+          <a href="#" onclick="switchView('getstarted');return false;" style="color:#10b981;text-decoration:none">🚀 New here? Take the 60-second tour →</a>
+        </div>
       </div>
       <div class="starter-prompts">
         <button class="starter-btn" onclick="sendMessage('Help me sleep better')">😴 Help me sleep better</button>
@@ -1029,7 +1049,39 @@
         <div class="panel-content"><div class="transcript-view" id="transcript-view"><div class="profile-empty">No conversation history yet</div></div></div>
       </div>
     </div>
-    
+
+    <div class="view" id="view-getstarted">
+      <div style="display:flex;flex-direction:column;gap:16px;max-width:720px;width:100%;margin:0 auto;padding-bottom:40px">
+        <div class="panel">
+          <div class="panel-header"><span>🚀 Get Started with GreenDial</span></div>
+          <div class="panel-content">
+            <div class="gs-step">
+              <div class="gs-num">1</div>
+              <div><h4>Just start talking</h4><p>No forms, no setup. Type a message to Doc — try "Help me sleep better" or tell it what's going on with your health today.</p></div>
+            </div>
+            <div class="gs-step">
+              <div class="gs-num">2</div>
+              <div><h4>Your profile builds itself</h4><p>As you chat, Doc quietly saves the relevant details — goals, conditions, preferences — into your health profile. Nothing to fill out by hand.</p></div>
+            </div>
+            <div class="gs-step">
+              <div class="gs-num">3</div>
+              <div><h4>Check the 🏷️ Board for daily check-ins</h4><p>A quick one-tap emoji poll for how you're doing across a few areas each day — takes seconds.</p></div>
+            </div>
+            <div class="gs-step">
+              <div class="gs-num">4</div>
+              <div><h4>Accept Suggestions → track Activities</h4><p>Each day Doc offers a couple of personalized suggestions. Accept one to turn it into an Activity you can check off when done.</p></div>
+            </div>
+            <div class="gs-step">
+              <div class="gs-num">5</div>
+              <div><h4>It's free — here's why</h4><p>GreenDial is a free system built to make good AI guidance available to everyone. <a href="/about" target="_blank">Read the ethos, FAQ, and Bounty Program →</a></p></div>
+            </div>
+          </div>
+        </div>
+        <div style="text-align:center;padding:8px 0 20px">
+          <button class="btn btn-primary" onclick="switchView('chat')">Start chatting with Doc →</button>
+        </div>
+      </div>
+    </div>
 
     <div class="view" id="view-admin">
       <div class="admin-view" style="width:100%">
@@ -1315,7 +1367,6 @@
     let userProfile = {};
     let userSettings = { doc_style: 'questioning', notifications_enabled: true, chat_only_mode: true };
     let notifications = []; // kept for legacy compat; use _todayData instead
-    let availableAgents = [];
     let currentHistoryAgent = 'doc';
     let taskMode = false; // task mode uses agentic Gemini Flash loop for Doc
 
@@ -1474,7 +1525,7 @@
       updateUserUI();
 
       // If we hid the current view's tab, go back to chat
-      if (chatOnly && currentView !== 'chat' && currentView !== 'admin' && currentView !== 'stickers' && currentView !== 'feedback') {
+      if (chatOnly && currentView !== 'chat' && currentView !== 'admin' && currentView !== 'stickers' && currentView !== 'feedback' && currentView !== 'getstarted') {
         switchView('chat');
       }
     }
@@ -1525,13 +1576,6 @@
           agentSessionIds = {};
           currentAgent = 'doc';
           updateAgentTabs();
-          try {
-            const ar = await fetch(`${API}/agents/${data.user_id}`);
-            const ad = await ar.json();
-            availableAgents = ad.available_agents || [];
-            userSettings.agent_subscriptions = ad.subscriptions || [];
-            updateAgentTabs();
-          } catch (e) {}
           await loadAgentChats(data.user_id);
           if (!agentChats.doc || agentChats.doc.length === 0) {
             agentChats.doc = [{ role: 'doc', text: `Welcome back, ${data.username}! What's on your mind today?` }];
@@ -1623,12 +1667,6 @@
         agentChats = { doc: [] };
         agentSessionIds = {};
         currentAgent = 'doc';
-        try {
-          const ar = await fetch(`${API}/agents/${saved.user_id}`);
-          const ad = await ar.json();
-          availableAgents = ad.available_agents || [];
-          userSettings.agent_subscriptions = ad.subscriptions || [];
-        } catch (e) {}
         updateAgentTabs();
         await loadAgentChats(saved.user_id);
         if (!agentChats.doc || agentChats.doc.length === 0) {
@@ -2040,47 +2078,13 @@
       }
 
       try {
-        const [settingsRes, agentsRes] = await Promise.allSettled([
-          fetch(`${API}/settings/${currentUser.user_id}`),
-          fetch(`${API}/agents/${currentUser.user_id}`)
-        ]);
-        if (settingsRes.status === 'fulfilled') {
-          const data = await settingsRes.value.json();
-          userSettings = data.settings || userSettings;
-        }
-        if (agentsRes.status === 'fulfilled') {
-          const data = await agentsRes.value.json();
-          availableAgents = data.available_agents || [];
-          userSettings.agent_subscriptions = data.subscriptions || [];
-        }
+        const settingsRes = await fetch(`${API}/settings/${currentUser.user_id}`);
+        const data = await settingsRes.json();
+        userSettings = data.settings || userSettings;
       } catch (e) {}
 
-      const subs = userSettings.agent_subscriptions || [];
       const customPrompt = userSettings.custom_agent_prompt ||
         'You are a custom AI health agent, capable of providing personalized guidance on any health topic the user cares about. Be kind, helpful, and truthful.';
-
-      const agentToggles = availableAgents.map(a => {
-        const isOn = subs.includes(a.id);
-        const isCustom = a.id === 'custom';
-        return `
-          <div class="settings-item">
-            <div>
-              <div class="settings-label">${escapeHtml(a.emoji)} ${escapeHtml(a.name)}</div>
-              <div class="settings-desc">Daily notification check-ins</div>
-            </div>
-            <div class="settings-toggle ${isOn ? 'on' : ''}"
-                 onclick="toggleAgentSub('${a.id}', this)"></div>
-          </div>
-          ${isCustom ? `
-          <div id="custom-prompt-section" style="${isOn ? '' : 'display:none'}">
-            <div class="custom-prompt-wrap">
-              <label style="font-size:11px;color:rgba(255,255,255,0.5);text-transform:uppercase;display:block;margin-bottom:6px">Custom Agent Prompt</label>
-              <textarea id="custom-agent-prompt-input" class="custom-prompt-textarea"
-                placeholder="You are a custom AI health agent, capable of...">${escapeHtml(customPrompt)}</textarea>
-              <button class="btn btn-secondary btn-sm" style="margin-top:8px" onclick="saveCustomPrompt()">Save Prompt</button>
-            </div>
-          </div>` : ''}`;
-      }).join('');
 
       const av = getUserAvatar();
       const avHtml = av && av.startsWith('data:')
@@ -2122,7 +2126,7 @@
         <div class="settings-group">
           <div class="settings-group-title">Notifications</div>
           <div class="settings-item">
-            <div><div class="settings-label">Enable Notifications</div><div class="settings-desc">Receive tips and reminders</div></div>
+            <div><div class="settings-label">Enable Notifications</div><div class="settings-desc">Doc checks in on you daily with relevant tips</div></div>
             <div class="settings-toggle ${userSettings.notifications_enabled ? 'on' : ''}" onclick="toggleNotificationSetting()"></div>
           </div>
           <div class="settings-item">
@@ -2132,11 +2136,15 @@
           ${!!userSettings.chat_only_mode ? `<div id="settings-notif-list" style="margin-top:8px"></div>` : ''}
         </div>
         <div class="settings-group">
-          <div class="settings-group-title">Daily Notifications</div>
+          <div class="settings-group-title">Custom Instructions</div>
           <div style="padding:0 0 10px;font-size:12px;color:rgba(255,255,255,0.5)">
-            All agents are available in the chat tabs above. Toggle to receive daily check-in notifications from specific agents.
+            Personalize the ⚙️ Custom chat tab with your own instructions for Doc.
           </div>
-          ${agentToggles || '<div class="profile-empty">Loading agents…</div>'}
+          <div class="custom-prompt-wrap">
+            <textarea id="custom-agent-prompt-input" class="custom-prompt-textarea"
+              placeholder="You are a custom AI health agent, capable of...">${escapeHtml(customPrompt)}</textarea>
+            <button class="btn btn-secondary btn-sm" style="margin-top:8px" onclick="saveCustomPrompt()">Save Prompt</button>
+          </div>
         </div>
         ${!!userSettings.chat_only_mode ? `
         <div class="settings-group">
@@ -2720,26 +2728,6 @@
       } catch (e) {}
     }
 
-    async function toggleAgentSub(agentId, toggleEl) {
-      const subs = userSettings.agent_subscriptions || [];
-      const idx = subs.indexOf(agentId);
-      if (idx === -1) subs.push(agentId);
-      else subs.splice(idx, 1);
-      userSettings.agent_subscriptions = subs;
-      toggleEl.classList.toggle('on', subs.includes(agentId));
-      if (agentId === 'custom') {
-        const sec = document.getElementById('custom-prompt-section');
-        if (sec) sec.style.display = subs.includes('custom') ? '' : 'none';
-      }
-      try {
-        await fetch(`${API}/agents/${currentUser.user_id}`, {
-          method: 'PUT', headers: {'Content-Type':'application/json'},
-          body: JSON.stringify({ subscriptions: subs })
-        });
-      } catch (e) {}
-      updateAgentTabs();
-    }
-
     async function saveCustomPrompt() {
       if (!currentUser) return;
       const el = document.getElementById('custom-agent-prompt-input');
@@ -2747,7 +2735,7 @@
       const prompt = el.value.trim();
       userSettings.custom_agent_prompt = prompt;
       try {
-        await fetch(`${API}/agents/${currentUser.user_id}`, {
+        await fetch(`${API}/settings/${currentUser.user_id}`, {
           method: 'PUT', headers: {'Content-Type':'application/json'},
           body: JSON.stringify({ custom_agent_prompt: prompt })
         });
@@ -3009,15 +2997,6 @@
           currentAgent = 'doc';
           updateAgentTabs();
 
-          // Load agent subscriptions for tabs
-          try {
-            const ar = await fetch(`${API}/agents/${data.user_id}`);
-            const ad = await ar.json();
-            availableAgents = ad.available_agents || [];
-            userSettings.agent_subscriptions = ad.subscriptions || [];
-            updateAgentTabs();
-          } catch (e) {}
-
           // Load saved transcripts
           await loadAgentChats(data.user_id);
           // If Doc has no loaded history, show welcome
@@ -3093,7 +3072,6 @@
       currentUser = null;
       userProfile = {};
       userSettings = { doc_style: 'questioning', notifications_enabled: true, chat_only_mode: true };
-      availableAgents = [];
       currentAgent = 'doc';
       currentHistoryAgent = 'doc';
       if (window._notifInterval) { clearInterval(window._notifInterval); window._notifInterval = null; }

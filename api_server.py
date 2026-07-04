@@ -471,31 +471,6 @@ def get_history(user_id):
     return Response(result, mimetype='application/json')
 
 
-@app.route("/agents/<user_id>", methods=['GET', 'OPTIONS'])
-def get_agent_subscriptions(user_id):
-    if request.method == 'OPTIONS':
-        return Response('', status=200)
-    denied = _require_session(user_id)
-    if denied: return denied
-    result = handlers.handle_get_agent_subscriptions(user_id)
-    if isinstance(result, tuple):
-        return Response(result[0], status=result[1], mimetype='application/json')
-    return Response(result, mimetype='application/json')
-
-
-@app.route("/agents/<user_id>", methods=['PUT', 'POST', 'OPTIONS'])
-def update_agent_subscriptions(user_id):
-    if request.method == 'OPTIONS':
-        return Response('', status=200)
-    denied = _require_session(user_id)
-    if denied: return denied
-    req = request.get_json() or {}
-    result = handlers.handle_update_agent_subscriptions(user_id, req)
-    if isinstance(result, tuple):
-        return Response(result[0], status=result[1], mimetype='application/json')
-    return Response(result, mimetype='application/json')
-
-
 # ============ THIRD-PARTY API ============
 
 @app.route("/api/v1/profile", methods=['GET', 'OPTIONS'])

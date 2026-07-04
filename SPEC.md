@@ -125,10 +125,12 @@ A HIPAA-waived personal health assistant with AI chat interface, user profile ma
     "theme": "dark",
     "notifications_enabled": true,
     "chat_only_mode": true,
-    "agent_subscriptions": []
+    "custom_agent_prompt": ""
   }
 }
 ```
+
+**Note:** there is no per-agent subscription picker — `notifications_enabled` alone controls whether the cron runner (`agent_runner.py`) sends all specialist agents' daily check-ins for a user. Older records may still carry a now-unused `agent_subscriptions` array from before this simplification.
 
 **Identity:** `(first_name, last_name, email)` is the canonical human identity for payment matching and demand-side targeting. The internal `user_id` hash remains the S3 key.
 
@@ -278,6 +280,14 @@ Body: `{ "status": "completed" }` — sets `completed_at`, snapshots wallet addr
 
 ---
 
+### 2.9 Specialist Agents & Notifications
+
+Nine agents live in `prompts/agents/` (`diet`, `exercise`, `protect`, `sleep`, `mental_health`, `relationships`, `environment`, `custom`, `cross_ai`) plus Doc, the primary coordinator. Doc routes conversations to the relevant specialist by keyword match; when a message spans two or more domains, Cross AI runs the matched specialists in parallel and synthesizes their answers. Each specialist also has its own chat tab in the UI (always visible — not gated by any subscription), and first activation of a tab triggers a 3-turn onboarding interview that fills domain-specific profile fields.
+
+**No per-agent subscription picker.** A single setting, `notifications_enabled` (default `true`), controls all daily check-ins. When true, `agent_runner.py` (cron, 08:00 UTC daily) runs every agent in `ALL_AGENT_IDS` for every user, subject to each agent's own debounce window (`CRON_CADENCE_HOURS` — 20h default, weekly for `protect` and `cross_ai`). This replaced an earlier design where users picked individual agents to subscribe to in Settings; that UI and its backing `/agents/<user_id>` GET/PUT endpoints have been removed in favor of one master toggle, to keep the app focused on conversing with Doc rather than managing a roster of specialists.
+
+---
+
 ## 3. COMPONENT SPECIFICATIONS
 
 ### 3.1 config.py
@@ -392,34 +402,54 @@ handle_api_profile_update(request) -> JSON
 **All routes:**
 ```
 GET  /                                         Serve index.html
+GET  /about                                    Serve about.html (ethos, Bounty Program, FAQ)
+GET  /docs                                     Serve docs.html (API reference)
+GET  /arazzo                                   Serve arazzo.html (10 usage walkthroughs)
+GET  /unprompted                               Serve unprompted.html
+GET  /stickers/<token>                         Serve stickers.html (public sticker board)
+GET  /manifest.json, /sw.js, /icons/<file>     PWA assets
 GET  /ping                                     Health check
+GET  /stats                                    Public user-count stat
+GET  /spec/openapi.yaml                        OpenAPI 3.1 spec
+GET  /spec/arazzo.yaml                         Arazzo workflow spec
 
 POST /auth                                     Login/Signup
 POST /chat                                     Chat with Doc
 POST /chat/agent/<agent_id>                    Chat with specialist agent
+POST /task                                     Task-mode chat (tool-calling, Gemini Flash)
 
 GET  /user/<user_id>                           Get user profile
 PUT  /user/<user_id>                           Update user (name, email, wallets, profile)
+DELETE /user/<user_id>                         Delete user
 
 GET  /settings/<user_id>                       Get user settings
-PUT  /settings/<user_id>                       Update user settings
+PUT  /settings/<user_id>                       Update user settings (incl. custom_agent_prompt)
+
+GET  /today/<user_id>                          Check-ins + pending suggestions + notifications, one call
 
 GET  /notifications/<user_id>                  Get notifications
-POST /notifications/<user_id>/generate         Generate notifications
+POST /notifications/<user_id>/generate         Generate an on-demand notification
 DELETE /notifications/<user_id>/<id>           Dismiss notification
 
 GET  /suggestions/<user_id>                    Get current suggestion batch
 POST /suggestions/<user_id>/generate           Generate daily suggestions (cron or on-demand)
 POST /suggestions/<user_id>/<id>/accept        Accept suggestion → activity
+POST /suggestions/<user_id>/<id>/dismiss       Dismiss suggestion
 
 GET  /activities/<user_id>                     Get activities list
-PATCH /activities/<user_id>/<id>               Mark activity complete
+PATCH /activities/<user_id>/<id>               Mark activity completed or abandoned
 
-POST /bounty                                   Create bounty (demand-side)
-GET  /bounty                                   List active bounties
-GET  /bounty/<id>                              Get single bounty
+POST /bounty                                   Create bounty (demand-side, X-API-Key)
+GET  /bounty                                   List all bounties (demand-side, X-API-Key)
+GET  /bounty/<id>                              Get single bounty (demand-side, X-API-Key)
+DELETE /bounty/<id>                            Delete bounty (demand-side, X-API-Key)
 
-POST /generate                                 Preview suggestion + bounty payload (demand-side)
+POST /generate                                 Preview suggestion + bounty payload (demand-side, X-API-Key)
+
+GET  /sticker-board/<user_id>                  Get user's sticker board
+POST /sticker-board/<user_id>                  Write today's sticker for an area
+POST /sticker-board/<user_id>/token            Mint a public share token
+GET  /sticker-board/public/<token>             Public read-only board view
 
 GET  /conversations/<user_id>                  List conversations
 DELETE /conversations/<user_id>                Clear all conversations
@@ -427,22 +457,33 @@ GET  /conversations/<user_id>/<conv_id>        Get conversation
 GET  /conversations/<user_id>/agents           List agent transcripts
 DELETE /conversations/<user_id>/agent/<id>     Clear agent transcript
 
+POST /push/vapid-public-key, /push/subscribe/<user_id>, /push/unsubscribe/<user_id>
+                                                Web Push subscription management
+
 GET  /api/v1/profile                           Third-party profile read (Basic Auth)
 POST /api/v1/profile                           Third-party profile update (Basic Auth)
-
-GET  /agents/<user_id>                         Get agent preferences
-PUT  /agents/<user_id>                         Update agent preferences
 
 GET  /history/<user_id>                        Get profile history
 
 GET  /feedback                                 List feedback posts
 POST /feedback                                 Post feedback
+POST /feedback/<id>/reply                      Reply to a feedback thread
 DELETE /feedback/<id>                          Delete post (admin)
 PATCH /feedback/<id>                           Update post status (admin)
 
+POST /unprompted/login, /unprompted/campaigns, /unprompted/assign,
+     /unprompted/groups/<id>, /unprompted/message, /unprompted/sms
+                                                Unprompted outreach subsystem (separate product surface)
+
 GET  /admin/balances                           BTC/ETH balances (admin)
 GET  /admin/stats                              Platform stats (admin)
+GET  /admin/payments                           Pending bounty payments (admin)
+POST /admin/payments/<user_id>/<activity_id>/paid
+                                                Mark a bounty payment settled (admin)
+GET  /admin/bounties                           All bounties, admin view
 ```
+
+**Note:** there is no `/agents/<user_id>` subscription endpoint — see section 2.9, Specialist Agents & Notifications, below.
 
 ### 3.6 prompts/doc.py
 

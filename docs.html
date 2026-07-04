@@ -459,7 +459,7 @@ POST /chat/agent/protect
   <hr>
 
   <!-- ===== SETTINGS ===== -->
-  <h2>Settings</h2>
+  <h2 id="settings">Settings</h2>
 
   <div class="endpoint">
     <div class="endpoint-header">
@@ -480,10 +480,9 @@ POST /chat/agent/protect
         <thead><tr><th>Field</th><th>Values</th><th>Description</th></tr></thead>
         <tbody>
           <tr><td>doc_style</td><td><em>questioning</em> · professional · friendly</td><td>Doc's conversational tone</td></tr>
-          <tr><td>notifications_enabled</td><td><em>true</em> · false</td><td>All notifications on/off</td></tr>
-          <tr><td>agent_subscriptions</td><td>array of agent IDs</td><td>Which agents send periodic check-ins and get chat tabs</td></tr>
-          <tr><td>agent_prefs</td><td>object</td><td>Per-agent preference overrides, e.g. <code>{"sleep": {"goal_hours": 8}}</code></td></tr>
-          <tr><td>custom_agent_prompt</td><td>string (max 2000)</td><td>System prompt for the Custom agent</td></tr>
+          <tr><td>notifications_enabled</td><td><em>true</em> · false</td><td>All notifications on/off, including daily agent check-ins (see <a href="#agents">Agents</a> below)</td></tr>
+          <tr><td>agent_prefs</td><td>object</td><td>Per-agent onboarding/preference state, e.g. <code>{"sleep": {"onboarded": true}}</code></td></tr>
+          <tr><td>custom_agent_prompt</td><td>string (max 2000)</td><td>System prompt for the ⚙️ Custom agent chat tab</td></tr>
         </tbody>
       </table>
     </div>
@@ -492,61 +491,11 @@ POST /chat/agent/protect
   <hr>
 
   <!-- ===== AGENTS ===== -->
-  <h2>Agents</h2>
-  <p>Manage agent subscriptions. Subscribed agents generate daily notifications via cron and appear as chat tabs in the UI. First activation triggers a 3-turn onboarding interview that fills domain-specific profile fields.</p>
-
-  <div class="endpoint">
-    <div class="endpoint-header">
-      <span class="method get">GET</span>
-      <span class="path">/agents/{user_id}</span>
-    </div>
-    <div class="endpoint-desc">
-      Get subscriptions and full agent list. Legacy agent IDs (<code>immunity</code>, <code>disease_prevention</code>) are transparently migrated to <code>protect</code>.
-      <div class="code-block">GET /agents/user_alice
-
-{
-  "subscriptions": ["diet", "sleep", "protect"],
-  "agent_prefs": {},
-  "available_agents": [
-    {"id": "diet",         "name": "Diet",         "emoji": "🥗", "subscribed": true},
-    {"id": "exercise",     "name": "Exercise",      "emoji": "💪", "subscribed": false},
-    {"id": "protect",      "name": "Protect AI",    "emoji": "🛡️", "subscribed": true},
-    {"id": "sleep",        "name": "Sleep",         "emoji": "😴", "subscribed": true},
-    {"id": "mental_health","name": "Mind",          "emoji": "🧠", "subscribed": false},
-    {"id": "relationships","name": "Relationships", "emoji": "💞", "subscribed": false},
-    {"id": "environment",  "name": "Environment",   "emoji": "🌍", "subscribed": false},
-    {"id": "custom",       "name": "Custom",        "emoji": "⚙️", "subscribed": false},
-    {"id": "cross_ai",     "name": "Cross AI",      "emoji": "🔀", "subscribed": false}
-  ]
-}</div>
-    </div>
-  </div>
-
-  <div class="endpoint">
-    <div class="endpoint-header">
-      <span class="method put">PUT</span>
-      <span class="path">/agents/{user_id}</span>
-    </div>
-    <div class="endpoint-desc">
-      Update subscriptions, per-agent preferences, and custom agent prompt.
-      <table class="field-table" style="margin-top:12px">
-        <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
-        <tbody>
-          <tr><td>subscriptions</td><td>string[]</td><td>Agent IDs. Unrecognized IDs silently dropped.</td></tr>
-          <tr><td>agent_prefs</td><td>object</td><td>Per-agent preferences (merged with existing)</td></tr>
-          <tr><td>custom_agent_prompt</td><td>string</td><td>System prompt for the Custom agent (max 2000 chars)</td></tr>
-        </tbody>
-      </table>
-      <div class="code-block">PUT /agents/user_alice
-{
-  "subscriptions": ["diet", "sleep", "protect"],
-  "custom_agent_prompt": "You are a longevity coach focused on Blue Zone habits."
-}</div>
-    </div>
-  </div>
+  <h2 id="agents">Agents</h2>
+  <p>There's no subscription API to manage — every user gets daily check-ins from all specialist agents automatically once notifications are enabled (see <code>notifications_enabled</code> under <a href="#settings">Settings</a> above). Doc still routes conversations to the right specialist (or several, via Cross AI) behind the scenes; specialists also each have a dedicated chat tab. First activation of a tab triggers a 3-turn onboarding interview that fills domain-specific profile fields.</p>
 
   <div class="note">
-    <strong>Cron runner:</strong> <code>agent_runner.py</code> — 08:00 UTC daily, 20-hour debounce per user per agent.
+    <strong>Cron runner:</strong> <code>agent_runner.py</code> — 08:00 UTC daily, 20-hour debounce per user per agent (weekly for <code>protect</code> and <code>cross_ai</code>, via each agent's <code>CRON_CADENCE_HOURS</code>).
     Logs to <code>/var/log/greendial_agents.log</code>. Manual run:<br>
     <code>python3 agent_runner.py --agent protect --user user_alice --dry-run</code>
   </div>
@@ -698,6 +647,33 @@ POST /chat/agent/protect
   <h3>Bounties <span class="badge">X-API-Key</span></h3>
   <p>Demand-side customers (health insurers, government health programs, employers, and other organizations) authenticate with <code>X-API-Key: &lt;DEMAND_API_KEY&gt;</code>. A bounty targets an explicit list of <code>user_ids</code>; matching users see it as a priced Suggestion.</p>
 
+  <h4 style="font-size:14px;color:rgba(255,255,255,0.85);margin:16px 0 8px">Quick start: sponsor an activity end-to-end</h4>
+  <p>A minimal integration for a new demand-side partner — preview a suggestion, turn it into a real bounty, then check on it. Swap in your own <code>X-API-Key</code> and real <code>user_id</code>s.</p>
+  <div class="code-block"># 1. Preview what GreenDial would suggest for a user, and get a ready-to-post bounty payload back
+curl -X POST https://greendial.org/generate \
+  -H "X-API-Key: $DEMAND_API_KEY" -H "Content-Type: application/json" \
+  -d '{"user_id": "user_abc", "health_area": "exercise", "price": 5.00}'
+
+# → {"suggestion": {...}, "bounty_payload": {...}, "bounty_post_url": "/bounty"}
+
+# 2. Create the bounty for real — pass the bounty_payload straight through, or your own list of user_ids
+curl -X POST https://greendial.org/bounty \
+  -H "X-API-Key: $DEMAND_API_KEY" -H "Content-Type: application/json" \
+  -d '{"activity": "Walk 10,000 steps", "health_area": "exercise", "price": 5.00,
+       "currency": "ETH", "user_ids": ["user_abc"], "expires": "2026-08-01"}'
+
+# → {"bounty_id": "bty_a1b2c3d4e5f6", "status": "active"}
+# Targeted users now see this as a priced Suggestion the next time theirs are generated.
+
+# 3. Check on it later — has anyone accepted and completed it?
+curl https://greendial.org/bounty/bty_a1b2c3d4e5f6 \
+  -H "X-API-Key: $DEMAND_API_KEY"
+
+# 4. When you're done sponsoring it (expired, budget spent, etc.)
+curl -X DELETE https://greendial.org/bounty/bty_a1b2c3d4e5f6 \
+  -H "X-API-Key: $DEMAND_API_KEY"</div>
+  <p style="margin-top:8px">Don't have a key yet? See the <a href="/about#faq">FAQ</a> for how to request one. Remember: this is <a href="#bounty-honor-system">honor-system payment</a>, not on-chain escrow — see the note below.</p>
+
   <div class="endpoint">
     <div class="endpoint-header">
       <span class="method post">POST</span>
@@ -765,7 +741,7 @@ X-API-Key: &lt;key&gt;
     </div>
   </div>
 
-  <div class="note"><strong>Honor system:</strong> bounty payment is not escrowed on-chain. GreenDial records the price, currency, and wallet snapshot, and flags the activity <code>payment_pending</code> on completion — settling payment to the user is the sponsoring organization's responsibility, off-platform.</div>
+  <div class="note" id="bounty-honor-system"><strong>Honor system:</strong> bounty payment is not escrowed on-chain. GreenDial records the price, currency, and wallet snapshot, and flags the activity <code>payment_pending</code> on completion — settling payment to the user is the sponsoring organization's responsibility, off-platform.</div>
 
   <hr>
 

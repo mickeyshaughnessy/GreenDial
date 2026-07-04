@@ -1,6 +1,6 @@
 """
 GreenDial Agent Runner
-Cron script: run subscribed health agents for all active users.
+Cron script: run all specialist agents for every user with notifications enabled.
 
 Usage:
   python3 agent_runner.py [--agent diet] [--dry-run]
@@ -53,11 +53,12 @@ def _load_all_users():
 
 
 def _get_user_agent_subscriptions(user):
-    """Return list of agent_ids the user has subscribed to."""
-    settings = user.get("settings", {})
-    subs = settings.get("agent_subscriptions", [])
-    # Default: no subscriptions unless explicitly set
-    return [aid for aid in subs if aid in REGISTRY]
+    """Return list of agent_ids to run for this user.
+
+    There's no per-agent picker in the UI anymore — every user with
+    notifications enabled gets daily check-ins from all specialist agents.
+    """
+    return list(ALL_AGENT_IDS)
 
 
 def _was_run_recently(user, agent_id, hours=20):
@@ -166,7 +167,7 @@ def run_agent_for_user(user_id, user, agent_id, dry_run=False):
 
 def main():
     parser = argparse.ArgumentParser(description="GreenDial Agent Runner")
-    parser.add_argument("--agent", help="Run only this agent (default: all subscribed agents)")
+    parser.add_argument("--agent", help="Run only this agent (default: all agents)")
     parser.add_argument("--dry-run", action="store_true", help="Print prompts without calling LLM or saving")
     parser.add_argument("--user", help="Run only for this user_id (for testing)")
     args = parser.parse_args()
