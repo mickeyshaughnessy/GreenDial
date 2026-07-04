@@ -933,6 +933,7 @@
       <button class="nav-tab" id="nav-feedback-tab" onclick="switchView('feedback')">📣 Feedback</button>
       <button class="nav-tab" id="admin-tab" style="display:none" onclick="switchView('admin')">🛡️ Admin</button>
       <a class="nav-tab" id="nav-docs-tab" href="/docs" target="_blank" style="text-decoration:none">📄 Docs</a>
+      <a class="nav-tab" id="nav-about-tab" href="/about" target="_blank" style="text-decoration:none">ℹ️ About</a>
     </div>
     <div class="user-area" id="user-area">
       <div style="position:relative">
@@ -2140,6 +2141,10 @@
         ${!!userSettings.chat_only_mode ? `
         <div class="settings-group">
           <div class="settings-group-title">Resources</div>
+          <div class="settings-item">
+            <div><div class="settings-label">ℹ️ About &amp; FAQ</div><div class="settings-desc">Ethos, bounty program, FAQ</div></div>
+            <a href="/about" class="btn btn-secondary btn-sm" style="text-decoration:none">Open ↗</a>
+          </div>
           <div class="settings-item">
             <div><div class="settings-label">📖 Documentation</div><div class="settings-desc">API reference and guides</div></div>
             <a href="/docs" class="btn btn-secondary btn-sm" style="text-decoration:none">Open Docs ↗</a>

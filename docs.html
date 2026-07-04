@@ -76,6 +76,7 @@
     .method.post   { background: rgba(16,185,129,0.25);  color: #6ee7b7; }
     .method.put    { background: rgba(245,158,11,0.25);  color: #fcd34d; }
     .method.delete { background: rgba(239,68,68,0.25);   color: #fca5a5; }
+    .method.patch  { background: rgba(168,85,247,0.25);  color: #d8b4fe; }
     .path { font-family: 'Monaco','Menlo',monospace; font-size: 13px; color: #e2e8f0; }
     .endpoint-desc { padding: 12px 16px; font-size: 13px; color: rgba(255,255,255,0.65); }
 
@@ -202,6 +203,7 @@
   <p class="subtitle">REST API — base URL: <code style="color:#10b981">https://greendial.org</code> &nbsp;·&nbsp; All endpoints return JSON unless noted.</p>
 
   <div class="spec-links">
+    <a class="spec-link" href="/about" target="_blank">ℹ️ About &amp; FAQ</a>
     <a class="spec-link" href="/arazzo" target="_blank">✨ How It Works — 10 Examples</a>
     <a class="spec-link" href="/spec/openapi.yaml" target="_blank">📄 OpenAPI 3.1 Spec</a>
     <a class="spec-link" href="/spec/arazzo.yaml"  target="_blank">🔀 Arazzo Workflow Spec</a>
@@ -625,6 +627,145 @@ POST /chat/agent/protect
     </div>
     <div class="endpoint-desc">Dismiss a notification.</div>
   </div>
+
+  <hr>
+
+  <!-- ===== SUGGESTIONS, ACTIVITIES & BOUNTY ===== -->
+  <h2>Suggestions, Activities &amp; Bounty API <span class="badge">Demand-Side</span></h2>
+  <p>Each day GreenDial generates up to 3 personalized Suggestions per user (exercise, diet, social) — separate from the notification bell. A Suggestion becomes an Activity when accepted. Bounty-backed suggestions (see below) are surfaced first, ahead of LLM-generated ones. See <a href="/about#bounty">About &amp; FAQ</a> for the plain-language explanation of the Bounty Program.</p>
+
+  <h3>Suggestions</h3>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method get">GET</span>
+      <span class="path">/suggestions/{user_id}</span>
+    </div>
+    <div class="endpoint-desc">Return the user's current suggestion batch.</div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method post">POST</span>
+      <span class="path">/suggestions/{user_id}/generate</span>
+    </div>
+    <div class="endpoint-desc">
+      Generate a new batch (cron or on-demand). Respects a 24h cadence unless forced.
+      <div class="code-block">POST /suggestions/{user_id}/generate
+{"force": false}</div>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method post">POST</span>
+      <span class="path">/suggestions/{user_id}/{suggestion_id}/accept</span>
+    </div>
+    <div class="endpoint-desc">Accept a suggestion → creates an Activity with <code>status: "active"</code>.</div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method post">POST</span>
+      <span class="path">/suggestions/{user_id}/{suggestion_id}/dismiss</span>
+    </div>
+    <div class="endpoint-desc">Dismiss a suggestion without creating an Activity.</div>
+  </div>
+
+  <h3>Activities</h3>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method get">GET</span>
+      <span class="path">/activities/{user_id}</span>
+    </div>
+    <div class="endpoint-desc">List the user's activities (active, completed, and abandoned).</div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method patch">PATCH</span>
+      <span class="path">/activities/{user_id}/{activity_id}</span>
+    </div>
+    <div class="endpoint-desc">
+      Mark an activity completed or abandoned.
+      <div class="code-block">PATCH /activities/{user_id}/{activity_id}
+{"status": "completed"}</div>
+      On <code>"completed"</code>: sets <code>completed_at</code>, snapshots the user's linked wallet address into <code>wallet_snapshot</code>, and — if the activity has a <code>price</code> — sets <code>payment_pending: true</code>. On <code>"abandoned"</code>: only valid from <code>"active"</code>; sets <code>abandoned_at</code>.
+    </div>
+  </div>
+
+  <h3>Bounties <span class="badge">X-API-Key</span></h3>
+  <p>Demand-side customers (health insurers, government health programs, employers, and other organizations) authenticate with <code>X-API-Key: &lt;DEMAND_API_KEY&gt;</code>. A bounty targets an explicit list of <code>user_ids</code>; matching users see it as a priced Suggestion.</p>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method post">POST</span>
+      <span class="path">/bounty</span>
+    </div>
+    <div class="endpoint-desc">
+      Create a bounty.
+      <div class="code-block">POST /bounty
+X-API-Key: &lt;key&gt;
+
+{
+  "activity": "Walk 10,000 steps",
+  "health_area": "exercise",
+  "price": 5.00,
+  "currency": "ETH",
+  "user_ids": ["user_abc", "user_def"],
+  "expires": "2026-08-01"
+}
+
+→ {"bounty_id": "bty_a1b2c3d4e5f6", "status": "active"}</div>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method get">GET</span>
+      <span class="path">/bounty</span>
+    </div>
+    <div class="endpoint-desc">List all bounties. <div class="code-block">→ {"bounties": [ {...}, {...} ]}</div></div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method get">GET</span>
+      <span class="path">/bounty/{bounty_id}</span>
+    </div>
+    <div class="endpoint-desc">Get a single bounty by ID.</div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method delete">DELETE</span>
+      <span class="path">/bounty/{bounty_id}</span>
+    </div>
+    <div class="endpoint-desc">Delete a bounty.</div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method post">POST</span>
+      <span class="path">/generate</span>
+    </div>
+    <div class="endpoint-desc">
+      Preview what suggestion GreenDial would generate for a user in a given health area, and get a ready-to-POST bounty payload back. Does not create the bounty.
+      <div class="code-block">POST /generate
+X-API-Key: &lt;key&gt;
+
+{"user_id": "user_abc", "health_area": "diet", "price": 10.00}
+
+→ {
+  "suggestion": {"text": "...", "agent_id": "diet", "health_area": "diet"},
+  "bounty_payload": {"activity": "...", "health_area": "diet", "price": 10.00, "currency": "ETH", "user_ids": ["user_abc"]},
+  "bounty_post_url": "/bounty"
+}</div>
+    </div>
+  </div>
+
+  <div class="note"><strong>Honor system:</strong> bounty payment is not escrowed on-chain. GreenDial records the price, currency, and wallet snapshot, and flags the activity <code>payment_pending</code> on completion — settling payment to the user is the sponsoring organization's responsibility, off-platform.</div>
 
   <hr>
 

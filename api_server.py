@@ -59,6 +59,11 @@ def arazzo():
     return send_from_directory('.', 'arazzo.html')
 
 
+@app.route("/about", methods=['GET'])
+def about():
+    return send_from_directory('.', 'about.html')
+
+
 @app.route("/stickers/<token>", methods=['GET'])
 def sticker_board_public(token):
     return send_from_directory('.', 'stickers.html')

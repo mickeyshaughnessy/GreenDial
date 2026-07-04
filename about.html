@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About GreenDial</title>
+  <meta name="description" content="GreenDial is a free AI health companion. Learn about our ethos, the Bounty Program, the founder, and frequently asked questions.">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #1a1a2e;
+      color: #eee;
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+    a { color: #10b981; }
+    a:hover { color: #059669; }
+
+    /* ── HEADER ── */
+    .header {
+      background: linear-gradient(135deg, rgba(16,185,129,0.18), rgba(26,26,46,0.97));
+      padding: 14px 28px;
+      display: flex; align-items: center; gap: 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      position: sticky; top: 0; z-index: 50;
+    }
+    .logo { font-size: 20px; font-weight: 700; color: #10b981; text-decoration: none; }
+    .header-links { margin-left: auto; display: flex; gap: 16px; font-size: 13px; }
+    .header-links a { color: rgba(255,255,255,0.55); text-decoration: none; }
+    .header-links a:hover { color: #10b981; }
+
+    /* ── HERO ── */
+    .hero {
+      background: linear-gradient(180deg, rgba(16,185,129,0.08) 0%, transparent 100%);
+      padding: 60px 28px 40px;
+      text-align: center;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .hero h1 { font-size: 36px; font-weight: 700; margin-bottom: 14px; }
+    .hero h1 span { color: #10b981; }
+    .hero p { font-size: 16px; color: rgba(255,255,255,0.6); max-width: 620px; margin: 0 auto 24px; }
+    .hero-links { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .hero-btn {
+      padding: 10px 22px; border-radius: 24px; font-size: 13px;
+      text-decoration: none; transition: all 0.2s;
+    }
+    .hero-btn.primary { background: #10b981; color: white; }
+    .hero-btn.primary:hover { background: #059669; }
+    .hero-btn.secondary {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      color: rgba(255,255,255,0.75);
+    }
+    .hero-btn.secondary:hover { background: rgba(255,255,255,0.14); color: white; }
+
+    /* ── CONTAINER ── */
+    .container { max-width: 860px; margin: 0 auto; padding: 48px 24px 80px; }
+
+    h2 { font-size: 22px; color: #10b981; margin: 48px 0 16px; }
+    h3 { font-size: 15px; color: rgba(255,255,255,0.85); margin: 20px 0 6px; }
+    p { font-size: 14px; color: rgba(255,255,255,0.7); margin-bottom: 12px; }
+
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.07); margin: 16px 0 48px; }
+
+    .badge {
+      display: inline-block; padding: 2px 8px; border-radius: 4px;
+      font-size: 11px; background: rgba(16,185,129,0.15); color: #10b981; margin-left: 8px;
+      vertical-align: middle;
+    }
+
+    .note {
+      background: rgba(255,193,7,0.08); border-left: 3px solid #ffc107;
+      padding: 10px 14px; border-radius: 0 6px 6px 0;
+      font-size: 13px; color: rgba(255,255,255,0.7); margin: 16px 0;
+    }
+
+    /* ── BOUNTY FLOW ── */
+    .flow-steps {
+      display: flex; flex-direction: column; gap: 10px;
+      margin: 16px 0 8px;
+    }
+    .flow-step {
+      display: flex; align-items: flex-start; gap: 12px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      padding: 12px 16px;
+    }
+    .flow-num {
+      width: 24px; height: 24px; border-radius: 50%;
+      background: rgba(16,185,129,0.2); color: #10b981;
+      font-size: 12px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; margin-top: 1px;
+    }
+    .flow-step p { margin: 0; font-size: 13.5px; color: rgba(255,255,255,0.75); }
+    .flow-step code { color: #fcd34d; font-family: 'Monaco','Menlo',monospace; font-size: 12.5px; }
+
+    /* ── FOUNDER ── */
+    .founder-card {
+      display: flex; gap: 22px; align-items: flex-start;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      padding: 24px;
+      margin-top: 8px;
+    }
+    .founder-photo {
+      width: 96px; height: 96px; border-radius: 50%;
+      object-fit: cover; flex-shrink: 0;
+      border: 2px solid rgba(16,185,129,0.4);
+    }
+    .founder-name { font-size: 17px; font-weight: 700; color: white; }
+    .founder-title { font-size: 12px; color: #10b981; margin-bottom: 8px; }
+    @media (max-width: 560px) {
+      .founder-card { flex-direction: column; align-items: center; text-align: center; }
+    }
+
+    /* ── FAQ ── */
+    .faq-list { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+    details.faq-item {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      padding: 14px 18px;
+    }
+    details.faq-item summary {
+      cursor: pointer; font-size: 14.5px; font-weight: 600; color: white;
+      list-style: none;
+    }
+    details.faq-item summary::-webkit-details-marker { display: none; }
+    details.faq-item summary::before { content: "▸ "; color: #10b981; }
+    details.faq-item[open] summary::before { content: "▾ "; }
+    details.faq-item p { margin: 10px 0 0; font-size: 13.5px; }
+    details.faq-item p:last-child { margin-bottom: 0; }
+
+    footer {
+      border-top: 1px solid rgba(255,255,255,0.07);
+      padding: 28px 24px 60px;
+      text-align: center;
+    }
+    footer a { font-size: 13px; margin: 0 10px; text-decoration: none; color: rgba(255,255,255,0.5); }
+    footer a:hover { color: #10b981; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <a class="logo" href="/">🌿 GreenDial</a>
+  <span style="color:rgba(255,255,255,0.35);font-size:14px">/ About</span>
+  <div class="header-links">
+    <a href="/docs">API Docs</a>
+    <a href="/arazzo">How It Works</a>
+  </div>
+</div>
+
+<div class="hero">
+  <h1>About <span>GreenDial</span></h1>
+  <p>A free system that puts the benefits of artificial intelligence in everyone's hands, through a simple conversation.</p>
+  <div class="hero-links">
+    <a class="hero-btn primary" href="/">Open GreenDial →</a>
+    <a class="hero-btn secondary" href="#faq">FAQ</a>
+    <a class="hero-btn secondary" href="#bounty">Bounty Program</a>
+  </div>
+</div>
+
+<div class="container">
+
+  <h2>Our Ethos</h2>
+  <p>GreenDial is designed to give people access to the benefits of artificial intelligence by providing a simple way to interact with it through a conversational interface — no forms, no appointments, no jargon. You just talk to Doc, and your health profile builds itself.</p>
+  <p>GreenDial is a free system, created to care about people's well-being and help distribute basic health and life benefits, universally. We believe the advantages of good AI — personalized guidance, patient listening, tireless follow-up — shouldn't be locked behind cost or complexity. Everyone should be able to get that kind of support for sleep, diet, exercise, stress, and the rest of daily life.</p>
+
+  <hr>
+
+  <h2>How It Works</h2>
+  <p>Doc is your primary AI health coordinator. Talk to Doc about anything — sleep, diet, exercise, stress, relationships — and it routes your question to the right specialist agent behind the scenes (or several at once, synthesized by Cross AI, if your question spans domains). Every conversation quietly builds your health profile, and each day GreenDial generates a small batch of personalized Suggestions you can accept (turning them into trackable Activities) or dismiss.</p>
+  <p>Want the mechanics in detail, or ten real conversation walkthroughs? See <a href="/arazzo">How It Works</a> and the <a href="/docs">API Docs</a>.</p>
+
+  <hr>
+
+  <h2 id="bounty">Bounty Program <span class="badge">Demand-Side</span></h2>
+  <p>Health insurers, government health programs, employers, and other organizations can sponsor real, priced health activities for the specific people they cover or serve — we call these <strong>bounties</strong>. A bounty targets a list of GreenDial users directly and offers to pay for a concrete action: a 10,000-step walk, a preventive screening, a week of home-cooked dinners.</p>
+
+  <div class="flow-steps">
+    <div class="flow-step">
+      <div class="flow-num">1</div>
+      <p>An organization creates a bounty via <code>POST /bounty</code>: the activity, a health area, a price and currency, an expiration date, and the specific <code>user_ids</code> it's targeting.</p>
+    </div>
+    <div class="flow-step">
+      <div class="flow-num">2</div>
+      <p>Targeted users see the bounty surface as one of their daily Suggestions — shown with its price — ahead of GreenDial's regular AI-generated suggestions.</p>
+    </div>
+    <div class="flow-step">
+      <div class="flow-num">3</div>
+      <p>The user accepts the suggestion, which becomes a tracked Activity, and completes it in their own time.</p>
+    </div>
+    <div class="flow-step">
+      <div class="flow-num">4</div>
+      <p>On completion, GreenDial snapshots the user's linked wallet address and marks the activity's payment as pending.</p>
+    </div>
+  </div>
+
+  <div class="note"><strong>Honor system:</strong> GreenDial records the price, the currency, and the user's wallet snapshot, and flags the activity <code>payment_pending</code> — but there is no on-chain escrow and no automatic transfer today. Settling payment to the user is on the sponsoring organization, off-platform. This may evolve; today it's intentionally simple and transparent about that limitation.</div>
+
+  <p style="margin-top:16px">Interested in sponsoring bounties for your members, employees, or constituents? Bounty and preview endpoints (<code>/bounty</code>, <code>/generate</code>) are gated behind an API key — reach out below to get one, and see the full request/response shapes in the <a href="/docs">API Docs</a>.</p>
+
+  <hr>
+
+  <h2>Founder</h2>
+  <div class="founder-card">
+    <img class="founder-photo" src="https://mithril-media.sfo3.digitaloceanspaces.com/theservicesexchange/mickey.png" alt="Mickey Shaughnessy">
+    <div>
+      <div class="founder-name">Mickey Shaughnessy</div>
+      <div class="founder-title">Creator</div>
+      <p>I'm Mickey Shaughnessy. I live in Lakewood, CO with my wife and 5 kids, and I've built things all my life.</p>
+      <p>I built GreenDial because I think the benefits of good AI — patient, personalized, always-available guidance — shouldn't be gated behind cost or complexity. GreenDial is free, and it's built around a simple conversation instead of forms and appointments, because that's the easiest way for anyone to get help with their health and well-being. The Bounty Program extends that same idea outward: it lets insurers, governments, and other organizations put real resources directly toward people's health, at scale, through the same simple interface.</p>
+    </div>
+  </div>
+
+  <hr>
+
+  <h2 id="faq">Frequently Asked Questions</h2>
+  <div class="faq-list">
+
+    <details class="faq-item">
+      <summary>What is GreenDial?</summary>
+      <p>GreenDial is a free AI health companion. You chat with Doc, a coordinating AI, which routes your questions to specialist agents (diet, exercise, sleep, mental health, relationships, environment, and more) and builds your health profile automatically as you talk.</p>
+    </details>
+
+    <details class="faq-item">
+      <summary>Is GreenDial really free?</summary>
+      <p>Yes. There's no subscription and no paywalled tier. GreenDial accepts optional donations to help keep the AI running, but using Doc, the specialist agents, Suggestions, and Activities costs nothing.</p>
+    </details>
+
+    <details class="faq-item">
+      <summary>Is this a substitute for a doctor?</summary>
+      <p>No. GreenDial is a HIPAA-waived personal wellness assistant, not a medical provider. It offers general guidance on sleep, diet, exercise, stress, and everyday well-being — it does not diagnose, prescribe, or replace professional medical care. If you're experiencing a medical emergency or suicidal ideation, GreenDial's Mind agent will point you to the 988 crisis line, but always seek qualified professional help for medical concerns.</p>
+    </details>
+
+    <details class="faq-item">
+      <summary>How does Doc build my profile automatically?</summary>
+      <p>As you chat, Doc extracts relevant details — goals, conditions, preferences, context — and saves them to your profile in the background. There are no intake forms to fill out; the more you talk with Doc, the more complete and useful your profile becomes.</p>
+    </details>
+
+    <details class="faq-item">
+      <summary>What are the specialist agents and Cross AI?</summary>
+      <p>Beyond Doc, GreenDial has dedicated agents for exercise, diet, sleep, mental health, relationships, environment, and preventive health ("Protect AI"), plus a fully custom agent you can define yourself. When a question touches more than one domain, Cross AI runs the relevant specialists in parallel and synthesizes their perspectives into one answer.</p>
+    </details>
+
+    <details class="faq-item">
+      <summary>What are Suggestions and Activities?</summary>
+      <p>Each day, GreenDial generates a small batch of personalized Suggestions — specific, actionable ideas across exercise, diet, and social health. Accept one and it becomes an Activity you can track and mark complete; dismiss it if it's not for you.</p>
+    </details>
+
+    <details class="faq-item">
+      <summary>What is the Bounty Program, and who can create a bounty?</summary>
+      <p>Health insurers, government health programs, employers, and other organizations can sponsor priced health activities targeted at specific GreenDial users. See the <a href="#bounty">Bounty Program</a> section above for the full flow.</p>
+    </details>
+
+    <details class="faq-item">
+      <summary>How does bounty payment actually work?</summary>
+      <p>It's an honor system today: GreenDial records the price, currency, and a snapshot of the user's wallet address when an activity completes, and flags it as payment-pending. There's no on-chain escrow or automatic transfer — the sponsoring organization is responsible for settling payment off-platform.</p>
+    </details>
+
+    <details class="faq-item">
+      <summary>How do I get an API key to create bounties for my organization?</summary>
+      <p>Email <a href="mailto:mickeyshaughnessy@gmail.com">mickeyshaughnessy@gmail.com</a> with a bit about your organization and who you'd like to target. Bounty and demand-side preview endpoints require an <code>X-API-Key</code> header — full request/response shapes are documented at <a href="/docs">/docs</a>.</p>
+    </details>
+
+    <details class="faq-item">
+      <summary>Where is my data stored, and can I delete it?</summary>
+      <p>Your profile, conversations, suggestions, and activities are stored as JSON in DigitalOcean Spaces (S3-compatible storage) tied to your account. Email <a href="mailto:mickeyshaughnessy@gmail.com">mickeyshaughnessy@gmail.com</a> if you'd like your data exported or deleted.</p>
+    </details>
+
+    <details class="faq-item">
+      <summary>Where's the source code, and how do I integrate with the API?</summary>
+      <p>GreenDial is open-source on <a href="https://github.com/mickeyshaughnessy/GreenDial" target="_blank">GitHub</a>. Full endpoint documentation, including the Bounty API, lives at <a href="/docs">/docs</a>, and <a href="/arazzo">/arazzo</a> walks through ten real usage examples end-to-end.</p>
+    </details>
+
+    <details class="faq-item">
+      <summary>How do I reach you?</summary>
+      <p>Email <a href="mailto:mickeyshaughnessy@gmail.com">mickeyshaughnessy@gmail.com</a> — for feedback, bug reports, bounty program partnerships, or anything else.</p>
+    </details>
+
+  </div>
+
+</div>
+
+<footer>
+  <a href="/">🌿 Open GreenDial</a>
+  <a href="/docs">API Docs</a>
+  <a href="/arazzo">How It Works</a>
+  <a href="mailto:mickeyshaughnessy@gmail.com">Email</a>
+</footer>
+
+</body>
+</html>
