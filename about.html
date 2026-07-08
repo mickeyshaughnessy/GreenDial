@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script>(function(){try{var l=localStorage.getItem('gd_lang');if(l&&l!=='en')document.documentElement.classList.add('i18n-loading');}catch(e){}})();</script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>About GreenDial</title>
-  <meta name="description" content="GreenDial is a free AI health companion. Learn about our ethos, Universal Bounty (UB), the founder, and frequently asked questions.">
+  <title data-i18n="about.title">About GreenDial</title>
+  <meta name="description" data-i18n-attr-content="about.meta_description" content="GreenDial is a free AI health companion. Learn about our ethos, Universal Bounty (UB), the founder, and frequently asked questions.">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    html.i18n-loading body { visibility: hidden; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: #1a1a2e;
@@ -16,6 +18,17 @@
     }
     a { color: #10b981; }
     a:hover { color: #059669; }
+    .lang-switch { display: flex; gap: 4px; }
+    .lang-btn {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      color: rgba(255,255,255,0.7);
+      font-size: 12px; font-weight: 600;
+      padding: 4px 9px; border-radius: 6px;
+      cursor: pointer;
+    }
+    .lang-btn:hover { background: rgba(255,255,255,0.16); color: #fff; }
+    .lang-btn.active { background: #10b981; border-color: #10b981; color: #fff; }
 
     /* ── HEADER ── */
     .header {
@@ -148,139 +161,144 @@
 
 <div class="header">
   <a class="logo" href="/">🌿 GreenDial</a>
-  <span style="color:rgba(255,255,255,0.35);font-size:14px">/ About</span>
+  <span style="color:rgba(255,255,255,0.35);font-size:14px" data-i18n="common.nav.about_crumb">/ About</span>
   <div class="header-links">
-    <a href="/docs">API Docs</a>
-    <a href="/arazzo">How It Works</a>
+    <a href="/docs" data-i18n="common.nav.api_docs">API Docs</a>
+    <a href="/arazzo" data-i18n="common.nav.how_it_works">How It Works</a>
+    <div class="lang-switch">
+      <button class="lang-btn" data-lang="en" onclick="setLanguage('en')" title="English">T</button>
+      <button class="lang-btn" data-lang="zh" onclick="setLanguage('zh')" title="中文">中</button>
+      <button class="lang-btn" data-lang="ja" onclick="setLanguage('ja')" title="日本語">日</button>
+    </div>
   </div>
 </div>
 
 <div class="hero">
-  <h1>About <span>GreenDial</span></h1>
-  <p>A free system that puts the benefits of artificial intelligence in everyone's hands, through a simple conversation.</p>
+  <h1><span data-i18n="about.hero.about_word">About</span> <span>GreenDial</span></h1>
+  <p data-i18n="about.hero.tagline">A free system that puts the benefits of artificial intelligence in everyone's hands, through a simple conversation.</p>
   <div class="hero-links">
-    <a class="hero-btn primary" href="/">Open GreenDial →</a>
-    <a class="hero-btn secondary" href="#faq">FAQ</a>
-    <a class="hero-btn secondary" href="#bounty">Universal Bounty</a>
+    <a class="hero-btn primary" href="/" data-i18n="common.open_greendial">Open GreenDial →</a>
+    <a class="hero-btn secondary" href="#faq" data-i18n="common.faq">FAQ</a>
+    <a class="hero-btn secondary" href="#bounty" data-i18n="common.universal_bounty">Universal Bounty</a>
   </div>
 </div>
 
 <div class="container">
 
-  <h2>Our Ethos</h2>
-  <p>GreenDial is designed to give people access to the benefits of artificial intelligence by providing a simple way to interact with it through a conversational interface — no forms, no appointments, no jargon. You just talk to Doc, and your health profile builds itself.</p>
-  <p>GreenDial is a free system, created to care about people's well-being and help distribute basic health and life benefits, universally. We believe the advantages of good AI — personalized guidance, patient listening, tireless follow-up — shouldn't be locked behind cost or complexity. Everyone should be able to get that kind of support for sleep, diet, exercise, stress, and the rest of daily life.</p>
+  <h2 data-i18n="about.ethos.heading">Our Ethos</h2>
+  <p data-i18n="about.ethos.p1">GreenDial is designed to give people access to the benefits of artificial intelligence by providing a simple way to interact with it through a conversational interface — no forms, no appointments, no jargon. You just talk to Doc, and your health profile builds itself.</p>
+  <p data-i18n="about.ethos.p2">GreenDial is a free system, created to care about people's well-being and help distribute basic health and life benefits, universally. We believe the advantages of good AI — personalized guidance, patient listening, tireless follow-up — shouldn't be locked behind cost or complexity. Everyone should be able to get that kind of support for sleep, diet, exercise, stress, and the rest of daily life.</p>
 
   <hr>
 
-  <h2>How It Works</h2>
-  <p>Doc is your primary AI health coordinator. Talk to Doc about anything — sleep, diet, exercise, stress, relationships — and it routes your question to the right specialist agent behind the scenes (or several at once, synthesized by Cross AI, if your question spans domains). Every conversation quietly builds your health profile, and each day GreenDial generates a small batch of personalized Suggestions you can accept (turning them into trackable Activities) or dismiss.</p>
-  <p>Want the mechanics in detail, or ten real conversation walkthroughs? See <a href="/arazzo">How It Works</a> and the <a href="/docs">API Docs</a>.</p>
+  <h2 data-i18n="about.how.heading">How It Works</h2>
+  <p data-i18n="about.how.p1">Doc is your primary AI health coordinator. Talk to Doc about anything — sleep, diet, exercise, stress, relationships — and it routes your question to the right specialist agent behind the scenes (or several at once, synthesized by Cross AI, if your question spans domains). Every conversation quietly builds your health profile, and each day GreenDial generates a small batch of personalized Suggestions you can accept (turning them into trackable Activities) or dismiss.</p>
+  <p data-i18n-html="about.how.p2">Want the mechanics in detail, or ten real conversation walkthroughs? See <a href="/arazzo">How It Works</a> and the <a href="/docs">API Docs</a>.</p>
 
   <hr>
 
-  <h2 id="bounty">Universal Bounty (UB) <span class="badge">Demand-Side</span></h2>
-  <p>Anyone — friends, family, employers, health insurers, or government programs — can sponsor a real, priced health activity for someone they care about or serve. We call these <strong>Universal Bounties</strong>, or <strong>UBs</strong>. A UB targets a list of GreenDial users directly and offers to pay for a concrete action: a 10,000-step walk, a preventive screening, a week of home-cooked dinners.</p>
+  <h2 id="bounty"><span data-i18n="common.universal_bounty_ub">Universal Bounty (UB)</span> <span class="badge" data-i18n="common.demand_side">Demand-Side</span></h2>
+  <p data-i18n-html="about.bounty.intro">Anyone — friends, family, employers, health insurers, or government programs — can sponsor a real, priced health activity for someone they care about or serve. We call these <strong>Universal Bounties</strong>, or <strong>UBs</strong>. A UB targets a list of GreenDial users directly and offers to pay for a concrete action: a 10,000-step walk, a preventive screening, a week of home-cooked dinners.</p>
 
   <div class="flow-steps">
     <div class="flow-step">
       <div class="flow-num">1</div>
-      <p>A sponsor creates a UB via <code>POST /bounty</code>: the activity, a health area, a price and currency, an expiration date, and the specific <code>user_ids</code> it's targeting.</p>
+      <p data-i18n-html="about.bounty.step1">A sponsor creates a UB via <code>POST /bounty</code>: the activity, a health area, a price and currency, an expiration date, and the specific <code>user_ids</code> it's targeting.</p>
     </div>
     <div class="flow-step">
       <div class="flow-num">2</div>
-      <p>Targeted users see the UB surface as one of their daily Suggestions — shown with its price — ahead of GreenDial's regular AI-generated suggestions.</p>
+      <p data-i18n="about.bounty.step2">Targeted users see the UB surface as one of their daily Suggestions — shown with its price — ahead of GreenDial's regular AI-generated suggestions.</p>
     </div>
     <div class="flow-step">
       <div class="flow-num">3</div>
-      <p>The user accepts the suggestion, which becomes a tracked Activity, and completes it in their own time.</p>
+      <p data-i18n="about.bounty.step3">The user accepts the suggestion, which becomes a tracked Activity, and completes it in their own time.</p>
     </div>
     <div class="flow-step">
       <div class="flow-num">4</div>
-      <p>On completion, GreenDial snapshots the user's linked wallet address and marks the activity's payment as pending.</p>
+      <p data-i18n="about.bounty.step4">On completion, GreenDial snapshots the user's linked wallet address and marks the activity's payment as pending.</p>
     </div>
   </div>
 
-  <div class="note"><strong>Honor system:</strong> GreenDial records the price, the currency, and the user's wallet snapshot, and flags the activity <code>payment_pending</code> — but there is no on-chain escrow and no automatic transfer today. Settling payment to the user is on the sponsor, off-platform. This may evolve; today it's intentionally simple and transparent about that limitation.</div>
+  <div class="note" data-i18n-html="about.bounty.honor_system"><strong>Honor system:</strong> GreenDial records the price, the currency, and the user's wallet snapshot, and flags the activity <code>payment_pending</code> — but there is no on-chain escrow and no automatic transfer today. Settling payment to the user is on the sponsor, off-platform. This may evolve; today it's intentionally simple and transparent about that limitation.</div>
 
-  <p style="margin-top:16px">Interested in sponsoring a UB for a loved one, employee, member, or constituent? The UB and preview endpoints (<code>/bounty</code>, <code>/generate</code>) are gated behind an API key — reach out below to get one, and see the full request/response shapes in the <a href="/docs">API Docs</a>.</p>
+  <p style="margin-top:16px" data-i18n-html="about.bounty.cta">Interested in sponsoring a UB for a loved one, employee, member, or constituent? The UB and preview endpoints (<code>/bounty</code>, <code>/generate</code>) are gated behind an API key — reach out below to get one, and see the full request/response shapes in the <a href="/docs">API Docs</a>.</p>
 
   <hr>
 
-  <h2>Founder</h2>
+  <h2 data-i18n="about.founder.heading">Founder</h2>
   <div class="founder-card">
     <img class="founder-photo" src="https://mithril-media.sfo3.digitaloceanspaces.com/theservicesexchange/mickey.png" alt="Mickey Shaughnessy">
     <div>
       <div class="founder-name">Mickey Shaughnessy</div>
-      <div class="founder-title">Creator</div>
-      <p>I'm Mickey Shaughnessy, based in Colorado, and I've built things all my life.</p>
-      <p>I built GreenDial because I think the benefits of good AI — patient, personalized, always-available guidance — shouldn't be gated behind cost or complexity. GreenDial is free, and it's built around a simple conversation instead of forms and appointments, because that's the easiest way for anyone to get help with their health and well-being. Universal Bounty extends that same idea outward: it lets anyone — friends, family, employers, insurers, or governments — put real resources directly toward someone's health, through the same simple interface.</p>
+      <div class="founder-title" data-i18n="about.founder.title">Creator</div>
+      <p data-i18n="about.founder.p1">I'm Mickey Shaughnessy, based in Colorado, and I've built things all my life.</p>
+      <p data-i18n="about.founder.p2">I built GreenDial because I think the benefits of good AI — patient, personalized, always-available guidance — shouldn't be gated behind cost or complexity. GreenDial is free, and it's built around a simple conversation instead of forms and appointments, because that's the easiest way for anyone to get help with their health and well-being. Universal Bounty extends that same idea outward: it lets anyone — friends, family, employers, insurers, or governments — put real resources directly toward someone's health, through the same simple interface.</p>
     </div>
   </div>
 
   <hr>
 
-  <h2 id="faq">Frequently Asked Questions</h2>
+  <h2 id="faq" data-i18n="about.faq.heading">Frequently Asked Questions</h2>
   <div class="faq-list">
 
     <details class="faq-item">
-      <summary>What is GreenDial?</summary>
-      <p>GreenDial is a free AI health companion. You chat with Doc, a coordinating AI, which routes your questions to specialist agents (diet, exercise, sleep, mental health, relationships, environment, and more) and builds your health profile automatically as you talk.</p>
+      <summary data-i18n="about.faq.q1">What is GreenDial?</summary>
+      <p data-i18n="about.faq.a1">GreenDial is a free AI health companion. You chat with Doc, a coordinating AI, which routes your questions to specialist agents (diet, exercise, sleep, mental health, relationships, environment, and more) and builds your health profile automatically as you talk.</p>
     </details>
 
     <details class="faq-item">
-      <summary>Is GreenDial really free?</summary>
-      <p>Yes. There's no subscription and no paywalled tier. GreenDial accepts optional donations to help keep the AI running, but using Doc, the specialist agents, Suggestions, and Activities costs nothing.</p>
+      <summary data-i18n="about.faq.q2">Is GreenDial really free?</summary>
+      <p data-i18n="about.faq.a2">Yes. There's no subscription and no paywalled tier. GreenDial accepts optional donations to help keep the AI running, but using Doc, the specialist agents, Suggestions, and Activities costs nothing.</p>
     </details>
 
     <details class="faq-item">
-      <summary>Is this a substitute for a doctor?</summary>
-      <p>No. GreenDial is a HIPAA-waived personal wellness assistant, not a medical provider. It offers general guidance on sleep, diet, exercise, stress, and everyday well-being — it does not diagnose, prescribe, or replace professional medical care. If you're experiencing a medical emergency or suicidal ideation, GreenDial's Mind agent will point you to the 988 crisis line, but always seek qualified professional help for medical concerns.</p>
+      <summary data-i18n="about.faq.q3">Is this a substitute for a doctor?</summary>
+      <p data-i18n="about.faq.a3">No. GreenDial is a HIPAA-waived personal wellness assistant, not a medical provider. It offers general guidance on sleep, diet, exercise, stress, and everyday well-being — it does not diagnose, prescribe, or replace professional medical care. If you're experiencing a medical emergency or suicidal ideation, GreenDial's Mind agent will point you to the 988 crisis line, but always seek qualified professional help for medical concerns.</p>
     </details>
 
     <details class="faq-item">
-      <summary>How does Doc build my profile automatically?</summary>
-      <p>As you chat, Doc extracts relevant details — goals, conditions, preferences, context — and saves them to your profile in the background. There are no intake forms to fill out; the more you talk with Doc, the more complete and useful your profile becomes.</p>
+      <summary data-i18n="about.faq.q4">How does Doc build my profile automatically?</summary>
+      <p data-i18n="about.faq.a4">As you chat, Doc extracts relevant details — goals, conditions, preferences, context — and saves them to your profile in the background. There are no intake forms to fill out; the more you talk with Doc, the more complete and useful your profile becomes.</p>
     </details>
 
     <details class="faq-item">
-      <summary>What are the specialist agents and Cross AI?</summary>
-      <p>Beyond Doc, GreenDial has dedicated agents for exercise, diet, sleep, mental health, relationships, environment, and preventive health ("Protect AI"), plus a fully custom agent you can define yourself. When a question touches more than one domain, Cross AI runs the relevant specialists in parallel and synthesizes their perspectives into one answer.</p>
+      <summary data-i18n="about.faq.q5">What are the specialist agents and Cross AI?</summary>
+      <p data-i18n="about.faq.a5">Beyond Doc, GreenDial has dedicated agents for exercise, diet, sleep, mental health, relationships, environment, and preventive health ("Protect AI"), plus a fully custom agent you can define yourself. When a question touches more than one domain, Cross AI runs the relevant specialists in parallel and synthesizes their perspectives into one answer.</p>
     </details>
 
     <details class="faq-item">
-      <summary>What are Suggestions and Activities?</summary>
-      <p>Each day, GreenDial generates a small batch of personalized Suggestions — specific, actionable ideas across exercise, diet, and social health. Accept one and it becomes an Activity you can track and mark complete; dismiss it if it's not for you.</p>
+      <summary data-i18n="about.faq.q6">What are Suggestions and Activities?</summary>
+      <p data-i18n="about.faq.a6">Each day, GreenDial generates a small batch of personalized Suggestions — specific, actionable ideas across exercise, diet, and social health. Accept one and it becomes an Activity you can track and mark complete; dismiss it if it's not for you.</p>
     </details>
 
     <details class="faq-item">
-      <summary>What is Universal Bounty (UB), and who can create one?</summary>
-      <p>Anyone can sponsor a priced health activity for a specific GreenDial user — friends and family, employers, health insurers, and government programs all use the same endpoint. See the <a href="#bounty">Universal Bounty</a> section above for the full flow.</p>
+      <summary data-i18n="about.faq.q7">What is Universal Bounty (UB), and who can create one?</summary>
+      <p data-i18n-html="about.faq.a7">Anyone can sponsor a priced health activity for a specific GreenDial user — friends and family, employers, health insurers, and government programs all use the same endpoint. See the <a href="#bounty">Universal Bounty</a> section above for the full flow.</p>
     </details>
 
     <details class="faq-item">
-      <summary>How does UB payment actually work?</summary>
-      <p>It's an honor system today: GreenDial records the price, currency, and a snapshot of the user's wallet address when an activity completes, and flags it as payment-pending. There's no on-chain escrow or automatic transfer — the sponsor is responsible for settling payment off-platform.</p>
+      <summary data-i18n="about.faq.q8">How does UB payment actually work?</summary>
+      <p data-i18n="about.faq.a8">It's an honor system today: GreenDial records the price, currency, and a snapshot of the user's wallet address when an activity completes, and flags it as payment-pending. There's no on-chain escrow or automatic transfer — the sponsor is responsible for settling payment off-platform.</p>
     </details>
 
     <details class="faq-item">
-      <summary>How do I get an API key to create a UB?</summary>
-      <p>Email <a href="mailto:mickey@theservicesexchange.com">mickey@theservicesexchange.com</a> with a bit about who you'd like to sponsor. UB and demand-side preview endpoints require an <code>X-API-Key</code> header — full request/response shapes are documented at <a href="/docs">/docs</a>.</p>
+      <summary data-i18n="about.faq.q9">How do I get an API key to create a UB?</summary>
+      <p data-i18n-html="about.faq.a9">Email <a href="mailto:mickey@theservicesexchange.com">mickey@theservicesexchange.com</a> with a bit about who you'd like to sponsor. UB and demand-side preview endpoints require an <code>X-API-Key</code> header — full request/response shapes are documented at <a href="/docs">/docs</a>.</p>
     </details>
 
     <details class="faq-item">
-      <summary>Where is my data stored, and can I delete it?</summary>
-      <p>Your profile, conversations, suggestions, and activities are stored as JSON in DigitalOcean Spaces (S3-compatible storage) tied to your account. Email <a href="mailto:mickey@theservicesexchange.com">mickey@theservicesexchange.com</a> if you'd like your data exported or deleted.</p>
+      <summary data-i18n="about.faq.q10">Where is my data stored, and can I delete it?</summary>
+      <p data-i18n-html="about.faq.a10">Your profile, conversations, suggestions, and activities are stored as JSON in DigitalOcean Spaces (S3-compatible storage) tied to your account. Email <a href="mailto:mickey@theservicesexchange.com">mickey@theservicesexchange.com</a> if you'd like your data exported or deleted.</p>
     </details>
 
     <details class="faq-item">
-      <summary>Where's the source code, and how do I integrate with the API?</summary>
-      <p>GreenDial is open-source on <a href="https://github.com/mickeyshaughnessy/GreenDial" target="_blank">GitHub</a>. Full endpoint documentation, including the UB API, lives at <a href="/docs">/docs</a>, and <a href="/arazzo">/arazzo</a> walks through ten real usage examples end-to-end.</p>
+      <summary data-i18n="about.faq.q11">Where's the source code, and how do I integrate with the API?</summary>
+      <p data-i18n-html="about.faq.a11">GreenDial is open-source on <a href="https://github.com/mickeyshaughnessy/GreenDial" target="_blank">GitHub</a>. Full endpoint documentation, including the UB API, lives at <a href="/docs">/docs</a>, and <a href="/arazzo">/arazzo</a> walks through ten real usage examples end-to-end.</p>
     </details>
 
     <details class="faq-item">
-      <summary>How do I reach you?</summary>
-      <p>Use the 📣 Feedback tab inside GreenDial to post feedback, bug reports, or suggestions directly. For UB partnerships or anything else, email <a href="mailto:mickey@theservicesexchange.com">mickey@theservicesexchange.com</a>.</p>
+      <summary data-i18n="about.faq.q12">How do I reach you?</summary>
+      <p data-i18n-html="about.faq.a12">Use the 📣 Feedback tab inside GreenDial to post feedback, bug reports, or suggestions directly. For UB partnerships or anything else, email <a href="mailto:mickey@theservicesexchange.com">mickey@theservicesexchange.com</a>.</p>
     </details>
 
   </div>
@@ -288,11 +306,12 @@
 </div>
 
 <footer>
-  <a href="/">🌿 Open GreenDial</a>
-  <a href="/docs">API Docs</a>
-  <a href="/arazzo">How It Works</a>
-  <a href="mailto:mickey@theservicesexchange.com">Email</a>
+  <a href="/" data-i18n="common.open_greendial_plain">🌿 Open GreenDial</a>
+  <a href="/docs" data-i18n="common.nav.api_docs">API Docs</a>
+  <a href="/arazzo" data-i18n="common.nav.how_it_works">How It Works</a>
+  <a href="mailto:mickey@theservicesexchange.com" data-i18n="common.email">Email</a>
 </footer>
 
+<script src="/i18n/i18n.js" defer></script>
 </body>
 </html>

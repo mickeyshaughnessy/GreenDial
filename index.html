@@ -1,13 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script>(function(){try{var l=localStorage.getItem('gd_lang');if(l&&l!=='en')document.documentElement.classList.add('i18n-loading');}catch(e){}})();</script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>GreenDial - Health Assistant</title>
+  <title data-i18n="app.doc_title">GreenDial - Health Assistant</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'><text y='32' font-size='32'>🌿</text></svg>">
   <!-- PWA / mobile app -->
   <meta name="theme-color" content="#1a1a2e">
-  <meta name="description" content="GreenDial is a free AI health companion. Chat with Doc for personalized guidance on sleep, diet, exercise, and stress.">
+  <meta name="description" data-i18n-attr-content="app.meta_description" content="GreenDial is a free AI health companion. Chat with Doc for personalized guidance on sleep, diet, exercise, and stress.">
   <link rel="manifest" href="/manifest.json">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
@@ -16,6 +17,18 @@
   <link rel="apple-touch-icon" href="/icons/icon-192.png">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    html.i18n-loading body { visibility: hidden; }
+    .lang-switch { display: flex; gap: 4px; }
+    .lang-btn {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      color: rgba(255,255,255,0.7);
+      font-size: 12px; font-weight: 600;
+      padding: 4px 9px; border-radius: 6px;
+      cursor: pointer;
+    }
+    .lang-btn:hover { background: rgba(255,255,255,0.16); color: #fff; }
+    .lang-btn.active { background: #10b981; border-color: #10b981; color: #fff; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: #1a1a2e;
@@ -943,218 +956,223 @@
   <div class="header">
     <div class="logo" onclick="switchView('chat')" style="cursor:pointer" title="Home"><span>🌿</span><span>GreenDial</span></div>
     <div class="nav-tabs">
-      <button class="nav-tab active" id="nav-chat-tab" onclick="switchView('chat')">💬 Chat</button>
-      <button class="nav-tab" id="nav-stickers-tab" onclick="switchView('stickers')">🏷️ Board</button>
-      <button class="nav-tab" id="nav-history-tab" onclick="switchView('history')">📜 History</button>
-      <button class="nav-tab" id="nav-feedback-tab" onclick="switchView('feedback')">📣 Feedback</button>
-      <button class="nav-tab" id="nav-getstarted-tab" onclick="switchView('getstarted')">🚀 Get Started</button>
+      <button class="nav-tab active" id="nav-chat-tab" onclick="switchView('chat')"><span data-i18n="app.nav.chat">💬 Chat</span></button>
+      <button class="nav-tab" id="nav-stickers-tab" onclick="switchView('stickers')"><span data-i18n="app.nav.board">🏷️ Board</span></button>
+      <button class="nav-tab" id="nav-history-tab" onclick="switchView('history')"><span data-i18n="app.nav.history">📜 History</span></button>
+      <button class="nav-tab" id="nav-feedback-tab" onclick="switchView('feedback')"><span data-i18n="app.nav.feedback">📣 Feedback</span></button>
+      <button class="nav-tab" id="nav-getstarted-tab" onclick="switchView('getstarted')"><span data-i18n="app.nav.getstarted">🚀 Get Started</span></button>
       <button class="nav-tab" id="admin-tab" style="display:none" onclick="switchView('admin')">🛡️ Admin</button>
-      <a class="nav-tab" id="nav-about-tab" href="/about" target="_blank" style="text-decoration:none">ℹ️ About</a>
-      <a class="nav-tab" id="nav-docs-tab" href="/docs" target="_blank" style="text-decoration:none">📄 Docs</a>
+      <a class="nav-tab" id="nav-about-tab" href="/about" target="_blank" style="text-decoration:none"><span data-i18n="app.nav.about">ℹ️ About</span></a>
+      <a class="nav-tab" id="nav-docs-tab" href="/docs" target="_blank" style="text-decoration:none"><span data-i18n="app.nav.docs">📄 Docs</span></a>
+    </div>
+    <div class="lang-switch" id="lang-switch">
+      <button class="lang-btn" data-lang="en" onclick="setLanguage('en')" title="English">T</button>
+      <button class="lang-btn" data-lang="zh" onclick="setLanguage('zh')" title="中文">中</button>
+      <button class="lang-btn" data-lang="ja" onclick="setLanguage('ja')" title="日本語">日</button>
     </div>
     <div class="user-area" id="user-area">
       <div style="position:relative">
         <button class="notification-bell" onclick="toggleNotifications()">🔔<span class="notification-badge" id="notif-badge" style="display:none">0</span></button>
         <div class="notification-dropdown" id="notif-dropdown">
-          <div class="notification-header">Notifications from Doc</div>
-          <div class="notification-list" id="notif-list"><div class="notification-empty">No notifications</div></div>
+          <div class="notification-header" data-i18n="app.notif.header">Notifications from Doc</div>
+          <div class="notification-list" id="notif-list"><div class="notification-empty" data-i18n="app.notif.empty">No notifications</div></div>
         </div>
       </div>
-      <button class="btn btn-secondary btn-sm" onclick="showDonateModal()" title="Support GreenDial">💚 Donate</button>
-      <span class="user-badge">Guest</span>
-      <button class="btn btn-primary btn-sm" onclick="showAuthPopup()">Sign In</button>
+      <button class="btn btn-secondary btn-sm" onclick="showDonateModal()" title="Support GreenDial"><span data-i18n="app.donate">💚 Donate</span></button>
+      <span class="user-badge" data-i18n="app.guest">Guest</span>
+      <button class="btn btn-primary btn-sm" onclick="showAuthPopup()" data-i18n="app.signin">Sign In</button>
     </div>
   </div>
   
   <div class="main">
     <div class="view active" id="view-chat">
       <div class="chat-hero">
-        GreenDial is a free AI health companion. Chat with Doc to get personalized guidance on sleep, diet, exercise, stress, and more. Your health profile builds automatically as you talk — no forms, no appointments.
+        <span data-i18n="app.chat.hero">GreenDial is a free AI health companion. Chat with Doc to get personalized guidance on sleep, diet, exercise, stress, and more. Your health profile builds automatically as you talk — no forms, no appointments.</span>
         <div style="margin-top:6px">
-          <a href="#" onclick="switchView('getstarted');return false;" style="color:#10b981;text-decoration:none">🚀 New here? Take the 60-second tour →</a>
+          <a href="#" onclick="switchView('getstarted');return false;" style="color:#10b981;text-decoration:none" data-i18n="app.chat.tour_link">🚀 New here? Take the 60-second tour →</a>
         </div>
       </div>
       <div class="starter-prompts">
-        <button class="starter-btn" onclick="sendMessage('Help me sleep better')">😴 Help me sleep better</button>
-        <button class="starter-btn" onclick="sendMessage('I want to lose 15 lbs')">⚖️ I want to lose 15 lbs</button>
-        <button class="starter-btn" onclick="sendMessage('I\'m stressed about work')">😤 I'm stressed about work</button>
-        <button class="starter-btn" onclick="sendMessage('What should I eat today?')">🥗 What should I eat today?</button>
+        <button class="starter-btn" onclick="sendMessage('Help me sleep better')" data-i18n="app.chat.starter1">😴 Help me sleep better</button>
+        <button class="starter-btn" onclick="sendMessage('I want to lose 15 lbs')" data-i18n="app.chat.starter2">⚖️ I want to lose 15 lbs</button>
+        <button class="starter-btn" onclick="sendMessage('I\'m stressed about work')" data-i18n="app.chat.starter3">😤 I'm stressed about work</button>
+        <button class="starter-btn" onclick="sendMessage('What should I eat today?')" data-i18n="app.chat.starter4">🥗 What should I eat today?</button>
       </div>
       <div class="chat-container">
         <div class="chat-header">
-          <span id="chat-agent-header">🌿 Chat with Doc</span>
-          <button id="chat-mode-escape" onclick="setChatOnlyMode(false)" title="Exit chat-only mode — show History, Feedback, and Settings tabs">Full interface ↗</button>
+          <span id="chat-agent-header" data-i18n="app.chat.header">🌿 Chat with Doc</span>
+          <button id="chat-mode-escape" onclick="setChatOnlyMode(false)" title="Exit chat-only mode — show History, Feedback, and Settings tabs" data-i18n="app.chat.full_interface">Full interface ↗</button>
         </div>
         <div class="agent-tabs-row" id="agent-tabs-row">
           <button class="agent-tab-btn active" onclick="switchChatAgent('doc')">🌿 Doc</button>
         </div>
         <div class="chat-messages" id="chat-messages"></div>
         <div class="chat-login-card" id="chat-login-card">
-          <h4>Sign in to continue</h4>
-          <p>GreenDial builds your health profile automatically as you chat. Sign in to save your data across sessions.</p>
-          <div class="form-group"><input type="text" id="inline-username" placeholder="Username" autocomplete="username"></div>
-          <div class="form-group"><input type="password" id="inline-password" placeholder="Passphrase" autocomplete="current-password" onkeypress="if(event.key==='Enter')handleInlineLogin()"></div>
+          <h4 data-i18n="app.chat.login_heading">Sign in to continue</h4>
+          <p data-i18n="app.chat.login_desc">GreenDial builds your health profile automatically as you chat. Sign in to save your data across sessions.</p>
+          <div class="form-group"><input type="text" id="inline-username" placeholder="Username" autocomplete="username" data-i18n-attr-placeholder="app.username_placeholder"></div>
+          <div class="form-group"><input type="password" id="inline-password" placeholder="Passphrase" autocomplete="current-password" onkeypress="if(event.key==='Enter')handleInlineLogin()" data-i18n-attr-placeholder="app.passphrase_placeholder"></div>
           <div class="chat-login-error" id="inline-login-error"></div>
           <div class="chat-login-row">
-            <button class="btn btn-primary btn-sm" id="inline-login-btn" onclick="handleInlineLogin()">Sign in</button>
-            <span class="chat-login-switch" onclick="openSignup()">Create account</span>
+            <button class="btn btn-primary btn-sm" id="inline-login-btn" onclick="handleInlineLogin()" data-i18n="app.signin_lower">Sign in</button>
+            <span class="chat-login-switch" onclick="openSignup()" data-i18n="app.create_account">Create account</span>
           </div>
         </div>
         <div class="chat-input-area">
-          <button class="task-toggle" id="task-toggle-btn" onclick="toggleTaskMode()" title="Task mode: uses Gemini Flash with real tools to log data, read history, and consult specialists" style="display:none">⚡ Task</button>
-          <input type="text" id="chat-input" placeholder="Type a message..." onkeypress="if(event.key==='Enter')sendMessage()">
-          <button class="btn btn-primary" onclick="sendMessage()">Send</button>
+          <button class="task-toggle" id="task-toggle-btn" onclick="toggleTaskMode()" title="Task mode: uses Gemini Flash with real tools to log data, read history, and consult specialists" style="display:none" data-i18n="app.chat.task_btn">⚡ Task</button>
+          <input type="text" id="chat-input" placeholder="Type a message..." onkeypress="if(event.key==='Enter')sendMessage()" data-i18n-attr-placeholder="app.chat.input_placeholder">
+          <button class="btn btn-primary" onclick="sendMessage()" data-i18n="app.chat.send">Send</button>
         </div>
       </div>
     </div>
-    
+
     <div class="view" id="view-user">
       <div style="display:flex;flex-direction:column;gap:20px;max-width:900px;width:100%;margin:0 auto;padding-bottom:40px">
         <div class="panel">
-          <div class="panel-header">👤 Identity</div>
+          <div class="panel-header" data-i18n="app.identity.heading">👤 Identity</div>
           <div class="panel-content" id="identity-panel">
-            <div class="profile-empty">Sign in to manage your identity</div>
+            <div class="profile-empty" data-i18n="app.identity.empty">Sign in to manage your identity</div>
           </div>
         </div>
         <div class="panel">
-          <div class="panel-header">⚙️ Settings</div>
-          <div class="panel-content" id="settings-panel"><div class="profile-empty">Sign in to manage settings</div></div>
+          <div class="panel-header" data-i18n="app.settings.heading">⚙️ Settings</div>
+          <div class="panel-content" id="settings-panel"><div class="profile-empty" data-i18n="app.settings.empty">Sign in to manage settings</div></div>
         </div>
         <div class="panel">
-          <div class="panel-header"><span>🏃 My Activities</span></div>
-          <div class="panel-content" id="activities-panel"><div class="profile-empty">Accepted suggestions appear here</div></div>
+          <div class="panel-header"><span data-i18n="app.activities.heading">🏃 My Activities</span></div>
+          <div class="panel-content" id="activities-panel"><div class="profile-empty" data-i18n="app.activities.empty">Accepted suggestions appear here</div></div>
         </div>
         <div class="panel">
-          <div class="panel-header"><span>📋 Health Profile</span><button class="btn btn-secondary btn-sm" onclick="refreshUserTab()">Refresh</button></div>
-          <div class="panel-content" id="full-profile-panel"><div class="profile-empty">Sign in to view your health profile</div></div>
+          <div class="panel-header"><span data-i18n="app.healthprofile.heading">📋 Health Profile</span><button class="btn btn-secondary btn-sm" onclick="refreshUserTab()" data-i18n="app.refresh">Refresh</button></div>
+          <div class="panel-content" id="full-profile-panel"><div class="profile-empty" data-i18n="app.healthprofile.empty">Sign in to view your health profile</div></div>
         </div>
         <div class="panel">
-          <div class="panel-header">📊 Profile JSON</div>
+          <div class="panel-header" data-i18n="app.profilejson.heading">📊 Profile JSON</div>
           <div class="panel-content"><div class="json-view" id="json-profile">{}</div></div>
         </div>
       </div>
     </div>
-    
+
     <div class="view" id="view-history">
       <div class="panel" style="flex:1">
         <div class="panel-header">
           <div style="display:flex;align-items:center;gap:10px;flex:1;flex-wrap:wrap;gap:8px">
-            <span>📜 History</span>
+            <span data-i18n="app.history.heading">📜 History</span>
             <select id="history-agent-select" class="settings-select" style="padding:4px 8px;font-size:12px" onchange="switchHistoryAgent(this.value)">
               <option value="doc">🌿 Doc</option>
             </select>
           </div>
-          <button class="btn btn-danger btn-sm" onclick="clearHistory()">Clear</button>
+          <button class="btn btn-danger btn-sm" onclick="clearHistory()" data-i18n="app.clear">Clear</button>
         </div>
-        <div class="panel-content"><div class="transcript-view" id="transcript-view"><div class="profile-empty">No conversation history yet</div></div></div>
+        <div class="panel-content"><div class="transcript-view" id="transcript-view"><div class="profile-empty" data-i18n="app.history.empty">No conversation history yet</div></div></div>
       </div>
     </div>
 
     <div class="view" id="view-getstarted">
       <div style="display:flex;flex-direction:column;gap:16px;max-width:720px;width:100%;margin:0 auto;padding-bottom:40px">
         <div class="panel">
-          <div class="panel-header"><span>🚀 Get Started with GreenDial</span></div>
+          <div class="panel-header"><span data-i18n="app.gs.heading">🚀 Get Started with GreenDial</span></div>
           <div class="panel-content">
             <div class="gs-step">
               <div class="gs-num">1</div>
-              <div><h4>Just start talking</h4><p>No forms, no setup. Type a message to Doc — try "Help me sleep better" or tell it what's going on with your health today.</p></div>
+              <div><h4 data-i18n="app.gs.step1_title">Just start talking</h4><p data-i18n="app.gs.step1_desc">No forms, no setup. Type a message to Doc — try "Help me sleep better" or tell it what's going on with your health today.</p></div>
             </div>
             <div class="gs-step">
               <div class="gs-num">2</div>
-              <div><h4>Your profile builds itself</h4><p>As you chat, Doc quietly saves the relevant details — goals, conditions, preferences — into your health profile. Nothing to fill out by hand.</p></div>
+              <div><h4 data-i18n="app.gs.step2_title">Your profile builds itself</h4><p data-i18n="app.gs.step2_desc">As you chat, Doc quietly saves the relevant details — goals, conditions, preferences — into your health profile. Nothing to fill out by hand.</p></div>
             </div>
             <div class="gs-step">
               <div class="gs-num">3</div>
-              <div><h4>Check the 🏷️ Board for daily check-ins</h4><p>A quick one-tap emoji poll for how you're doing across a few areas each day — takes seconds.</p></div>
+              <div><h4 data-i18n="app.gs.step3_title">Check the 🏷️ Board for daily check-ins</h4><p data-i18n="app.gs.step3_desc">A quick one-tap emoji poll for how you're doing across a few areas each day — takes seconds.</p></div>
             </div>
             <div class="gs-step">
               <div class="gs-num">4</div>
-              <div><h4>Accept Suggestions → track Activities</h4><p>Each day Doc offers a couple of personalized suggestions. Accept one to turn it into an Activity you can check off when done.</p></div>
+              <div><h4 data-i18n="app.gs.step4_title">Accept Suggestions → track Activities</h4><p data-i18n="app.gs.step4_desc">Each day Doc offers a couple of personalized suggestions. Accept one to turn it into an Activity you can check off when done.</p></div>
             </div>
             <div class="gs-step">
               <div class="gs-num">5</div>
-              <div><h4>It's free — here's why</h4><p>GreenDial is a free system built to make good AI guidance available to everyone. <a href="/about" target="_blank">Read the ethos, FAQ, and Universal Bounty (UB) →</a></p></div>
+              <div><h4 data-i18n="app.gs.step5_title">It's free — here's why</h4><p data-i18n-html="app.gs.step5_desc">GreenDial is a free system built to make good AI guidance available to everyone. <a href="/about" target="_blank">Read the ethos, FAQ, and Universal Bounty (UB) →</a></p></div>
             </div>
           </div>
         </div>
         <div style="text-align:center;padding:8px 0 20px">
-          <button class="btn btn-primary" onclick="switchView('chat')">Start chatting with Doc →</button>
+          <button class="btn btn-primary" onclick="switchView('chat')" data-i18n="app.gs.cta">Start chatting with Doc →</button>
         </div>
       </div>
     </div>
 
     <div class="view" id="view-admin">
       <div class="admin-view" style="width:100%">
-        <h2 style="margin-bottom:4px;">🛡️ Admin Dashboard</h2>
-        <p style="color:rgba(255,255,255,0.4);font-size:13px;margin-bottom:20px;">Live data — passphrases not shown.</p>
+        <h2 style="margin-bottom:4px;" data-i18n="app.admin.heading">🛡️ Admin Dashboard</h2>
+        <p style="color:rgba(255,255,255,0.4);font-size:13px;margin-bottom:20px;" data-i18n="app.admin.subtitle">Live data — passphrases not shown.</p>
         <div class="admin-stats-grid" id="admin-stats-grid">
-          <div class="admin-stat-card"><div class="admin-stat-num" id="admin-total-users">—</div><div class="admin-stat-label">Total Users</div></div>
-          <div class="admin-stat-card"><div class="admin-stat-num" id="admin-new-today">—</div><div class="admin-stat-label">Joined Today</div></div>
-          <div class="admin-stat-card"><div class="admin-stat-num" id="admin-with-profile">—</div><div class="admin-stat-label">Have Profile</div></div>
+          <div class="admin-stat-card"><div class="admin-stat-num" id="admin-total-users">—</div><div class="admin-stat-label" data-i18n="app.admin.total_users">Total Users</div></div>
+          <div class="admin-stat-card"><div class="admin-stat-num" id="admin-new-today">—</div><div class="admin-stat-label" data-i18n="app.admin.joined_today">Joined Today</div></div>
+          <div class="admin-stat-card"><div class="admin-stat-num" id="admin-with-profile">—</div><div class="admin-stat-label" data-i18n="app.admin.have_profile">Have Profile</div></div>
           <div class="admin-stat-card" title="₿ Bitcoin donation address">
             <div class="admin-stat-num" id="admin-btc-balance" style="font-size:1.3rem">—</div>
-            <div class="admin-stat-label">BTC Balance</div>
+            <div class="admin-stat-label" data-i18n="app.admin.btc_balance">BTC Balance</div>
           </div>
           <div class="admin-stat-card" title="Ξ Ethereum donation address">
             <div class="admin-stat-num" id="admin-eth-balance" style="font-size:1.3rem">—</div>
-            <div class="admin-stat-label">ETH Balance</div>
+            <div class="admin-stat-label" data-i18n="app.admin.eth_balance">ETH Balance</div>
           </div>
         </div>
         <div class="admin-table-wrap">
           <table class="admin-table">
             <thead><tr>
-              <th>#</th><th>Username</th><th>Joined</th><th>Profile Fields</th><th>Settings</th>
+              <th>#</th><th data-i18n="app.admin.username">Username</th><th data-i18n="app.admin.joined">Joined</th><th data-i18n="app.admin.profile_fields">Profile Fields</th><th data-i18n="app.settings.heading_plain">Settings</th>
             </tr></thead>
             <tbody id="admin-user-tbody">
-              <tr><td colspan="5" style="padding:24px;text-align:center;color:rgba(255,255,255,0.4)">Loading…</td></tr>
+              <tr><td colspan="5" style="padding:24px;text-align:center;color:rgba(255,255,255,0.4)" data-i18n="app.loading">Loading…</td></tr>
             </tbody>
           </table>
         </div>
-        <h3 style="margin:28px 0 10px">💸 Pending Payments</h3>
+        <h3 style="margin:28px 0 10px" data-i18n="app.admin.pending_payments">💸 Pending Payments</h3>
         <div class="admin-table-wrap">
           <table class="admin-table">
             <thead><tr>
-              <th>User</th><th>Activity</th><th>Amount</th><th>Wallet</th><th>Completed</th><th></th>
+              <th data-i18n="app.admin.user">User</th><th data-i18n="app.admin.activity">Activity</th><th data-i18n="app.admin.amount">Amount</th><th data-i18n="app.admin.wallet">Wallet</th><th data-i18n="app.admin.completed">Completed</th><th></th>
             </tr></thead>
             <tbody id="admin-payments-tbody">
-              <tr><td colspan="6" style="padding:24px;text-align:center;color:rgba(255,255,255,0.4)">Loading…</td></tr>
+              <tr><td colspan="6" style="padding:24px;text-align:center;color:rgba(255,255,255,0.4)" data-i18n="app.loading">Loading…</td></tr>
             </tbody>
           </table>
         </div>
-        <h3 style="margin:28px 0 10px">🎯 Bounties</h3>
+        <h3 style="margin:28px 0 10px" data-i18n="app.admin.bounties">🎯 Bounties</h3>
         <div class="admin-table-wrap">
           <table class="admin-table">
             <thead><tr>
-              <th>Activity</th><th>Area</th><th>Price</th><th>Targets</th><th>Expires</th><th>Status</th>
+              <th data-i18n="app.admin.activity">Activity</th><th data-i18n="app.admin.area">Area</th><th data-i18n="app.admin.price">Price</th><th data-i18n="app.admin.targets">Targets</th><th data-i18n="app.admin.expires">Expires</th><th data-i18n="app.admin.status">Status</th>
             </tr></thead>
             <tbody id="admin-bounties-tbody">
-              <tr><td colspan="6" style="padding:24px;text-align:center;color:rgba(255,255,255,0.4)">Loading…</td></tr>
+              <tr><td colspan="6" style="padding:24px;text-align:center;color:rgba(255,255,255,0.4)" data-i18n="app.loading">Loading…</td></tr>
             </tbody>
           </table>
         </div>
       </div>
     </div>
-    
+
     <div class="view" id="view-stickers">
       <div style="max-width:960px;width:100%;margin:0 auto;padding-bottom:40px">
         <div class="panel">
           <div class="panel-header" style="display:flex;justify-content:space-between;align-items:center">
-            <span>🏷️ Daily Health Board</span>
+            <span data-i18n="app.stickers.heading">🏷️ Daily Health Board</span>
             <div style="display:flex;gap:8px;align-items:center">
-              <button class="btn btn-secondary btn-sm" id="sticker-share-btn" onclick="copyShareLink()" style="display:none">🔗 Share</button>
-              <button class="btn btn-secondary btn-sm" onclick="loadStickerBoard()">Refresh</button>
+              <button class="btn btn-secondary btn-sm" id="sticker-share-btn" onclick="copyShareLink()" style="display:none" data-i18n="app.stickers.share">🔗 Share</button>
+              <button class="btn btn-secondary btn-sm" onclick="loadStickerBoard()" data-i18n="app.refresh">Refresh</button>
             </div>
           </div>
           <div class="panel-content">
-            <p style="color:rgba(255,255,255,0.5);font-size:13px;margin-bottom:16px">Emoji check-ins across health areas — filled in by you through daily polls and chat.</p>
+            <p style="color:rgba(255,255,255,0.5);font-size:13px;margin-bottom:16px" data-i18n="app.stickers.desc">Emoji check-ins across health areas — filled in by you through daily polls and chat.</p>
             <div id="sticker-board-content" style="overflow-x:auto">
-              <div style="color:rgba(255,255,255,0.4);text-align:center;padding:32px">Sign in to see your board</div>
+              <div style="color:rgba(255,255,255,0.4);text-align:center;padding:32px" data-i18n="app.stickers.signin_prompt">Sign in to see your board</div>
             </div>
             <div id="sticker-share-section" style="display:none;margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.08)">
-              <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-bottom:6px">Shareable link (no identifying info)</div>
+              <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-bottom:6px" data-i18n="app.stickers.share_label">Shareable link (no identifying info)</div>
               <div style="display:flex;gap:8px;align-items:center">
                 <input id="sticker-share-url" type="text" readonly style="flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:6px 10px;color:#e6edf3;font-size:12px;cursor:pointer" onclick="this.select()" value="">
-                <button class="btn btn-primary btn-sm" onclick="copyShareLink()">Copy</button>
+                <button class="btn btn-primary btn-sm" onclick="copyShareLink()" data-i18n="app.copy">Copy</button>
               </div>
             </div>
           </div>
@@ -1165,19 +1183,19 @@
     <div class="view" id="view-feedback">
       <div style="max-width:800px;width:100%;margin:0 auto;padding-bottom:40px">
         <div class="panel" style="margin-bottom:16px">
-          <div class="panel-header">📣 Post Feedback</div>
+          <div class="panel-header" data-i18n="app.feedback.heading">📣 Post Feedback</div>
           <div class="panel-content">
-            <p style="color:rgba(255,255,255,0.5);font-size:13px;margin-bottom:14px">Share feedback, report bugs, or suggest features. No sign-in required.</p>
+            <p style="color:rgba(255,255,255,0.5);font-size:13px;margin-bottom:14px" data-i18n="app.feedback.desc">Share feedback, report bugs, or suggest features. No sign-in required.</p>
             <div class="form-group">
-              <label>Your name (optional)</label>
-              <input type="text" id="feedback-name" placeholder="Anonymous" maxlength="40">
+              <label data-i18n="app.feedback.name_label">Your name (optional)</label>
+              <input type="text" id="feedback-name" placeholder="Anonymous" maxlength="40" data-i18n-attr-placeholder="app.feedback.name_placeholder">
             </div>
             <div class="form-group">
-              <label>Message</label>
-              <textarea id="feedback-message" class="custom-prompt-textarea" style="min-height:80px" placeholder="What's on your mind?" maxlength="2000"></textarea>
+              <label data-i18n="app.feedback.message_label">Message</label>
+              <textarea id="feedback-message" class="custom-prompt-textarea" style="min-height:80px" placeholder="What's on your mind?" maxlength="2000" data-i18n-attr-placeholder="app.feedback.message_placeholder"></textarea>
             </div>
             <div id="feedback-error" class="form-error" style="margin-bottom:8px"></div>
-            <button class="btn btn-primary" onclick="postFeedback()">Post</button>
+            <button class="btn btn-primary" onclick="postFeedback()" data-i18n="app.post">Post</button>
           </div>
         </div>
         <div class="panel">
@@ -1190,31 +1208,31 @@
   
   <div class="popup-overlay" id="donate-popup">
     <div class="donate-popup">
-      <h3>💚 Support GreenDial</h3>
-      <p class="subtitle">GreenDial is free and open-source. Donations help keep the AI running.</p>
+      <h3 data-i18n="app.donate_modal.heading">💚 Support GreenDial</h3>
+      <p class="subtitle" data-i18n="app.donate_modal.subtitle">GreenDial is free and open-source. Donations help keep the AI running.</p>
       <div class="crypto-row" style="display:none">
         <div class="crypto-label">₿ Bitcoin (BTC)</div>
         <div class="crypto-addr" id="btc-addr">139VrBnUEB3UgzwGCQwLxDHnDTUWoE96Y8</div>
-        <button class="btn-copy" onclick="copyAddr('btc-addr', this)">Copy address</button>
+        <button class="btn-copy" onclick="copyAddr('btc-addr', this)" data-i18n="app.donate_modal.copy_addr">Copy address</button>
       </div>
       <div class="crypto-row" style="display:none">
         <div class="crypto-label">Ξ Ethereum (ETH)</div>
         <div class="crypto-addr" id="eth-addr">0x58ed1da7a1A58DaB2Fb8d21317725D8760C816Fe</div>
-        <button class="btn-copy" onclick="copyAddr('eth-addr', this)">Copy address</button>
+        <button class="btn-copy" onclick="copyAddr('eth-addr', this)" data-i18n="app.donate_modal.copy_addr">Copy address</button>
       </div>
       <div class="phantom-row" style="display:none">
-        <button class="btn-phantom" id="phantom-connect-btn" onclick="connectPhantom()">👻 Connect Phantom to send ETH</button>
+        <button class="btn-phantom" id="phantom-connect-btn" onclick="connectPhantom()" data-i18n="app.donate_modal.connect_phantom">👻 Connect Phantom to send ETH</button>
         <div id="phantom-connected" style="display:none">
           <div class="phantom-wallet-addr" id="phantom-wallet-addr"></div>
           <div class="phantom-send-row">
-            <input class="phantom-amount-input" type="number" id="phantom-amount" placeholder="Amount in ETH" step="0.001" min="0.0001">
-            <button class="btn btn-primary btn-sm" onclick="sendPhantomDonation()">Send</button>
+            <input class="phantom-amount-input" type="number" id="phantom-amount" placeholder="Amount in ETH" step="0.001" min="0.0001" data-i18n-attr-placeholder="app.donate_modal.amount_placeholder">
+            <button class="btn btn-primary btn-sm" onclick="sendPhantomDonation()" data-i18n="app.chat.send">Send</button>
           </div>
           <div class="phantom-status" id="phantom-status"></div>
         </div>
       </div>
       <div class="popup-buttons">
-        <button type="button" class="btn btn-primary" onclick="hideDonateModal()">Close</button>
+        <button type="button" class="btn btn-primary" onclick="hideDonateModal()" data-i18n="app.close">Close</button>
       </div>
     </div>
   </div>
@@ -1222,38 +1240,39 @@
   <div class="popup-overlay" id="auth-popup">
     <div class="popup">
       <div class="form-tabs">
-        <button class="form-tab active" onclick="switchAuthTab('login')">Sign In</button>
-        <button class="form-tab" onclick="switchAuthTab('signup')">Create Account</button>
+        <button class="form-tab active" onclick="switchAuthTab('login')" data-i18n="app.signin">Sign In</button>
+        <button class="form-tab" onclick="switchAuthTab('signup')" data-i18n="app.create_account_cap">Create Account</button>
       </div>
       <form id="login-form" onsubmit="handleLogin(event)">
-        <div class="form-group"><label>Username</label><input type="text" id="login-username" placeholder="Enter your username" required></div>
-        <div class="form-group"><label>Passphrase</label><input type="password" id="login-password" placeholder="Enter your passphrase" required></div>
+        <div class="form-group"><label data-i18n="app.username">Username</label><input type="text" id="login-username" placeholder="Enter your username" required data-i18n-attr-placeholder="app.enter_username"></div>
+        <div class="form-group"><label data-i18n="app.passphrase">Passphrase</label><input type="password" id="login-password" placeholder="Enter your passphrase" required data-i18n-attr-placeholder="app.enter_passphrase"></div>
         <div class="form-error" id="login-error"></div>
         <div class="popup-buttons">
-          <button type="button" class="btn btn-secondary" onclick="hideAuthPopup()">Cancel</button>
-          <button type="submit" class="btn btn-primary" id="login-btn">Sign In</button>
+          <button type="button" class="btn btn-secondary" onclick="hideAuthPopup()" data-i18n="app.cancel">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="login-btn" data-i18n="app.signin">Sign In</button>
         </div>
       </form>
       <form id="signup-form" style="display:none" onsubmit="handleSignup(event)">
-        <div class="hipaa-notice"><strong>Important:</strong> GreenDial is not HIPAA-compliant. <span class="waiver-link" onclick="showHipaaWaiver()">Read the full HIPAA waiver</span> before creating an account.</div>
-        <div class="form-group"><label>Username</label><input type="text" id="signup-username" placeholder="Choose a username" required></div>
-        <div class="form-group"><label>Passphrase</label><input type="password" id="signup-password" placeholder="Create a passphrase" required></div>
+        <div class="hipaa-notice" data-i18n-html="app.hipaa_notice"><strong>Important:</strong> GreenDial is not HIPAA-compliant. <span class="waiver-link" onclick="showHipaaWaiver()">Read the full HIPAA waiver</span> before creating an account.</div>
+        <div class="form-group"><label data-i18n="app.username">Username</label><input type="text" id="signup-username" placeholder="Choose a username" required data-i18n-attr-placeholder="app.choose_username"></div>
+        <div class="form-group"><label data-i18n="app.passphrase">Passphrase</label><input type="password" id="signup-password" placeholder="Create a passphrase" required data-i18n-attr-placeholder="app.create_passphrase"></div>
         <div class="checkbox-group">
           <input type="checkbox" id="signup-hipaa" required>
-          <label for="signup-hipaa">I have read and agree to the <span class="waiver-link" onclick="event.preventDefault(); showHipaaWaiver()">HIPAA Waiver</span></label>
+          <label for="signup-hipaa" data-i18n-html="app.hipaa_agree">I have read and agree to the <span class="waiver-link" onclick="event.preventDefault(); showHipaaWaiver()">HIPAA Waiver</span></label>
         </div>
         <div class="form-error" id="signup-error"></div>
         <div class="popup-buttons">
-          <button type="button" class="btn btn-secondary" onclick="hideAuthPopup()">Cancel</button>
-          <button type="submit" class="btn btn-primary" id="signup-btn">Create Account</button>
+          <button type="button" class="btn btn-secondary" onclick="hideAuthPopup()" data-i18n="app.cancel">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="signup-btn" data-i18n="app.create_account_cap">Create Account</button>
         </div>
       </form>
     </div>
   </div>
-  
+
   <div class="popup-overlay" id="hipaa-popup">
     <div class="waiver-popup">
-      <h3>HIPAA Waiver and Health Information Disclosure</h3>
+      <h3 data-i18n="app.hipaa.heading">HIPAA Waiver and Health Information Disclosure</h3>
+      <p style="font-size:11px;color:rgba(255,255,255,0.35);margin-bottom:16px" data-i18n="app.hipaa.legal_note">This legal notice is provided in English only.</p>
       
       <div class="waiver-section">
         <h4>What is HIPAA?</h4>
@@ -1326,11 +1345,12 @@
       </div>
       
       <div class="popup-buttons">
-        <button type="button" class="btn btn-primary" onclick="hideHipaaWaiver()" style="flex:1">I Understand</button>
+        <button type="button" class="btn btn-primary" onclick="hideHipaaWaiver()" style="flex:1" data-i18n="app.hipaa.understand">I Understand</button>
       </div>
     </div>
   </div>
 
+  <script src="/i18n/i18n.js"></script>
   <script>
     // ── CONSTANTS ────────────────────────────────────────────────────────────
     const API = window.location.origin;
@@ -1696,10 +1716,12 @@
       applyChatOnlyMode(true);
       const restored = await restoreSession();
       if (!restored) {
-        agentChats.doc = [{ role: 'doc', text: "Hi! I'm Doc. I'll help you build your health profile and track your health over time. What brings you here today?" }];
+        _usingDefaultWelcome = true;
+        agentChats.doc = [{ role: 'doc', text: t('app.doc_welcome',"Hi! I'm Doc. I'll help you build your health profile and track your health over time. What brings you here today?") }];
         renderMessages();
       }
     }
+    let _usingDefaultWelcome = false;
     
     function switchView(view) {
       currentView = view;
@@ -1795,11 +1817,12 @@
       const input = document.getElementById('chat-input');
       const text = prefillText || input.value.trim();
       if (!text || isLoading) return;
+      _usingDefaultWelcome = false;
 
       if (!currentUser) {
         addMessage('user', text);
         input.value = '';
-        addMessage('doc', 'Sign in to chat and save your profile.');
+        addMessage('doc', t('app.signin_to_chat','Sign in to chat and save your profile.'));
         return;
       }
 
@@ -1858,7 +1881,7 @@
               setTimeout(refreshSettings, 400);
             }
             if (result === 'history_cleared') {
-              agentChats.doc = [{ role: 'doc', text: 'History cleared.' }];
+              agentChats.doc = [{ role: 'doc', text: t('app.history_cleared_short','History cleared.') }];
               renderMessages();
             }
           }
@@ -1900,8 +1923,8 @@
     
     async function refreshProfile() {
       if (!currentUser) {
-        document.getElementById('full-profile-panel').innerHTML = '<div class="profile-empty">Sign in to view your health profile</div>';
-        document.getElementById('identity-panel').innerHTML = '<div class="profile-empty">Sign in to manage your identity</div>';
+        document.getElementById('full-profile-panel').innerHTML = `<div class="profile-empty">${t('app.healthprofile.empty','Sign in to view your health profile')}</div>`;
+        document.getElementById('identity-panel').innerHTML = `<div class="profile-empty">${t('app.identity.empty','Sign in to manage your identity')}</div>`;
         return;
       }
       try {
@@ -1930,10 +1953,10 @@
       const p = userProfile || {};
       
       if (!Object.keys(p).length) {
-        panel.innerHTML = '<div class="profile-empty" style="padding:32px 20px;font-size:14px;line-height:1.7">🌿 Tell Doc about yourself and your profile will build automatically.</div>';
+        panel.innerHTML = `<div class="profile-empty" style="padding:32px 20px;font-size:14px;line-height:1.7">🌿 ${t('app.healthprofile.build_hint','Tell Doc about yourself and your profile will build automatically.')}</div>`;
         return;
       }
-      
+
       const sections = {
         'Core Information': ['primary_concern', 'age', 'location', 'goals'],
         'Health Status': ['health_conditions', 'medications', 'allergies'],
@@ -1941,20 +1964,31 @@
         'Measurements': ['weight', 'height'],
         'Other': ['notes']
       };
-      
-      const fieldLabels = {
-        primary_concern: 'Primary Health Focus', health_conditions: 'Health Conditions',
-        diet_type: 'Diet Type', exercise_frequency: 'Exercise Frequency',
-        exercise_type: 'Exercise Type', sleep_hours: 'Sleep (hours)',
-        sleep_quality: 'Sleep Quality', stress_level: 'Stress Level'
+      const sectionLabels = {
+        'Core Information': t('app.healthprofile.section.core','Core Information'),
+        'Health Status': t('app.healthprofile.section.health','Health Status'),
+        'Lifestyle': t('app.healthprofile.section.lifestyle','Lifestyle'),
+        'Measurements': t('app.healthprofile.section.measurements','Measurements'),
+        'Other': t('app.healthprofile.section.other','Other')
       };
-      
+
+      const fieldLabels = {
+        primary_concern: t('app.healthprofile.field.primary_concern','Primary Health Focus'),
+        health_conditions: t('app.healthprofile.field.health_conditions','Health Conditions'),
+        diet_type: t('app.healthprofile.field.diet_type','Diet Type'),
+        exercise_frequency: t('app.healthprofile.field.exercise_frequency','Exercise Frequency'),
+        exercise_type: t('app.healthprofile.field.exercise_type','Exercise Type'),
+        sleep_hours: t('app.healthprofile.field.sleep_hours','Sleep (hours)'),
+        sleep_quality: t('app.healthprofile.field.sleep_quality','Sleep Quality'),
+        stress_level: t('app.healthprofile.field.stress_level','Stress Level')
+      };
+
       let html = '';
       for (const [section, fields] of Object.entries(sections)) {
         const sectionFields = fields.filter(f => p[f]);
         if (!sectionFields.length) continue;
-        
-        html += `<div class="profile-section"><div class="profile-section-title">${section}</div>`;
+
+        html += `<div class="profile-section"><div class="profile-section-title">${sectionLabels[section]}</div>`;
         for (const field of sectionFields) {
           const label = fieldLabels[field] || field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
           let value = Array.isArray(p[field]) ? p[field].join(', ') : String(p[field]);
@@ -1962,11 +1996,11 @@
         }
         html += '</div>';
       }
-      
+
       const allFields = Object.values(sections).flat();
       const otherFields = Object.keys(p).filter(k => !allFields.includes(k));
       if (otherFields.length) {
-        html += '<div class="profile-section"><div class="profile-section-title">Additional</div>';
+        html += `<div class="profile-section"><div class="profile-section-title">${t('app.healthprofile.section.additional','Additional')}</div>`;
         for (const field of otherFields) {
           let value = Array.isArray(p[field]) ? p[field].join(', ') : String(p[field]);
           html += `<div class="profile-field"><span class="label">${field.replace(/_/g, ' ')}</span><span class="value">${escapeHtml(value)}</span></div>`;
@@ -1986,7 +2020,7 @@
 
       const histFields = Object.entries(historyData).filter(([, entries]) => entries && entries.length > 0);
       if (histFields.length) {
-        html += '<div class="profile-section"><div class="profile-section-title">📈 History (last 30 days)</div>';
+        html += `<div class="profile-section"><div class="profile-section-title">📈 ${t('app.healthprofile.history_30d','History (last 30 days)')}</div>`;
         for (const [field, entries] of histFields) {
           const label = FIELD_LABELS[field] || field.replace(/_/g, ' ');
           const sorted = [...entries].sort((a, b) => b.ts.localeCompare(a.ts));
@@ -2011,7 +2045,7 @@
         html += '</div>';
       }
 
-      panel.innerHTML = html || '<div class="profile-empty">No profile data yet</div>';
+      panel.innerHTML = html || `<div class="profile-empty">${t('app.healthprofile.no_data','No profile data yet')}</div>`;
     }
     
     function switchHistoryAgent(agentId) {
@@ -2059,7 +2093,7 @@
       try {
         if (currentHistoryAgent === 'doc') {
           await fetch(`${API}/conversations/${currentUser.user_id}`, { method: 'DELETE' });
-          agentChats['doc'] = [{ role: 'doc', text: "History cleared. What would you like to discuss?" }];
+          agentChats['doc'] = [{ role: 'doc', text: t('app.history_cleared_long','History cleared. What would you like to discuss?') }];
           if (currentAgent === 'doc') renderMessages();
         } else {
           await fetch(`${API}/conversations/${currentUser.user_id}/agent/${currentHistoryAgent}`, { method: 'DELETE' });
@@ -2073,7 +2107,7 @@
     async function refreshSettings() {
       const panel = document.getElementById('settings-panel');
       if (!currentUser) {
-        panel.innerHTML = '<div class="profile-empty">Sign in to manage settings</div>';
+        panel.innerHTML = `<div class="profile-empty">${t('app.settings.empty','Sign in to manage settings')}</div>`;
         return;
       }
 
@@ -2093,79 +2127,79 @@
 
       panel.innerHTML = `
         <div class="settings-group">
-          <div class="settings-group-title">Profile Picture</div>
+          <div class="settings-group-title">${t('app.settings.profile_picture','Profile Picture')}</div>
           <div class="avatar-section">
             <div class="avatar-preview">${avHtml}</div>
             <div class="avatar-actions">
-              <button class="btn btn-secondary btn-sm" onclick="generateRandomAvatar()">🎲 Random</button>
+              <button class="btn btn-secondary btn-sm" onclick="generateRandomAvatar()">🎲 ${t('app.settings.random','Random')}</button>
               <label class="avatar-file-label">
-                📷 Upload Photo
+                📷 ${t('app.settings.upload_photo','Upload Photo')}
                 <input type="file" accept="image/*" style="display:none" onchange="uploadAvatar(event)">
               </label>
             </div>
           </div>
         </div>
         <div class="settings-group">
-          <div class="settings-group-title">Doc's Communication Style</div>
+          <div class="settings-group-title">${t('app.settings.doc_style_title', "Doc's Communication Style")}</div>
           <div class="settings-item">
-            <div><div class="settings-label">Conversation Tone</div><div class="settings-desc">How Doc interacts with you</div></div>
+            <div><div class="settings-label">${t('app.settings.conversation_tone','Conversation Tone')}</div><div class="settings-desc">${t('app.settings.conversation_tone_desc','How Doc interacts with you')}</div></div>
             <select class="settings-select" onchange="updateSetting('doc_style', this.value)">
-              <option value="questioning" ${userSettings.doc_style === 'questioning' ? 'selected' : ''}>Questioning</option>
-              <option value="professional" ${userSettings.doc_style === 'professional' ? 'selected' : ''}>Professional</option>
-              <option value="friendly" ${userSettings.doc_style === 'friendly' ? 'selected' : ''}>Friendly</option>
+              <option value="questioning" ${userSettings.doc_style === 'questioning' ? 'selected' : ''}>${t('app.settings.questioning','Questioning')}</option>
+              <option value="professional" ${userSettings.doc_style === 'professional' ? 'selected' : ''}>${t('app.settings.professional','Professional')}</option>
+              <option value="friendly" ${userSettings.doc_style === 'friendly' ? 'selected' : ''}>${t('app.settings.friendly','Friendly')}</option>
             </select>
           </div>
         </div>
         <div class="settings-group">
-          <div class="settings-group-title">Interface</div>
+          <div class="settings-group-title">${t('app.settings.interface','Interface')}</div>
           <div class="settings-item">
-            <div><div class="settings-label">Chat-only mode</div><div class="settings-desc">Use only the chat interface — hides other panels</div></div>
+            <div><div class="settings-label">${t('app.settings.chatonly','Chat-only mode')}</div><div class="settings-desc">${t('app.settings.chatonly_desc','Use only the chat interface — hides other panels')}</div></div>
             <div class="settings-toggle ${userSettings.chat_only_mode ? 'on' : ''}" onclick="setChatOnlyMode(${userSettings.chat_only_mode ? 0 : 1})"></div>
           </div>
         </div>
         <div class="settings-group">
-          <div class="settings-group-title">Notifications</div>
+          <div class="settings-group-title">${t('app.settings.notifications','Notifications')}</div>
           <div class="settings-item">
-            <div><div class="settings-label">Enable Notifications</div><div class="settings-desc">Doc checks in on you daily with relevant tips</div></div>
+            <div><div class="settings-label">${t('app.settings.enable_notif','Enable Notifications')}</div><div class="settings-desc">${t('app.settings.enable_notif_desc','Doc checks in on you daily with relevant tips')}</div></div>
             <div class="settings-toggle ${userSettings.notifications_enabled ? 'on' : ''}" onclick="toggleNotificationSetting()"></div>
           </div>
           <div class="settings-item">
-            <div><div class="settings-label">Push reminders</div><div class="settings-desc" id="push-desc">Daily check-in reminders on this device</div></div>
+            <div><div class="settings-label">${t('app.settings.push','Push reminders')}</div><div class="settings-desc" id="push-desc">${t('app.settings.push_desc','Daily check-in reminders on this device')}</div></div>
             <div id="push-toggle-wrap"><span style="font-size:12px;color:rgba(255,255,255,0.35)">…</span></div>
           </div>
           ${!!userSettings.chat_only_mode ? `<div id="settings-notif-list" style="margin-top:8px"></div>` : ''}
         </div>
         <div class="settings-group">
-          <div class="settings-group-title">Custom Instructions</div>
+          <div class="settings-group-title">${t('app.settings.custom_instructions','Custom Instructions')}</div>
           <div style="padding:0 0 10px;font-size:12px;color:rgba(255,255,255,0.5)">
-            Personalize the ⚙️ Custom chat tab with your own instructions for Doc.
+            ${t('app.settings.custom_instructions_desc','Personalize the ⚙️ Custom chat tab with your own instructions for Doc.')}
           </div>
           <div class="custom-prompt-wrap">
             <textarea id="custom-agent-prompt-input" class="custom-prompt-textarea"
               placeholder="You are a custom AI health agent, capable of...">${escapeHtml(customPrompt)}</textarea>
-            <button class="btn btn-secondary btn-sm" style="margin-top:8px" onclick="saveCustomPrompt()">Save Prompt</button>
+            <button class="btn btn-secondary btn-sm" style="margin-top:8px" onclick="saveCustomPrompt()">${t('app.settings.save_prompt','Save Prompt')}</button>
           </div>
         </div>
         ${!!userSettings.chat_only_mode ? `
         <div class="settings-group">
-          <div class="settings-group-title">Resources</div>
+          <div class="settings-group-title">${t('app.settings.resources','Resources')}</div>
           <div class="settings-item">
-            <div><div class="settings-label">ℹ️ About &amp; FAQ</div><div class="settings-desc">Ethos, Universal Bounty (UB), FAQ</div></div>
-            <a href="/about" class="btn btn-secondary btn-sm" style="text-decoration:none">Open ↗</a>
+            <div><div class="settings-label">ℹ️ ${t('app.settings.about_faq','About &amp; FAQ')}</div><div class="settings-desc">${t('app.settings.about_faq_desc','Ethos, Universal Bounty (UB), FAQ')}</div></div>
+            <a href="/about" class="btn btn-secondary btn-sm" style="text-decoration:none">${t('app.settings.open','Open ↗')}</a>
           </div>
           <div class="settings-item">
-            <div><div class="settings-label">📖 Documentation</div><div class="settings-desc">API reference and guides</div></div>
-            <a href="/docs" class="btn btn-secondary btn-sm" style="text-decoration:none">Open Docs ↗</a>
+            <div><div class="settings-label">📖 ${t('app.settings.documentation','Documentation')}</div><div class="settings-desc">${t('app.settings.documentation_desc','API reference and guides')}</div></div>
+            <a href="/docs" class="btn btn-secondary btn-sm" style="text-decoration:none">${t('app.settings.open_docs','Open Docs ↗')}</a>
           </div>
           <div class="settings-item">
-            <div><div class="settings-label">💚 Support GreenDial</div><div class="settings-desc">Help keep GreenDial running</div></div>
-            <button class="btn btn-secondary btn-sm" onclick="showDonateModal()">Donate</button>
+            <div><div class="settings-label">💚 ${t('app.settings.support','Support GreenDial')}</div><div class="settings-desc">${t('app.settings.support_desc','Help keep GreenDial running')}</div></div>
+            <button class="btn btn-secondary btn-sm" onclick="showDonateModal()">${t('app.donate_plain','Donate')}</button>
           </div>
         </div>` : ''}
         <div class="settings-group">
-          <div class="settings-group-title">Account</div>
-          <div class="settings-item"><div><div class="settings-label">Username</div><div class="settings-desc">${escapeHtml(currentUser.username)}</div></div></div>
-          <div class="settings-item"><div><div class="settings-label">Sign Out</div></div><button class="btn btn-danger btn-sm" onclick="logout()">Sign Out</button></div>
+          <div class="settings-group-title">${t('app.settings.account','Account')}</div>
+          <div class="settings-item"><div><div class="settings-label">${t('app.settings.username','Username')}</div><div class="settings-desc">${escapeHtml(currentUser.username)}</div></div></div>
+          <div class="settings-item"><div><div class="settings-label">${t('app.signout','Sign Out')}</div></div><button class="btn btn-danger btn-sm" onclick="logout()">${t('app.signout','Sign Out')}</button></div>
         </div>
       `;
 
@@ -2187,14 +2221,14 @@
       if (!panel) return;
       const v = s => escapeHtml(s || '');
       panel.innerHTML = `
-        <div class="identity-field"><label>First name</label><input id="id-first" value="${v(data.first_name)}" placeholder="First"></div>
-        <div class="identity-field"><label>Last name</label><input id="id-last" value="${v(data.last_name)}" placeholder="Last"></div>
-        <div class="identity-field"><label>Email</label><input id="id-email" type="email" value="${v(data.email)}" placeholder="you@example.com"></div>
-        <div class="identity-field"><label>ETH wallet</label><input id="id-eth" value="${v((data.wallets||{}).eth)}" placeholder="0x…"></div>
-        <div class="identity-field"><label>SOL wallet</label><input id="id-sol" value="${v((data.wallets||{}).sol)}" placeholder="Solana address"></div>
+        <div class="identity-field"><label>${t('app.identity.first_name','First name')}</label><input id="id-first" value="${v(data.first_name)}" placeholder="First"></div>
+        <div class="identity-field"><label>${t('app.identity.last_name','Last name')}</label><input id="id-last" value="${v(data.last_name)}" placeholder="Last"></div>
+        <div class="identity-field"><label>${t('app.identity.email','Email')}</label><input id="id-email" type="email" value="${v(data.email)}" placeholder="you@example.com"></div>
+        <div class="identity-field"><label>${t('app.identity.eth_wallet','ETH wallet')}</label><input id="id-eth" value="${v((data.wallets||{}).eth)}" placeholder="0x…"></div>
+        <div class="identity-field"><label>${t('app.identity.sol_wallet','SOL wallet')}</label><input id="id-sol" value="${v((data.wallets||{}).sol)}" placeholder="Solana address"></div>
         <div style="margin-top:12px">
-          <button class="btn btn-primary btn-sm" onclick="saveIdentity()">Save</button>
-          <span id="identity-save-msg" style="margin-left:10px;font-size:12px;color:#10b981;display:none">Saved!</span>
+          <button class="btn btn-primary btn-sm" onclick="saveIdentity()">${t('app.save','Save')}</button>
+          <span id="identity-save-msg" style="margin-left:10px;font-size:12px;color:#10b981;display:none">${t('app.saved','Saved!')}</span>
           <span id="identity-error" class="form-error" style="margin-left:10px;font-size:12px"></span>
         </div>`;
     }
@@ -2259,8 +2293,8 @@
       if (!data || !currentUser) {
         const ci = document.getElementById('today-checkins-list');
         const su = document.getElementById('today-suggestions-list');
-        if (ci) ci.innerHTML = '<div class="notif-empty-sm">Sign in to see check-ins</div>';
-        if (su) su.innerHTML = '<div class="notif-empty-sm">Sign in to see suggestions</div>';
+        if (ci) ci.innerHTML = `<div class="notif-empty-sm">${t('app.signin_checkins','Sign in to see check-ins')}</div>`;
+        if (su) su.innerHTML = `<div class="notif-empty-sm">${t('app.signin_suggestions','Sign in to see suggestions')}</div>`;
         if (badge) badge.style.display = 'none';
         return;
       }
@@ -2277,7 +2311,7 @@
       if (sp) {
         const tips = data.notifications || [];
         sp.innerHTML = tips.length
-          ? '<div style="font-size:11px;color:rgba(255,255,255,0.4);padding:4px 0">Click 🔔 above to see your check-ins and suggestions.</div>'
+          ? `<div style="font-size:11px;color:rgba(255,255,255,0.4);padding:4px 0">${t('app.click_bell_hint','Click 🔔 above to see your check-ins and suggestions.')}</div>`
           : '';
       }
     }
@@ -2286,7 +2320,7 @@
       const container = document.getElementById('today-checkins-list');
       if (!container) return;
       if (!checkIns.length) {
-        container.innerHTML = '<div class="notif-empty-sm">No areas configured</div>';
+        container.innerHTML = `<div class="notif-empty-sm">${t('app.no_areas','No areas configured')}</div>`;
         return;
       }
       container.innerHTML = checkIns.map(ci => {
@@ -2333,7 +2367,7 @@
       const container = document.getElementById('today-suggestions-list');
       if (!container) return;
       if (!suggestions.length) {
-        container.innerHTML = '<div class="notif-empty-sm">No suggestions today</div>';
+        container.innerHTML = `<div class="notif-empty-sm">${t('app.no_suggestions_today','No suggestions today')}</div>`;
         return;
       }
       container.innerHTML = suggestions.map(s => {
@@ -2343,8 +2377,8 @@
           <div class="sugg-item-header">
             <span>${meta.emoji} ${meta.name}${priceTag}</span>
             <div>
-              <button class="sugg-accept" onclick="acceptSuggestion('${s.id}')">✓ Accept</button>
-              <button class="sugg-skip" onclick="dismissSuggestion('${s.id}')">Skip</button>
+              <button class="sugg-accept" onclick="acceptSuggestion('${s.id}')">✓ ${t('app.accept','Accept')}</button>
+              <button class="sugg-skip" onclick="dismissSuggestion('${s.id}')">${t('app.skip','Skip')}</button>
             </div>
           </div>
           <div class="sugg-item-text">${escapeHtml(s.text)}</div>
@@ -2442,7 +2476,7 @@
       const active = acts.filter(a => a.status === 'active');
       const done = acts.filter(a => a.status === 'completed');
       if (!active.length && !done.length) {
-        panel.innerHTML = '<div class="profile-empty">Accept a suggestion to start an activity.</div>';
+        panel.innerHTML = `<div class="profile-empty">${t('app.activities.cta','Accept a suggestion to start an activity.')}</div>`;
         return;
       }
       let html = '';
@@ -2453,21 +2487,21 @@
           return `<div class="activity-card" id="acard-${a.id}">
             <div class="activity-meta"><span class="activity-agent">${meta.emoji} ${meta.name}</span>${priceTag}</div>
             <div class="activity-text">${escapeHtml(a.text)}</div>
-            <button class="btn-complete" onclick="completeActivity('${a.id}')">✓ Mark Complete</button>
-            <button class="btn-dismiss" onclick="abandonActivity('${a.id}')" style="margin-left:6px">Abandon</button>
+            <button class="btn-complete" onclick="completeActivity('${a.id}')">✓ ${t('app.mark_complete','Mark Complete')}</button>
+            <button class="btn-dismiss" onclick="abandonActivity('${a.id}')" style="margin-left:6px">${t('app.abandon','Abandon')}</button>
           </div>`;
         }).join('');
       }
       if (done.length) {
-        html += `<div style="padding:10px 14px 4px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,0.3)">Completed</div>`;
+        html += `<div style="padding:10px 14px 4px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,0.3)">${t('app.completed','Completed')}</div>`;
         html += done.map(a => {
           const meta = getAgentMeta(a.agent_id);
-          const payBadge = a.payment_pending ? `<span class="activity-payment-badge">💜 Payment pending</span>` : '';
+          const payBadge = a.payment_pending ? `<span class="activity-payment-badge">💜 ${t('app.payment_pending','Payment pending')}</span>` : '';
           const priceTag = a.price ? `<span class="activity-price">💰 ${a.price} ${a.currency || 'ETH'}</span>` : '';
           return `<div class="activity-card completed">
             <div class="activity-meta"><span class="activity-agent">${meta.emoji} ${meta.name}</span>${priceTag}${payBadge}</div>
             <div class="activity-text">${escapeHtml(a.text)}</div>
-            <div class="activity-date">Completed ${formatTime(a.completed_at)}</div>
+            <div class="activity-date">${t('app.completed','Completed')} ${formatTime(a.completed_at)}</div>
           </div>`;
         }).join('');
       }
@@ -2517,14 +2551,14 @@
 
     function _feedbackThreadHtml(p) {
       const id = escapeHtml(p.id);
-      const opName = p.username || 'Guest';
+      const opName = p.username || t('app.guest','Guest');
       const replies = p.replies || [];
       const repliesHtml = replies.map(r => {
         const isOp = (r.username || '') === opName;
-        const badge = isOp ? ' <span style="font-size:9px;color:#10b981;border:1px solid rgba(16,185,129,0.4);border-radius:6px;padding:0 4px;vertical-align:middle">author</span>' : '';
+        const badge = isOp ? ` <span style="font-size:9px;color:#10b981;border:1px solid rgba(16,185,129,0.4);border-radius:6px;padding:0 4px;vertical-align:middle">${t('app.feedback.author','author')}</span>` : '';
         return `<div style="margin-top:8px;padding-left:10px;border-left:2px solid rgba(255,255,255,0.1)">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">
-            <span style="font-size:12px;font-weight:600;color:#58a6ff">${escapeHtml(r.username || 'Guest')}${badge}</span>
+            <span style="font-size:12px;font-weight:600;color:#58a6ff">${escapeHtml(r.username || t('app.guest','Guest'))}${badge}</span>
             <span style="font-size:10px;color:rgba(255,255,255,0.3)">${formatTime(r.created)}</span>
           </div>
           <div style="font-size:12px;line-height:1.5;color:rgba(255,255,255,0.8)">${escapeHtml(r.message)}</div>
@@ -2535,12 +2569,12 @@
       return `<div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.06)">
         ${repliesHtml}
         <div style="display:flex;gap:6px;margin-top:8px" onmousedown="event.stopPropagation()">
-          <input id="reply-name-${id}" placeholder="Name" value="${prefillName}" maxlength="40" draggable="false"
+          <input id="reply-name-${id}" placeholder="${t('app.feedback.name_placeholder2','Name')}" value="${prefillName}" maxlength="40" draggable="false"
             style="width:78px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:6px;color:#fff;font-size:12px;padding:6px 8px">
-          <input id="reply-msg-${id}" placeholder="Write a reply…" maxlength="2000" draggable="false"
+          <input id="reply-msg-${id}" placeholder="${t('app.feedback.reply_placeholder','Write a reply…')}" maxlength="2000" draggable="false"
             onkeypress="if(event.key==='Enter')replyToFeedback('${id}')"
             style="flex:1;min-width:0;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:6px;color:#fff;font-size:12px;padding:6px 9px">
-          <button class="btn btn-secondary btn-sm" onclick="replyToFeedback('${id}')">Reply</button>
+          <button class="btn btn-secondary btn-sm" onclick="replyToFeedback('${id}')">${t('app.feedback.reply','Reply')}</button>
         </div>
       </div>`;
     }
@@ -2585,7 +2619,7 @@
     async function loadFeedback() {
       const list = document.getElementById('feedback-list');
       if (!list) return;
-      list.innerHTML = '<div class="profile-empty">Loading…</div>';
+      list.innerHTML = `<div class="profile-empty">${t('app.loading','Loading…')}</div>`;
       try {
         const res = await fetch(`${API}/feedback`);
         const data = await res.json();
@@ -2593,7 +2627,7 @@
         const isMickey = currentUser && currentUser.username.toLowerCase() === 'mickey';
 
         if (!posts.length) {
-          list.innerHTML = '<div class="profile-empty">No posts yet. Be the first to leave feedback!</div>';
+          list.innerHTML = `<div class="profile-empty">${t('app.feedback.no_posts','No posts yet. Be the first to leave feedback!')}</div>`;
           return;
         }
 
@@ -2604,14 +2638,14 @@
             ${_feedbackColHtml('completed', '✅ Completed', posts, 'feedback-col-done')}
           </div>`;
         } else {
-          const statusLabel = { new: null, todo: ['📋 To-Do', '#f59e0b'], completed: ['✅ Done', '#10b981'] };
+          const statusLabel = { new: null, todo: ['📋 ' + t('app.feedback.todo','To-Do'), '#f59e0b'], completed: ['✅ ' + t('app.feedback.done','Done'), '#10b981'] };
           list.innerHTML = posts.map(p => {
             const st = statusLabel[p.status || 'new'];
             const badge = st ? `<span style="font-size:10px;font-weight:600;color:${st[1]};background:${st[1]}18;border:1px solid ${st[1]}44;padding:1px 7px;border-radius:10px;margin-left:8px">${st[0]}</span>` : '';
             return `
             <div style="padding:14px 0;border-bottom:1px solid rgba(255,255,255,0.07)">
               <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
-                <span style="display:flex;align-items:center"><span style="font-weight:600;font-size:13px;color:#10b981">${escapeHtml(p.username || 'Guest')}</span>${badge}</span>
+                <span style="display:flex;align-items:center"><span style="font-weight:600;font-size:13px;color:#10b981">${escapeHtml(p.username || t('app.guest','Guest'))}</span>${badge}</span>
                 <span style="font-size:11px;color:rgba(255,255,255,0.35)">${formatTime(p.created)}</span>
               </div>
               <div style="font-size:13px;line-height:1.6;color:rgba(255,255,255,0.85)">${escapeHtml(p.message)}</div>
@@ -2620,7 +2654,7 @@
           }).join('');
         }
       } catch (e) {
-        list.innerHTML = '<div class="profile-empty">Could not load feedback</div>';
+        list.innerHTML = `<div class="profile-empty">${t('app.feedback.load_error','Could not load feedback')}</div>`;
       }
     }
 
@@ -2808,7 +2842,7 @@
 
     async function loadStickerBoard() {
       if (!currentUser) {
-        document.getElementById('sticker-board-content').innerHTML = '<div style="color:rgba(255,255,255,0.4);text-align:center;padding:32px">Sign in to see your board</div>';
+        document.getElementById('sticker-board-content').innerHTML = `<div style="color:rgba(255,255,255,0.4);text-align:center;padding:32px">${t('app.stickers.signin_prompt','Sign in to see your board')}</div>`;
         return;
       }
       try {
@@ -2819,7 +2853,7 @@
         stickerBoardData = data;
         renderStickerBoard(data);
       } catch (e) {
-        document.getElementById('sticker-board-content').innerHTML = '<div style="color:#f85149;text-align:center;padding:32px">Failed to load board</div>';
+        document.getElementById('sticker-board-content').innerHTML = `<div style="color:#f85149;text-align:center;padding:32px">${t('app.stickers.load_error','Failed to load board')}</div>`;
       }
     }
 
@@ -2833,7 +2867,12 @@
       const { rows, token, share_url } = data;
       const today = isoToday();
       const areas = ['sleep','diet','exercise','mental_health','relationships','environment','protect'];
-      const areaLabels = {sleep:'🌙 Sleep',diet:'🥗 Diet',exercise:'💪 Exercise',mental_health:'🧠 Mental',relationships:'❤️ Relationships',environment:'🌿 Environment',protect:'🛡️ Protect'};
+      const areaLabels = {
+        sleep: '🌙 ' + t('app.area.sleep','Sleep'), diet: '🥗 ' + t('app.area.diet','Diet'),
+        exercise: '💪 ' + t('app.area.exercise','Exercise'), mental_health: '🧠 ' + t('app.area.mental','Mental'),
+        relationships: '❤️ ' + t('app.area.relationships','Relationships'), environment: '🌿 ' + t('app.area.environment','Environment'),
+        protect: '🛡️ ' + t('app.area.protect','Protect')
+      };
 
       // Build last 30 days oldest→newest (today on the right); skip days with no stickers.
       // Use UTC throughout so day keys match the server's utcnow-based storage.
@@ -2841,7 +2880,7 @@
       for (let i = 29; i >= 0; i--) {
         const d = new Date(); d.setUTCDate(d.getUTCDate() - i);
         const iso = `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}`;
-        const label = i === 0 ? 'Today' : `${d.getUTCMonth()+1}/${d.getUTCDate()}`;
+        const label = i === 0 ? t('app.today_short','Today') : `${d.getUTCMonth()+1}/${d.getUTCDate()}`;
         candidates.push({ iso, label, isToday: i === 0 });
       }
       const days = candidates.filter(day =>
@@ -2968,7 +3007,7 @@
       const btn = document.getElementById('login-btn');
       
       btn.disabled = true;
-      btn.textContent = 'Signing in...';
+      btn.textContent = t('app.signing_in','Signing in...');
       
       try {
         const response = await fetch(`${API}/auth`, {
@@ -3001,7 +3040,7 @@
           await loadAgentChats(data.user_id);
           // If Doc has no loaded history, show welcome
           if (!agentChats.doc || agentChats.doc.length === 0) {
-            agentChats.doc = [{ role: 'doc', text: `Welcome back, ${data.username}! Let's continue building your health profile.` }];
+            agentChats.doc = [{ role: 'doc', text: `${t('app.welcome_back','Welcome back')}, ${data.username}! ${t('app.welcome_back_rest',"Let's continue building your health profile.")}` }];
           }
           renderMessages();
 
@@ -3010,13 +3049,13 @@
           applyChatOnlyMode(!!userSettings.chat_only_mode);
         }
       } catch (error) {
-        errorEl.textContent = 'Connection error.';
+        errorEl.textContent = t('app.connection_error','Connection error.');
       }
 
       btn.disabled = false;
-      btn.textContent = 'Sign In';
+      btn.textContent = t('app.signin','Sign In');
     }
-    
+
     async function handleSignup(e) {
       e.preventDefault();
       const username = document.getElementById('signup-username').value.trim();
@@ -3024,14 +3063,14 @@
       const hipaaAccepted = document.getElementById('signup-hipaa').checked;
       const errorEl = document.getElementById('signup-error');
       const btn = document.getElementById('signup-btn');
-      
+
       if (!hipaaAccepted) {
-        errorEl.textContent = 'Please accept the HIPAA waiver';
+        errorEl.textContent = t('app.accept_hipaa','Please accept the HIPAA waiver');
         return;
       }
-      
+
       btn.disabled = true;
-      btn.textContent = 'Creating...';
+      btn.textContent = t('app.creating','Creating...');
       
       try {
         const response = await fetch(`${API}/auth`, {
@@ -3053,18 +3092,18 @@
           hideAuthPopup();
           updateUserUI();
           updateAllProfileDisplays();
-          startFreshChat(`Welcome, ${data.username}! I'm Doc. I'll help you build your health profile. What's your main health focus right now?`);
+          startFreshChat(`${t('app.welcome_new','Welcome')}, ${data.username}! ${t('app.welcome_new_rest',"I'm Doc. I'll help you build your health profile. What's your main health focus right now?")}`);
 
           if (window._notifInterval) clearInterval(window._notifInterval);
           window._notifInterval = setInterval(fetchToday, 120000);
           applyChatOnlyMode(!!userSettings.chat_only_mode);
         }
       } catch (error) {
-        errorEl.textContent = 'Connection error.';
+        errorEl.textContent = t('app.connection_error','Connection error.');
       }
-      
+
       btn.disabled = false;
-      btn.textContent = 'Create Account';
+      btn.textContent = t('app.create_account_cap','Create Account');
     }
     
     function logout() {
@@ -3096,17 +3135,17 @@
         <div style="position:relative">
           <button class="notification-bell" onclick="toggleNotifications()">🔔<span class="notification-badge" id="notif-badge" style="display:none">0</span></button>
           <div class="notification-dropdown" id="notif-dropdown">
-            <div class="notification-header">Today</div>
+            <div class="notification-header">${t('app.today','Today')}</div>
             <div class="notif-section">
-              <div class="notif-section-label">Check-ins</div>
-              <div id="today-checkins-list"><div class="notif-empty-sm">${signedIn ? 'Loading…' : 'Sign in to see check-ins'}</div></div>
+              <div class="notif-section-label">${t('app.checkins','Check-ins')}</div>
+              <div id="today-checkins-list"><div class="notif-empty-sm">${signedIn ? t('app.loading','Loading…') : t('app.signin_checkins','Sign in to see check-ins')}</div></div>
             </div>
             <div class="notif-section">
-              <div class="notif-section-label">Suggestions</div>
-              <div id="today-suggestions-list"><div class="notif-empty-sm">${signedIn ? 'Loading…' : 'Sign in to see suggestions'}</div></div>
+              <div class="notif-section-label">${t('app.suggestions','Suggestions')}</div>
+              <div id="today-suggestions-list"><div class="notif-empty-sm">${signedIn ? t('app.loading','Loading…') : t('app.signin_suggestions','Sign in to see suggestions')}</div></div>
             </div>
             <div class="notif-section" id="tips-section" style="display:none">
-              <div class="notif-section-label notif-section-toggle" onclick="toggleTipsSection()">Tips & Reminders <span id="tips-toggle">▶</span></div>
+              <div class="notif-section-label notif-section-toggle" onclick="toggleTipsSection()">${t('app.tips_reminders','Tips & Reminders')} <span id="tips-toggle">▶</span></div>
               <div id="today-tips-list" style="display:none"></div>
             </div>
           </div>
@@ -3126,9 +3165,9 @@
         } else {
           userArea.innerHTML = `
             ${todayDropdownHtml(true)}
-            <button class="btn btn-secondary btn-sm" onclick="showDonateModal()" title="Support GreenDial">💚 Donate</button>
+            <button class="btn btn-secondary btn-sm" onclick="showDonateModal()" title="Support GreenDial">💚 ${t('app.donate_plain','Donate')}</button>
             <span class="user-badge" onclick="goToSettings()" style="display:flex;align-items:center;gap:6px"><span style="font-size:16px">${getUserAvatar()}</span>${escapeHtml(currentUser.username)}</span>
-            <button class="btn btn-secondary btn-sm" onclick="logout()">Sign Out</button>
+            <button class="btn btn-secondary btn-sm" onclick="logout()">${t('app.signout','Sign Out')}</button>
           `;
         }
         fetchToday();
@@ -3140,13 +3179,13 @@
         if (adminTab) adminTab.style.display = 'none';
 
         if (chatOnly) {
-          userArea.innerHTML = `<button class="btn btn-primary btn-sm" onclick="showAuthPopup()">Sign In</button>`;
+          userArea.innerHTML = `<button class="btn btn-primary btn-sm" onclick="showAuthPopup()">${t('app.signin','Sign In')}</button>`;
         } else {
           userArea.innerHTML = `
             ${todayDropdownHtml(false)}
-            <button class="btn btn-secondary btn-sm" onclick="showDonateModal()" title="Support GreenDial">💚 Donate</button>
-            <span class="user-badge">Guest</span>
-            <button class="btn btn-primary btn-sm" onclick="showAuthPopup()">Sign In</button>
+            <button class="btn btn-secondary btn-sm" onclick="showDonateModal()" title="Support GreenDial">💚 ${t('app.donate_plain','Donate')}</button>
+            <span class="user-badge">${t('app.guest','Guest')}</span>
+            <button class="btn btn-primary btn-sm" onclick="showAuthPopup()">${t('app.signin','Sign In')}</button>
           `;
         }
       }
@@ -3445,6 +3484,23 @@
     }
     window.togglePush = togglePush;
     window.updatePushSettingUI = updatePushSettingUI;
+
+    // Re-render panels that were already built with baked-in English text
+    // (JS template strings, not data-i18n DOM attrs) once a translation
+    // dictionary becomes available or the user switches language.
+    window.onGdLanguageChange = function () {
+      updateUserUI();
+      if (_usingDefaultWelcome && currentAgent === 'doc') {
+        agentChats.doc = [{ role: 'doc', text: t('app.doc_welcome',"Hi! I'm Doc. I'll help you build your health profile and track your health over time. What brings you here today?") }];
+        renderMessages();
+      }
+      if (currentUser) {
+        if (currentView === 'user') { refreshProfile(); refreshSettings(); loadActivities(); }
+        if (currentView === 'stickers') loadStickerBoard();
+        if (currentView === 'feedback') loadFeedback();
+        fetchToday();
+      }
+    };
 
     init();
   </script>

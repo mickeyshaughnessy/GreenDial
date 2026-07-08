@@ -89,6 +89,11 @@ def pwa_icons(filename):
     return send_from_directory('icons', filename)
 
 
+@app.route("/i18n/<path:filename>", methods=['GET'])
+def i18n_files(filename):
+    return send_from_directory('i18n', filename, mimetype='application/json' if filename.endswith('.json') else 'application/javascript')
+
+
 # ---- Web push ----
 
 @app.route("/push/vapid-public-key", methods=['GET'])

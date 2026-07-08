@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script>(function(){try{var l=localStorage.getItem('gd_lang');if(l&&l!=='en')document.documentElement.classList.add('i18n-loading');}catch(e){}})();</script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GreenDial API Docs</title>
+  <title data-i18n="docs.title">GreenDial API Docs</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    html.i18n-loading body { visibility: hidden; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: #1a1a2e;
@@ -189,38 +191,54 @@
     }
     .hc-summary.pass { display: block; background: rgba(16,185,129,0.12); color: #6ee7b7; border: 1px solid rgba(16,185,129,0.3); }
     .hc-summary.fail { display: block; background: rgba(239,68,68,0.12); color: #fca5a5; border: 1px solid rgba(239,68,68,0.3); }
+    .lang-switch { display: flex; gap: 4px; margin-left: auto; }
+    .lang-btn {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      color: rgba(255,255,255,0.7);
+      font-size: 12px; font-weight: 600;
+      padding: 4px 9px; border-radius: 6px;
+      cursor: pointer;
+    }
+    .lang-btn:hover { background: rgba(255,255,255,0.16); color: #fff; }
+    .lang-btn.active { background: #10b981; border-color: #10b981; color: #fff; }
   </style>
 </head>
 <body>
 
 <div class="header">
   <a class="logo" href="/">🌿 GreenDial</a>
-  <span class="header-title">/ API Docs</span>
+  <span class="header-title" data-i18n="common.nav.docs_crumb">/ API Docs</span>
+  <div class="lang-switch">
+    <button class="lang-btn" data-lang="en" onclick="setLanguage('en')" title="English">T</button>
+    <button class="lang-btn" data-lang="zh" onclick="setLanguage('zh')" title="中文">中</button>
+    <button class="lang-btn" data-lang="ja" onclick="setLanguage('ja')" title="日本語">日</button>
+  </div>
 </div>
 
 <div class="container">
-  <h1>GreenDial API</h1>
-  <p class="subtitle">REST API — base URL: <code style="color:#10b981">https://greendial.org</code> &nbsp;·&nbsp; All endpoints return JSON unless noted.</p>
+  <h1 data-i18n="docs.h1">GreenDial API</h1>
+  <p class="subtitle" data-i18n-html="docs.subtitle">REST API — base URL: <code style="color:#10b981">https://greendial.org</code> &nbsp;·&nbsp; All endpoints return JSON unless noted.</p>
 
   <div class="spec-links">
-    <a class="spec-link" href="/about" target="_blank">ℹ️ About &amp; FAQ</a>
-    <a class="spec-link" href="/arazzo" target="_blank">✨ How It Works — 10 Examples</a>
-    <a class="spec-link" href="/spec/openapi.yaml" target="_blank">📄 OpenAPI 3.1 Spec</a>
-    <a class="spec-link" href="/spec/arazzo.yaml"  target="_blank">🔀 Arazzo Workflow Spec</a>
-    <a class="spec-link" href="https://github.com/mickeyshaughnessy/GreenDial" target="_blank">⚙️ Source on GitHub</a>
+    <a class="spec-link" href="/about" target="_blank" data-i18n="docs.speclinks.about">ℹ️ About &amp; FAQ</a>
+    <a class="spec-link" href="/arazzo" target="_blank" data-i18n="docs.speclinks.arazzo">✨ How It Works — 10 Examples</a>
+    <a class="spec-link" href="/spec/openapi.yaml" target="_blank" data-i18n="docs.speclinks.openapi">📄 OpenAPI 3.1 Spec</a>
+    <a class="spec-link" href="/spec/arazzo.yaml"  target="_blank" data-i18n="docs.speclinks.arazzospec">🔀 Arazzo Workflow Spec</a>
+    <a class="spec-link" href="https://github.com/mickeyshaughnessy/GreenDial" target="_blank" data-i18n="docs.speclinks.github">⚙️ Source on GitHub</a>
   </div>
 
   <!-- ===== API HEALTH CHECK ===== -->
   <div class="healthcheck">
     <div class="hc-top">
       <div>
-        <h2>🩺 API Health Check</h2>
-        <p>Runs the live integration suite against this server: signup → login → chat → profile → settings → suggestions → activities → auth enforcement → cleanup. Creates a throwaway test account and deletes it at the end. Takes ~30–60 seconds (real LLM calls).</p>
+        <h2 data-i18n="docs.hc.heading">🩺 API Health Check</h2>
+        <p data-i18n="docs.hc.desc">Runs the live integration suite against this server: signup → login → chat → profile → settings → suggestions → activities → auth enforcement → cleanup. Creates a throwaway test account and deletes it at the end. Takes ~30–60 seconds (real LLM calls).</p>
       </div>
-      <button class="hc-run-btn" id="hc-run" onclick="runHealthCheck()">▶ Run all tests</button>
+      <button class="hc-run-btn" id="hc-run" onclick="runHealthCheck()" data-i18n="docs.hc.run_btn">▶ Run all tests</button>
     </div>
     <div class="hc-key-row">
-      <label for="hc-api-key">Demand-side API key (optional — unlocks UB &amp; payment tests):</label>
+      <label for="hc-api-key" data-i18n-html="docs.hc.key_label">Demand-side API key (optional — unlocks UB &amp; payment tests):</label>
       <input id="hc-api-key" type="password" placeholder="X-API-Key value" autocomplete="off">
     </div>
     <div class="hc-results" id="hc-results"></div>
@@ -228,38 +246,38 @@
   </div>
 
   <!-- ===== OVERVIEW ===== -->
-  <h2>Overview</h2>
-  <p>GreenDial is a personal health platform powered by <strong>Doc</strong>, a primary AI coordinator, and a team of specialist <strong>health agents</strong>. Doc guides conversations, builds the user's health profile, and routes domain-specific questions to the right agent. When a message matches two or more agent domains, <strong>Cross AI</strong> synthesizes perspectives from multiple specialists in parallel.</p>
-  <p>Agents also run on a server-side cron schedule (08:00 UTC daily), generating personalized check-in notifications for subscribed users. Each agent has its own dedicated chat tab in the UI, with a profile-building onboarding interview on first activation.</p>
-  <p>Authentication is username + passphrase for the app; HTTP Basic Auth for third-party integrations.</p>
+  <h2 data-i18n="docs.overview.heading">Overview</h2>
+  <p data-i18n-html="docs.overview.p1">GreenDial is a personal health platform powered by <strong>Doc</strong>, a primary AI coordinator, and a team of specialist <strong>health agents</strong>. Doc guides conversations, builds the user's health profile, and routes domain-specific questions to the right agent. When a message matches two or more agent domains, <strong>Cross AI</strong> synthesizes perspectives from multiple specialists in parallel.</p>
+  <p data-i18n="docs.overview.p2">Agents also run on a server-side cron schedule (08:00 UTC daily), generating personalized check-in notifications for subscribed users. Each agent has its own dedicated chat tab in the UI, with a profile-building onboarding interview on first activation.</p>
+  <p data-i18n="docs.overview.p3">Authentication is username + passphrase for the app; HTTP Basic Auth for third-party integrations.</p>
 
-  <h3>Agent roster</h3>
+  <h3 data-i18n="docs.roster.heading">Agent roster</h3>
   <table class="field-table">
-    <thead><tr><th>ID</th><th>Name</th><th>Domain</th></tr></thead>
+    <thead><tr><th data-i18n="docs.field.id">ID</th><th data-i18n="docs.field.name">Name</th><th data-i18n="docs.field.domain">Domain</th></tr></thead>
     <tbody>
-      <tr><td>diet</td><td>🥗 Diet</td><td>Nutrition, eating habits, weight management, hydration</td></tr>
-      <tr><td>exercise</td><td>💪 Exercise</td><td>Fitness, movement, workouts, injury prevention</td></tr>
-      <tr><td>protect</td><td>🛡️ Protect AI</td><td>Immune resilience + disease prevention, screenings, risk factors</td></tr>
-      <tr><td>sleep</td><td>😴 Sleep</td><td>Sleep quality, insomnia, circadian rhythm, sleep hygiene</td></tr>
-      <tr><td>mental_health</td><td>🧠 Mind</td><td>Stress, anxiety, depression, mindfulness, resilience</td></tr>
-      <tr><td>relationships</td><td>💞 Relationships</td><td>Social connection, communication, loneliness, caregiving</td></tr>
-      <tr><td>environment</td><td>🌍 Environment</td><td>Air quality, ergonomics, home/workplace health, nature</td></tr>
-      <tr><td>custom</td><td>⚙️ Custom</td><td>User-defined system prompt — any health topic</td></tr>
-      <tr><td>cross_ai</td><td>🔀 Cross AI</td><td>Multi-domain synthesis — activated when 2+ domains match</td></tr>
+      <tr><td>diet</td><td>🥗 Diet</td><td data-i18n="docs.roster.diet">Nutrition, eating habits, weight management, hydration</td></tr>
+      <tr><td>exercise</td><td>💪 Exercise</td><td data-i18n="docs.roster.exercise">Fitness, movement, workouts, injury prevention</td></tr>
+      <tr><td>protect</td><td>🛡️ Protect AI</td><td data-i18n="docs.roster.protect">Immune resilience + disease prevention, screenings, risk factors</td></tr>
+      <tr><td>sleep</td><td>😴 Sleep</td><td data-i18n="docs.roster.sleep">Sleep quality, insomnia, circadian rhythm, sleep hygiene</td></tr>
+      <tr><td>mental_health</td><td>🧠 Mind</td><td data-i18n="docs.roster.mental_health">Stress, anxiety, depression, mindfulness, resilience</td></tr>
+      <tr><td>relationships</td><td>💞 Relationships</td><td data-i18n="docs.roster.relationships">Social connection, communication, loneliness, caregiving</td></tr>
+      <tr><td>environment</td><td>🌍 Environment</td><td data-i18n="docs.roster.environment">Air quality, ergonomics, home/workplace health, nature</td></tr>
+      <tr><td>custom</td><td>⚙️ Custom</td><td data-i18n="docs.roster.custom">User-defined system prompt — any health topic</td></tr>
+      <tr><td>cross_ai</td><td>🔀 Cross AI</td><td data-i18n="docs.roster.cross_ai">Multi-domain synthesis — activated when 2+ domains match</td></tr>
     </tbody>
   </table>
 
-  <h3>How agents activate</h3>
-  <p><strong>1. Via Doc (chat-triggered)</strong> — Doc checks keyword lists and emits <code>**CALL_AGENT**</code>. Single-domain → specialist. Two or more domains → Cross AI runs matched agents in parallel threads and synthesizes.</p>
-  <p><strong>2. Via agent direct chat</strong> — Users open an agent's tab; the server routes to <code>POST /chat/agent/{agent_id}</code>. Each agent maintains its own transcript separate from Doc.</p>
-  <p><strong>3. Via crontab (scheduled)</strong> — <code>agent_runner.py</code> at 08:00 UTC daily. Per-user, per-agent, 20-hour debounce. Results land in the notification bell.</p>
+  <h3 data-i18n="docs.activate.heading">How agents activate</h3>
+  <p data-i18n-html="docs.activate.p1"><strong>1. Via Doc (chat-triggered)</strong> — Doc checks keyword lists and emits <code>**CALL_AGENT**</code>. Single-domain → specialist. Two or more domains → Cross AI runs matched agents in parallel threads and synthesizes.</p>
+  <p data-i18n-html="docs.activate.p2"><strong>2. Via agent direct chat</strong> — Users open an agent's tab; the server routes to <code>POST /chat/agent/{agent_id}</code>. Each agent maintains its own transcript separate from Doc.</p>
+  <p data-i18n-html="docs.activate.p3"><strong>3. Via crontab (scheduled)</strong> — <code>agent_runner.py</code> at 08:00 UTC daily. Per-user, per-agent, 20-hour debounce. Results land in the notification bell.</p>
 
-  <div class="note">All agents are kind, helpful, and truthful — expert systems backed by scientific and medical LLMs. The Mental Wellness Guide provides the 988 crisis line for users expressing suicidal ideation.</div>
+  <div class="note" data-i18n="docs.activate.note">All agents are kind, helpful, and truthful — expert systems backed by scientific and medical LLMs. The Mental Wellness Guide provides the 988 crisis line for users expressing suicidal ideation.</div>
 
   <hr>
 
   <!-- ===== PING ===== -->
-  <h2>System</h2>
+  <h2 data-i18n="docs.system.heading">System</h2>
 
   <div class="endpoint">
     <div class="endpoint-header">
@@ -267,9 +285,9 @@
       <span class="path">/ping</span>
     </div>
     <div class="endpoint-desc">
-      Health check. No auth required.
+      <span data-i18n="docs.system.ping_desc">Health check. No auth required.</span>
       <div class="ping-tester">
-        <button class="btn-try" id="ping-btn" onclick="runPing()">▶ Try it live</button>
+        <button class="btn-try" id="ping-btn" onclick="runPing()" data-i18n="docs.system.try_live">▶ Try it live</button>
         <div class="ping-result" id="ping-result"></div>
       </div>
     </div>
@@ -280,7 +298,7 @@
       <span class="method get">GET</span>
       <span class="path">/stats</span>
     </div>
-    <div class="endpoint-desc">Public. Returns total registered user count.
+    <div class="endpoint-desc"><span data-i18n="docs.system.stats_desc">Public. Returns total registered user count.</span>
       <div class="code-block">{"user_count": 23}</div>
     </div>
   </div>
@@ -288,7 +306,7 @@
   <hr>
 
   <!-- ===== AUTH ===== -->
-  <h2>Authentication</h2>
+  <h2 data-i18n="docs.auth.heading">Authentication</h2>
 
   <div class="endpoint">
     <div class="endpoint-header">
@@ -296,15 +314,15 @@
       <span class="path">/auth</span>
     </div>
     <div class="endpoint-desc">
-      Sign in or create an account.
+      <span data-i18n="docs.auth.desc">Sign in or create an account.</span>
       <table class="field-table" style="margin-top:12px">
-        <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+        <thead><tr><th data-i18n="docs.field.field">Field</th><th data-i18n="docs.field.type">Type</th><th data-i18n="docs.field.description">Description</th></tr></thead>
         <tbody>
-          <tr><td>username</td><td>string</td><td>Required</td></tr>
-          <tr><td>password</td><td>string</td><td>Required (passphrase)</td></tr>
-          <tr><td>create_new</td><td>bool</td><td>Set <em>true</em> to register</td></tr>
-          <tr><td>hipaa_waiver_accepted</td><td>bool</td><td>Required when registering</td></tr>
-          <tr><td>profile</td><td>object</td><td>Optional initial profile on signup</td></tr>
+          <tr><td>username</td><td>string</td><td data-i18n="docs.auth.f_required">Required</td></tr>
+          <tr><td>password</td><td>string</td><td data-i18n="docs.auth.f_password">Required (passphrase)</td></tr>
+          <tr><td>create_new</td><td>bool</td><td data-i18n-html="docs.auth.f_create_new">Set <em>true</em> to register</td></tr>
+          <tr><td>hipaa_waiver_accepted</td><td>bool</td><td data-i18n="docs.auth.f_hipaa">Required when registering</td></tr>
+          <tr><td>profile</td><td>object</td><td data-i18n="docs.auth.f_profile">Optional initial profile on signup</td></tr>
         </tbody>
       </table>
       <div class="code-block">POST /auth
@@ -318,7 +336,7 @@
   <hr>
 
   <!-- ===== CHAT ===== -->
-  <h2>Chat</h2>
+  <h2 data-i18n="docs.chat.heading">Chat</h2>
 
   <div class="endpoint">
     <div class="endpoint-header">
@@ -326,13 +344,13 @@
       <span class="path">/chat</span>
     </div>
     <div class="endpoint-desc">
-      Send a message to Doc (primary coordinator). Doc may dispatch to a specialist agent internally. Pass <code>user_id</code> to persist profile updates.
+      <span data-i18n-html="docs.chat.desc">Send a message to Doc (primary coordinator). Doc may dispatch to a specialist agent internally. Pass <code>user_id</code> to persist profile updates.</span>
       <table class="field-table" style="margin-top:12px">
-        <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+        <thead><tr><th data-i18n="docs.field.field">Field</th><th data-i18n="docs.field.type">Type</th><th data-i18n="docs.field.description">Description</th></tr></thead>
         <tbody>
-          <tr><td>text</td><td>string</td><td>User's message</td></tr>
-          <tr><td>user_id</td><td>string</td><td>Optional — links to saved profile</td></tr>
-          <tr><td>session_id</td><td>string</td><td>Optional — pass back to continue session</td></tr>
+          <tr><td>text</td><td>string</td><td data-i18n="docs.chat.f_text">User's message</td></tr>
+          <tr><td>user_id</td><td>string</td><td data-i18n="docs.chat.f_user_id">Optional — links to saved profile</td></tr>
+          <tr><td>session_id</td><td>string</td><td data-i18n="docs.chat.f_session_id">Optional — pass back to continue session</td></tr>
         </tbody>
       </table>
       <div class="code-block">POST /chat
@@ -354,14 +372,14 @@
       <span class="path">/chat/agent/{agent_id}</span>
     </div>
     <div class="endpoint-desc">
-      Chat directly with a named specialist agent. Each agent maintains its own transcript. Pass <code>"init": true</code> (or empty <code>text</code>) to trigger the agent's welcome message and begin onboarding.
+      <span data-i18n-html="docs.agentchat.desc">Chat directly with a named specialist agent. Each agent maintains its own transcript. Pass <code>"init": true</code> (or empty <code>text</code>) to trigger the agent's welcome message and begin onboarding.</span>
       <table class="field-table" style="margin-top:12px">
-        <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+        <thead><tr><th data-i18n="docs.field.field">Field</th><th data-i18n="docs.field.type">Type</th><th data-i18n="docs.field.description">Description</th></tr></thead>
         <tbody>
-          <tr><td>text</td><td>string</td><td>User's message. Empty or omitted → triggers intro.</td></tr>
-          <tr><td>user_id</td><td>string</td><td>Optional — for profile persistence</td></tr>
-          <tr><td>session_id</td><td>string</td><td>Optional session token</td></tr>
-          <tr><td>init</td><td>bool</td><td>Set <em>true</em> to request welcome message without saving a user turn</td></tr>
+          <tr><td>text</td><td>string</td><td data-i18n="docs.agentchat.f_text">User's message. Empty or omitted → triggers intro.</td></tr>
+          <tr><td>user_id</td><td>string</td><td data-i18n="docs.agentchat.f_user_id">Optional — for profile persistence</td></tr>
+          <tr><td>session_id</td><td>string</td><td data-i18n="docs.agentchat.f_session_id">Optional session token</td></tr>
+          <tr><td>init</td><td>bool</td><td data-i18n-html="docs.agentchat.f_init">Set <em>true</em> to request welcome message without saving a user turn</td></tr>
         </tbody>
       </table>
       <div class="code-block">// First visit — trigger intro
@@ -387,14 +405,14 @@ POST /chat/agent/protect
   <hr>
 
   <!-- ===== USER / PROFILE ===== -->
-  <h2>User &amp; Profile</h2>
+  <h2 data-i18n="docs.userprofile.heading">User &amp; Profile</h2>
 
   <div class="endpoint">
     <div class="endpoint-header">
       <span class="method get">GET</span>
       <span class="path">/user/{user_id}</span>
     </div>
-    <div class="endpoint-desc">Fetch a user's full record (passphrase and session token excluded). Requires <code>X-Session-Token</code> header from <code>/auth</code>.</div>
+    <div class="endpoint-desc" data-i18n-html="docs.userprofile.get_desc">Fetch a user's full record (passphrase and session token excluded). Requires <code>X-Session-Token</code> header from <code>/auth</code>.</div>
   </div>
 
   <div class="endpoint">
@@ -403,7 +421,7 @@ POST /chat/agent/protect
       <span class="path">/user/{user_id}</span>
     </div>
     <div class="endpoint-desc">
-      Partial update. Requires <code>X-Session-Token</code>. Allowed top-level keys: <code>username</code>, <code>settings</code>, <code>profile</code>, <code>first_name</code>, <code>last_name</code>, <code>email</code>, <code>wallets</code>. Nested objects are merged.
+      <span data-i18n-html="docs.userprofile.put_desc">Partial update. Requires <code>X-Session-Token</code>. Allowed top-level keys: <code>username</code>, <code>settings</code>, <code>profile</code>, <code>first_name</code>, <code>last_name</code>, <code>email</code>, <code>wallets</code>. Nested objects are merged.</span>
       <div class="code-block">PUT /user/user_alice
 {"profile": {"weight": "165 lbs", "goals": "lose 20 lbs", "avatar": "🧑"}}</div>
     </div>
@@ -414,37 +432,37 @@ POST /chat/agent/protect
       <span class="method delete">DELETE</span>
       <span class="path">/user/{user_id}</span>
     </div>
-    <div class="endpoint-desc">Delete your own account and conversation data. Requires <code>X-Session-Token</code>.</div>
+    <div class="endpoint-desc" data-i18n-html="docs.userprofile.delete_desc">Delete your own account and conversation data. Requires <code>X-Session-Token</code>.</div>
   </div>
 
-  <h3>Core profile fields</h3>
+  <h3 data-i18n="docs.coreprofile.heading">Core profile fields</h3>
   <table class="field-table">
-    <thead><tr><th>Field</th><th>Description</th></tr></thead>
+    <thead><tr><th data-i18n="docs.field.field">Field</th><th data-i18n="docs.field.description">Description</th></tr></thead>
     <tbody>
-      <tr><td>primary_concern</td><td>Main health focus</td></tr>
-      <tr><td>health_conditions</td><td>Diagnoses, chronic conditions</td></tr>
-      <tr><td>medications</td><td>Current medications and supplements</td></tr>
-      <tr><td>allergies</td><td>Drug or food allergies</td></tr>
-      <tr><td>age</td><td>Age</td></tr>
-      <tr><td>weight</td><td>Weight</td></tr>
-      <tr><td>height</td><td>Height</td></tr>
-      <tr><td>location</td><td>City / region</td></tr>
-      <tr><td>diet_type</td><td>Diet style (e.g. keto, vegan, Mediterranean)</td></tr>
-      <tr><td>exercise_frequency</td><td>How often they exercise</td></tr>
-      <tr><td>exercise_type</td><td>Type of exercise</td></tr>
-      <tr><td>sleep_hours</td><td>Average nightly sleep</td></tr>
-      <tr><td>sleep_quality</td><td>Self-rated sleep quality</td></tr>
-      <tr><td>stress_level</td><td>Self-rated stress level</td></tr>
-      <tr><td>goals</td><td>Health goals</td></tr>
-      <tr><td>avatar</td><td>Emoji string or base64 data URL for profile picture</td></tr>
-      <tr><td>notes</td><td>Free-form notes</td></tr>
+      <tr><td>primary_concern</td><td data-i18n="docs.coreprofile.primary_concern">Main health focus</td></tr>
+      <tr><td>health_conditions</td><td data-i18n="docs.coreprofile.health_conditions">Diagnoses, chronic conditions</td></tr>
+      <tr><td>medications</td><td data-i18n="docs.coreprofile.medications">Current medications and supplements</td></tr>
+      <tr><td>allergies</td><td data-i18n="docs.coreprofile.allergies">Drug or food allergies</td></tr>
+      <tr><td>age</td><td data-i18n="docs.coreprofile.age">Age</td></tr>
+      <tr><td>weight</td><td data-i18n="docs.coreprofile.weight">Weight</td></tr>
+      <tr><td>height</td><td data-i18n="docs.coreprofile.height">Height</td></tr>
+      <tr><td>location</td><td data-i18n="docs.coreprofile.location">City / region</td></tr>
+      <tr><td>diet_type</td><td data-i18n="docs.coreprofile.diet_type">Diet style (e.g. keto, vegan, Mediterranean)</td></tr>
+      <tr><td>exercise_frequency</td><td data-i18n="docs.coreprofile.exercise_frequency">How often they exercise</td></tr>
+      <tr><td>exercise_type</td><td data-i18n="docs.coreprofile.exercise_type">Type of exercise</td></tr>
+      <tr><td>sleep_hours</td><td data-i18n="docs.coreprofile.sleep_hours">Average nightly sleep</td></tr>
+      <tr><td>sleep_quality</td><td data-i18n="docs.coreprofile.sleep_quality">Self-rated sleep quality</td></tr>
+      <tr><td>stress_level</td><td data-i18n="docs.coreprofile.stress_level">Self-rated stress level</td></tr>
+      <tr><td>goals</td><td data-i18n="docs.coreprofile.goals">Health goals</td></tr>
+      <tr><td>avatar</td><td data-i18n="docs.coreprofile.avatar">Emoji string or base64 data URL for profile picture</td></tr>
+      <tr><td>notes</td><td data-i18n="docs.coreprofile.notes">Free-form notes</td></tr>
     </tbody>
   </table>
 
-  <h3>Agent-specific profile fields</h3>
-  <p>Written by agents during onboarding and chat. Merged into the same profile object.</p>
+  <h3 data-i18n="docs.agentprofile.heading">Agent-specific profile fields</h3>
+  <p data-i18n="docs.agentprofile.desc">Written by agents during onboarding and chat. Merged into the same profile object.</p>
   <table class="field-table">
-    <thead><tr><th>Field</th><th>Agent</th></tr></thead>
+    <thead><tr><th data-i18n="docs.field.field">Field</th><th data-i18n="docs.field.agent">Agent</th></tr></thead>
     <tbody>
       <tr><td>diet_type, dietary_restrictions, nutrition_goals, food_allergies</td><td>🥗 Diet</td></tr>
       <tr><td>fitness_goals, fitness_level, exercise_limitations, preferred_workout_time</td><td>💪 Exercise</td></tr>
@@ -459,14 +477,14 @@ POST /chat/agent/protect
   <hr>
 
   <!-- ===== SETTINGS ===== -->
-  <h2 id="settings">Settings</h2>
+  <h2 id="settings" data-i18n="docs.settings.heading">Settings</h2>
 
   <div class="endpoint">
     <div class="endpoint-header">
       <span class="method get">GET</span>
       <span class="path">/settings/{user_id}</span>
     </div>
-    <div class="endpoint-desc">Get user settings.</div>
+    <div class="endpoint-desc" data-i18n="docs.settings.get_desc">Get user settings.</div>
   </div>
 
   <div class="endpoint">
@@ -475,14 +493,14 @@ POST /chat/agent/protect
       <span class="path">/settings/{user_id}</span>
     </div>
     <div class="endpoint-desc">
-      Partial update — only provided fields change.
+      <span data-i18n="docs.settings.put_desc">Partial update — only provided fields change.</span>
       <table class="field-table" style="margin-top:12px">
-        <thead><tr><th>Field</th><th>Values</th><th>Description</th></tr></thead>
+        <thead><tr><th data-i18n="docs.field.field">Field</th><th data-i18n="docs.field.values">Values</th><th data-i18n="docs.field.description">Description</th></tr></thead>
         <tbody>
-          <tr><td>doc_style</td><td><em>questioning</em> · professional · friendly</td><td>Doc's conversational tone</td></tr>
-          <tr><td>notifications_enabled</td><td><em>true</em> · false</td><td>All notifications on/off, including daily agent check-ins (see <a href="#agents">Agents</a> below)</td></tr>
-          <tr><td>agent_prefs</td><td>object</td><td>Per-agent onboarding/preference state, e.g. <code>{"sleep": {"onboarded": true}}</code></td></tr>
-          <tr><td>custom_agent_prompt</td><td>string (max 2000)</td><td>System prompt for the ⚙️ Custom agent chat tab</td></tr>
+          <tr><td>doc_style</td><td><em>questioning</em> · professional · friendly</td><td data-i18n="docs.settings.f_doc_style">Doc's conversational tone</td></tr>
+          <tr><td>notifications_enabled</td><td><em>true</em> · false</td><td data-i18n-html="docs.settings.f_notifications">All notifications on/off, including daily agent check-ins (see <a href="#agents">Agents</a> below)</td></tr>
+          <tr><td>agent_prefs</td><td>object</td><td data-i18n-html="docs.settings.f_agent_prefs">Per-agent onboarding/preference state, e.g. <code>{"sleep": {"onboarded": true}}</code></td></tr>
+          <tr><td>custom_agent_prompt</td><td>string (max 2000)</td><td data-i18n="docs.settings.f_custom_prompt">System prompt for the ⚙️ Custom agent chat tab</td></tr>
         </tbody>
       </table>
     </div>
@@ -491,10 +509,10 @@ POST /chat/agent/protect
   <hr>
 
   <!-- ===== AGENTS ===== -->
-  <h2 id="agents">Agents</h2>
-  <p>There's no subscription API to manage — every user gets daily check-ins from all specialist agents automatically once notifications are enabled (see <code>notifications_enabled</code> under <a href="#settings">Settings</a> above). Doc still routes conversations to the right specialist (or several, via Cross AI) behind the scenes; specialists also each have a dedicated chat tab. First activation of a tab triggers a 3-turn onboarding interview that fills domain-specific profile fields.</p>
+  <h2 id="agents" data-i18n="docs.agents.heading">Agents</h2>
+  <p data-i18n-html="docs.agents.desc">There's no subscription API to manage — every user gets daily check-ins from all specialist agents automatically once notifications are enabled (see <code>notifications_enabled</code> under <a href="#settings">Settings</a> above). Doc still routes conversations to the right specialist (or several, via Cross AI) behind the scenes; specialists also each have a dedicated chat tab. First activation of a tab triggers a 3-turn onboarding interview that fills domain-specific profile fields.</p>
 
-  <div class="note">
+  <div class="note" data-i18n-html="docs.agents.cron_note">
     <strong>Cron runner:</strong> <code>agent_runner.py</code> — 08:00 UTC daily, 20-hour debounce per user per agent (weekly for <code>protect</code> and <code>cross_ai</code>, via each agent's <code>CRON_CADENCE_HOURS</code>).
     Logs to <code>/var/log/greendial_agents.log</code>. Manual run:<br>
     <code>python3 agent_runner.py --agent protect --user user_alice --dry-run</code>
@@ -503,7 +521,7 @@ POST /chat/agent/protect
   <hr>
 
   <!-- ===== CONVERSATIONS ===== -->
-  <h2>Conversations</h2>
+  <h2 data-i18n="docs.conv.heading">Conversations</h2>
 
   <div class="endpoint">
     <div class="endpoint-header">
@@ -511,7 +529,7 @@ POST /chat/agent/protect
       <span class="path">/conversations/{user_id}/agents</span>
     </div>
     <div class="endpoint-desc">
-      Fetch all transcripts — Doc's and each agent's — in one call. Used by the browser on login.
+      <span data-i18n="docs.conv.get_all_desc">Fetch all transcripts — Doc's and each agent's — in one call. Used by the browser on login.</span>
       <div class="code-block">GET /conversations/user_alice/agents
 
 {
@@ -529,7 +547,7 @@ POST /chat/agent/protect
       <span class="method get">GET</span>
       <span class="path">/conversations/{user_id}</span>
     </div>
-    <div class="endpoint-desc">Get Doc's transcript only (legacy endpoint, backward-compatible).</div>
+    <div class="endpoint-desc" data-i18n="docs.conv.get_desc">Get Doc's transcript only (legacy endpoint, backward-compatible).</div>
   </div>
 
   <div class="endpoint">
@@ -537,7 +555,7 @@ POST /chat/agent/protect
       <span class="method delete">DELETE</span>
       <span class="path">/conversations/{user_id}</span>
     </div>
-    <div class="endpoint-desc">Clear Doc's transcript.</div>
+    <div class="endpoint-desc" data-i18n="docs.conv.delete_desc">Clear Doc's transcript.</div>
   </div>
 
   <div class="endpoint">
@@ -545,20 +563,20 @@ POST /chat/agent/protect
       <span class="method delete">DELETE</span>
       <span class="path">/conversations/{user_id}/agent/{agent_id}</span>
     </div>
-    <div class="endpoint-desc">Clear one agent's transcript without affecting others.</div>
+    <div class="endpoint-desc" data-i18n="docs.conv.delete_agent_desc">Clear one agent's transcript without affecting others.</div>
   </div>
 
   <hr>
 
   <!-- ===== NOTIFICATIONS ===== -->
-  <h2>Notifications</h2>
+  <h2 data-i18n="docs.notif.heading">Notifications</h2>
 
   <div class="endpoint">
     <div class="endpoint-header">
       <span class="method get">GET</span>
       <span class="path">/notifications/{user_id}</span>
     </div>
-    <div class="endpoint-desc">List pending notifications (last 10). Notifications come from Doc, agents, and the cron runner.</div>
+    <div class="endpoint-desc" data-i18n="docs.notif.list_desc">List pending notifications (last 10). Notifications come from Doc, agents, and the cron runner.</div>
   </div>
 
   <div class="endpoint">
@@ -566,7 +584,7 @@ POST /chat/agent/protect
       <span class="method post">POST</span>
       <span class="path">/notifications/{user_id}/generate</span>
     </div>
-    <div class="endpoint-desc">Trigger an on-demand notification based on the user's current profile.</div>
+    <div class="endpoint-desc" data-i18n="docs.notif.generate_desc">Trigger an on-demand notification based on the user's current profile.</div>
   </div>
 
   <div class="endpoint">
@@ -574,23 +592,23 @@ POST /chat/agent/protect
       <span class="method delete">DELETE</span>
       <span class="path">/notifications/{user_id}/{notification_id}</span>
     </div>
-    <div class="endpoint-desc">Dismiss a notification.</div>
+    <div class="endpoint-desc" data-i18n="docs.notif.dismiss_desc">Dismiss a notification.</div>
   </div>
 
   <hr>
 
   <!-- ===== SUGGESTIONS, ACTIVITIES & BOUNTY ===== -->
-  <h2>Suggestions, Activities &amp; Universal Bounty (UB) API <span class="badge">Demand-Side</span></h2>
-  <p>Each day GreenDial generates up to 3 personalized Suggestions per user (exercise, diet, social) — separate from the notification bell. A Suggestion becomes an Activity when accepted. UB-backed suggestions (see below) are surfaced first, ahead of LLM-generated ones. See <a href="/about#bounty">About &amp; FAQ</a> for the plain-language explanation of Universal Bounty.</p>
+  <h2><span data-i18n="docs.sab.heading">Suggestions, Activities &amp; Universal Bounty (UB) API</span> <span class="badge" data-i18n="common.demand_side">Demand-Side</span></h2>
+  <p data-i18n-html="docs.sab.desc">Each day GreenDial generates up to 3 personalized Suggestions per user (exercise, diet, social) — separate from the notification bell. A Suggestion becomes an Activity when accepted. UB-backed suggestions (see below) are surfaced first, ahead of LLM-generated ones. See <a href="/about#bounty">About &amp; FAQ</a> for the plain-language explanation of Universal Bounty.</p>
 
-  <h3>Suggestions</h3>
+  <h3 data-i18n="docs.sab.suggestions_heading">Suggestions</h3>
 
   <div class="endpoint">
     <div class="endpoint-header">
       <span class="method get">GET</span>
       <span class="path">/suggestions/{user_id}</span>
     </div>
-    <div class="endpoint-desc">Return the user's current suggestion batch.</div>
+    <div class="endpoint-desc" data-i18n="docs.sab.get_suggestions_desc">Return the user's current suggestion batch.</div>
   </div>
 
   <div class="endpoint">
@@ -599,7 +617,7 @@ POST /chat/agent/protect
       <span class="path">/suggestions/{user_id}/generate</span>
     </div>
     <div class="endpoint-desc">
-      Generate a new batch (cron or on-demand). Respects a 24h cadence unless forced.
+      <span data-i18n="docs.sab.generate_desc">Generate a new batch (cron or on-demand). Respects a 24h cadence unless forced.</span>
       <div class="code-block">POST /suggestions/{user_id}/generate
 {"force": false}</div>
     </div>
@@ -610,7 +628,7 @@ POST /chat/agent/protect
       <span class="method post">POST</span>
       <span class="path">/suggestions/{user_id}/{suggestion_id}/accept</span>
     </div>
-    <div class="endpoint-desc">Accept a suggestion → creates an Activity with <code>status: "active"</code>.</div>
+    <div class="endpoint-desc" data-i18n-html="docs.sab.accept_desc">Accept a suggestion → creates an Activity with <code>status: "active"</code>.</div>
   </div>
 
   <div class="endpoint">
@@ -618,17 +636,17 @@ POST /chat/agent/protect
       <span class="method post">POST</span>
       <span class="path">/suggestions/{user_id}/{suggestion_id}/dismiss</span>
     </div>
-    <div class="endpoint-desc">Dismiss a suggestion without creating an Activity.</div>
+    <div class="endpoint-desc" data-i18n="docs.sab.dismiss_desc">Dismiss a suggestion without creating an Activity.</div>
   </div>
 
-  <h3>Activities</h3>
+  <h3 data-i18n="docs.sab.activities_heading">Activities</h3>
 
   <div class="endpoint">
     <div class="endpoint-header">
       <span class="method get">GET</span>
       <span class="path">/activities/{user_id}</span>
     </div>
-    <div class="endpoint-desc">List the user's activities (active, completed, and abandoned).</div>
+    <div class="endpoint-desc" data-i18n="docs.sab.list_activities_desc">List the user's activities (active, completed, and abandoned).</div>
   </div>
 
   <div class="endpoint">
@@ -637,18 +655,18 @@ POST /chat/agent/protect
       <span class="path">/activities/{user_id}/{activity_id}</span>
     </div>
     <div class="endpoint-desc">
-      Mark an activity completed or abandoned.
+      <span data-i18n="docs.sab.patch_desc">Mark an activity completed or abandoned.</span>
       <div class="code-block">PATCH /activities/{user_id}/{activity_id}
 {"status": "completed"}</div>
-      On <code>"completed"</code>: sets <code>completed_at</code>, snapshots the user's linked wallet address into <code>wallet_snapshot</code>, and — if the activity has a <code>price</code> — sets <code>payment_pending: true</code>. On <code>"abandoned"</code>: only valid from <code>"active"</code>; sets <code>abandoned_at</code>.
+      <span data-i18n-html="docs.sab.patch_detail">On <code>"completed"</code>: sets <code>completed_at</code>, snapshots the user's linked wallet address into <code>wallet_snapshot</code>, and — if the activity has a <code>price</code> — sets <code>payment_pending: true</code>. On <code>"abandoned"</code>: only valid from <code>"active"</code>; sets <code>abandoned_at</code>.</span>
     </div>
   </div>
 
-  <h3>Bounties <span class="badge">X-API-Key</span></h3>
-  <p>Anyone can sponsor a Universal Bounty — friends and family, health insurers, government health programs, employers — by authenticating with <code>X-API-Key: &lt;DEMAND_API_KEY&gt;</code>. A UB targets an explicit list of <code>user_ids</code>; matching users see it as a priced Suggestion.</p>
+  <h3><span data-i18n="docs.sab.bounties_heading">Bounties</span> <span class="badge">X-API-Key</span></h3>
+  <p data-i18n-html="docs.sab.bounties_desc">Anyone can sponsor a Universal Bounty — friends and family, health insurers, government health programs, employers — by authenticating with <code>X-API-Key: &lt;DEMAND_API_KEY&gt;</code>. A UB targets an explicit list of <code>user_ids</code>; matching users see it as a priced Suggestion.</p>
 
-  <h4 style="font-size:14px;color:rgba(255,255,255,0.85);margin:16px 0 8px">Quick start: sponsor an activity end-to-end</h4>
-  <p>A minimal integration for a new demand-side sponsor — preview a suggestion, turn it into a real UB, then check on it. Swap in your own <code>X-API-Key</code> and real <code>user_id</code>s.</p>
+  <h4 style="font-size:14px;color:rgba(255,255,255,0.85);margin:16px 0 8px" data-i18n="docs.sab.quickstart_heading">Quick start: sponsor an activity end-to-end</h4>
+  <p data-i18n-html="docs.sab.quickstart_desc">A minimal integration for a new demand-side sponsor — preview a suggestion, turn it into a real UB, then check on it. Swap in your own <code>X-API-Key</code> and real <code>user_id</code>s.</p>
   <div class="code-block"># 1. Preview what GreenDial would suggest for a user, and get a ready-to-post UB payload back
 curl -X POST https://greendial.org/generate \
   -H "X-API-Key: $DEMAND_API_KEY" -H "Content-Type: application/json" \
@@ -672,7 +690,7 @@ curl https://greendial.org/bounty/bty_a1b2c3d4e5f6 \
 # 4. When you're done sponsoring it (expired, budget spent, etc.)
 curl -X DELETE https://greendial.org/bounty/bty_a1b2c3d4e5f6 \
   -H "X-API-Key: $DEMAND_API_KEY"</div>
-  <p style="margin-top:8px">Don't have a key yet? See the <a href="/about#faq">FAQ</a> for how to request one. Remember: UB is <a href="#bounty-honor-system">honor-system payment</a>, not on-chain escrow — see the note below.</p>
+  <p style="margin-top:8px" data-i18n-html="docs.sab.quickstart_footer">Don't have a key yet? See the <a href="/about#faq">FAQ</a> for how to request one. Remember: UB is <a href="#bounty-honor-system">honor-system payment</a>, not on-chain escrow — see the note below.</p>
 
   <div class="endpoint">
     <div class="endpoint-header">
@@ -680,7 +698,7 @@ curl -X DELETE https://greendial.org/bounty/bty_a1b2c3d4e5f6 \
       <span class="path">/bounty</span>
     </div>
     <div class="endpoint-desc">
-      Create a UB.
+      <span data-i18n="docs.sab.create_bounty_desc">Create a UB.</span>
       <div class="code-block">POST /bounty
 X-API-Key: &lt;key&gt;
 
@@ -702,7 +720,7 @@ X-API-Key: &lt;key&gt;
       <span class="method get">GET</span>
       <span class="path">/bounty</span>
     </div>
-    <div class="endpoint-desc">List all UBs. <div class="code-block">→ {"bounties": [ {...}, {...} ]}</div></div>
+    <div class="endpoint-desc"><span data-i18n="docs.sab.list_bounties_desc">List all UBs.</span> <div class="code-block">→ {"bounties": [ {...}, {...} ]}</div></div>
   </div>
 
   <div class="endpoint">
@@ -710,7 +728,7 @@ X-API-Key: &lt;key&gt;
       <span class="method get">GET</span>
       <span class="path">/bounty/{bounty_id}</span>
     </div>
-    <div class="endpoint-desc">Get a single UB by ID.</div>
+    <div class="endpoint-desc" data-i18n="docs.sab.get_bounty_desc">Get a single UB by ID.</div>
   </div>
 
   <div class="endpoint">
@@ -718,7 +736,7 @@ X-API-Key: &lt;key&gt;
       <span class="method delete">DELETE</span>
       <span class="path">/bounty/{bounty_id}</span>
     </div>
-    <div class="endpoint-desc">Delete a UB.</div>
+    <div class="endpoint-desc" data-i18n="docs.sab.delete_bounty_desc">Delete a UB.</div>
   </div>
 
   <div class="endpoint">
@@ -727,7 +745,7 @@ X-API-Key: &lt;key&gt;
       <span class="path">/generate</span>
     </div>
     <div class="endpoint-desc">
-      Preview what suggestion GreenDial would generate for a user in a given health area, and get a ready-to-POST UB payload back. Does not create the UB.
+      <span data-i18n="docs.sab.preview_desc">Preview what suggestion GreenDial would generate for a user in a given health area, and get a ready-to-POST UB payload back. Does not create the UB.</span>
       <div class="code-block">POST /generate
 X-API-Key: &lt;key&gt;
 
@@ -741,20 +759,20 @@ X-API-Key: &lt;key&gt;
     </div>
   </div>
 
-  <div class="note" id="bounty-honor-system"><strong>Honor system:</strong> UB payment is not escrowed on-chain. GreenDial records the price, currency, and wallet snapshot, and flags the activity <code>payment_pending</code> on completion — settling payment to the user is the sponsor's responsibility, off-platform.</div>
+  <div class="note" id="bounty-honor-system" data-i18n-html="docs.sab.honor_note"><strong>Honor system:</strong> UB payment is not escrowed on-chain. GreenDial records the price, currency, and wallet snapshot, and flags the activity <code>payment_pending</code> on completion — settling payment to the user is the sponsor's responsibility, off-platform.</div>
 
   <hr>
 
   <!-- ===== THIRD-PARTY API ===== -->
-  <h2>Third-Party API <span class="badge">Basic Auth</span></h2>
-  <p>Use <code>Authorization: Basic &lt;base64(username:passphrase)&gt;</code> for machine-to-machine profile sync.</p>
+  <h2><span data-i18n="docs.thirdparty.heading">Third-Party API</span> <span class="badge" data-i18n="docs.thirdparty.badge">Basic Auth</span></h2>
+  <p data-i18n-html="docs.thirdparty.desc">Use <code>Authorization: Basic &lt;base64(username:passphrase)&gt;</code> for machine-to-machine profile sync.</p>
 
   <div class="endpoint">
     <div class="endpoint-header">
       <span class="method get">GET</span>
       <span class="path">/api/v1/profile</span>
     </div>
-    <div class="endpoint-desc">Read the authenticated user's health profile.</div>
+    <div class="endpoint-desc" data-i18n="docs.thirdparty.get_desc">Read the authenticated user's health profile.</div>
   </div>
 
   <div class="endpoint">
@@ -763,7 +781,7 @@ X-API-Key: &lt;key&gt;
       <span class="path">/api/v1/profile</span>
     </div>
     <div class="endpoint-desc">
-      Merge profile fields from an external app (wearable, EHR export, etc.).
+      <span data-i18n="docs.thirdparty.put_desc">Merge profile fields from an external app (wearable, EHR export, etc.).</span>
       <div class="code-block">PUT /api/v1/profile
 Authorization: Basic YWxpY2U6bXlwYXNzcGhyYXNl
 
@@ -774,29 +792,29 @@ Authorization: Basic YWxpY2U6bXlwYXNzcGhyYXNl
   <hr>
 
   <!-- ===== SPEC FILES ===== -->
-  <h2>Spec Files</h2>
-  <p>Machine-readable specs for tooling, code generation, and AI agents that interact with this API.</p>
+  <h2 data-i18n="docs.spec.heading">Spec Files</h2>
+  <p data-i18n="docs.spec.desc">Machine-readable specs for tooling, code generation, and AI agents that interact with this API.</p>
   <table class="field-table">
-    <thead><tr><th>File</th><th>URL</th><th>Format</th></tr></thead>
+    <thead><tr><th data-i18n="docs.field.file">File</th><th data-i18n="docs.field.url">URL</th><th data-i18n="docs.field.format">Format</th></tr></thead>
     <tbody>
-      <tr><td>OpenAPI 3.1</td><td><a href="/spec/openapi.yaml">/spec/openapi.yaml</a></td><td>Full endpoint schemas, request/response models</td></tr>
-      <tr><td>Arazzo 1.0</td><td><a href="/spec/arazzo.yaml">/spec/arazzo.yaml</a></td><td>Workflow descriptions: chat dispatch, cron notifications, onboarding, profile updates</td></tr>
+      <tr><td>OpenAPI 3.1</td><td><a href="/spec/openapi.yaml">/spec/openapi.yaml</a></td><td data-i18n="docs.spec.openapi_desc">Full endpoint schemas, request/response models</td></tr>
+      <tr><td>Arazzo 1.0</td><td><a href="/spec/arazzo.yaml">/spec/arazzo.yaml</a></td><td data-i18n="docs.spec.arazzo_desc">Workflow descriptions: chat dispatch, cron notifications, onboarding, profile updates</td></tr>
     </tbody>
   </table>
 
   <hr>
 
   <!-- ===== HOW DOC WORKS ===== -->
-  <h2>How Doc Works</h2>
-  <p>Doc is the primary coordinator. Its prompt is assembled dynamically each turn from profile state, conversation stage, and optional agent context.</p>
+  <h2 data-i18n="docs.howdoc.heading">How Doc Works</h2>
+  <p data-i18n="docs.howdoc.desc">Doc is the primary coordinator. Its prompt is assembled dynamically each turn from profile state, conversation stage, and optional agent context.</p>
 
-  <div class="note">
+  <div class="note" data-i18n-html="docs.howdoc.markers_note">
     Two structured markers are stripped server-side before returning text to the user:<br>
     • <code>**PROFILE_UPDATE** {"field": "value"}</code> — persists health data<br>
     • <code>**CALL_AGENT** {"agent": "sleep"}</code> — triggers a specialist sub-call
   </div>
 
-  <h3>Dispatch flow</h3>
+  <h3 data-i18n="docs.howdoc.dispatch_heading">Dispatch flow</h3>
   <div class="code-block">User message
   │
   ├─ keyword match → 0 agents  →  Doc answers directly
@@ -808,10 +826,10 @@ Authorization: Basic YWxpY2U6bXlwYXNzcGhyYXNl
 
 Profile updates extracted from any response → saved to S3 → sidebar refreshes</div>
 
-  <h3>Language mirroring</h3>
-  <p>All agents (Doc and specialists) detect message length and tone from each user turn and inject a style-matching instruction. Very short messages get terse replies; detailed messages get thorough ones. Casual phrasing gets casual responses.</p>
+  <h3 data-i18n="docs.howdoc.mirroring_heading">Language mirroring</h3>
+  <p data-i18n="docs.howdoc.mirroring_desc">All agents (Doc and specialists) detect message length and tone from each user turn and inject a style-matching instruction. Very short messages get terse replies; detailed messages get thorough ones. Casual phrasing gets casual responses.</p>
 
-  <h3>Profile update syntax</h3>
+  <h3 data-i18n="docs.howdoc.syntax_heading">Profile update syntax</h3>
   <div class="prompt-block">// Set a field
 **PROFILE_UPDATE**
 {"age": "44", "health_conditions": "type 2 diabetes"}
@@ -830,9 +848,10 @@ Profile updates extracted from any response → saved to S3 → sidebar refreshe
 
   <hr>
 
-  <p style="color:rgba(255,255,255,0.3);font-size:12px">GreenDial is open source. Questions? <a href="mailto:mickey@theservicesexchange.com">mickey@theservicesexchange.com</a></p>
+  <p style="color:rgba(255,255,255,0.3);font-size:12px" data-i18n-html="docs.footer">GreenDial is open source. Questions? <a href="mailto:mickey@theservicesexchange.com">mickey@theservicesexchange.com</a></p>
 </div>
 
+<script src="/i18n/i18n.js" defer></script>
 <script>
   async function runPing() {
     const btn = document.getElementById('ping-btn');
