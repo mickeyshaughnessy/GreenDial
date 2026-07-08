@@ -2920,7 +2920,9 @@ def handle_list_bounties():
         return json.dumps({"bounties": [], "error": str(e)})
 
 
-def handle_get_bounty(bounty_id):
+def handle_get_bounty(bounty_id, api_key=None):
+    if not demand_key_ok(api_key):
+        return (json.dumps({"error": "Unauthorized — valid API key required"}), 401)
     try:
         bounties = s3_storage.get_bounties()
         for b in bounties:

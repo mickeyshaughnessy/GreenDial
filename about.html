@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>About GreenDial</title>
-  <meta name="description" content="GreenDial is a free AI health companion. Learn about our ethos, the Bounty Program, the founder, and frequently asked questions.">
+  <meta name="description" content="GreenDial is a free AI health companion. Learn about our ethos, Universal Bounty (UB), the founder, and frequently asked questions.">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -161,7 +161,7 @@
   <div class="hero-links">
     <a class="hero-btn primary" href="/">Open GreenDial →</a>
     <a class="hero-btn secondary" href="#faq">FAQ</a>
-    <a class="hero-btn secondary" href="#bounty">Bounty Program</a>
+    <a class="hero-btn secondary" href="#bounty">Universal Bounty</a>
   </div>
 </div>
 
@@ -179,17 +179,17 @@
 
   <hr>
 
-  <h2 id="bounty">Bounty Program <span class="badge">Demand-Side</span></h2>
-  <p>Health insurers, government health programs, employers, and other organizations can sponsor real, priced health activities for the specific people they cover or serve — we call these <strong>bounties</strong>. A bounty targets a list of GreenDial users directly and offers to pay for a concrete action: a 10,000-step walk, a preventive screening, a week of home-cooked dinners.</p>
+  <h2 id="bounty">Universal Bounty (UB) <span class="badge">Demand-Side</span></h2>
+  <p>Anyone — friends, family, employers, health insurers, or government programs — can sponsor a real, priced health activity for someone they care about or serve. We call these <strong>Universal Bounties</strong>, or <strong>UBs</strong>. A UB targets a list of GreenDial users directly and offers to pay for a concrete action: a 10,000-step walk, a preventive screening, a week of home-cooked dinners.</p>
 
   <div class="flow-steps">
     <div class="flow-step">
       <div class="flow-num">1</div>
-      <p>An organization creates a bounty via <code>POST /bounty</code>: the activity, a health area, a price and currency, an expiration date, and the specific <code>user_ids</code> it's targeting.</p>
+      <p>A sponsor creates a UB via <code>POST /bounty</code>: the activity, a health area, a price and currency, an expiration date, and the specific <code>user_ids</code> it's targeting.</p>
     </div>
     <div class="flow-step">
       <div class="flow-num">2</div>
-      <p>Targeted users see the bounty surface as one of their daily Suggestions — shown with its price — ahead of GreenDial's regular AI-generated suggestions.</p>
+      <p>Targeted users see the UB surface as one of their daily Suggestions — shown with its price — ahead of GreenDial's regular AI-generated suggestions.</p>
     </div>
     <div class="flow-step">
       <div class="flow-num">3</div>
@@ -201,9 +201,9 @@
     </div>
   </div>
 
-  <div class="note"><strong>Honor system:</strong> GreenDial records the price, the currency, and the user's wallet snapshot, and flags the activity <code>payment_pending</code> — but there is no on-chain escrow and no automatic transfer today. Settling payment to the user is on the sponsoring organization, off-platform. This may evolve; today it's intentionally simple and transparent about that limitation.</div>
+  <div class="note"><strong>Honor system:</strong> GreenDial records the price, the currency, and the user's wallet snapshot, and flags the activity <code>payment_pending</code> — but there is no on-chain escrow and no automatic transfer today. Settling payment to the user is on the sponsor, off-platform. This may evolve; today it's intentionally simple and transparent about that limitation.</div>
 
-  <p style="margin-top:16px">Interested in sponsoring bounties for your members, employees, or constituents? Bounty and preview endpoints (<code>/bounty</code>, <code>/generate</code>) are gated behind an API key — reach out below to get one, and see the full request/response shapes in the <a href="/docs">API Docs</a>.</p>
+  <p style="margin-top:16px">Interested in sponsoring a UB for a loved one, employee, member, or constituent? The UB and preview endpoints (<code>/bounty</code>, <code>/generate</code>) are gated behind an API key — reach out below to get one, and see the full request/response shapes in the <a href="/docs">API Docs</a>.</p>
 
   <hr>
 
@@ -213,8 +213,8 @@
     <div>
       <div class="founder-name">Mickey Shaughnessy</div>
       <div class="founder-title">Creator</div>
-      <p>I'm Mickey Shaughnessy. I live in Lakewood, CO with my wife and 5 kids, and I've built things all my life.</p>
-      <p>I built GreenDial because I think the benefits of good AI — patient, personalized, always-available guidance — shouldn't be gated behind cost or complexity. GreenDial is free, and it's built around a simple conversation instead of forms and appointments, because that's the easiest way for anyone to get help with their health and well-being. The Bounty Program extends that same idea outward: it lets insurers, governments, and other organizations put real resources directly toward people's health, at scale, through the same simple interface.</p>
+      <p>I'm Mickey Shaughnessy, based in Colorado, and I've built things all my life.</p>
+      <p>I built GreenDial because I think the benefits of good AI — patient, personalized, always-available guidance — shouldn't be gated behind cost or complexity. GreenDial is free, and it's built around a simple conversation instead of forms and appointments, because that's the easiest way for anyone to get help with their health and well-being. Universal Bounty extends that same idea outward: it lets anyone — friends, family, employers, insurers, or governments — put real resources directly toward someone's health, through the same simple interface.</p>
     </div>
   </div>
 
@@ -254,33 +254,33 @@
     </details>
 
     <details class="faq-item">
-      <summary>What is the Bounty Program, and who can create a bounty?</summary>
-      <p>Health insurers, government health programs, employers, and other organizations can sponsor priced health activities targeted at specific GreenDial users. See the <a href="#bounty">Bounty Program</a> section above for the full flow.</p>
+      <summary>What is Universal Bounty (UB), and who can create one?</summary>
+      <p>Anyone can sponsor a priced health activity for a specific GreenDial user — friends and family, employers, health insurers, and government programs all use the same endpoint. See the <a href="#bounty">Universal Bounty</a> section above for the full flow.</p>
     </details>
 
     <details class="faq-item">
-      <summary>How does bounty payment actually work?</summary>
-      <p>It's an honor system today: GreenDial records the price, currency, and a snapshot of the user's wallet address when an activity completes, and flags it as payment-pending. There's no on-chain escrow or automatic transfer — the sponsoring organization is responsible for settling payment off-platform.</p>
+      <summary>How does UB payment actually work?</summary>
+      <p>It's an honor system today: GreenDial records the price, currency, and a snapshot of the user's wallet address when an activity completes, and flags it as payment-pending. There's no on-chain escrow or automatic transfer — the sponsor is responsible for settling payment off-platform.</p>
     </details>
 
     <details class="faq-item">
-      <summary>How do I get an API key to create bounties for my organization?</summary>
-      <p>Email <a href="mailto:mickeyshaughnessy@gmail.com">mickeyshaughnessy@gmail.com</a> with a bit about your organization and who you'd like to target. Bounty and demand-side preview endpoints require an <code>X-API-Key</code> header — full request/response shapes are documented at <a href="/docs">/docs</a>.</p>
+      <summary>How do I get an API key to create a UB?</summary>
+      <p>Email <a href="mailto:mickey@theservicesexchange.com">mickey@theservicesexchange.com</a> with a bit about who you'd like to sponsor. UB and demand-side preview endpoints require an <code>X-API-Key</code> header — full request/response shapes are documented at <a href="/docs">/docs</a>.</p>
     </details>
 
     <details class="faq-item">
       <summary>Where is my data stored, and can I delete it?</summary>
-      <p>Your profile, conversations, suggestions, and activities are stored as JSON in DigitalOcean Spaces (S3-compatible storage) tied to your account. Email <a href="mailto:mickeyshaughnessy@gmail.com">mickeyshaughnessy@gmail.com</a> if you'd like your data exported or deleted.</p>
+      <p>Your profile, conversations, suggestions, and activities are stored as JSON in DigitalOcean Spaces (S3-compatible storage) tied to your account. Email <a href="mailto:mickey@theservicesexchange.com">mickey@theservicesexchange.com</a> if you'd like your data exported or deleted.</p>
     </details>
 
     <details class="faq-item">
       <summary>Where's the source code, and how do I integrate with the API?</summary>
-      <p>GreenDial is open-source on <a href="https://github.com/mickeyshaughnessy/GreenDial" target="_blank">GitHub</a>. Full endpoint documentation, including the Bounty API, lives at <a href="/docs">/docs</a>, and <a href="/arazzo">/arazzo</a> walks through ten real usage examples end-to-end.</p>
+      <p>GreenDial is open-source on <a href="https://github.com/mickeyshaughnessy/GreenDial" target="_blank">GitHub</a>. Full endpoint documentation, including the UB API, lives at <a href="/docs">/docs</a>, and <a href="/arazzo">/arazzo</a> walks through ten real usage examples end-to-end.</p>
     </details>
 
     <details class="faq-item">
       <summary>How do I reach you?</summary>
-      <p>Email <a href="mailto:mickeyshaughnessy@gmail.com">mickeyshaughnessy@gmail.com</a> — for feedback, bug reports, bounty program partnerships, or anything else.</p>
+      <p>Use the 📣 Feedback tab inside GreenDial to post feedback, bug reports, or suggestions directly. For UB partnerships or anything else, email <a href="mailto:mickey@theservicesexchange.com">mickey@theservicesexchange.com</a>.</p>
     </details>
 
   </div>
@@ -291,7 +291,7 @@
   <a href="/">🌿 Open GreenDial</a>
   <a href="/docs">API Docs</a>
   <a href="/arazzo">How It Works</a>
-  <a href="mailto:mickeyshaughnessy@gmail.com">Email</a>
+  <a href="mailto:mickey@theservicesexchange.com">Email</a>
 </footer>
 
 </body>

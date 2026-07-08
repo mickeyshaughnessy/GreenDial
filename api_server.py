@@ -654,12 +654,10 @@ def bounty():
 def get_bounty(bounty_id):
     if request.method == 'OPTIONS':
         return Response('', status=200)
-    if not handlers.demand_key_ok(_api_key()):
-        return _unauthorized()
     if request.method == 'DELETE':
         result = handlers.handle_delete_bounty(bounty_id, api_key=_api_key())
     else:
-        result = handlers.handle_get_bounty(bounty_id)
+        result = handlers.handle_get_bounty(bounty_id, api_key=_api_key())
     if isinstance(result, tuple):
         return Response(result[0], status=result[1], mimetype='application/json')
     return Response(result, mimetype='application/json')

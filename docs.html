@@ -220,7 +220,7 @@
       <button class="hc-run-btn" id="hc-run" onclick="runHealthCheck()">▶ Run all tests</button>
     </div>
     <div class="hc-key-row">
-      <label for="hc-api-key">Demand-side API key (optional — unlocks bounty &amp; payment tests):</label>
+      <label for="hc-api-key">Demand-side API key (optional — unlocks UB &amp; payment tests):</label>
       <input id="hc-api-key" type="password" placeholder="X-API-Key value" autocomplete="off">
     </div>
     <div class="hc-results" id="hc-results"></div>
@@ -580,8 +580,8 @@ POST /chat/agent/protect
   <hr>
 
   <!-- ===== SUGGESTIONS, ACTIVITIES & BOUNTY ===== -->
-  <h2>Suggestions, Activities &amp; Bounty API <span class="badge">Demand-Side</span></h2>
-  <p>Each day GreenDial generates up to 3 personalized Suggestions per user (exercise, diet, social) — separate from the notification bell. A Suggestion becomes an Activity when accepted. Bounty-backed suggestions (see below) are surfaced first, ahead of LLM-generated ones. See <a href="/about#bounty">About &amp; FAQ</a> for the plain-language explanation of the Bounty Program.</p>
+  <h2>Suggestions, Activities &amp; Universal Bounty (UB) API <span class="badge">Demand-Side</span></h2>
+  <p>Each day GreenDial generates up to 3 personalized Suggestions per user (exercise, diet, social) — separate from the notification bell. A Suggestion becomes an Activity when accepted. UB-backed suggestions (see below) are surfaced first, ahead of LLM-generated ones. See <a href="/about#bounty">About &amp; FAQ</a> for the plain-language explanation of Universal Bounty.</p>
 
   <h3>Suggestions</h3>
 
@@ -645,18 +645,18 @@ POST /chat/agent/protect
   </div>
 
   <h3>Bounties <span class="badge">X-API-Key</span></h3>
-  <p>Demand-side customers (health insurers, government health programs, employers, and other organizations) authenticate with <code>X-API-Key: &lt;DEMAND_API_KEY&gt;</code>. A bounty targets an explicit list of <code>user_ids</code>; matching users see it as a priced Suggestion.</p>
+  <p>Anyone can sponsor a Universal Bounty — friends and family, health insurers, government health programs, employers — by authenticating with <code>X-API-Key: &lt;DEMAND_API_KEY&gt;</code>. A UB targets an explicit list of <code>user_ids</code>; matching users see it as a priced Suggestion.</p>
 
   <h4 style="font-size:14px;color:rgba(255,255,255,0.85);margin:16px 0 8px">Quick start: sponsor an activity end-to-end</h4>
-  <p>A minimal integration for a new demand-side partner — preview a suggestion, turn it into a real bounty, then check on it. Swap in your own <code>X-API-Key</code> and real <code>user_id</code>s.</p>
-  <div class="code-block"># 1. Preview what GreenDial would suggest for a user, and get a ready-to-post bounty payload back
+  <p>A minimal integration for a new demand-side sponsor — preview a suggestion, turn it into a real UB, then check on it. Swap in your own <code>X-API-Key</code> and real <code>user_id</code>s.</p>
+  <div class="code-block"># 1. Preview what GreenDial would suggest for a user, and get a ready-to-post UB payload back
 curl -X POST https://greendial.org/generate \
   -H "X-API-Key: $DEMAND_API_KEY" -H "Content-Type: application/json" \
   -d '{"user_id": "user_abc", "health_area": "exercise", "price": 5.00}'
 
 # → {"suggestion": {...}, "bounty_payload": {...}, "bounty_post_url": "/bounty"}
 
-# 2. Create the bounty for real — pass the bounty_payload straight through, or your own list of user_ids
+# 2. Create the UB for real — pass the bounty_payload straight through, or your own list of user_ids
 curl -X POST https://greendial.org/bounty \
   -H "X-API-Key: $DEMAND_API_KEY" -H "Content-Type: application/json" \
   -d '{"activity": "Walk 10,000 steps", "health_area": "exercise", "price": 5.00,
@@ -672,7 +672,7 @@ curl https://greendial.org/bounty/bty_a1b2c3d4e5f6 \
 # 4. When you're done sponsoring it (expired, budget spent, etc.)
 curl -X DELETE https://greendial.org/bounty/bty_a1b2c3d4e5f6 \
   -H "X-API-Key: $DEMAND_API_KEY"</div>
-  <p style="margin-top:8px">Don't have a key yet? See the <a href="/about#faq">FAQ</a> for how to request one. Remember: this is <a href="#bounty-honor-system">honor-system payment</a>, not on-chain escrow — see the note below.</p>
+  <p style="margin-top:8px">Don't have a key yet? See the <a href="/about#faq">FAQ</a> for how to request one. Remember: UB is <a href="#bounty-honor-system">honor-system payment</a>, not on-chain escrow — see the note below.</p>
 
   <div class="endpoint">
     <div class="endpoint-header">
@@ -680,7 +680,7 @@ curl -X DELETE https://greendial.org/bounty/bty_a1b2c3d4e5f6 \
       <span class="path">/bounty</span>
     </div>
     <div class="endpoint-desc">
-      Create a bounty.
+      Create a UB.
       <div class="code-block">POST /bounty
 X-API-Key: &lt;key&gt;
 
@@ -702,7 +702,7 @@ X-API-Key: &lt;key&gt;
       <span class="method get">GET</span>
       <span class="path">/bounty</span>
     </div>
-    <div class="endpoint-desc">List all bounties. <div class="code-block">→ {"bounties": [ {...}, {...} ]}</div></div>
+    <div class="endpoint-desc">List all UBs. <div class="code-block">→ {"bounties": [ {...}, {...} ]}</div></div>
   </div>
 
   <div class="endpoint">
@@ -710,7 +710,7 @@ X-API-Key: &lt;key&gt;
       <span class="method get">GET</span>
       <span class="path">/bounty/{bounty_id}</span>
     </div>
-    <div class="endpoint-desc">Get a single bounty by ID.</div>
+    <div class="endpoint-desc">Get a single UB by ID.</div>
   </div>
 
   <div class="endpoint">
@@ -718,7 +718,7 @@ X-API-Key: &lt;key&gt;
       <span class="method delete">DELETE</span>
       <span class="path">/bounty/{bounty_id}</span>
     </div>
-    <div class="endpoint-desc">Delete a bounty.</div>
+    <div class="endpoint-desc">Delete a UB.</div>
   </div>
 
   <div class="endpoint">
@@ -727,7 +727,7 @@ X-API-Key: &lt;key&gt;
       <span class="path">/generate</span>
     </div>
     <div class="endpoint-desc">
-      Preview what suggestion GreenDial would generate for a user in a given health area, and get a ready-to-POST bounty payload back. Does not create the bounty.
+      Preview what suggestion GreenDial would generate for a user in a given health area, and get a ready-to-POST UB payload back. Does not create the UB.
       <div class="code-block">POST /generate
 X-API-Key: &lt;key&gt;
 
@@ -741,7 +741,7 @@ X-API-Key: &lt;key&gt;
     </div>
   </div>
 
-  <div class="note" id="bounty-honor-system"><strong>Honor system:</strong> bounty payment is not escrowed on-chain. GreenDial records the price, currency, and wallet snapshot, and flags the activity <code>payment_pending</code> on completion — settling payment to the user is the sponsoring organization's responsibility, off-platform.</div>
+  <div class="note" id="bounty-honor-system"><strong>Honor system:</strong> UB payment is not escrowed on-chain. GreenDial records the price, currency, and wallet snapshot, and flags the activity <code>payment_pending</code> on completion — settling payment to the user is the sponsor's responsibility, off-platform.</div>
 
   <hr>
 
@@ -830,7 +830,7 @@ Profile updates extracted from any response → saved to S3 → sidebar refreshe
 
   <hr>
 
-  <p style="color:rgba(255,255,255,0.3);font-size:12px">GreenDial is open source. Questions? <a href="mailto:mickeyshaughnessy@gmail.com">mickeyshaughnessy@gmail.com</a></p>
+  <p style="color:rgba(255,255,255,0.3);font-size:12px">GreenDial is open source. Questions? <a href="mailto:mickey@theservicesexchange.com">mickey@theservicesexchange.com</a></p>
 </div>
 
 <script>
