@@ -75,6 +75,11 @@ def _settings_from_greendial() -> Settings:
         os.path.dirname(os.path.abspath(__file__)), "data", "listening_ai"
     )
     base.db_path = os.path.join(base.data_dir, "db.json")
+    # Listen more than speak: prioritize tools, then compress final replies.
+    # Host can override via LISTENING_AI_REPLY_BREVITY / REPLY_BREVITY in config.
+    base.reply_brevity = getattr(
+        greendial_config, "LISTENING_AI_REPLY_BREVITY", None
+    ) or getattr(greendial_config, "REPLY_BREVITY", None) or "very_short"
     return base
 
 
@@ -93,7 +98,8 @@ def ensure_configured() -> Settings:
     print(
         f"[ListeningAI] configured store_backend={settings.store_backend} "
         f"prefix={settings.spaces_prefix!r} "
-        f"model={settings.openrouter_model!r}"
+        f"model={settings.openrouter_model!r} "
+        f"reply_brevity={settings.reply_brevity!r}"
     )
     return settings
 
@@ -142,12 +148,13 @@ def run_agentic_loop(
     Returns (final_text, profile_updates, model_used) — same shape GreenDial
     expects, so call sites stay unchanged.
     """
-    ensure_configured()
+    settings = ensure_configured()
     registry = build_health_registry(agent_id=agent_id)
     controller = ChatController(
         tool_registry=registry,
         system_prompt=system_prompt,
         max_steps=max_steps,
+        reply_brevity=settings.reply_brevity,
     )
     final_text, model_used, tool_log = controller.run_loop(
         messages, user_id, system_prompt=system_prompt
