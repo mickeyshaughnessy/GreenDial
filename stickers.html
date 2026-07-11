@@ -90,6 +90,16 @@
       position: relative;
       cursor: default;
       transition: transform 0.1s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .px-sticker {
+      width: 28px; height: 28px;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      object-fit: contain;
+      vertical-align: middle;
     }
     .cell.filled { background: rgba(88,166,255,0.08); cursor: help; }
     .cell.filled:hover { transform: scale(1.2); }
@@ -210,7 +220,14 @@
             const tip = prompt
               ? `<div class="tooltip"><div class="t-prompt">${prompt}</div>${response ? `<div class="t-response">${response}</div>` : ''}</div>`
               : '';
-            html += `<td><div class="cell filled${isToday?' today-col':''}">${entry.emoji}${tip}</div></td>`;
+            const em = entry.emoji || '';
+            let mark = em;
+            if (typeof em === 'string' && em.startsWith('px:')) {
+              mark = `<img class="px-sticker" src="/stickers/pixel/${em.slice(3)}.png" width="28" height="28" alt="">`;
+            } else if (typeof em === 'string' && em.startsWith('/stickers/')) {
+              mark = `<img class="px-sticker" src="${em}" width="28" height="28" alt="">`;
+            }
+            html += `<td><div class="cell filled${isToday?' today-col':''}">${mark}${tip}</div></td>`;
           } else {
             html += `<td><div class="cell empty${isToday?' today-col':''}">·</div></td>`;
           }

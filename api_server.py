@@ -103,6 +103,12 @@ def pwa_icons(filename):
     return send_from_directory('icons', filename)
 
 
+@app.route("/stickers/pixel/<path:filename>", methods=['GET'])
+def pixel_stickers(filename):
+    """Custom 32×32 pixel-art sticker library."""
+    return send_from_directory('stickers/pixel', filename)
+
+
 @app.route("/i18n/<path:filename>", methods=['GET'])
 def i18n_files(filename):
     return send_from_directory('i18n', filename, mimetype='application/json' if filename.endswith('.json') else 'application/javascript')

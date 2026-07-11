@@ -337,6 +337,18 @@
     .sb-dot.filled:hover { transform: scale(1.25); }
     .sb-dot.empty { font-size: 8px; color: rgba(255,255,255,0.1); }
     .sb-dot.today-border { border: 1px solid rgba(88,166,255,0.3); }
+    /* Custom 32×32 pixel stickers — crisp nearest-neighbor scaling */
+    .px-sticker {
+      width: 28px; height: 28px;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      -ms-interpolation-mode: nearest-neighbor;
+      vertical-align: middle;
+      object-fit: contain;
+      pointer-events: none;
+    }
+    .ci-opt .px-sticker { width: 24px; height: 24px; }
+    .ci-emoji .px-sticker { width: 22px; height: 22px; }
     .sb-tip {
       display: none; position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%);
       background: #1c2129; border: 1px solid rgba(88,166,255,0.2); border-radius: 8px;
@@ -1522,6 +1534,21 @@
     // ── AGENT TABS ───────────────────────────────────────────────────────────
     function getAgentMeta(id) { return AGENT_META[id] || { emoji: '🤖', name: id }; }
 
+    /** Render a board sticker: pixel art (px:id or /stickers/...) or unicode emoji. */
+    function stickerHTML(token, extraClass) {
+      if (!token) return '';
+      const cls = extraClass ? `px-sticker ${extraClass}` : 'px-sticker';
+      let src = null;
+      if (typeof token === 'string') {
+        if (token.startsWith('px:')) src = `/stickers/pixel/${token.slice(3)}.png`;
+        else if (token.startsWith('/stickers/')) src = token;
+      }
+      if (src) {
+        return `<img class="${cls}" src="${src}" alt="" width="28" height="28" draggable="false">`;
+      }
+      return `<span>${escapeHtml(String(token))}</span>`;
+    }
+
     function updateAgentTabs() {
       const row = document.getElementById('agent-tabs-row');
       if (!row) return;
@@ -2457,7 +2484,7 @@
           return `<div class="ci-answered">
             <span class="ci-icon">${icon}</span>
             <span style="font-size:12px">${escapeHtml(ci.area_label)}</span>
-            <span class="ci-emoji">${ci.emoji}</span>
+            <span class="ci-emoji">${stickerHTML(ci.emoji)}</span>
             <span class="ci-check">✓</span>
           </div>`;
         }
@@ -2467,7 +2494,8 @@
           const lbl = escapeHtml(o.label || '');
           const jsLbl = lbl.replace(/'/g, "\\'");
           const title = o.rare ? `✨ Rare find — ${lbl}` : lbl;
-          return `<button class="ci-opt${o.rare ? ' rare' : ''}" title="${title}" onclick="event.stopPropagation(); answerCheckin('${ci.area}','${o.emoji}','${jsLbl}','${safemsg}')">${o.emoji}</button>`;
+          const token = (o.emoji || o.src || '').replace(/'/g, "\\'");
+          return `<button class="ci-opt${o.rare ? ' rare' : ''}" title="${title}" onclick="event.stopPropagation(); answerCheckin('${ci.area}','${token}','${jsLbl}','${safemsg}')">${stickerHTML(o.emoji || o.src)}</button>`;
         }).join('');
         return `<div class="ci-card" id="ci-card-${ci.area}">
           <div class="ci-question"><span class="ci-icon">${icon}</span>${msg}</div>
@@ -3072,7 +3100,7 @@
             const prompt = (entry.prompt||'').replace(/</g,'&lt;');
             const resp = (entry.response||'').replace(/</g,'&lt;');
             const tip = prompt ? `<div class="sb-tip"><div class="sb-tip-prompt">${prompt}</div>${resp?`<div>${resp}</div>`:''}</div>` : '';
-            html += `<td class="sb-cell"><div class="sb-dot filled${todayClass}">${entry.emoji}${tip}</div></td>`;
+            html += `<td class="sb-cell"><div class="sb-dot filled${todayClass}">${stickerHTML(entry.emoji)}${tip}</div></td>`;
           } else {
             html += `<td class="sb-cell"><div class="sb-dot empty${todayClass}">·</div></td>`;
           }

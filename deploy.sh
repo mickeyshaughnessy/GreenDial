@@ -55,6 +55,9 @@ cp manifest.json /var/www/greendial/manifest.json
 cp sw.js /var/www/greendial/sw.js
 mkdir -p /var/www/greendial/icons
 cp icons/*.png /var/www/greendial/icons/
+# Pixel-art sticker library (32×32)
+mkdir -p /var/www/greendial/stickers/pixel
+cp -r stickers/pixel/* /var/www/greendial/stickers/pixel/
 # UI style themes (also served via Flask /themes/ from /root/GreenDial)
 mkdir -p /var/www/greendial/themes
 cp -r themes/* /var/www/greendial/themes/
