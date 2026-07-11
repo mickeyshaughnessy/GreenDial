@@ -1984,10 +1984,32 @@
     }
 
     // ── CHAT-ONLY MODE ───────────────────────────────────────────────────────
-    function applyChatOnlyMode(enabled) {
-      const chatOnly = !!enabled;
+    /** Coerce API/LLM values (bool, "true"/"false", 0/1) to a real boolean. */
+    function coerceBool(v, defaultVal = false) {
+      if (v === true || v === 1 || v === '1') return true;
+      if (v === false || v === 0 || v === '0') return false;
+      if (typeof v === 'string') {
+        const s = v.trim().toLowerCase();
+        if (s === 'true' || s === 'yes' || s === 'on') return true;
+        if (s === 'false' || s === 'no' || s === 'off' || s === '') return false;
+      }
+      if (v == null) return defaultVal;
+      return !!v;
+    }
 
-      // Nav tab visibility
+    function isChatOnly() {
+      return coerceBool(userSettings.chat_only_mode, true);
+    }
+
+    function isAdminUser() {
+      return !!(currentUser && String(currentUser.username || '').toLowerCase() === 'mickey');
+    }
+
+    function applyChatOnlyMode(enabled) {
+      const chatOnly = coerceBool(enabled, true);
+      userSettings.chat_only_mode = chatOnly;
+
+      // Nav tab visibility (History + Docs hide in chat-only; Admin always for mickey)
       ['nav-history-tab', 'nav-docs-tab'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.display = chatOnly ? 'none' : '';
@@ -2009,17 +2031,32 @@
     }
 
     async function setChatOnlyMode(enabled) {
-      const val = !!enabled;
+      const val = coerceBool(enabled, false);
       userSettings.chat_only_mode = val;
       applyChatOnlyMode(val);
+      // Persist first so a settings re-render cannot race and restore the old value
       if (currentUser) {
         try {
-          await fetch(`${API}/settings/${currentUser.user_id}`, {
+          const res = await fetch(`${API}/settings/${currentUser.user_id}`, {
             method: 'PUT', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ chat_only_mode: val })
           });
+          const data = await res.json().catch(() => ({}));
+          if (data.settings) {
+            userSettings = { ...userSettings, ...data.settings };
+            userSettings.chat_only_mode = coerceBool(userSettings.chat_only_mode, val);
+          }
         } catch (e) {}
       }
+      // Re-render settings so the toggle knob stays in sync (use local state, no re-fetch)
+      if (currentView === 'user' && currentUser) {
+        try { await refreshSettings({ skipFetch: true }); } catch (e) {}
+      }
+    }
+
+    /** Toggle chat-only from current state (avoids stale baked-in onclick values). */
+    function toggleChatOnlyMode() {
+      return setChatOnlyMode(!isChatOnly());
     }
 
     async function handleInlineLogin() {
@@ -2062,7 +2099,7 @@
           renderMessages();
           if (window._notifInterval) clearInterval(window._notifInterval);
           window._notifInterval = setInterval(fetchToday, 120000);
-          applyChatOnlyMode(!!userSettings.chat_only_mode);
+          applyChatOnlyMode(isChatOnly());
         }
       } catch (e) {
         errorEl.textContent = 'Connection error.';
@@ -2155,7 +2192,7 @@
         renderMessages();
         if (window._notifInterval) clearInterval(window._notifInterval);
         window._notifInterval = setInterval(fetchToday, 120000);
-        applyChatOnlyMode(!!userSettings.chat_only_mode);
+        applyChatOnlyMode(isChatOnly());
         return true;
       } catch (e) {
         clearSession();
@@ -2184,6 +2221,10 @@
     let _usingDefaultWelcome = false;
     
     function switchView(view) {
+      // Admin is mickey-only (UI + API both enforce this)
+      if (view === 'admin' && !isAdminUser()) {
+        view = 'chat';
+      }
       currentView = view;
       document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
       document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
@@ -2333,7 +2374,11 @@
             if (result.startsWith('activity_')) setTimeout(loadActivities, 400);
             if (result.startsWith('notification_')) setTimeout(fetchToday, 400);
             if (result.startsWith('settings_updated:chat_only_mode:')) {
-              const val = result.endsWith(':false') ? false : true;
+              // json.dumps may produce false, true, "false", etc.
+              const raw = result.slice('settings_updated:chat_only_mode:'.length);
+              let parsed = raw;
+              try { parsed = JSON.parse(raw); } catch (e) {}
+              const val = coerceBool(parsed, false);
               userSettings.chat_only_mode = val;
               setTimeout(() => applyChatOnlyMode(val), 400);
             }
@@ -2564,7 +2609,8 @@
       } catch (e) { console.error('Clear history error:', e); }
     }
     
-    async function refreshSettings() {
+    async function refreshSettings(opts) {
+      const skipFetch = !!(opts && opts.skipFetch);
       const panel = document.getElementById('settings-panel');
       if (!currentUser) {
         panel.innerHTML = `
@@ -2583,14 +2629,19 @@
         return;
       }
 
-      try {
-        const settingsRes = await fetch(`${API}/settings/${currentUser.user_id}`);
-        const data = await settingsRes.json();
-        userSettings = data.settings || userSettings;
-        if (window.GDThemes && userSettings.ui_style) {
-          GDThemes.hydrateFromSettings(userSettings);
-        }
-      } catch (e) {}
+      if (!skipFetch) {
+        try {
+          const settingsRes = await fetch(`${API}/settings/${currentUser.user_id}`);
+          const data = await settingsRes.json();
+          userSettings = data.settings || userSettings;
+          if (window.GDThemes && userSettings.ui_style) {
+            GDThemes.hydrateFromSettings(userSettings);
+          }
+        } catch (e) {}
+      }
+      // Normalize booleans (legacy string "false" must not stay truthy)
+      userSettings.chat_only_mode = coerceBool(userSettings.chat_only_mode, true);
+      userSettings.notifications_enabled = coerceBool(userSettings.notifications_enabled, true);
 
       const customPrompt = userSettings.custom_agent_prompt ||
         'You are a custom AI health agent, capable of providing personalized guidance on any health topic the user cares about. Be kind, helpful, and truthful.';
@@ -2635,7 +2686,7 @@
           <div class="settings-group-title">${t('app.settings.interface','Interface')}</div>
           <div class="settings-item">
             <div><div class="settings-label">${t('app.settings.chatonly','Chat-only mode')}</div><div class="settings-desc">${t('app.settings.chatonly_desc','Use only the chat interface — hides other panels')}</div></div>
-            <div class="settings-toggle ${userSettings.chat_only_mode ? 'on' : ''}" onclick="setChatOnlyMode(${userSettings.chat_only_mode ? 0 : 1})"></div>
+            <div class="settings-toggle ${isChatOnly() ? 'on' : ''}" onclick="toggleChatOnlyMode()" role="switch" aria-checked="${isChatOnly() ? 'true' : 'false'}" title="${isChatOnly() ? 'On — click to show full interface' : 'Off — click to hide other panels'}"></div>
           </div>
         </div>
         <div class="settings-group">
@@ -2648,7 +2699,7 @@
             <div><div class="settings-label">${t('app.settings.push','Push reminders')}</div><div class="settings-desc" id="push-desc">${t('app.settings.push_desc','Daily check-in reminders on this device')}</div></div>
             <div id="push-toggle-wrap"><span style="font-size:12px;color:rgba(255,255,255,0.35)">…</span></div>
           </div>
-          ${!!userSettings.chat_only_mode ? `<div id="settings-notif-list" style="margin-top:8px"></div>` : ''}
+          ${isChatOnly() ? `<div id="settings-notif-list" style="margin-top:8px"></div>` : ''}
         </div>
         <div class="settings-group">
           <div class="settings-group-title">${t('app.settings.custom_instructions','Custom Instructions')}</div>
@@ -2661,7 +2712,7 @@
             <button class="btn btn-secondary btn-sm" style="margin-top:8px" onclick="saveCustomPrompt()">${t('app.settings.save_prompt','Save Prompt')}</button>
           </div>
         </div>
-        ${!!userSettings.chat_only_mode ? `
+        ${isChatOnly() ? `
         <div class="settings-group">
           <div class="settings-group-title">${t('app.settings.resources','Resources')}</div>
           <div class="settings-item">
@@ -2685,7 +2736,7 @@
       `;
 
       // Populate the in-panel notifications list when in chat-only mode
-      if (!!userSettings.chat_only_mode) fetchToday();
+      if (isChatOnly()) fetchToday();
 
       // Reflect current push-permission/subscription state
       updatePushSettingUI();
@@ -3622,7 +3673,7 @@
 
           if (window._notifInterval) clearInterval(window._notifInterval);
           window._notifInterval = setInterval(fetchToday, 120000);
-          applyChatOnlyMode(!!userSettings.chat_only_mode);
+          applyChatOnlyMode(isChatOnly());
         }
       } catch (error) {
         errorEl.textContent = t('app.connection_error','Connection error.');
@@ -3673,7 +3724,7 @@
 
           if (window._notifInterval) clearInterval(window._notifInterval);
           window._notifInterval = setInterval(fetchToday, 120000);
-          applyChatOnlyMode(!!userSettings.chat_only_mode);
+          applyChatOnlyMode(isChatOnly());
         }
       } catch (error) {
         errorEl.textContent = t('app.connection_error','Connection error.');
@@ -3706,7 +3757,7 @@
     function updateUserUI() {
       const userArea = document.getElementById('user-area');
       const adminTab = document.getElementById('admin-tab');
-      const chatOnly = !!userSettings.chat_only_mode;
+      const chatOnly = isChatOnly();
 
       const todayDropdownHtml = (signedIn) => `
         <div class="notif-bell-wrap">
@@ -3733,8 +3784,8 @@
         </div>`;
 
       if (currentUser) {
-        const isAdmin = currentUser.username.toLowerCase() === 'mickey';
-        if (adminTab) adminTab.style.display = (isAdmin && !chatOnly) ? '' : 'none';
+        // Admin tab: only username "mickey", always visible (even in chat-only)
+        if (adminTab) adminTab.style.display = isAdminUser() ? '' : 'none';
 
         if (chatOnly) {
           userArea.innerHTML = `
@@ -3841,7 +3892,7 @@
 
     // ---- Admin ----
     async function loadAdminStats() {
-      if (!currentUser || currentUser.username.toLowerCase() !== 'mickey') {
+      if (!isAdminUser()) {
         document.getElementById('admin-user-tbody').innerHTML =
           '<tr><td colspan="5" style="padding:24px;text-align:center;color:#ef4444">Unauthorized</td></tr>';
         return;

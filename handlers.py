@@ -346,7 +346,26 @@ def handle_get_settings(user_id):
     }
     
     settings = {**default_settings, **user.get('settings', {})}
+    settings['notifications_enabled'] = _coerce_bool(settings.get('notifications_enabled'), True)
+    settings['chat_only_mode'] = _coerce_bool(settings.get('chat_only_mode'), True)
     return json.dumps({"settings": settings})
+
+
+def _coerce_bool(value, default=False):
+    """Normalize bool-ish values from JSON / LLM actions (incl. string 'false')."""
+    if value is True or value is False:
+        return value
+    if value is None:
+        return default
+    if isinstance(value, (int, float)) and not isinstance(value, bool):
+        return value != 0
+    if isinstance(value, str):
+        s = value.strip().lower()
+        if s in ('true', '1', 'yes', 'on'):
+            return True
+        if s in ('false', '0', 'no', 'off', ''):
+            return False
+    return bool(value)
 
 
 def handle_update_settings(user_id, data):
@@ -355,8 +374,22 @@ def handle_update_settings(user_id, data):
     if not user:
         return json.dumps({"error": "User not found"}), 404
 
+    if not isinstance(data, dict):
+        return json.dumps({"error": "Invalid settings payload"}), 400
+
+    # Only allow known keys through (prevents junk / privilege fields)
+    allowed = {
+        'doc_style', 'theme', 'ui_style', 'notifications_enabled',
+        'chat_only_mode', 'custom_agent_prompt',
+    }
+    data = {k: v for k, v in data.items() if k in allowed}
+
     if 'custom_agent_prompt' in data:
         data['custom_agent_prompt'] = str(data['custom_agent_prompt'])[:2000]
+
+    for bool_key in ('notifications_enabled', 'chat_only_mode'):
+        if bool_key in data:
+            data[bool_key] = _coerce_bool(data[bool_key], default=True if bool_key == 'chat_only_mode' else False)
 
     user.setdefault('settings', {}).update(data)
     user['last_updated'] = datetime.utcnow().isoformat()
@@ -2076,7 +2109,7 @@ def _build_prompt(user_id=None, session_id=None, user_input="", style_hint=None,
     username = user.get('username', 'Guest')
     profile = user.get('profile', {})
     settings = user.get('settings', {})
-    chat_only = settings.get('chat_only_mode', True)
+    chat_only = _coerce_bool(settings.get('chat_only_mode', True), True)
 
     chat_only_instructions = chat_only_module.CHAT_ONLY_INSTRUCTIONS if chat_only else None
     injected_context = _build_injected_context(user, user_input.lower()) if (user_id and chat_only) else None
@@ -2168,7 +2201,7 @@ def handle_chat(request):
         # Logged-in users: real ListeningAI tool loop so profile writes actually land
         if user_id:
             used_agentic = True
-            chat_only = settings.get('chat_only_mode', True)
+            chat_only = _coerce_bool(settings.get('chat_only_mode', True), True)
             system = doc_v2.build_doc_system_for_tools(
                 user_input=user_input,
                 profile=profile,
