@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-gd-page="app">
 <head>
-  <script>(function(){try{var l=localStorage.getItem('gd_lang');if(l&&l!=='en')document.documentElement.classList.add('i18n-loading');}catch(e){}})();</script>
+  <script>(function(){try{var l=localStorage.getItem('gd_lang');if(l&&l!=='en')document.documentElement.classList.add('i18n-loading');var p=localStorage.getItem('gd_ui_style');var r=localStorage.getItem('gd_ui_style_resolved');if(p&&p!=='page_default')document.documentElement.setAttribute('data-gd-theme',p);else if(r)document.documentElement.setAttribute('data-gd-theme',r);}catch(e){}})();</script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title data-i18n="app.doc_title">GreenDial - Health Assistant</title>
+  <link rel="stylesheet" href="/themes/skins.css">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'><text y='32' font-size='32'>🌿</text></svg>">
   <!-- PWA / mobile app -->
   <meta name="theme-color" content="#1a1a2e">
@@ -965,6 +966,10 @@
       <a class="nav-tab" id="nav-about-tab" href="/about" target="_blank" style="text-decoration:none"><span data-i18n="app.nav.about">ℹ️ About</span></a>
       <a class="nav-tab" id="nav-docs-tab" href="/docs" target="_blank" style="text-decoration:none"><span data-i18n="app.nav.docs">📄 Docs</span></a>
     </div>
+    <label class="gd-style-toolbar" title="UI style" style="margin-right:4px">
+      <span data-i18n="common.style" class="gd-style-toolbar-label">Style</span>
+      <select data-gd-style-select="page" aria-label="UI style" id="header-style-select"></select>
+    </label>
     <div class="lang-switch" id="lang-switch">
       <button class="lang-btn" data-lang="en" onclick="setLanguage('en')" title="English">T</button>
       <button class="lang-btn" data-lang="zh" onclick="setLanguage('zh')" title="中文">中</button>
@@ -1351,6 +1356,8 @@
   </div>
 
   <script src="/i18n/i18n.js"></script>
+  <script src="/themes/catalog.js"></script>
+  <script src="/themes/apply.js"></script>
   <script>
     // ── CONSTANTS ────────────────────────────────────────────────────────────
     const API = window.location.origin;
@@ -1385,7 +1392,7 @@
     let agentChats = { doc: [] };
     let agentSessionIds = {};
     let userProfile = {};
-    let userSettings = { doc_style: 'questioning', notifications_enabled: true, chat_only_mode: true };
+    let userSettings = { doc_style: 'questioning', notifications_enabled: true, chat_only_mode: true, ui_style: 'page_default' };
     let notifications = []; // kept for legacy compat; use _todayData instead
     let currentHistoryAgent = 'doc';
     let taskMode = false; // task mode uses agentic Gemini Flash loop for Doc
@@ -1588,6 +1595,7 @@
           currentUser = { user_id: data.user_id, username: data.username, token: data.token };
           userProfile = data.profile || {};
           userSettings = { ...userSettings, ...(data.settings || {}) };
+          if (window.GDThemes) GDThemes.hydrateFromSettings(userSettings);
           saveSession();
           hideAuthPopup();
           updateUserUI();
@@ -1682,6 +1690,7 @@
         if (data.error) { clearSession(); currentUser = null; return false; }
         userProfile = data.profile || {};
         userSettings = data.settings || userSettings;
+        if (window.GDThemes) GDThemes.hydrateFromSettings(userSettings);
         updateUserUI();
         updateAllProfileDisplays();
         agentChats = { doc: [] };
@@ -2107,7 +2116,19 @@
     async function refreshSettings() {
       const panel = document.getElementById('settings-panel');
       if (!currentUser) {
-        panel.innerHTML = `<div class="profile-empty">${t('app.settings.empty','Sign in to manage settings')}</div>`;
+        panel.innerHTML = `
+          <div class="settings-group">
+            <div class="settings-group-title">${t('app.settings.ui_style_title','Look &amp; Feel')}</div>
+            <div class="settings-desc" style="margin-bottom:8px">${t('app.settings.ui_style_guest_desc','Pick a visual style — saved on this device. Sign in to sync it to your account.')}</div>
+            <div class="settings-desc" style="margin-bottom:6px;opacity:0.75">${t('app.settings.ui_style_current','Current')}: <strong id="gd-style-current-label"></strong></div>
+            <div data-gd-style-picker="full"></div>
+          </div>
+          <div class="profile-empty" style="margin-top:16px">${t('app.settings.empty','Sign in to manage settings')}</div>`;
+        if (window.GDThemes) {
+          GDThemes.renderPicker(panel.querySelector('[data-gd-style-picker="full"]'), 'full');
+          const lab = document.getElementById('gd-style-current-label');
+          if (lab) lab.textContent = GDThemes.currentLabel();
+        }
         return;
       }
 
@@ -2115,6 +2136,9 @@
         const settingsRes = await fetch(`${API}/settings/${currentUser.user_id}`);
         const data = await settingsRes.json();
         userSettings = data.settings || userSettings;
+        if (window.GDThemes && userSettings.ui_style) {
+          GDThemes.hydrateFromSettings(userSettings);
+        }
       } catch (e) {}
 
       const customPrompt = userSettings.custom_agent_prompt ||
@@ -2126,6 +2150,12 @@
         : `<span style="font-size:28px">${av}</span>`;
 
       panel.innerHTML = `
+        <div class="settings-group">
+          <div class="settings-group-title">${t('app.settings.ui_style_title','Look &amp; Feel')}</div>
+          <div class="settings-desc" style="margin-bottom:8px">${t('app.settings.ui_style_desc','Choose a visual style for GreenDial. “Page default” picks a semi-random look for each page (stable for the day). The full menu includes page-exclusive skins.')}</div>
+          <div class="settings-desc" style="margin-bottom:6px;opacity:0.75">${t('app.settings.ui_style_current','Current')}: <strong id="gd-style-current-label"></strong></div>
+          <div data-gd-style-picker="full"></div>
+        </div>
         <div class="settings-group">
           <div class="settings-group-title">${t('app.settings.profile_picture','Profile Picture')}</div>
           <div class="avatar-section">
@@ -2208,6 +2238,12 @@
 
       // Reflect current push-permission/subscription state
       updatePushSettingUI();
+
+      if (window.GDThemes) {
+        GDThemes.renderPicker(panel.querySelector('[data-gd-style-picker="full"]'), 'full');
+        const lab = document.getElementById('gd-style-current-label');
+        if (lab) lab.textContent = GDThemes.currentLabel();
+      }
     }
 
     async function refreshUserTab() {
@@ -3024,6 +3060,7 @@
           currentUser = { user_id: data.user_id, username: data.username, token: data.token };
           userProfile = data.profile || {};
           userSettings = data.settings || userSettings;
+          if (window.GDThemes) GDThemes.hydrateFromSettings(userSettings);
           saveSession();
 
           hideAuthPopup();
@@ -3089,6 +3126,7 @@
           saveSession();
 
           userSettings = { ...userSettings, ...(data.settings || {}) };
+          if (window.GDThemes) GDThemes.hydrateFromSettings(userSettings);
           hideAuthPopup();
           updateUserUI();
           updateAllProfileDisplays();
@@ -3110,7 +3148,7 @@
       clearSession();
       currentUser = null;
       userProfile = {};
-      userSettings = { doc_style: 'questioning', notifications_enabled: true, chat_only_mode: true };
+      userSettings = { doc_style: 'questioning', notifications_enabled: true, chat_only_mode: true, ui_style: 'page_default' };
       currentAgent = 'doc';
       currentHistoryAgent = 'doc';
       if (window._notifInterval) { clearInterval(window._notifInterval); window._notifInterval = null; }
@@ -3184,7 +3222,7 @@
           userArea.innerHTML = `
             ${todayDropdownHtml(false)}
             <button class="btn btn-secondary btn-sm" onclick="showDonateModal()" title="Support GreenDial">💚 ${t('app.donate_plain','Donate')}</button>
-            <span class="user-badge">${t('app.guest','Guest')}</span>
+            <span class="user-badge" onclick="goToSettings()" style="cursor:pointer" title="${t('app.settings.heading','⚙️ Settings')}">${t('app.guest','Guest')}</span>
             <button class="btn btn-primary btn-sm" onclick="showAuthPopup()">${t('app.signin','Sign In')}</button>
           `;
         }
@@ -3501,6 +3539,21 @@
         fetchToday();
       }
     };
+
+    // UI style system (after API const + session helpers exist)
+    if (window.GDThemes) {
+      GDThemes.init({
+        page: 'app',
+        api: typeof API !== 'undefined' ? API : '',
+        getUserId: () => currentUser && currentUser.user_id,
+        onChange: () => {
+          const lab = document.getElementById('gd-style-current-label');
+          if (lab) lab.textContent = GDThemes.currentLabel();
+          userSettings.ui_style = GDThemes.preference;
+        },
+      });
+      // If session already restored settings with ui_style, prefer server value later via hydrate
+    }
 
     init();
   </script>

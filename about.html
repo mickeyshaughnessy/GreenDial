@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-gd-page="about">
 <head>
-  <script>(function(){try{var l=localStorage.getItem('gd_lang');if(l&&l!=='en')document.documentElement.classList.add('i18n-loading');}catch(e){}})();</script>
+  <script>(function(){try{var l=localStorage.getItem('gd_lang');if(l&&l!=='en')document.documentElement.classList.add('i18n-loading');var p=localStorage.getItem('gd_ui_style');var r=localStorage.getItem('gd_ui_style_resolved');if(p&&p!=='page_default')document.documentElement.setAttribute('data-gd-theme',p);else if(r)document.documentElement.setAttribute('data-gd-theme',r);}catch(e){}})();</script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title data-i18n="about.title">About GreenDial</title>
+  <link rel="stylesheet" href="/themes/skins.css">
   <meta name="description" data-i18n-attr-content="about.meta_description" content="GreenDial is a free AI health companion. Learn about our ethos, Universal Bounty (UB), the founder, and frequently asked questions.">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -165,6 +166,10 @@
   <div class="header-links">
     <a href="/docs" data-i18n="common.nav.api_docs">API Docs</a>
     <a href="/arazzo" data-i18n="common.nav.how_it_works">How It Works</a>
+    <label class="gd-style-toolbar" title="UI style">
+      <span data-i18n="common.style">Style</span>
+      <select data-gd-style-select="page" aria-label="UI style"></select>
+    </label>
     <div class="lang-switch">
       <button class="lang-btn" data-lang="en" onclick="setLanguage('en')" title="English">T</button>
       <button class="lang-btn" data-lang="zh" onclick="setLanguage('zh')" title="中文">中</button>
@@ -313,5 +318,8 @@
 </footer>
 
 <script src="/i18n/i18n.js" defer></script>
+<script src="/themes/catalog.js"></script>
+<script src="/themes/apply.js"></script>
+<script>GDThemes.init({ page: 'about' });</script>
 </body>
 </html>

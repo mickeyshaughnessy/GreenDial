@@ -108,6 +108,18 @@ def i18n_files(filename):
     return send_from_directory('i18n', filename, mimetype='application/json' if filename.endswith('.json') else 'application/javascript')
 
 
+@app.route("/themes/<path:filename>", methods=['GET'])
+def theme_files(filename):
+    """UI style skins + catalog/apply scripts."""
+    if filename.endswith('.css'):
+        mime = 'text/css'
+    elif filename.endswith('.js'):
+        mime = 'application/javascript'
+    else:
+        mime = None
+    return send_from_directory('themes', filename, mimetype=mime)
+
+
 # ---- Web push ----
 
 @app.route("/push/vapid-public-key", methods=['GET'])

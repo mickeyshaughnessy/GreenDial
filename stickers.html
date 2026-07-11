@@ -1,10 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-gd-page="stickers">
 <head>
+  <script>(function(){try{var p=localStorage.getItem('gd_ui_style');var r=localStorage.getItem('gd_ui_style_resolved');if(p&&p!=='page_default')document.documentElement.setAttribute('data-gd-theme',p);else if(r)document.documentElement.setAttribute('data-gd-theme',r);}catch(e){}})();</script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#0d1117">
   <title>GreenDial Health Board</title>
+  <link rel="stylesheet" href="/themes/skins.css">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -19,7 +21,9 @@
       align-items: center;
       gap: 10px;
       margin-bottom: 32px;
+      flex-wrap: wrap;
     }
+    .header .gd-style-toolbar { margin-left: auto; }
     .logo { font-size: 28px; }
     .header h1 { font-size: 20px; font-weight: 600; color: #58a6ff; }
     .header p { font-size: 13px; color: rgba(230,237,243,0.5); margin-top: 2px; }
@@ -108,6 +112,10 @@
       <h1>GreenDial Health Board</h1>
       <p>Daily wellness check-ins</p>
     </div>
+    <label class="gd-style-toolbar" title="UI style">
+      <span>Style</span>
+      <select data-gd-style-select="page" aria-label="UI style"></select>
+    </label>
   </div>
 
   <div id="content"><div class="loading">Loading board…</div></div>
@@ -201,5 +209,8 @@
 
     load();
   </script>
+  <script src="/themes/catalog.js"></script>
+  <script src="/themes/apply.js"></script>
+  <script>GDThemes.init({ page: 'stickers' });</script>
 </body>
 </html>

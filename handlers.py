@@ -340,6 +340,7 @@ def handle_get_settings(user_id):
     default_settings = {
         "doc_style": "questioning",
         "theme": "dark",
+        "ui_style": "page_default",
         "notifications_enabled": True,
         "chat_only_mode": True
     }

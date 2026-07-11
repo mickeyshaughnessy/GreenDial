@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-gd-page="docs">
 <head>
-  <script>(function(){try{var l=localStorage.getItem('gd_lang');if(l&&l!=='en')document.documentElement.classList.add('i18n-loading');}catch(e){}})();</script>
+  <script>(function(){try{var l=localStorage.getItem('gd_lang');if(l&&l!=='en')document.documentElement.classList.add('i18n-loading');var p=localStorage.getItem('gd_ui_style');var r=localStorage.getItem('gd_ui_style_resolved');if(p&&p!=='page_default')document.documentElement.setAttribute('data-gd-theme',p);else if(r)document.documentElement.setAttribute('data-gd-theme',r);}catch(e){}})();</script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title data-i18n="docs.title">GreenDial API Docs</title>
+  <link rel="stylesheet" href="/themes/skins.css">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html.i18n-loading body { visibility: hidden; }
@@ -209,10 +210,16 @@
 <div class="header">
   <a class="logo" href="/">🌿 GreenDial</a>
   <span class="header-title" data-i18n="common.nav.docs_crumb">/ API Docs</span>
-  <div class="lang-switch">
-    <button class="lang-btn" data-lang="en" onclick="setLanguage('en')" title="English">T</button>
-    <button class="lang-btn" data-lang="zh" onclick="setLanguage('zh')" title="中文">中</button>
-    <button class="lang-btn" data-lang="ja" onclick="setLanguage('ja')" title="日本語">日</button>
+  <div style="margin-left:auto;display:flex;align-items:center;gap:12px">
+    <label class="gd-style-toolbar" title="UI style">
+      <span data-i18n="common.style">Style</span>
+      <select data-gd-style-select="page" aria-label="UI style"></select>
+    </label>
+    <div class="lang-switch">
+      <button class="lang-btn" data-lang="en" onclick="setLanguage('en')" title="English">T</button>
+      <button class="lang-btn" data-lang="zh" onclick="setLanguage('zh')" title="中文">中</button>
+      <button class="lang-btn" data-lang="ja" onclick="setLanguage('ja')" title="日本語">日</button>
+    </div>
   </div>
 </div>
 
@@ -852,6 +859,9 @@ Profile updates extracted from any response → saved to S3 → sidebar refreshe
 </div>
 
 <script src="/i18n/i18n.js" defer></script>
+<script src="/themes/catalog.js"></script>
+<script src="/themes/apply.js"></script>
+<script>GDThemes.init({ page: 'docs' });</script>
 <script>
   async function runPing() {
     const btn = document.getElementById('ping-btn');

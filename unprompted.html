@@ -1,9 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-gd-page="unprompted">
 <head>
+  <script>(function(){try{var p=localStorage.getItem('gd_ui_style');var r=localStorage.getItem('gd_ui_style_resolved');if(p&&p!=='page_default')document.documentElement.setAttribute('data-gd-theme',p);else if(r)document.documentElement.setAttribute('data-gd-theme',r);}catch(e){}})();</script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Unprompted - Group Facilitator</title>
+  <link rel="stylesheet" href="/themes/skins.css">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -80,6 +82,10 @@
   <header>
     <div class="brand">Unprompted <span class="badge">Jeeves facilitates</span></div>
     <div class="tagline">Comfortable group negotiation via web or SMS</div>
+    <label class="gd-style-toolbar" title="UI style">
+      <span>Style</span>
+      <select data-gd-style-select="page" aria-label="UI style"></select>
+    </label>
   </header>
 
   <main class="layout">
@@ -342,5 +348,8 @@
 
     loadCampaigns();
   </script>
+  <script src="/themes/catalog.js"></script>
+  <script src="/themes/apply.js"></script>
+  <script>GDThemes.init({ page: 'unprompted' });</script>
 </body>
 </html>
