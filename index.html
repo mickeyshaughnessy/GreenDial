@@ -349,6 +349,84 @@
     }
     .ci-opt .px-sticker { width: 24px; height: 24px; }
     .ci-emoji .px-sticker { width: 22px; height: 22px; }
+
+    /* Sticker style toggle + picker modal */
+    .sticker-toolbar {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px;
+      margin-bottom: 14px;
+    }
+    .sticker-style-toggle {
+      display: inline-flex; background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12); border-radius: 20px; padding: 3px;
+      gap: 2px;
+    }
+    .sticker-style-toggle button {
+      border: none; background: transparent; color: rgba(255,255,255,0.55);
+      font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 16px;
+      cursor: pointer; font-family: inherit;
+    }
+    .sticker-style-toggle button.active {
+      background: rgba(16,185,129,0.25); color: #6ee7b7;
+    }
+    .sticker-style-hint { font-size: 12px; color: rgba(255,255,255,0.4); }
+    .sb-dot.empty.sb-pickable {
+      cursor: pointer; color: rgba(255,255,255,0.25); font-size: 16px;
+      border: 1px dashed rgba(255,255,255,0.15);
+    }
+    .sb-dot.empty.sb-pickable:hover {
+      background: rgba(16,185,129,0.12); border-color: rgba(16,185,129,0.4);
+      color: #10b981;
+    }
+    .sb-dot.filled.sb-pickable { cursor: pointer; }
+    .sticker-picker-backdrop {
+      display: none; position: fixed; inset: 0; z-index: 3000;
+      background: rgba(0,0,0,0.55); align-items: center; justify-content: center;
+      padding: 16px; box-sizing: border-box;
+    }
+    .sticker-picker-backdrop.show { display: flex; }
+    .sticker-picker-modal {
+      background: #1e1e32; border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 16px; width: min(440px, 100%); max-height: min(80vh, 560px);
+      display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+      overflow: hidden;
+    }
+    .sticker-picker-head {
+      padding: 14px 16px; border-bottom: 1px solid rgba(255,255,255,0.08);
+      display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+    }
+    .sticker-picker-head h3 { margin: 0; font-size: 15px; flex: 1 1 auto; min-width: 0; }
+    .sticker-picker-close {
+      border: none; background: rgba(255,255,255,0.08); color: #eee;
+      width: 32px; height: 32px; border-radius: 8px; cursor: pointer; font-size: 18px;
+    }
+    .sticker-picker-grid {
+      padding: 12px; overflow-y: auto; display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+      gap: 8px;
+    }
+    .sticker-pick-btn {
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      padding: 10px 6px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.04); cursor: pointer; color: #eee;
+      font-family: inherit; font-size: 11px; line-height: 1.2; text-align: center;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .sticker-pick-btn:hover {
+      border-color: rgba(16,185,129,0.5); background: rgba(16,185,129,0.1);
+    }
+    .sticker-pick-btn .pick-glyph {
+      font-size: 26px; line-height: 1; min-height: 32px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .sticker-pick-btn .pick-glyph .px-sticker { width: 32px; height: 32px; }
+    .sticker-pick-btn.rare {
+      border-color: rgba(251,191,36,0.45);
+      background: linear-gradient(135deg, rgba(251,191,36,0.12), transparent);
+    }
+    .sticker-pick-btn .pick-label {
+      color: rgba(255,255,255,0.55); max-width: 100%;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
     .sb-tip {
       display: none; position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%);
       background: #1c2129; border: 1px solid rgba(88,166,255,0.2); border-radius: 8px;
@@ -1071,6 +1149,21 @@
     </div>
   </div>
   
+  <!-- Sticker picker modal (board) -->
+  <div class="sticker-picker-backdrop" id="sticker-picker-backdrop" onclick="if(event.target===this)closeStickerPicker()">
+    <div class="sticker-picker-modal" role="dialog" aria-modal="true" aria-labelledby="sticker-picker-title">
+      <div class="sticker-picker-head">
+        <h3 id="sticker-picker-title">Pick a sticker</h3>
+        <div class="sticker-style-toggle" role="group">
+          <button type="button" id="picker-style-pixel" class="active" onclick="setStickerStyle('pixel')">🎨 Pixel</button>
+          <button type="button" id="picker-style-emoji" onclick="setStickerStyle('emoji')">😀 Emoji</button>
+        </div>
+        <button type="button" class="sticker-picker-close" onclick="closeStickerPicker()" aria-label="Close">×</button>
+      </div>
+      <div class="sticker-picker-grid" id="sticker-picker-grid"></div>
+    </div>
+  </div>
+
   <div class="main">
     <div class="view active" id="view-chat">
       <div class="chat-hero">
@@ -1251,7 +1344,14 @@
             </div>
           </div>
           <div class="panel-content">
-            <p style="color:rgba(255,255,255,0.5);font-size:13px;margin-bottom:16px" data-i18n="app.stickers.desc">Emoji check-ins across health areas — filled in by you through daily polls and chat.</p>
+            <p style="color:rgba(255,255,255,0.5);font-size:13px;margin-bottom:12px" data-i18n="app.stickers.desc">Daily check-ins across health areas — pick a sticker for today, or answer polls in the bell.</p>
+            <div class="sticker-toolbar" id="sticker-toolbar" style="display:none">
+              <div class="sticker-style-toggle" role="group" aria-label="Sticker style">
+                <button type="button" id="sticker-style-pixel" class="active" onclick="setStickerStyle('pixel')" data-i18n="app.stickers.style_pixel">🎨 Pixel</button>
+                <button type="button" id="sticker-style-emoji" onclick="setStickerStyle('emoji')" data-i18n="app.stickers.style_emoji">😀 Emoji</button>
+              </div>
+              <span class="sticker-style-hint" data-i18n="app.stickers.picker_hint">Click today’s empty cells to pick a sticker</span>
+            </div>
             <div id="sticker-board-content" style="overflow-x:auto">
               <div style="color:rgba(255,255,255,0.4);text-align:center;padding:32px" data-i18n="app.stickers.signin_prompt">Sign in to see your board</div>
             </div>
@@ -1534,7 +1634,7 @@
     // ── AGENT TABS ───────────────────────────────────────────────────────────
     function getAgentMeta(id) { return AGENT_META[id] || { emoji: '🤖', name: id }; }
 
-    // Legacy unicode emoji → pixel sticker (same map as server EMOJI_TO_PIXEL)
+    // Legacy unicode emoji ↔ pixel sticker maps
     const EMOJI_TO_PIXEL = {
       '😴':'sleep_great','🥱':'sleep_rough','😊':'sleep_good','😌':'sleep_rested','😐':'sleep_ok',
       '💤':'sleep_zzz','🌗':'sleep_broken','⏰':'sleep_early','🛌':'sleep_in','🌃':'sleep_late',
@@ -1555,22 +1655,253 @@
       '🧴':'pr_sun','🧼':'pr_hygiene','🩺':'pr_check','😷':'pr_careful','🦾':'pr_bullet',
       '🍵':'pr_boost','⭐':'pr_picture','🧬':'pr_opt'
     };
+    const PIXEL_TO_EMOJI = Object.fromEntries(
+      Object.entries(EMOJI_TO_PIXEL).map(([em, id]) => [id, em])
+    );
+    // Prefer first mapping if multiple emojis share an id — filled above order is fine
 
-    /** Render a board sticker: pixel art (px:id, /stickers/..., or legacy emoji). */
+    // Full emoji palettes for the picker (area → options)
+    const EMOJI_PICKER = {
+      sleep: [
+        {emoji:'😴',label:'Slept great'},{emoji:'😊',label:'Good'},{emoji:'😌',label:'Rested'},
+        {emoji:'😐',label:'OK'},{emoji:'💤',label:'Dozy'},{emoji:'🌗',label:'Broken sleep'},
+        {emoji:'⏰',label:'Woke early'},{emoji:'🛌',label:'Slept in'},{emoji:'🌃',label:'Late night'},
+        {emoji:'🥱',label:'Rough night'},{emoji:'🦉',label:'Night owl',rare:true},
+        {emoji:'🌌',label:'Stargazer',rare:true},{emoji:'🐑',label:'Counted sheep',rare:true},
+        {emoji:'🛸',label:'Wild dreams',rare:true},{emoji:'🌙',label:'Moon'},
+      ],
+      diet: [
+        {emoji:'🥗',label:'Clean & healthy'},{emoji:'😋',label:'Enjoyed it'},{emoji:'💪',label:'On point'},
+        {emoji:'🍎',label:'Fruity'},{emoji:'🥦',label:'Veggies'},{emoji:'💧',label:'Hydrated'},
+        {emoji:'🍕',label:'Indulgent'},{emoji:'🍰',label:'Sweet tooth'},{emoji:'🍜',label:'Comfort food'},
+        {emoji:'😤',label:'Struggled'},{emoji:'🥑',label:'Avocado win',rare:true},
+        {emoji:'🍇',label:'Superfood',rare:true},{emoji:'🦞',label:'Feast',rare:true},
+      ],
+      exercise: [
+        {emoji:'💪',label:'Crushed it'},{emoji:'🏃',label:'Active'},{emoji:'🚶',label:'Walked'},
+        {emoji:'🧘',label:'Stretched'},{emoji:'🚴',label:'Cycled'},{emoji:'🏋️',label:'Lifted'},
+        {emoji:'😅',label:'Sweaty'},{emoji:'🧗',label:'Pushed limits'},{emoji:'🛋️',label:'Skipped it'},
+        {emoji:'🏆',label:'Personal record',rare:true},{emoji:'🥇',label:'Champion',rare:true},
+        {emoji:'🦸',label:'Beast mode',rare:true},{emoji:'⚡',label:'Electric',rare:true},
+      ],
+      mental_health: [
+        {emoji:'😌',label:'Calm & clear'},{emoji:'😊',label:'Good'},{emoji:'😐',label:'Mixed'},
+        {emoji:'🧠',label:'Focused'},{emoji:'🫧',label:'Light'},{emoji:'😟',label:'Stressed'},
+        {emoji:'🌥️',label:'Cloudy'},{emoji:'🔥',label:'Burnt out'},{emoji:'🌀',label:'Foggy'},
+        {emoji:'😢',label:'Struggling'},{emoji:'🌈',label:'Hopeful',rare:true},
+        {emoji:'✨',label:'Inspired',rare:true},{emoji:'🦋',label:'Transformed',rare:true},
+        {emoji:'🕯️',label:'Centered',rare:true},
+      ],
+      relationships: [
+        {emoji:'🤗',label:'Very connected'},{emoji:'❤️',label:'Loved'},{emoji:'😊',label:'Good'},
+        {emoji:'🙏',label:'Grateful'},{emoji:'🫂',label:'Supported'},{emoji:'📞',label:'Reached out'},
+        {emoji:'💬',label:'Good talk'},{emoji:'👯',label:'Social'},{emoji:'😶',label:'Quiet'},
+        {emoji:'😞',label:'Distant'},{emoji:'💞',label:'Deep bond',rare:true},
+        {emoji:'🥰',label:'Cherished',rare:true},{emoji:'🕊️',label:'Made peace',rare:true},
+        {emoji:'🎉',label:'Celebrated',rare:true},
+      ],
+      environment: [
+        {emoji:'🌿',label:'Fresh & calm'},{emoji:'☀️',label:'Bright'},{emoji:'🏠',label:'Cozy'},
+        {emoji:'🪴',label:'Tidy'},{emoji:'🌳',label:'Outdoors'},{emoji:'🧹',label:'Cleaned up'},
+        {emoji:'🔆',label:'Aired out'},{emoji:'🌆',label:'Busy'},{emoji:'🌧️',label:'Heavy'},
+        {emoji:'🏞️',label:'Nature day',rare:true},{emoji:'🌅',label:'Golden hour',rare:true},
+        {emoji:'🌊',label:'By the water',rare:true},{emoji:'🦜',label:'Wildlife',rare:true},
+      ],
+      protect: [
+        {emoji:'🛡️',label:'On top of it'},{emoji:'💪',label:'Strong'},{emoji:'💊',label:'Managing'},
+        {emoji:'🌿',label:'Natural'},{emoji:'🧴',label:'Sun-safe'},{emoji:'🧼',label:'Hygiene'},
+        {emoji:'🩺',label:'Checked in'},{emoji:'😷',label:'Careful'},{emoji:'🛌',label:'Resting up'},
+        {emoji:'🤒',label:'Not great'},{emoji:'🦾',label:'Bulletproof',rare:true},
+        {emoji:'🍵',label:'Immunity boost',rare:true},{emoji:'⭐',label:'Picture of health',rare:true},
+        {emoji:'🧬',label:'Optimized',rare:true},
+      ],
+    };
+
+    let stickerStyle = 'pixel'; // 'pixel' | 'emoji' — board display + picker default
+    try {
+      const s = localStorage.getItem('gd_sticker_style');
+      if (s === 'emoji' || s === 'pixel') stickerStyle = s;
+    } catch (e) {}
+
+    let _pixelCatalog = null; // loaded once from /stickers/pixel/catalog.json
+    let _pickerCtx = null;    // { area, date }
+
+    function setStickerStyle(style) {
+      if (style !== 'pixel' && style !== 'emoji') return;
+      stickerStyle = style;
+      try { localStorage.setItem('gd_sticker_style', style); } catch (e) {}
+      document.querySelectorAll('#sticker-style-pixel, #picker-style-pixel').forEach(b => {
+        b.classList.toggle('active', style === 'pixel');
+      });
+      document.querySelectorAll('#sticker-style-emoji, #picker-style-emoji').forEach(b => {
+        b.classList.toggle('active', style === 'emoji');
+      });
+      if (stickerBoardData) renderStickerBoard(stickerBoardData);
+      if (_pickerCtx) renderStickerPickerGrid();
+      // Re-render check-in options in bell if open
+      if (_todayData) renderCheckIns(_todayData.check_ins || []);
+    }
+
+    async function ensurePixelCatalog() {
+      if (_pixelCatalog) return _pixelCatalog;
+      try {
+        const r = await fetch('/stickers/pixel/catalog.json');
+        const data = await r.json();
+        _pixelCatalog = data.stickers || [];
+      } catch (e) {
+        _pixelCatalog = [];
+      }
+      return _pixelCatalog;
+    }
+
+    function pixelOptionsForArea(area) {
+      const all = _pixelCatalog || [];
+      return all.filter(s => (s.areas || []).includes(area)).map(s => ({
+        emoji: `px:${s.id}`,
+        src: s.src || `/stickers/pixel/${s.file}`,
+        label: s.label || s.id,
+        rare: !!s.rare,
+        pixel_id: s.id,
+      }));
+    }
+
+    function emojiOptionsForArea(area) {
+      return (EMOJI_PICKER[area] || []).map(o => ({ ...o }));
+    }
+
+    /** Render a board sticker respecting stickerStyle preference. */
     function stickerHTML(token, extraClass, explicitSrc) {
       if (!token && !explicitSrc) return '';
       const cls = extraClass ? `px-sticker ${extraClass}` : 'px-sticker';
+
+      // Resolve to pixel src if available
       let src = explicitSrc || null;
-      if (!src && typeof token === 'string') {
-        if (token.startsWith('px:')) src = `/stickers/pixel/${token.slice(3)}.png`;
-        else if (token.startsWith('/stickers/')) src = token;
-        else if (EMOJI_TO_PIXEL[token]) src = `/stickers/pixel/${EMOJI_TO_PIXEL[token]}.png`;
+      let emojiChar = null;
+      if (typeof token === 'string') {
+        if (token.startsWith('px:')) {
+          src = src || `/stickers/pixel/${token.slice(3)}.png`;
+          emojiChar = PIXEL_TO_EMOJI[token.slice(3)] || null;
+        } else if (token.startsWith('/stickers/')) {
+          src = token;
+        } else {
+          emojiChar = token;
+          if (!src && EMOJI_TO_PIXEL[token]) {
+            src = `/stickers/pixel/${EMOJI_TO_PIXEL[token]}.png`;
+          }
+        }
       }
+
+      if (stickerStyle === 'emoji') {
+        if (emojiChar) return `<span>${escapeHtml(emojiChar)}</span>`;
+        // px token without reverse map — still show pixel as last resort
+        if (src) return `<img class="${cls}" src="${src}" alt="" width="28" height="28" draggable="false">`;
+        return `<span>${escapeHtml(String(token || ''))}</span>`;
+      }
+
+      // pixel mode
       if (src) {
         return `<img class="${cls}" src="${src}" alt="" width="28" height="28" draggable="false">`;
       }
       return `<span>${escapeHtml(String(token || ''))}</span>`;
     }
+
+    function openStickerPicker(area, date) {
+      if (!currentUser) return;
+      _pickerCtx = { area, date: date || isoToday() };
+      const labels = {
+        sleep: t('app.area.sleep','Sleep'), diet: t('app.area.diet','Diet'),
+        exercise: t('app.area.exercise','Exercise'), mental_health: t('app.area.mental','Mental'),
+        relationships: t('app.area.relationships','Relationships'),
+        environment: t('app.area.environment','Environment'), protect: t('app.area.protect','Protect'),
+      };
+      const title = document.getElementById('sticker-picker-title');
+      if (title) {
+        title.textContent = t('app.stickers.pick_for', 'Pick a sticker') + ' — ' + (labels[area] || area);
+      }
+      // Sync toggle UI
+      document.querySelectorAll('#picker-style-pixel').forEach(b => b.classList.toggle('active', stickerStyle === 'pixel'));
+      document.querySelectorAll('#picker-style-emoji').forEach(b => b.classList.toggle('active', stickerStyle === 'emoji'));
+      const backdrop = document.getElementById('sticker-picker-backdrop');
+      if (backdrop) backdrop.classList.add('show');
+      renderStickerPickerGrid();
+    }
+
+    function closeStickerPicker() {
+      _pickerCtx = null;
+      document.getElementById('sticker-picker-backdrop')?.classList.remove('show');
+    }
+
+    async function renderStickerPickerGrid() {
+      const grid = document.getElementById('sticker-picker-grid');
+      if (!grid || !_pickerCtx) return;
+      const area = _pickerCtx.area;
+      grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:20px;color:rgba(255,255,255,0.4)">${t('app.loading','Loading…')}</div>`;
+      let options = [];
+      if (stickerStyle === 'pixel') {
+        await ensurePixelCatalog();
+        options = pixelOptionsForArea(area);
+        if (!options.length) {
+          // fall back to emoji if catalog missing
+          options = emojiOptionsForArea(area);
+        }
+      } else {
+        options = emojiOptionsForArea(area);
+      }
+      if (!options.length) {
+        grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:20px;color:rgba(255,255,255,0.4)">${t('app.stickers.no_options','No stickers available')}</div>`;
+        return;
+      }
+      // Sort rare to end
+      options = options.slice().sort((a, b) => (a.rare ? 1 : 0) - (b.rare ? 1 : 0));
+      grid.innerHTML = options.map((o, i) => {
+        const token = (o.emoji || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+        const label = escapeHtml(o.label || '');
+        const glyph = stickerStyle === 'pixel'
+          ? stickerHTML(o.emoji, '', o.src)
+          : `<span style="font-size:26px">${escapeHtml(o.emoji || '')}</span>`;
+        return `<button type="button" class="sticker-pick-btn${o.rare ? ' rare' : ''}" title="${label}"
+          onclick="pickBoardSticker('${token}', '${label.replace(/'/g, "\\'")}')">
+          <span class="pick-glyph">${glyph}</span>
+          <span class="pick-label">${label}</span>
+        </button>`;
+      }).join('');
+    }
+
+    async function pickBoardSticker(token, label) {
+      if (!_pickerCtx || !currentUser) return;
+      const { area, date } = _pickerCtx;
+      const prompt = t('app.stickers.manual_prompt', 'Picked on the sticker board');
+      closeStickerPicker();
+      await _submitSticker(area, token, prompt, label || '');
+      // Optimistic local update
+      if (stickerBoardData) {
+        const rows = stickerBoardData.rows || (stickerBoardData.rows = {});
+        if (!rows[area]) rows[area] = {};
+        rows[area][date] = {
+          emoji: token,
+          prompt,
+          response: label || '',
+          src: token.startsWith('px:') ? `/stickers/pixel/${token.slice(3)}.png`
+            : (EMOJI_TO_PIXEL[token] ? `/stickers/pixel/${EMOJI_TO_PIXEL[token]}.png` : null),
+          ts: new Date().toISOString(),
+        };
+        renderStickerBoard(stickerBoardData);
+      }
+      if (_todayData) {
+        const ci = (_todayData.check_ins || []).find(c => c.area === area);
+        if (ci) {
+          ci.answered = true;
+          ci.emoji = token;
+          ci.src = token.startsWith('px:') ? `/stickers/pixel/${token.slice(3)}.png` : null;
+        }
+        renderToday(_todayData);
+      }
+    }
+
+    // Esc closes picker
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeStickerPicker();
+    });
 
     function updateAgentTabs() {
       const row = document.getElementById('agent-tabs-row');
@@ -2518,7 +2849,13 @@
           const jsLbl = lbl.replace(/'/g, "\\'");
           const title = o.rare ? `✨ Rare find — ${lbl}` : lbl;
           const token = (o.emoji || o.src || '').replace(/'/g, "\\'");
-          return `<button class="ci-opt${o.rare ? ' rare' : ''}" title="${title}" onclick="event.stopPropagation(); answerCheckin('${ci.area}','${token}','${jsLbl}','${safemsg}')">${stickerHTML(o.emoji || o.src)}</button>`;
+          // In emoji mode, prefer showing unicode if we can reverse-map from px:
+          let display = stickerHTML(o.emoji || o.src, '', o.src);
+          if (stickerStyle === 'emoji' && typeof o.emoji === 'string' && o.emoji.startsWith('px:')) {
+            const rev = PIXEL_TO_EMOJI[o.emoji.slice(3)];
+            if (rev) display = `<span>${rev}</span>`;
+          }
+          return `<button class="ci-opt${o.rare ? ' rare' : ''}" title="${title}" onclick="event.stopPropagation(); answerCheckin('${ci.area}','${token}','${jsLbl}','${safemsg}')">${display}</button>`;
         }).join('');
         return `<div class="ci-card" id="ci-card-${ci.area}">
           <div class="ci-question"><span class="ci-icon">${icon}</span>${msg}</div>
@@ -3094,6 +3431,12 @@
         protect: '🛡️ ' + t('app.area.protect','Protect')
       };
 
+      // Toolbar: style toggle visible when signed in
+      const toolbar = document.getElementById('sticker-toolbar');
+      if (toolbar) toolbar.style.display = currentUser ? 'flex' : 'none';
+      document.querySelectorAll('#sticker-style-pixel').forEach(b => b.classList.toggle('active', stickerStyle === 'pixel'));
+      document.querySelectorAll('#sticker-style-emoji').forEach(b => b.classList.toggle('active', stickerStyle === 'emoji'));
+
       // Build last 30 days oldest→newest (today on the right); skip days with no stickers.
       // Use UTC throughout so day keys match the server's utcnow-based storage.
       const candidates = [];
@@ -3123,7 +3466,16 @@
             const prompt = (entry.prompt||'').replace(/</g,'&lt;');
             const resp = (entry.response||'').replace(/</g,'&lt;');
             const tip = prompt ? `<div class="sb-tip"><div class="sb-tip-prompt">${prompt}</div>${resp?`<div>${resp}</div>`:''}</div>` : '';
-            html += `<td class="sb-cell"><div class="sb-dot filled${todayClass}">${stickerHTML(entry.emoji, '', entry.src)}${tip}</div></td>`;
+            // Today’s filled cells stay pickable so user can change sticker
+            const pickCls = day.isToday ? ' sb-pickable' : '';
+            const pickAttr = day.isToday
+              ? ` role="button" tabindex="0" onclick="openStickerPicker('${area}','${day.iso}')" title="${t('app.stickers.change','Change sticker')}"`
+              : '';
+            html += `<td class="sb-cell"><div class="sb-dot filled${todayClass}${pickCls}"${pickAttr}>${stickerHTML(entry.emoji, '', entry.src)}${tip}</div></td>`;
+          } else if (day.isToday) {
+            html += `<td class="sb-cell"><div class="sb-dot empty${todayClass} sb-pickable" role="button" tabindex="0"
+              onclick="openStickerPicker('${area}','${day.iso}')"
+              title="${t('app.stickers.pick','Pick a sticker')}">+</div></td>`;
           } else {
             html += `<td class="sb-cell"><div class="sb-dot empty${todayClass}">·</div></td>`;
           }
@@ -3136,6 +3488,9 @@
       scroller.innerHTML = html;
       // Today is the rightmost column — scroll it into view (frozen labels stay put)
       requestAnimationFrame(() => { scroller.scrollLeft = scroller.scrollWidth; });
+
+      // Prefetch pixel catalog for snappy picker
+      ensurePixelCatalog();
 
       // Show share section
       if (share_url) {
