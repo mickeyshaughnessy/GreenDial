@@ -1397,14 +1397,14 @@
     <div class="donate-popup">
       <h3 data-i18n="app.donate_modal.heading">💚 Support GreenDial</h3>
       <p class="subtitle" data-i18n="app.donate_modal.subtitle">GreenDial is free and open-source. Donations help keep the AI running.</p>
-      <div class="crypto-row" style="display:none">
-        <div class="crypto-label">₿ Bitcoin (BTC)</div>
-        <div class="crypto-addr" id="btc-addr">139VrBnUEB3UgzwGCQwLxDHnDTUWoE96Y8</div>
+      <div class="crypto-row">
+        <div class="crypto-label">₿ Bitcoin (BTC) — Coinbase</div>
+        <div class="crypto-addr" id="btc-addr">3M6nzmM6T5WsfJkGHxGFs1YRTtp8TXpBpv</div>
         <button class="btn-copy" onclick="copyAddr('btc-addr', this)" data-i18n="app.donate_modal.copy_addr">Copy address</button>
       </div>
-      <div class="crypto-row" style="display:none">
-        <div class="crypto-label">Ξ Ethereum (ETH)</div>
-        <div class="crypto-addr" id="eth-addr">0x58ed1da7a1A58DaB2Fb8d21317725D8760C816Fe</div>
+      <div class="crypto-row">
+        <div class="crypto-label">Ξ Ethereum (ETH) — Coinbase</div>
+        <div class="crypto-addr" id="eth-addr">0x3EbF65C9D212F3978cB5105Aa6877F6013cAfD57</div>
         <button class="btn-copy" onclick="copyAddr('eth-addr', this)" data-i18n="app.donate_modal.copy_addr">Copy address</button>
       </div>
       <div class="phantom-row" style="display:none">
@@ -3839,7 +3839,7 @@
       });
     }
 
-    const DONATION_ETH_ADDRESS = '0x58ed1da7a1A58DaB2Fb8d21317725D8760C816Fe';
+    const DONATION_ETH_ADDRESS = '0x3EbF65C9D212F3978cB5105Aa6877F6013cAfD57';
     const BASE_CHAIN_ID = '0x2105'; // 8453
 
     async function connectPhantom() {

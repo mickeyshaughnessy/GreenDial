@@ -2839,8 +2839,8 @@ def handle_unprompted_sms(form_data):
 
 ADMIN_USER_IDS = {'user_mickey'}
 
-BTC_ADDRESS = '139VrBnUEB3UgzwGCQwLxDHnDTUWoE96Y8'
-ETH_ADDRESS = '0x58ed1da7a1A58DaB2Fb8d21317725D8760C816Fe'
+BTC_ADDRESS = '3M6nzmM6T5WsfJkGHxGFs1YRTtp8TXpBpv'
+ETH_ADDRESS = '0x3EbF65C9D212F3978cB5105Aa6877F6013cAfD57'
 
 
 def _admin_ok(user_id, token):
