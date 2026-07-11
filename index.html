@@ -30,24 +30,31 @@
     }
     .lang-btn:hover { background: rgba(255,255,255,0.16); color: #fff; }
     .lang-btn.active { background: #10b981; border-color: #10b981; color: #fff; }
+    html { overflow-x: hidden; max-width: 100%; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: #1a1a2e;
       color: #eee;
       min-height: 100vh;
       min-height: 100dvh;
+      overflow-x: hidden;
+      max-width: 100%;
     }
     
     .header {
       background: linear-gradient(135deg, rgba(16,185,129,0.15), rgba(26,26,46,0.95));
-      padding: 12px 24px;
+      padding: 10px 16px;
       display: flex;
-      justify-content: space-between;
+      flex-wrap: wrap;
       align-items: center;
+      gap: 8px 10px;
       border-bottom: 1px solid rgba(255,255,255,0.1);
       position: sticky;
       top: 0;
       z-index: 50;
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
     }
     .logo {
       font-size: 22px;
@@ -56,6 +63,8 @@
       display: flex;
       align-items: center;
       gap: 8px;
+      flex: 0 0 auto;
+      min-width: 0;
     }
     .user-count {
       font-size: 11px;
@@ -64,7 +73,20 @@
       background: rgba(255,255,255,0.05);
       border-radius: 12px;
     }
-    .nav-tabs { display: flex; gap: 4px; }
+    /* Nav scrolls inside the header when space is tight — never pushes actions off-screen */
+    .nav-tabs {
+      display: flex;
+      gap: 4px;
+      flex: 1 1 140px;
+      min-width: 0;
+      max-width: 100%;
+      overflow-x: auto;
+      overflow-y: hidden;
+      flex-wrap: nowrap;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+    }
+    .nav-tabs::-webkit-scrollbar { height: 4px; }
     .nav-tab {
       padding: 8px 16px;
       background: transparent;
@@ -74,10 +96,42 @@
       cursor: pointer;
       border-radius: 8px;
       transition: all 0.2s;
+      white-space: nowrap;
+      flex-shrink: 0;
     }
     .nav-tab:hover { background: rgba(255,255,255,0.1); color: white; }
     .nav-tab.active { background: rgba(16,185,129,0.2); color: #10b981; }
-    .user-area { display: flex; align-items: center; gap: 12px; }
+    .header-actions {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-left: auto;
+      flex: 0 1 auto;
+      max-width: 100%;
+      min-width: 0;
+    }
+    .gd-style-toolbar {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+      max-width: 100%;
+    }
+    .gd-style-toolbar select,
+    .gd-style-toolbar .settings-select,
+    #header-style-select {
+      max-width: min(160px, 42vw);
+      min-width: 0;
+    }
+    .user-area {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      max-width: 100%;
+      min-width: 0;
+    }
     .user-badge {
       padding: 6px 14px;
       background: rgba(255,255,255,0.1);
@@ -903,24 +957,26 @@
     .chat-login-switch:hover { color: #10b981; text-decoration: underline; }
     .chat-login-error { font-size: 12px; color: #ef4444; margin-top: 6px; min-height: 16px; }
 
-    /* ============ MOBILE ============ */
-    @media (max-width: 700px) {
-      /* Header: logo + bell/user on row 1, tabs scroll on row 2 */
+    /* ============ NARROW / MOBILE ============ */
+    @media (max-width: 900px) {
       .header {
-        flex-wrap: wrap; gap: 8px;
         padding: 10px 12px;
         padding-top: calc(10px + env(safe-area-inset-top));
       }
+      /* Logo + actions on first row; nav full-width scroll row below */
       .nav-tabs {
-        order: 3; width: 100%;
-        overflow-x: auto; flex-wrap: nowrap;
-        scrollbar-width: none; -webkit-overflow-scrolling: touch;
+        order: 3;
+        flex: 1 1 100%;
+        width: 100%;
+        max-width: 100%;
       }
-      .nav-tabs::-webkit-scrollbar { display: none; }
-      .nav-tab { white-space: nowrap; flex-shrink: 0; }
+      .header-actions {
+        margin-left: auto;
+      }
+      .gd-style-toolbar-label { display: none; }
       .user-count { display: none; }
-      .user-area { margin-left: auto; }
-
+    }
+    @media (max-width: 700px) {
       .main { padding: 12px 12px calc(20px + env(safe-area-inset-bottom)); }
       .panel-content { padding: 12px; }
 
@@ -929,27 +985,28 @@
       .chat-input-area input, .form-group input, .identity-field input,
       .custom-prompt-textarea, .settings-select { font-size: 16px; }
 
-      /* Chat fills the viewport, accounts for browser chrome */
       .chat-input-area { padding: 12px; gap: 8px; }
       .chat-input-area .btn { padding: 12px 16px; }
       .msg { max-width: 90%; }
       .chat-hero { font-size: 12px; padding-top: 10px; }
 
-      /* Notification / check-in dropdown must not overflow the screen */
       .notification-dropdown {
-        width: calc(100vw - 20px);
-        max-width: 360px;
-        right: -4px;
+        width: min(360px, calc(100vw - 20px));
+        max-width: calc(100vw - 20px);
+        right: 0;
+        left: auto;
       }
 
-      /* Board: tighter cells, frozen label already sticky via base rule */
       .sb-area-label { font-size: 11px; padding-right: 8px; }
       .sb-cell, .sb-dot { width: 30px; height: 30px; }
       .sb-dot { font-size: 18px; }
+
+      .user-area .btn-sm { padding: 6px 10px; }
     }
     @media (max-width: 420px) {
       .nav-tab { padding: 6px 10px; font-size: 12px; }
       .logo { font-size: 18px; }
+      .logo span:last-child { max-width: 9ch; overflow: hidden; text-overflow: ellipsis; }
     }
   </style>
 </head>
@@ -966,26 +1023,28 @@
       <a class="nav-tab" id="nav-about-tab" href="/about" target="_blank" style="text-decoration:none"><span data-i18n="app.nav.about">ℹ️ About</span></a>
       <a class="nav-tab" id="nav-docs-tab" href="/docs" target="_blank" style="text-decoration:none"><span data-i18n="app.nav.docs">📄 Docs</span></a>
     </div>
-    <label class="gd-style-toolbar" title="UI style" style="margin-right:4px">
-      <span data-i18n="common.style" class="gd-style-toolbar-label">Style</span>
-      <select data-gd-style-select="page" aria-label="UI style" id="header-style-select"></select>
-    </label>
-    <div class="lang-switch" id="lang-switch">
-      <button class="lang-btn" data-lang="en" onclick="setLanguage('en')" title="English">T</button>
-      <button class="lang-btn" data-lang="zh" onclick="setLanguage('zh')" title="中文">中</button>
-      <button class="lang-btn" data-lang="ja" onclick="setLanguage('ja')" title="日本語">日</button>
-    </div>
-    <div class="user-area" id="user-area">
-      <div style="position:relative">
-        <button class="notification-bell" onclick="toggleNotifications()">🔔<span class="notification-badge" id="notif-badge" style="display:none">0</span></button>
-        <div class="notification-dropdown" id="notif-dropdown">
-          <div class="notification-header" data-i18n="app.notif.header">Notifications from Doc</div>
-          <div class="notification-list" id="notif-list"><div class="notification-empty" data-i18n="app.notif.empty">No notifications</div></div>
-        </div>
+    <div class="header-actions">
+      <label class="gd-style-toolbar" title="UI style">
+        <span data-i18n="common.style" class="gd-style-toolbar-label">Style</span>
+        <select data-gd-style-select="page" aria-label="UI style" id="header-style-select"></select>
+      </label>
+      <div class="lang-switch" id="lang-switch">
+        <button class="lang-btn" data-lang="en" onclick="setLanguage('en')" title="English">T</button>
+        <button class="lang-btn" data-lang="zh" onclick="setLanguage('zh')" title="中文">中</button>
+        <button class="lang-btn" data-lang="ja" onclick="setLanguage('ja')" title="日本語">日</button>
       </div>
-      <button class="btn btn-secondary btn-sm" onclick="showDonateModal()" title="Support GreenDial"><span data-i18n="app.donate">💚 Donate</span></button>
-      <span class="user-badge" data-i18n="app.guest">Guest</span>
-      <button class="btn btn-primary btn-sm" onclick="showAuthPopup()" data-i18n="app.signin">Sign In</button>
+      <div class="user-area" id="user-area">
+        <div style="position:relative">
+          <button class="notification-bell" onclick="toggleNotifications()">🔔<span class="notification-badge" id="notif-badge" style="display:none">0</span></button>
+          <div class="notification-dropdown" id="notif-dropdown">
+            <div class="notification-header" data-i18n="app.notif.header">Notifications from Doc</div>
+            <div class="notification-list" id="notif-list"><div class="notification-empty" data-i18n="app.notif.empty">No notifications</div></div>
+          </div>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="showDonateModal()" title="Support GreenDial"><span data-i18n="app.donate">💚 Donate</span></button>
+        <span class="user-badge" data-i18n="app.guest">Guest</span>
+        <button class="btn btn-primary btn-sm" onclick="showAuthPopup()" data-i18n="app.signin">Sign In</button>
+      </div>
     </div>
   </div>
   

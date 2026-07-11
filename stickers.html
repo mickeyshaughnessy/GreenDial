@@ -9,12 +9,16 @@
   <link rel="stylesheet" href="/themes/skins.css">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { overflow-x: hidden; max-width: 100%; }
     body {
       background: #0d1117;
       color: #e6edf3;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       min-height: 100vh;
       padding: 24px 16px 48px;
+      overflow-x: hidden;
+      max-width: 100%;
+      box-sizing: border-box;
     }
     .header {
       display: flex;
@@ -22,8 +26,21 @@
       gap: 10px;
       margin-bottom: 32px;
       flex-wrap: wrap;
+      width: 100%;
+      max-width: 100%;
     }
-    .header .gd-style-toolbar { margin-left: auto; }
+    .header .gd-style-toolbar {
+      margin-left: auto;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+      max-width: 100%;
+    }
+    .header .gd-style-toolbar select { max-width: min(150px, 42vw); }
+    @media (max-width: 520px) {
+      .header .gd-style-toolbar > span:first-child { display: none; }
+    }
     .logo { font-size: 28px; }
     .header h1 { font-size: 20px; font-weight: 600; color: #58a6ff; }
     .header p { font-size: 13px; color: rgba(230,237,243,0.5); margin-top: 2px; }
