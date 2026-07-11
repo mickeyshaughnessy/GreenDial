@@ -686,6 +686,11 @@ def pattern_css(t: dict) -> str:
   opacity: 0.45;
 }}
 {sel} body > * {{ position: relative; z-index: 1; }}
+/* Keep sticky chrome (header + menus) above page content */
+{sel} body > .header,
+{sel} body > header {{
+  z-index: 1000;
+}}
 """)
 
     if kind == "mesh":

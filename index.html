@@ -51,10 +51,12 @@
       border-bottom: 1px solid rgba(255,255,255,0.1);
       position: sticky;
       top: 0;
-      z-index: 50;
+      /* Must beat theme body > * {{ z-index: 1 }} so dropdowns paint above .main */
+      z-index: 1000;
       width: 100%;
       max-width: 100%;
       box-sizing: border-box;
+      isolation: isolate;
     }
     .logo {
       font-size: 22px;
@@ -180,18 +182,27 @@
       align-items: center;
       justify-content: center;
     }
+    /* Bell wrapper — stacking context for the dropdown */
+    .user-area > div[style*="relative"],
+    .notif-bell-wrap {
+      position: relative;
+      z-index: 20;
+    }
     .notification-dropdown {
       position: absolute;
-      top: 100%; right: 0;
+      top: calc(100% + 6px);
+      right: 0;
       width: 360px;
+      max-width: min(360px, calc(100vw - 16px));
       background: #2a2a4e;
       border-radius: 12px;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+      box-shadow: 0 12px 48px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.08);
       display: none;
-      z-index: 100;
+      z-index: 2000;
       overflow: hidden;
-      max-height: 85vh;
+      max-height: min(85vh, 640px);
       overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
     }
     .notification-dropdown.show { display: block; }
     .notification-header {
@@ -199,7 +210,7 @@
       border-bottom: 1px solid rgba(255,255,255,0.1);
       font-weight: 600;
       font-size: 14px;
-      position: sticky; top: 0; background: #2a2a4e; z-index: 1;
+      position: sticky; top: 0; background: #2a2a4e; z-index: 2;
     }
     .notif-section { border-bottom: 1px solid rgba(255,255,255,0.07); }
     .notif-section-label {
@@ -1034,9 +1045,9 @@
         <button class="lang-btn" data-lang="ja" onclick="setLanguage('ja')" title="日本語">日</button>
       </div>
       <div class="user-area" id="user-area">
-        <div style="position:relative">
-          <button class="notification-bell" onclick="toggleNotifications()">🔔<span class="notification-badge" id="notif-badge" style="display:none">0</span></button>
-          <div class="notification-dropdown" id="notif-dropdown">
+        <div class="notif-bell-wrap">
+          <button class="notification-bell" onclick="toggleNotifications()" type="button" aria-haspopup="true" aria-expanded="false" id="notif-bell-btn">🔔<span class="notification-badge" id="notif-badge" style="display:none">0</span></button>
+          <div class="notification-dropdown" id="notif-dropdown" role="menu">
             <div class="notification-header" data-i18n="app.notif.header">Notifications from Doc</div>
             <div class="notification-list" id="notif-list"><div class="notification-empty" data-i18n="app.notif.empty">No notifications</div></div>
           </div>
@@ -2952,8 +2963,12 @@
     
     function toggleNotifications() {
       const dropdown = document.getElementById('notif-dropdown');
+      if (!dropdown) return;
       dropdown.classList.toggle('show');
-      if (dropdown.classList.contains('show')) fetchToday();
+      const open = dropdown.classList.contains('show');
+      const btn = document.getElementById('notif-bell-btn');
+      if (btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      if (open) fetchToday();
     }
 
     async function openNotificationInChat(notifId, message, agentId) {
@@ -3108,7 +3123,7 @@
     }
     
     document.addEventListener('click', (e) => {
-      if (!e.target.closest('.notification-bell') && !e.target.closest('.notification-dropdown')) {
+      if (!e.target.closest('.notif-bell-wrap') && !e.target.closest('.notification-bell') && !e.target.closest('.notification-dropdown')) {
         const dropdown = document.getElementById('notif-dropdown');
         if (dropdown) dropdown.classList.remove('show');
       }
@@ -3288,9 +3303,9 @@
       const chatOnly = !!userSettings.chat_only_mode;
 
       const todayDropdownHtml = (signedIn) => `
-        <div style="position:relative">
-          <button class="notification-bell" onclick="toggleNotifications()">🔔<span class="notification-badge" id="notif-badge" style="display:none">0</span></button>
-          <div class="notification-dropdown" id="notif-dropdown">
+        <div class="notif-bell-wrap">
+          <button class="notification-bell" type="button" onclick="toggleNotifications()" aria-haspopup="true" aria-expanded="false" id="notif-bell-btn">🔔<span class="notification-badge" id="notif-badge" style="display:none">0</span></button>
+          <div class="notification-dropdown" id="notif-dropdown" role="menu">
             <div class="notification-header">${t('app.today','Today')}</div>
             <div class="notif-section">
               <div class="notif-section-label">${t('app.ub_activities','Universal Bounty')}</div>
