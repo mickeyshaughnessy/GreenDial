@@ -1181,7 +1181,7 @@ def handle_dismiss_notification(user_id, notification_id):
 
 
 def handle_get_today(user_id):
-    """Single endpoint returning check-ins (all 7 areas), pending suggestions, and tips."""
+    """Bell feed: UB activities first, free suggestions, sticker check-ins, tips."""
     user = get_user_data(user_id)
     if not user:
         return json.dumps({"error": "User not found"}), 404
@@ -1207,15 +1207,35 @@ def handle_get_today(user_id):
                 "emoji_options": stickers_module.build_poll_options(area, f"{user_id}:{area}:{today}"),
             })
 
-    suggestions = [s for s in user.get('suggestions', []) if s.get('status') == 'pending'][:3]
-    other_notifs = [n for n in user.get('notifications', []) if n.get('type') != 'sticker_poll'][-10:]
+    # Suggestions: UB (bounty) first, then free chat-bound
+    pending = [s for s in user.get('suggestions', []) if s.get('status') == 'pending']
+    bounty_s = [s for s in pending if s.get('bounty_id')]
+    free_s = [s for s in pending if not s.get('bounty_id')]
+    # Ensure destination flags for older records
+    for s in bounty_s:
+        s.setdefault('destination', 'activity')
+    for s in free_s:
+        s.setdefault('destination', 'chat')
+    suggestions = (bounty_s + free_s)[:6]
+
+    # Active UB / accepted activities for the top of the bell
+    activities = [
+        a for a in user.get('activities', [])
+        if a.get('status') == 'active'
+    ][:8]
+
+    other_notifs = [
+        n for n in user.get('notifications', [])
+        if n.get('type') != 'sticker_poll' and not n.get('read')
+    ][-10:]
 
     unanswered = sum(1 for c in check_ins if not c['answered'])
-    badge = unanswered + len(suggestions)
+    badge = unanswered + len(suggestions) + len(activities) + len(other_notifs)
 
     return json.dumps({
+        "activities": activities,          # UB first in the UI
+        "suggestions": suggestions,        # bounty then free
         "check_ins": check_ins,
-        "suggestions": suggestions,
         "notifications": other_notifs,
         "badge_count": badge,
     })
@@ -1260,8 +1280,12 @@ def handle_agent_chat(agent_id, request):
     agent_intro = getattr(module, 'ONBOARDING_INTRO', '')
     agent_system = getattr(module, 'SYSTEM_PROMPT', '')
 
-    # Combine agent persona with shared profile syntax and tool rules
-    full_system = f"{agent_system}\n\n{PROFILE_UPDATE_SYNTAX}\n\n{TOOL_USE_INSTRUCTIONS}"
+    # Combine agent persona with shared profile syntax, tools, and transient check-ins
+    from prompts.shared.transient import TRANSIENT_CHECK_IN
+    full_system = (
+        f"{agent_system}\n\n{PROFILE_UPDATE_SYNTAX}\n\n"
+        f"{TOOL_USE_INSTRUCTIONS}\n\n{TRANSIENT_CHECK_IN}"
+    )
 
     # Build initial user message for the loop
     if is_init and followup_context:
@@ -3048,10 +3072,13 @@ _SUGGESTION_AREAS = [
     ("exercise", "exercise", "Exercise Coach"),
     ("diet", "diet", "Diet Advisor"),
     ("social", "relationships", "Relationships Advisor"),
+    ("sleep", "sleep", "Sleep Coach"),
+    ("mind", "mental_health", "Mind Coach"),
 ]
 
 
 _ERROR_PHRASES = ("having trouble", "please try again", "i'm sorry", "i cannot", "error")
+
 
 def _generate_suggestion_text(area_label, agent_name, profile):
     """Call LLM to produce one specific, actionable suggestion for the given health area."""
@@ -3060,7 +3087,8 @@ def _generate_suggestion_text(area_label, agent_name, profile):
         f"actionable suggestion for them today in the area of {area_label}.\n\n"
         f"Health profile:\n{json.dumps(profile, indent=2) if profile else '{}'}\n\n"
         "Respond with ONLY the suggestion text (1-2 sentences, specific and actionable). "
-        "No preamble, no explanation."
+        "No preamble, no explanation. Phrase it as something you (the coach) are suggesting "
+        "in conversation — first person as the coach is fine."
     )
     try:
         result = utils.completion(prompt=prompt, temperature=0.8, max_tokens=100).strip()
@@ -3092,18 +3120,63 @@ def _get_active_bounties_for_user(user_id):
     return result
 
 
-def generate_suggestions(user_id):
-    """Generate up to 3 suggestions (bounty-backed first, then LLM-personalized)."""
+def _inject_suggestion_into_chat(user, agent_id, text):
+    """Append a free suggestion into the relevant agent/Doc transcript so it
+    shows up in that conversation history (listen-first proactive nudge)."""
+    if not text:
+        return
+    timestamp = datetime.utcnow().isoformat()
+    agent_id = agent_id or "doc"
+    if agent_id == "doc":
+        existing = user.get("transcript", "") or ""
+        user["transcript"] = (
+            existing + f"\n[{timestamp}] Doc: {text}"
+        ).strip()
+        # Cap transcript length similarly to other paths
+        lines = user["transcript"].split("\n")
+        if len(lines) > 300:
+            user["transcript"] = "\n".join(lines[-300:])
+    else:
+        name = agent_id.replace("_", " ").title()
+        transcripts = user.setdefault("agent_transcripts", {})
+        existing = transcripts.get(agent_id, "") or ""
+        existing += f"\n[{timestamp}] {name}: {text}"
+        lines = existing.split("\n")
+        if len(lines) > 300:
+            existing = "\n".join(lines[-300:])
+        transcripts[agent_id] = existing
+
+
+def generate_suggestions(user_id, max_free=2, include_meta=True, include_profile_nudge=True):
+    """Generate suggestions: UB bounties first, then free (chat-bound) suggestions.
+
+    Free suggestions are also injected into the relevant agent/Doc chat transcript.
+    Always tries to include one product-improvement suggestion (Doc/Feedback)
+    and occasionally a profile-update nudge.
+    """
+    from prompts.shared.transient import (
+        GREEN_DIAL_IMPROVE_SUGGESTIONS,
+        PROFILE_UPDATE_SUGGESTIONS,
+    )
+
     user = get_user_data(user_id)
     if not user:
         return []
     profile = user.get('profile', {})
     suggestions = []
 
-    # Bounty-backed suggestions — skip bounties the user already accepted
-    accepted_bounty_ids = {a.get('bounty_id') for a in user.get('activities', []) if a.get('bounty_id')}
-    bounties = [b for b in _get_active_bounties_for_user(user_id) if b.get('id') not in accepted_bounty_ids]
-    _area_to_agent = {'exercise': 'exercise', 'diet': 'diet', 'social': 'relationships'}
+    # 1) UB / bounty-backed — always first, skip already-accepted
+    accepted_bounty_ids = {
+        a.get('bounty_id') for a in user.get('activities', []) if a.get('bounty_id')
+    }
+    bounties = [
+        b for b in _get_active_bounties_for_user(user_id)
+        if b.get('id') not in accepted_bounty_ids
+    ]
+    _area_to_agent = {
+        'exercise': 'exercise', 'diet': 'diet', 'social': 'relationships',
+        'sleep': 'sleep', 'mental_health': 'mental_health', 'protect': 'protect',
+    }
     for b in bounties[:3]:
         area = b.get('health_area', 'exercise')
         suggestions.append({
@@ -3114,15 +3187,18 @@ def generate_suggestions(user_id):
             "bounty_id": b.get('id'),
             "price": b.get('price'),
             "currency": b.get('currency'),
+            "destination": "activity",  # accept → trackable UB activity
             "created": datetime.utcnow().isoformat(),
-            "status": "pending"
+            "status": "pending",
         })
 
-    # Fill remaining slots with LLM suggestions — sequential to avoid simultaneous rate limits
+    # 2) Free LLM suggestions bound to specialist chat (not activities)
     used_areas = {s['type'] for s in suggestions}
-    slots = 3 - len(suggestions)
-    areas_to_fill = [a for a in _SUGGESTION_AREAS if a[0] not in used_areas][:max(slots, 0)]
-    for area_label, agent_id, agent_name in areas_to_fill:
+    free_slots = max(0, max_free - sum(1 for s in suggestions if not s.get('bounty_id')))
+    # Prefer areas not already covered by bounties
+    areas_to_fill = [a for a in _SUGGESTION_AREAS if a[0] not in used_areas]
+    random.shuffle(areas_to_fill)
+    for area_label, agent_id, agent_name in areas_to_fill[:free_slots]:
         text = _generate_suggestion_text(area_label, agent_name, profile)
         if text:
             suggestions.append({
@@ -3133,30 +3209,76 @@ def generate_suggestions(user_id):
                 "bounty_id": None,
                 "price": None,
                 "currency": None,
+                "destination": "chat",  # accept → open that coach's chat
                 "created": datetime.utcnow().isoformat(),
-                "status": "pending"
+                "status": "pending",
             })
+            _inject_suggestion_into_chat(user, agent_id, text)
 
-    # Re-fetch before save: LLM generation takes seconds and another request
-    # (e.g. login rotating the session token) may have written the user record
-    # since we loaded it. Merge suggestions onto the fresh copy.
+    # 3) Product-improvement free suggestion (Doc / Feedback) — always try once
+    if include_meta:
+        pending_meta = any(
+            s.get('type') == 'greendial' and s.get('status') == 'pending'
+            for s in user.get('suggestions', [])
+        )
+        if not pending_meta:
+            meta_text = random.choice(GREEN_DIAL_IMPROVE_SUGGESTIONS)
+            suggestions.append({
+                "id": f"sug_{uuid.uuid4().hex[:12]}",
+                "type": "greendial",
+                "agent_id": "doc",
+                "text": meta_text,
+                "bounty_id": None,
+                "price": None,
+                "currency": None,
+                "destination": "chat",
+                "created": datetime.utcnow().isoformat(),
+                "status": "pending",
+            })
+            _inject_suggestion_into_chat(user, "doc", meta_text)
+
+    # 4) Occasional profile-update nudge via Doc (~40% of regenerations)
+    if include_profile_nudge and random.random() < 0.4:
+        profile_text = random.choice(PROFILE_UPDATE_SUGGESTIONS)
+        suggestions.append({
+            "id": f"sug_{uuid.uuid4().hex[:12]}",
+            "type": "profile_update",
+            "agent_id": "doc",
+            "text": profile_text,
+            "bounty_id": None,
+            "price": None,
+            "currency": None,
+            "destination": "chat",
+            "created": datetime.utcnow().isoformat(),
+            "status": "pending",
+        })
+        _inject_suggestion_into_chat(user, "doc", profile_text)
+
+    # Re-fetch before save to avoid stomping concurrent login/token writes
     try:
         fresh = s3_storage.get_user(user_id)
         if fresh:
+            # Preserve transcript / agent_transcripts injections on the live record
+            for key in ("transcript", "agent_transcripts"):
+                if key in user:
+                    fresh[key] = user[key]
             user = fresh
     except Exception:
         pass
 
-    # Replace only pending suggestions; keep last 30 accepted/rejected for history
+    # Replace only pending; keep last 30 accepted/dismissed for history
     existing = [s for s in user.get('suggestions', []) if s.get('status') != 'pending'][-30:]
-    user['suggestions'] = existing + suggestions
+    # Order: UB (bounty) first, then free
+    bounty_s = [s for s in suggestions if s.get('bounty_id')]
+    free_s = [s for s in suggestions if not s.get('bounty_id')]
+    user['suggestions'] = existing + bounty_s + free_s
     user['last_suggestion_gen'] = datetime.utcnow().isoformat()
     _cache_user(user_id, user)
     try:
         s3_storage.save_user(user_id, user)
     except Exception as e:
         print(f"[Suggestions] Save failed: {e}")
-    return suggestions
+    return bounty_s + free_s
 
 
 def generate_login_suggestions(user_id):
@@ -3207,6 +3329,12 @@ def handle_generate_suggestions(user_id, force=False):
 
 
 def handle_accept_suggestion(user_id, suggestion_id):
+    """Accept a suggestion.
+
+    - UB / bounty suggestions → trackable activity
+    - Free suggestions (destination=chat) → mark accepted, open chat client-side
+      (already injected into the relevant transcript at generation time)
+    """
     user = get_user_data(user_id)
     if not user:
         return (json.dumps({"error": "User not found"}), 404)
@@ -3216,28 +3344,48 @@ def handle_accept_suggestion(user_id, suggestion_id):
         return (json.dumps({"error": "Suggestion not found"}), 404)
 
     suggestion['status'] = 'accepted'
-    activity = {
-        "id": f"act_{uuid.uuid4().hex[:12]}",
-        "suggestion_id": suggestion_id,
-        "type": suggestion.get('type'),
-        "agent_id": suggestion.get('agent_id'),
-        "text": suggestion.get('text'),
-        "bounty_id": suggestion.get('bounty_id'),
-        "price": suggestion.get('price'),
-        "currency": suggestion.get('currency'),
-        "accepted_at": datetime.utcnow().isoformat(),
-        "status": "active",
-        "completed_at": None,
-        "wallet_snapshot": None,
-        "payment_pending": False
-    }
-    user.setdefault('activities', []).append(activity)
+    dest = suggestion.get('destination') or (
+        'activity' if suggestion.get('bounty_id') else 'chat'
+    )
+
+    activity = None
+    if dest == 'activity' or suggestion.get('bounty_id'):
+        activity = {
+            "id": f"act_{uuid.uuid4().hex[:12]}",
+            "suggestion_id": suggestion_id,
+            "type": suggestion.get('type'),
+            "agent_id": suggestion.get('agent_id'),
+            "text": suggestion.get('text'),
+            "bounty_id": suggestion.get('bounty_id'),
+            "price": suggestion.get('price'),
+            "currency": suggestion.get('currency'),
+            "accepted_at": datetime.utcnow().isoformat(),
+            "status": "active",
+            "completed_at": None,
+            "wallet_snapshot": None,
+            "payment_pending": False
+        }
+        user.setdefault('activities', []).append(activity)
+    else:
+        # Free / meta / profile nudges: ensure they're in chat history
+        _inject_suggestion_into_chat(
+            user,
+            suggestion.get('agent_id') or 'doc',
+            suggestion.get('text') or '',
+        )
+
     _cache_user(user_id, user)
     try:
         s3_storage.save_user(user_id, user)
     except Exception as e:
         return (json.dumps({"error": str(e)}), 500)
-    return json.dumps({"activity": activity})
+
+    return json.dumps({
+        "activity": activity,
+        "destination": dest,
+        "agent_id": suggestion.get('agent_id') or 'doc',
+        "text": suggestion.get('text') or '',
+    })
 
 
 def handle_dismiss_suggestion(user_id, suggestion_id):

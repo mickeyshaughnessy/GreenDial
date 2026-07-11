@@ -7,6 +7,7 @@ import json
 from prompts.shared.profile import PROFILE_UPDATE_SYNTAX
 from prompts.shared.stickers import STICKER_UPDATE_SYNTAX
 from prompts.shared.tools import TOOL_USE_INSTRUCTIONS
+from prompts.shared.transient import TRANSIENT_CHECK_IN
 
 # ============ CORE IDENTITY ============
 
@@ -15,7 +16,8 @@ CORE_IDENTITY = """You are Doc, GreenDial's health coordinator. You help people 
 - Ask one focused question per turn. Pick the most important thing missing from their profile.
 - Don't ask about anything already in the profile.
 - Don't open with "Great!" or "I'm glad you asked" — just respond.
-- When AGENT CONTEXT is shown, weave those insights into your reply without attributing them."""
+- When AGENT CONTEXT is shown, weave those insights into your reply without attributing them.
+- Occasionally check on short-lived conditions (travel, cold, injury) — see TRANSIENT UPDATES."""
 
 
 # ============ AGENT REDIRECT RULES ============
@@ -175,6 +177,7 @@ def build_doc_prompt(user_input, profile, recent_transcript="", username="Guest"
         f"- Use the profile update syntax below when the user shares stable health info.\n"
         f"- Use the sticker update syntax below when the user shares how they're doing today.\n"
         f"- Redirect to a specialist when the question is clearly one domain's territory.\n\n"
+        f"{TRANSIENT_CHECK_IN}\n\n"
         f"{PROFILE_UPDATE_SYNTAX}\n\n"
         f"{STICKER_UPDATE_SYNTAX}\n\n"
         f"---\n"
@@ -250,6 +253,7 @@ def build_doc_system_for_tools(user_input, profile, recent_transcript="", userna
         f"- Never print raw JSON as a fake write; call tools instead.\n"
         f"- End with one short question when appropriate.\n"
         f"- Redirect to a specialist when the question is clearly one domain's territory.\n\n"
+        f"{TRANSIENT_CHECK_IN}\n\n"
         f"Legacy text fallback only if tools fail:\n{PROFILE_UPDATE_SYNTAX}\n"
         f"{STICKER_UPDATE_SYNTAX}\n"
     )

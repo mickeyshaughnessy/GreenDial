@@ -1,25 +1,26 @@
 """
 GreenDial Agent Runner
-Cron script: run all specialist agents for every user with notifications enabled.
+Cron script: generate specialist check-ins and free chat suggestions.
 
 Usage:
-  python3 agent_runner.py [--agent diet] [--dry-run]
+  python3 agent_runner.py [--agent diet] [--dry-run] [--user user_id]
+  python3 agent_runner.py --hourly [--gate 0.2]
 
-Crontab examples (on production VM):
-  # Run all agents every morning at 8 AM UTC
+Crontab (production):
+  # Hourly feed — ~20% of users each hour get one interaction
+  7 * * * * /root/GreenDial/venv/bin/python /root/GreenDial/agent_runner.py --hourly --gate 0.2 >> /var/log/greendial_agents.log 2>&1
+
+  # Optional full daily sweep (all agents, cadence-gated)
   0 8 * * * /root/GreenDial/venv/bin/python /root/GreenDial/agent_runner.py >> /var/log/greendial_agents.log 2>&1
-
-  # Run sleep agent at 10 PM UTC (bedtime reminder)
-  0 22 * * * /root/GreenDial/venv/bin/python /root/GreenDial/agent_runner.py --agent sleep >> /var/log/greendial_agents.log 2>&1
 """
 
 import sys
 import json
 import uuid
+import random
 import argparse
 from datetime import datetime, timedelta
 
-# Ensure we can import from the project root
 import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -53,11 +54,7 @@ def _load_all_users():
 
 
 def _get_user_agent_subscriptions(user):
-    """Return list of agent_ids to run for this user.
-
-    There's no per-agent picker in the UI anymore — every user with
-    notifications enabled gets daily check-ins from all specialist agents.
-    """
+    """Every user with notifications enabled gets all specialist agents."""
     return list(ALL_AGENT_IDS)
 
 
@@ -75,8 +72,7 @@ def _was_run_recently(user, agent_id, hours=20):
 
 
 def _agent_cadence_hours(agent_id):
-    """Debounce window for this agent. Agents may declare CRON_CADENCE_HOURS
-    (e.g. 164 for weekly synthesis); default is 20h (daily check-ins)."""
+    """Debounce window for this agent (daily full run)."""
     module = REGISTRY.get(agent_id)
     return getattr(module, "CRON_CADENCE_HOURS", 20) if module else 20
 
@@ -86,13 +82,12 @@ def run_agent_for_user(user_id, user, agent_id, dry_run=False):
     module = REGISTRY.get(agent_id)
     if not module:
         print(f"[Runner] Unknown agent: {agent_id}")
-        return
+        return False
 
     profile = user.get("profile", {})
     transcript = user.get("transcript", "")
     settings = user.get("settings", {})
 
-    # Build the cron prompt via shared builder
     prompt = agent_base.build_cron_prompt(
         module=module,
         profile=profile,
@@ -100,19 +95,19 @@ def run_agent_for_user(user_id, user, agent_id, dry_run=False):
         settings=settings
     )
 
-    # Ground the check-in in tracked data so agents can reference real trends
-    # ("your sleep has averaged 6.4h this week") instead of generic tips
     history_summary = utils.summarize_history(user, days=14)
     if history_summary:
-        prompt += f"\n\nRECENT HEALTH HISTORY (last 14 days, tracked data):\n{history_summary}\n\nIf the history shows a clear trend or correlation, reference it specifically in your message."
+        prompt += (
+            f"\n\nRECENT HEALTH HISTORY (last 14 days, tracked data):\n{history_summary}\n\n"
+            "If the history shows a clear trend or correlation, reference it specifically."
+        )
 
     system_prompt = getattr(module, "SYSTEM_PROMPT", None)
-
     print(f"[Runner] Running {agent_id} for {user_id}...")
 
     if dry_run:
         print(f"[Runner] DRY RUN — prompt length: {len(prompt)}")
-        return
+        return True
 
     try:
         response = utils.completion(
@@ -123,9 +118,8 @@ def run_agent_for_user(user_id, user, agent_id, dry_run=False):
         )
     except Exception as e:
         print(f"[Runner] LLM error for {agent_id}/{user_id}: {e}")
-        return
+        return False
 
-    # Parse the JSON response
     try:
         text = response.strip()
         if "```json" in text:
@@ -137,13 +131,12 @@ def run_agent_for_user(user_id, user, agent_id, dry_run=False):
         notif_type = data.get("type", f"{agent_id}_checkin")
     except Exception as e:
         print(f"[Runner] Failed to parse agent response for {agent_id}: {e} — raw: {response[:200]}")
-        return
+        return False
 
     if not message:
         print(f"[Runner] Empty message from {agent_id} for {user_id}")
-        return
+        return False
 
-    # Append notification to user record
     notification = {
         "id": str(uuid.uuid4()),
         "type": notif_type,
@@ -153,16 +146,51 @@ def run_agent_for_user(user_id, user, agent_id, dry_run=False):
         "read": False
     }
 
-    user.setdefault("notifications", []).append(notification)
-    user["notifications"] = user["notifications"][-20:]  # keep last 20
+    # Re-fetch before save
+    try:
+        fresh = s3_storage.get_user(user_id)
+        if fresh:
+            user = fresh
+    except Exception:
+        pass
 
+    user.setdefault("notifications", []).append(notification)
+    user["notifications"] = user["notifications"][-20:]
     user.setdefault("agent_last_ran", {})[agent_id] = _now_iso()
+
+    # Also drop the check-in into that agent's chat transcript
+    try:
+        import handlers
+        handlers._inject_suggestion_into_chat(user, agent_id, message)
+    except Exception as e:
+        print(f"[Runner] chat inject failed: {e}")
 
     try:
         s3_storage.save_user(user_id, user)
         print(f"[Runner] Saved notification for {user_id} from {agent_id}: {message[:60]}")
+        return True
     except Exception as e:
         print(f"[Runner] Failed to save for {user_id}: {e}")
+        return False
+
+
+def _hourly_nudge_user(user_id, user, dry_run=False):
+    """One light free suggestion for a gated hourly pick (chat-bound)."""
+    if dry_run:
+        print(f"[Runner] DRY RUN hourly free suggestion for {user_id}")
+        return
+    try:
+        import handlers
+        # Small batch: no meta spam every hour — meta only sometimes
+        handlers.generate_suggestions(
+            user_id,
+            max_free=1,
+            include_meta=(random.random() < 0.25),
+            include_profile_nudge=(random.random() < 0.35),
+        )
+        print(f"[Runner] Hourly free suggestion batch for {user_id}")
+    except Exception as e:
+        print(f"[Runner] Hourly suggestion failed for {user_id}: {e}")
 
 
 def main():
@@ -170,13 +198,26 @@ def main():
     parser.add_argument("--agent", help="Run only this agent (default: all agents)")
     parser.add_argument("--dry-run", action="store_true", help="Print prompts without calling LLM or saving")
     parser.add_argument("--user", help="Run only for this user_id (for testing)")
+    parser.add_argument(
+        "--hourly",
+        action="store_true",
+        help="Hourly mode: random gate per user, one agent check-in max",
+    )
+    parser.add_argument(
+        "--gate",
+        type=float,
+        default=0.2,
+        help="Probability a user is selected in --hourly mode (default 0.2)",
+    )
     args = parser.parse_args()
 
     target_agent = args.agent
     dry_run = args.dry_run
     target_user = args.user
+    hourly = args.hourly
+    gate = max(0.0, min(1.0, args.gate))
 
-    print(f"[Runner] Starting at {_now_iso()}")
+    print(f"[Runner] Starting at {_now_iso()} hourly={hourly} gate={gate}")
     if target_agent:
         print(f"[Runner] Agent filter: {target_agent}")
     if dry_run:
@@ -187,12 +228,12 @@ def main():
 
     ran = 0
     skipped = 0
+    gated_out = 0
 
     for user_id, user in users:
         if target_user and user_id != target_user:
             continue
 
-        # Skip users who haven't enabled notifications
         if not user.get("settings", {}).get("notifications_enabled", True):
             continue
 
@@ -200,6 +241,34 @@ def main():
         if not subscriptions:
             continue
 
+        if hourly:
+            # ~20% of users each hour → continual feed without overload
+            if random.random() >= gate:
+                gated_out += 1
+                continue
+
+            candidates = [
+                a for a in subscriptions
+                if not target_agent or a == target_agent
+            ]
+            # Shorter debounce in hourly mode (4h) so variety across the day
+            candidates = [
+                a for a in candidates
+                if not _was_run_recently(user, a, hours=4)
+            ]
+            if not candidates:
+                skipped += 1
+                continue
+
+            agent_id = random.choice(candidates)
+            if run_agent_for_user(user_id, user, agent_id, dry_run=dry_run):
+                ran += 1
+            # ~half the time also drop a free chat suggestion / profile nudge
+            if random.random() < 0.5:
+                _hourly_nudge_user(user_id, user, dry_run=dry_run)
+            continue
+
+        # Full daily mode — every agent, cadence-gated
         for agent_id in subscriptions:
             if target_agent and agent_id != target_agent:
                 continue
@@ -209,10 +278,10 @@ def main():
                 skipped += 1
                 continue
 
-            run_agent_for_user(user_id, user, agent_id, dry_run=dry_run)
-            ran += 1
+            if run_agent_for_user(user_id, user, agent_id, dry_run=dry_run):
+                ran += 1
 
-    print(f"[Runner] Done. Ran: {ran}, Skipped: {skipped}")
+    print(f"[Runner] Done. Ran: {ran}, Skipped: {skipped}, Gated-out: {gated_out}")
 
 
 if __name__ == "__main__":

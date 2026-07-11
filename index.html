@@ -2329,27 +2329,49 @@
       if (!data || !currentUser) {
         const ci = document.getElementById('today-checkins-list');
         const su = document.getElementById('today-suggestions-list');
+        const ac = document.getElementById('today-activities-list');
         if (ci) ci.innerHTML = `<div class="notif-empty-sm">${t('app.signin_checkins','Sign in to see check-ins')}</div>`;
         if (su) su.innerHTML = `<div class="notif-empty-sm">${t('app.signin_suggestions','Sign in to see suggestions')}</div>`;
+        if (ac) ac.innerHTML = `<div class="notif-empty-sm">${t('app.signin_activities','Sign in to see activities')}</div>`;
         if (badge) badge.style.display = 'none';
         return;
       }
-      renderCheckIns(data.check_ins || []);
+      // Order: UB activities → free/UB suggestions → sticker check-ins → tips
+      renderBellActivities(data.activities || []);
       renderDropdownSuggestions(data.suggestions || []);
+      renderCheckIns(data.check_ins || []);
       renderTips(data.notifications || []);
       const count = data.badge_count || 0;
       if (badge) {
         badge.textContent = count;
         badge.style.display = count > 0 ? 'flex' : 'none';
       }
-      // Settings panel mirror (chat-only mode)
       const sp = document.getElementById('settings-notif-list');
       if (sp) {
-        const tips = data.notifications || [];
-        sp.innerHTML = tips.length
-          ? `<div style="font-size:11px;color:rgba(255,255,255,0.4);padding:4px 0">${t('app.click_bell_hint','Click 🔔 above to see your check-ins and suggestions.')}</div>`
-          : '';
+        sp.innerHTML = `<div style="font-size:11px;color:rgba(255,255,255,0.4);padding:4px 0">${t('app.click_bell_hint','Click 🔔 above for bounties, suggestions, and check-ins.')}</div>`;
       }
+    }
+
+    function renderBellActivities(acts) {
+      const container = document.getElementById('today-activities-list');
+      if (!container) return;
+      if (!acts.length) {
+        container.innerHTML = `<div class="notif-empty-sm">${t('app.no_ub_activities','No active Universal Bounty activities')}</div>`;
+        return;
+      }
+      container.innerHTML = acts.map(a => {
+        const meta = getAgentMeta(a.agent_id);
+        const priceTag = a.price
+          ? ` <span class="sugg-price">💰${escapeHtml(String(a.price))} ${escapeHtml(a.currency || '')}</span>`
+          : '';
+        return `<div class="sugg-item" id="bact-${a.id}">
+          <div class="sugg-item-header">
+            <span>${meta.emoji} ${meta.name}${priceTag}</span>
+            <button class="sugg-accept" onclick="completeActivity('${a.id}');document.getElementById('notif-dropdown')?.classList.remove('show')">${t('app.mark_complete','Mark Complete')}</button>
+          </div>
+          <div class="sugg-item-text">${escapeHtml(a.text || '')}</div>
+        </div>`;
+      }).join('');
     }
 
     function renderCheckIns(checkIns) {
@@ -2408,12 +2430,20 @@
       }
       container.innerHTML = suggestions.map(s => {
         const meta = getAgentMeta(s.agent_id);
+        const isUB = !!s.bounty_id || s.destination === 'activity';
+        const isMeta = s.type === 'greendial' || s.type === 'profile_update';
         const priceTag = s.price ? ` <span class="sugg-price">💰${s.price}</span>` : '';
+        const kind = isUB
+          ? ` · ${t('app.ub_tag','UB')}`
+          : (isMeta ? ` · ${t('app.chat_tag','Chat')}` : ` · ${t('app.chat_tag','Chat')}`);
+        const acceptLabel = isUB
+          ? `✓ ${t('app.accept','Accept')}`
+          : `💬 ${t('app.open_chat','Open chat')}`;
         return `<div class="sugg-item" id="dsugg-${s.id}">
           <div class="sugg-item-header">
-            <span>${meta.emoji} ${meta.name}${priceTag}</span>
+            <span>${meta.emoji} ${meta.name}${priceTag}<span style="opacity:.5;font-size:10px">${kind}</span></span>
             <div>
-              <button class="sugg-accept" onclick="acceptSuggestion('${s.id}')">✓ ${t('app.accept','Accept')}</button>
+              <button class="sugg-accept" onclick="acceptSuggestion('${s.id}')">${acceptLabel}</button>
               <button class="sugg-skip" onclick="dismissSuggestion('${s.id}')">${t('app.skip','Skip')}</button>
             </div>
           </div>
@@ -2469,7 +2499,9 @@
       if (!currentUser) return;
       const sugg = (_todayData?.suggestions || _suggestions).find(s => s.id === suggestionId);
       if (!sugg) return;
-      const { agent_id: agentId, text } = sugg;
+      const agentId = sugg.agent_id || 'doc';
+      const text = sugg.text || '';
+      const isUB = !!sugg.bounty_id || sugg.destination === 'activity';
       // Optimistic removal
       if (_todayData) {
         _todayData.suggestions = (_todayData.suggestions || []).filter(s => s.id !== suggestionId);
@@ -2477,13 +2509,40 @@
         renderToday(_todayData);
       }
       _suggestions = _suggestions.filter(s => s.id !== suggestionId);
+      let dest = isUB ? 'activity' : 'chat';
       try {
-        await fetch(`${API}/suggestions/${currentUser.user_id}/${suggestionId}/accept`, { method: 'POST' });
-        await loadActivities();
+        const r = await fetch(`${API}/suggestions/${currentUser.user_id}/${suggestionId}/accept`, { method: 'POST' });
+        const data = await r.json().catch(() => ({}));
+        if (data.destination) dest = data.destination;
+        if (dest === 'activity') await loadActivities();
+        else if (typeof loadAgentChats === 'function') {
+          try { await loadAgentChats(currentUser.user_id); } catch (e) {}
+        }
       } catch (e) {}
       document.getElementById('notif-dropdown')?.classList.remove('show');
       switchView('chat');
-      if (agentId && agentId !== 'doc' && AGENT_META[agentId]) {
+      // Free suggestions + meta/profile nudges open the relevant conversation
+      if (dest === 'chat' || !isUB) {
+        if (agentId && agentId !== 'doc' && AGENT_META[agentId]) {
+          await triggerAgentFollowup(agentId, text);
+        } else {
+          await switchChatAgent('doc');
+          // Prefill a natural reply so the user can continue the conversation
+          const input = document.getElementById('chat-input');
+          if (input) {
+            if (sugg.type === 'greendial') {
+              input.value = t('app.reply_improve','I have some thoughts on how GreenDial could work better for me: ');
+            } else if (sugg.type === 'profile_update') {
+              input.value = t('app.reply_profile','A temporary update for my profile: ');
+            } else {
+              input.value = '';
+            }
+            input.focus();
+          }
+          // Reload Doc history so the injected nudge is visible
+          if (agentChats && agentChats.doc) renderMessages();
+        }
+      } else if (agentId && agentId !== 'doc' && AGENT_META[agentId]) {
         await triggerAgentFollowup(agentId, text);
       } else {
         await switchChatAgent('doc');
@@ -3175,12 +3234,16 @@
           <div class="notification-dropdown" id="notif-dropdown">
             <div class="notification-header">${t('app.today','Today')}</div>
             <div class="notif-section">
-              <div class="notif-section-label">${t('app.checkins','Check-ins')}</div>
-              <div id="today-checkins-list"><div class="notif-empty-sm">${signedIn ? t('app.loading','Loading…') : t('app.signin_checkins','Sign in to see check-ins')}</div></div>
+              <div class="notif-section-label">${t('app.ub_activities','Universal Bounty')}</div>
+              <div id="today-activities-list"><div class="notif-empty-sm">${signedIn ? t('app.loading','Loading…') : t('app.signin_activities','Sign in to see activities')}</div></div>
             </div>
             <div class="notif-section">
               <div class="notif-section-label">${t('app.suggestions','Suggestions')}</div>
               <div id="today-suggestions-list"><div class="notif-empty-sm">${signedIn ? t('app.loading','Loading…') : t('app.signin_suggestions','Sign in to see suggestions')}</div></div>
+            </div>
+            <div class="notif-section">
+              <div class="notif-section-label">${t('app.checkins','Check-ins')}</div>
+              <div id="today-checkins-list"><div class="notif-empty-sm">${signedIn ? t('app.loading','Loading…') : t('app.signin_checkins','Sign in to see check-ins')}</div></div>
             </div>
             <div class="notif-section" id="tips-section" style="display:none">
               <div class="notif-section-label notif-section-toggle" onclick="toggleTipsSection()">${t('app.tips_reminders','Tips & Reminders')} <span id="tips-toggle">▶</span></div>

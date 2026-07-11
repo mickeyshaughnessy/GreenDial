@@ -12,6 +12,7 @@ Each agent module must define:
 """
 import json
 from prompts.shared.profile import PROFILE_UPDATE_SYNTAX
+from prompts.shared.transient import TRANSIENT_CHECK_IN
 
 
 def build_onboarding_prompt(module, profile, transcript, turn_number):
@@ -36,6 +37,7 @@ def build_onboarding_prompt(module, profile, transcript, turn_number):
         f"Ask ONE focused question about {focus}. "
         f"If this is turn 1, introduce yourself in one sentence, then ask.{priority_line}\n\n"
         f"{PROFILE_UPDATE_SYNTAX}\n\n"
+        f"{TRANSIENT_CHECK_IN}\n\n"
         f"{name} (onboarding):"
     )
 
@@ -62,5 +64,7 @@ def build_cron_prompt(module, profile, transcript, settings=None):
         f"USER PROFILE:\n{profile_str}\n\n"
         f"RECENT CONVERSATION:\n{transcript_str}\n\n"
         f"{guidelines}\n\n"
+        f"If relevant, lightly nod to short-lived factors (travel, illness, injury) "
+        f"or invite a one-line profile update — without making the whole message about that.\n\n"
         f'Output JSON:\n{{"message": "...", "type": "{agent_id}_checkin"}}'
     )
