@@ -1534,19 +1534,42 @@
     // ── AGENT TABS ───────────────────────────────────────────────────────────
     function getAgentMeta(id) { return AGENT_META[id] || { emoji: '🤖', name: id }; }
 
-    /** Render a board sticker: pixel art (px:id or /stickers/...) or unicode emoji. */
-    function stickerHTML(token, extraClass) {
-      if (!token) return '';
+    // Legacy unicode emoji → pixel sticker (same map as server EMOJI_TO_PIXEL)
+    const EMOJI_TO_PIXEL = {
+      '😴':'sleep_great','🥱':'sleep_rough','😊':'sleep_good','😌':'sleep_rested','😐':'sleep_ok',
+      '💤':'sleep_zzz','🌗':'sleep_broken','⏰':'sleep_early','🛌':'sleep_in','🌃':'sleep_late',
+      '🦉':'sleep_owl','🌌':'sleep_stars','🐑':'sleep_sheep','🛸':'sleep_ufo','🌙':'sleep_moon',
+      '🥗':'diet_clean','😤':'diet_struggle','😋':'diet_enjoy','💪':'ex_crush','🍎':'diet_apple',
+      '🥦':'diet_veg','💧':'diet_water','🍕':'diet_pizza','🍰':'diet_sweet','🍜':'diet_comfort',
+      '🥑':'diet_avo','🍇':'diet_grape','🦞':'diet_feast','🛋️':'ex_skip','🏃':'ex_active',
+      '🚶':'ex_walk','🧘':'ex_stretch','🚴':'ex_bike','🏋️':'ex_lift','😅':'ex_sweat',
+      '🧗':'ex_crush','🏆':'ex_pr','🥇':'ex_champ','🦸':'ex_beast','⚡':'ex_electric',
+      '😢':'mh_struggle','🧠':'mh_focus','🫧':'mh_light','😟':'mh_stress','🌥️':'mh_cloudy',
+      '🔥':'mh_burnout','🌀':'mh_fog','🌈':'mh_hope','✨':'mh_inspired','🦋':'mh_transform',
+      '🕯️':'mh_center','🤗':'rel_connect','😞':'rel_distant','❤️':'rel_loved','🙏':'rel_grateful',
+      '🫂':'rel_support','📞':'rel_reach','💬':'rel_talk','👯':'rel_social','😶':'rel_quiet',
+      '💞':'rel_bond','🥰':'rel_cherish','🕊️':'rel_peace','🎉':'rel_celeb','🌿':'env_fresh',
+      '🌧️':'env_heavy','☀️':'env_bright','🏠':'env_cozy','🪴':'env_tidy','🌳':'env_outdoors',
+      '🧹':'env_clean','🔆':'env_air','🌆':'env_busy','🏞️':'env_nature','🌅':'env_golden',
+      '🌊':'env_water','🦜':'env_wild','🛡️':'pr_ontop','🤒':'pr_notgreat','💊':'pr_manage',
+      '🧴':'pr_sun','🧼':'pr_hygiene','🩺':'pr_check','😷':'pr_careful','🦾':'pr_bullet',
+      '🍵':'pr_boost','⭐':'pr_picture','🧬':'pr_opt'
+    };
+
+    /** Render a board sticker: pixel art (px:id, /stickers/..., or legacy emoji). */
+    function stickerHTML(token, extraClass, explicitSrc) {
+      if (!token && !explicitSrc) return '';
       const cls = extraClass ? `px-sticker ${extraClass}` : 'px-sticker';
-      let src = null;
-      if (typeof token === 'string') {
+      let src = explicitSrc || null;
+      if (!src && typeof token === 'string') {
         if (token.startsWith('px:')) src = `/stickers/pixel/${token.slice(3)}.png`;
         else if (token.startsWith('/stickers/')) src = token;
+        else if (EMOJI_TO_PIXEL[token]) src = `/stickers/pixel/${EMOJI_TO_PIXEL[token]}.png`;
       }
       if (src) {
         return `<img class="${cls}" src="${src}" alt="" width="28" height="28" draggable="false">`;
       }
-      return `<span>${escapeHtml(String(token))}</span>`;
+      return `<span>${escapeHtml(String(token || ''))}</span>`;
     }
 
     function updateAgentTabs() {
@@ -2484,7 +2507,7 @@
           return `<div class="ci-answered">
             <span class="ci-icon">${icon}</span>
             <span style="font-size:12px">${escapeHtml(ci.area_label)}</span>
-            <span class="ci-emoji">${stickerHTML(ci.emoji)}</span>
+            <span class="ci-emoji">${stickerHTML(ci.emoji, '', ci.src)}</span>
             <span class="ci-check">✓</span>
           </div>`;
         }
@@ -3100,7 +3123,7 @@
             const prompt = (entry.prompt||'').replace(/</g,'&lt;');
             const resp = (entry.response||'').replace(/</g,'&lt;');
             const tip = prompt ? `<div class="sb-tip"><div class="sb-tip-prompt">${prompt}</div>${resp?`<div>${resp}</div>`:''}</div>` : '';
-            html += `<td class="sb-cell"><div class="sb-dot filled${todayClass}">${stickerHTML(entry.emoji)}${tip}</div></td>`;
+            html += `<td class="sb-cell"><div class="sb-dot filled${todayClass}">${stickerHTML(entry.emoji, '', entry.src)}${tip}</div></td>`;
           } else {
             html += `<td class="sb-cell"><div class="sb-dot empty${todayClass}">·</div></td>`;
           }

@@ -90,15 +90,42 @@ def is_pixel_token(value):
     )
 
 
-def pixel_src(value):
-    """Resolve a stored sticker value to an image URL, or None."""
-    if not isinstance(value, str):
+def pixel_src(value, area=None):
+    """Resolve a stored sticker value (px: token or legacy emoji) to an image URL."""
+    if not isinstance(value, str) or not value:
         return None
     if value.startswith("px:"):
         return f"/stickers/pixel/{value[3:]}.png"
     if value.startswith("/stickers/pixel/"):
         return value
+    # Legacy unicode emoji → pixel art (display-time only)
+    pid = None
+    if area and area in EMOJI_TO_PIXEL_BY_AREA:
+        pid = EMOJI_TO_PIXEL_BY_AREA[area].get(value)
+    if not pid:
+        pid = EMOJI_TO_PIXEL.get(value)
+    if pid:
+        return f"/stickers/pixel/{pid}.png"
     return None
+
+
+def enrich_board_rows(rows):
+    """Add display ``src`` on each entry so clients render pixel art for legacy emoji too."""
+    if not rows:
+        return rows
+    out = {}
+    for area, days in rows.items():
+        out[area] = {}
+        for day, entry in (days or {}).items():
+            if not isinstance(entry, dict):
+                out[area][day] = entry
+                continue
+            e = dict(entry)
+            src = pixel_src(e.get("emoji") or "", area=area)
+            if src:
+                e["src"] = src
+            out[area][day] = e
+    return out
 
 
 # Legacy emoji templates (fallback if pixel library missing)
@@ -261,6 +288,53 @@ PIXEL_ANCHORS = {
     "relationships": ("rel_connect", "rel_distant"),
     "environment": ("env_fresh", "env_heavy"),
     "protect": ("pr_ontop", "pr_notgreat"),
+}
+
+# Map legacy unicode emoji (already saved on boards) → pixel sticker ids so
+# existing boards render as pixel art without rewriting S3 data.
+EMOJI_TO_PIXEL = {
+    # sleep
+    "😴": "sleep_great", "🥱": "sleep_rough", "😊": "sleep_good", "😌": "sleep_rested",
+    "😐": "sleep_ok", "💤": "sleep_zzz", "🌗": "sleep_broken", "⏰": "sleep_early",
+    "🛌": "sleep_in", "🌃": "sleep_late", "🦉": "sleep_owl", "🌌": "sleep_stars",
+    "🐑": "sleep_sheep", "🛸": "sleep_ufo", "🌙": "sleep_moon",
+    # diet
+    "🥗": "diet_clean", "😤": "diet_struggle", "😋": "diet_enjoy", "💪": "diet_onpoint",
+    "🍎": "diet_apple", "🥦": "diet_veg", "💧": "diet_water", "🍕": "diet_pizza",
+    "🍰": "diet_sweet", "🍜": "diet_comfort", "🧑‍🍳": "diet_chef", "🥑": "diet_avo",
+    "🍇": "diet_grape", "🦞": "diet_feast",
+    # exercise
+    "🛋️": "ex_skip", "🏃": "ex_active", "🚶": "ex_walk", "🧘": "ex_stretch",
+    "🚴": "ex_bike", "🏋️": "ex_lift", "🤸": "ex_walk", "😅": "ex_sweat",
+    "🧗": "ex_crush", "🏆": "ex_pr", "🥇": "ex_champ", "🦸": "ex_beast", "⚡": "ex_electric",
+    # mental
+    "😢": "mh_struggle", "🧠": "mh_focus", "🫧": "mh_light", "😟": "mh_stress",
+    "🌥️": "mh_cloudy", "🔥": "mh_burnout", "🌀": "mh_fog", "🌈": "mh_hope",
+    "✨": "mh_inspired", "🦋": "mh_transform", "🕯️": "mh_center",
+    # relationships
+    "🤗": "rel_connect", "😞": "rel_distant", "❤️": "rel_loved", "🙏": "rel_grateful",
+    "🫂": "rel_support", "📞": "rel_reach", "💬": "rel_talk", "👯": "rel_social",
+    "😶": "rel_quiet", "💞": "rel_bond", "🥰": "rel_cherish", "🕊️": "rel_peace",
+    "🎉": "rel_celeb",
+    # environment
+    "🌿": "env_fresh", "🌧️": "env_heavy", "☀️": "env_bright", "🏠": "env_cozy",
+    "🪴": "env_tidy", "🌳": "env_outdoors", "🧹": "env_clean", "🔆": "env_air",
+    "🌆": "env_busy", "🏞️": "env_nature", "🌅": "env_golden", "🌊": "env_water",
+    "🦜": "env_wild",
+    # protect
+    "🛡️": "pr_ontop", "🤒": "pr_notgreat", "💊": "pr_manage", "🧴": "pr_sun",
+    "🧼": "pr_hygiene", "🩺": "pr_check", "😷": "pr_careful", "🦾": "pr_bullet",
+    "🍵": "pr_boost", "⭐": "pr_picture", "🧬": "pr_opt",
+}
+
+# Area-specific overrides when the same emoji means different things
+EMOJI_TO_PIXEL_BY_AREA = {
+    "exercise": {"💪": "ex_crush"},
+    "protect": {"💪": "pr_strong", "🌿": "pr_natural", "🛌": "pr_rest"},
+    "diet": {"💪": "diet_onpoint"},
+    "mental_health": {"😊": "mh_good", "😐": "mh_mixed", "😌": "mh_calm"},
+    "relationships": {"😊": "rel_good"},
+    "sleep": {"😊": "sleep_good", "😌": "sleep_rested"},
 }
 
 RARE_CHANCE = 0.12

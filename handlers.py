@@ -1196,9 +1196,11 @@ def handle_get_today(user_id):
         template = stickers_module.POLL_TEMPLATES.get(area, {})
         area_label = stickers_module.AREA_LABELS.get(area, area)
         if entry:
+            em = entry.get("emoji")
             check_ins.append({
                 "area": area, "area_label": area_label,
-                "answered": True, "emoji": entry.get("emoji"), "prompt": entry.get("prompt"),
+                "answered": True, "emoji": em, "prompt": entry.get("prompt"),
+                "src": stickers_module.pixel_src(em or "", area=area),
             })
         else:
             check_ins.append({
@@ -1701,8 +1703,9 @@ def handle_get_sticker_board(user_id):
     """Authenticated: return the user's sticker board + share token."""
     board = _get_or_create_sticker_board(user_id)
     token = board.get('token') or _get_or_create_share_token(user_id)
+    rows = stickers_module.enrich_board_rows(board.get('rows', {}))
     board_data = {
-        "rows": board.get('rows', {}),
+        "rows": rows,
         "token": token,
         "share_url": f"/stickers/{token}"
     }
@@ -1743,9 +1746,9 @@ def handle_public_sticker_board(token):
         return json.dumps({"error": "Not found"}), 404
 
     board = _get_or_create_sticker_board(user_id)
-    # Return board without user_id
+    # Return board without user_id; enrich legacy emoji → pixel art src
     return json.dumps({
-        "rows": board.get('rows', {}),
+        "rows": stickers_module.enrich_board_rows(board.get('rows', {})),
         "areas": stickers_module.STICKER_AREAS,
         "area_labels": stickers_module.AREA_LABELS,
         "area_emojis": stickers_module.AREA_EMOJIS,

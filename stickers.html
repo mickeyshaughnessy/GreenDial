@@ -221,12 +221,46 @@
               ? `<div class="tooltip"><div class="t-prompt">${prompt}</div>${response ? `<div class="t-response">${response}</div>` : ''}</div>`
               : '';
             const em = entry.emoji || '';
-            let mark = em;
-            if (typeof em === 'string' && em.startsWith('px:')) {
-              mark = `<img class="px-sticker" src="/stickers/pixel/${em.slice(3)}.png" width="28" height="28" alt="">`;
-            } else if (typeof em === 'string' && em.startsWith('/stickers/')) {
-              mark = `<img class="px-sticker" src="${em}" width="28" height="28" alt="">`;
+            let src = entry.src || null;
+            if (!src && typeof em === 'string') {
+              if (em.startsWith('px:')) src = `/stickers/pixel/${em.slice(3)}.png`;
+              else if (em.startsWith('/stickers/')) src = em;
             }
+            // Legacy unicode → pixel (server also sends src; this is a client fallback)
+            const EMOJI_PX = {
+              '😴':'sleep_great','🥱':'sleep_rough','😊':'sleep_good','😌':'sleep_rested','😐':'sleep_ok',
+              '💤':'sleep_zzz','🌗':'sleep_broken','⏰':'sleep_early','🛌':'sleep_in','🌃':'sleep_late',
+              '🦉':'sleep_owl','🌌':'sleep_stars','🐑':'sleep_sheep','🛸':'sleep_ufo','🌙':'sleep_moon',
+              '🥗':'diet_clean','😤':'diet_struggle','😋':'diet_enjoy','💪':'ex_crush','🍎':'diet_apple',
+              '🥦':'diet_veg','💧':'diet_water','🍕':'diet_pizza','🍰':'diet_sweet','🍜':'diet_comfort',
+              '🥑':'diet_avo','🍇':'diet_grape','🦞':'diet_feast','🛋️':'ex_skip','🏃':'ex_active',
+              '🚶':'ex_walk','🧘':'ex_stretch','🚴':'ex_bike','🏋️':'ex_lift','😅':'ex_sweat',
+              '🧗':'ex_crush','🏆':'ex_pr','🥇':'ex_champ','🦸':'ex_beast','⚡':'ex_electric',
+              '😢':'mh_struggle','🧠':'mh_focus','🫧':'mh_light','😟':'mh_stress','🌥️':'mh_cloudy',
+              '🔥':'mh_burnout','🌀':'mh_fog','🌈':'mh_hope','✨':'mh_inspired','🦋':'mh_transform',
+              '🕯️':'mh_center','🤗':'rel_connect','😞':'rel_distant','❤️':'rel_loved','🙏':'rel_grateful',
+              '🫂':'rel_support','📞':'rel_reach','💬':'rel_talk','👯':'rel_social','😶':'rel_quiet',
+              '💞':'rel_bond','🥰':'rel_cherish','🕊️':'rel_peace','🎉':'rel_celeb','🌿':'env_fresh',
+              '🌧️':'env_heavy','☀️':'env_bright','🏠':'env_cozy','🪴':'env_tidy','🌳':'env_outdoors',
+              '🧹':'env_clean','🔆':'env_air','🌆':'env_busy','🏞️':'env_nature','🌅':'env_golden',
+              '🌊':'env_water','🦜':'env_wild','🛡️':'pr_ontop','🤒':'pr_notgreat','💊':'pr_manage',
+              '🧴':'pr_sun','🧼':'pr_hygiene','🩺':'pr_check','😷':'pr_careful','🦾':'pr_bullet',
+              '🍵':'pr_boost','⭐':'pr_picture','🧬':'pr_opt'
+            };
+            if (!src && EMOJI_PX[em]) src = `/stickers/pixel/${EMOJI_PX[em]}.png`;
+            // Area-aware remaps for ambiguous emoji
+            if (em === '💪' && area === 'diet') src = '/stickers/pixel/diet_onpoint.png';
+            if (em === '💪' && area === 'protect') src = '/stickers/pixel/pr_strong.png';
+            if (em === '😊' && area === 'sleep') src = '/stickers/pixel/sleep_good.png';
+            if (em === '😊' && area === 'mental_health') src = '/stickers/pixel/mh_good.png';
+            if (em === '😊' && area === 'relationships') src = '/stickers/pixel/rel_good.png';
+            if (em === '😌' && area === 'mental_health') src = '/stickers/pixel/mh_calm.png';
+            if (em === '😐' && area === 'mental_health') src = '/stickers/pixel/mh_mixed.png';
+            if (em === '🌿' && area === 'protect') src = '/stickers/pixel/pr_natural.png';
+            if (em === '🛌' && area === 'protect') src = '/stickers/pixel/pr_rest.png';
+            const mark = src
+              ? `<img class="px-sticker" src="${src}" width="28" height="28" alt="">`
+              : em;
             html += `<td><div class="cell filled${isToday?' today-col':''}">${mark}${tip}</div></td>`;
           } else {
             html += `<td><div class="cell empty${isToday?' today-col':''}">·</div></td>`;
