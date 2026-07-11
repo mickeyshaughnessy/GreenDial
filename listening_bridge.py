@@ -160,15 +160,22 @@ def run_agentic_loop(
         messages, user_id, system_prompt=system_prompt
     )
 
-    profile_updates: Dict[str, str] = {}
+    # Collect profile mutations for the host response payload.
+    # Tools already persist via handlers._execute_health_tool; this is for
+    # the chat API to report profile_updated + return the new profile.
+    profile_updates: Dict[str, Any] = {}
     for entry in tool_log:
-        if entry.get("name") in ("update_profile", "log_health_data"):
-            inp = entry.get("input") or {}
-            field = inp.get("field", "")
-            value = inp.get("value", "")
-            if field and value and entry["name"] == "update_profile":
-                # log_health_data writes history only; profile updates come from update_profile
-                profile_updates[field] = value
+        if entry.get("name") != "update_profile":
+            continue
+        inp = entry.get("input") or {}
+        field = (inp.get("field") or "").strip() if isinstance(inp.get("field"), str) else inp.get("field")
+        if not field:
+            continue
+        value = inp.get("value")
+        if isinstance(value, str) and value.strip().lower() in ("null", "none", ""):
+            value = None
+        # Include null so host apply logic can delete the field
+        profile_updates[field] = value
 
     return final_text, profile_updates, model_used
 

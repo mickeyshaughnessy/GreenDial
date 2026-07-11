@@ -475,14 +475,21 @@ HEALTH_TOOLS = [
         "type": "function",
         "function": {
             "name": "update_profile",
-            "description": "Save or update a field in the user's health profile. Use for stable facts: conditions, medications, goals, preferences.",
+            "description": (
+                "Save or update a field in the user's health profile. Use for stable facts: "
+                "conditions, medications, goals, preferences, symptoms. "
+                "Pass value=null to CLEAR/remove a field (e.g. when a problem is resolved)."
+            ),
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "field": {"type": "string", "description": "Profile field name (e.g. sleep_hours, weight, primary_concern, goals)"},
-                    "value": {"type": "string", "description": "Value to save"}
+                    "field": {"type": "string", "description": "Profile field name (e.g. symptoms, medications, primary_concern, goals)"},
+                    "value": {
+                        "description": "Value to save (string), or null to clear/remove the field",
+                        "anyOf": [{"type": "string"}, {"type": "null"}],
+                    },
                 },
-                "required": ["field", "value"]
+                "required": ["field"],
             }
         }
     },
@@ -631,17 +638,35 @@ def _execute_health_tool(name, inputs, user_id, agent_id):
 
         elif name == "update_profile":
             field = (inputs.get("field") or "").strip()
-            value = (inputs.get("value") or "").strip()
-            if not field or not value:
-                return "Error: field and value are required."
+            if not field:
+                return "Error: field is required."
+            raw_value = inputs.get("value")
+            # Models may send JSON null, Python None, or the string "null"
+            if isinstance(raw_value, str) and raw_value.strip().lower() in ("null", "none", ""):
+                raw_value = None
             if user_id:
                 u = get_user_data(user_id)
                 if u:
-                    u.setdefault('profile', {})[field] = value
+                    profile = u.setdefault('profile', {})
+                    if raw_value is None:
+                        if field in profile:
+                            del profile[field]
+                            action = f"Cleared profile.{field}"
+                        else:
+                            action = f"profile.{field} was already empty"
+                    else:
+                        value = str(raw_value).strip()
+                        if not value:
+                            return "Error: value is empty; pass null to clear a field."
+                        profile[field] = value
+                        action = f"Saved profile.{field} = {value!r}"
                     u['last_updated'] = datetime.utcnow().isoformat()
                     _cache_user(user_id, u)
                     s3_storage.save_user(user_id, u)
-            return f"Saved profile.{field} = {value!r}"
+                    return action
+            if raw_value is None:
+                return f"Cleared profile.{field} (no user session)"
+            return f"Saved profile.{field} = {str(raw_value)!r} (no user session)"
 
         elif name == "log_health_data":
             field = (inputs.get("field") or "").strip()
@@ -802,10 +827,12 @@ def _run_agentic_loop(messages, system_prompt, user_id, agent_id, max_steps=6):
         tool_results = []
         for tc in tool_uses:
             result = _execute_health_tool(tc["name"], tc["input"], user_id, agent_id)
-            if tc["name"] in ("update_profile", "log_health_data"):
-                f = tc["input"].get("field", "")
-                v = tc["input"].get("value", "")
-                if f and v:
+            if tc["name"] == "update_profile":
+                f = (tc["input"] or {}).get("field", "")
+                v = (tc["input"] or {}).get("value")
+                if isinstance(v, str) and v.strip().lower() in ("null", "none", ""):
+                    v = None
+                if f:
                     profile_updates[f] = v
             tool_results.append({
                 "role": "tool",
@@ -1830,23 +1857,26 @@ def handle_api_profile_get(auth_header):
 # ============ CHAT ============
 
 def _parse_profile_updates(response):
-    """Extract profile updates from Doc's response"""
+    """Extract profile updates from Doc's response (markers or bare JSON dumps)."""
     updates = {}
-    
+    if not response:
+        return updates
+
     # Match both **PROFILE_UPDATE** and **PROFILE UPDATE** (with space or underscore)
     pattern = r'\*\*PROFILE[_ ]UPDATE\*\*\s*(\{[^{}]*\})'
     matches = re.finditer(pattern, response, re.DOTALL | re.IGNORECASE)
-    
+
     for match in matches:
         json_str = match.group(1).strip()
         try:
             data = json.loads(json_str)
-            updates.update(data)
-            print(f"[Chat] Parsed profile update: {data}")
+            if isinstance(data, dict):
+                updates.update(data)
+                print(f"[Chat] Parsed profile update: {data}")
         except json.JSONDecodeError as e:
             print(f"[Chat] Failed to parse profile update: {json_str} - {e}")
-    
-    # Fallback: try more flexible matching if nothing found
+
+    # Fallback: flexible marker match
     if not updates:
         alt_pattern = r'\*\*PROFILE[_ ]UPDATE\*\*\s*\n?\s*(\{[\s\S]*?\})'
         alt_matches = re.finditer(alt_pattern, response, re.IGNORECASE)
@@ -1855,11 +1885,26 @@ def _parse_profile_updates(response):
             json_str = re.sub(r'\s+', ' ', json_str)
             try:
                 data = json.loads(json_str)
-                updates.update(data)
-                print(f"[Chat] Parsed profile update (alt): {data}")
+                if isinstance(data, dict):
+                    updates.update(data)
+                    print(f"[Chat] Parsed profile update (alt): {data}")
             except json.JSONDecodeError as e:
                 print(f"[Chat] Failed alt parse: {json_str} - {e}")
-    
+
+    # Models sometimes dump bare {"field": value} lines without markers
+    if not updates:
+        for m in re.finditer(r'(?m)^\s*(\{[^{}]{2,300}\})\s*$', response):
+            try:
+                data = json.loads(m.group(1))
+            except json.JSONDecodeError:
+                continue
+            if not isinstance(data, dict) or not data:
+                continue
+            # Only accept small key/value profile-like objects
+            if all(isinstance(k, str) and len(k) < 64 for k in data.keys()):
+                updates.update(data)
+                print(f"[Chat] Parsed bare JSON profile update: {data}")
+
     return updates
 
 
@@ -1935,12 +1980,14 @@ def _clean_sticker_markers(response):
 
 
 def _clean_profile_markers(response):
-    """Remove profile update markers from response"""
+    """Remove profile update markers and bare profile-JSON dumps from response."""
     # Remove both **PROFILE_UPDATE** and **PROFILE UPDATE** variants
     cleaned = re.sub(r'\*\*PROFILE[_ ]UPDATE\*\*\s*\{[^{}]*\}', '', response, flags=re.IGNORECASE)
     cleaned = re.sub(r'\*\*PROFILE[_ ]UPDATE\*\*\s*\n?\s*\{[\s\S]*?\}', '', cleaned, flags=re.IGNORECASE)
     # Also clean any leftover markers without JSON
     cleaned = re.sub(r'\*\*PROFILE[_ ]UPDATE\*\*\s*', '', cleaned, flags=re.IGNORECASE)
+    # Bare one-line JSON objects models dump instead of tool calls
+    cleaned = re.sub(r'(?m)^\s*\{[^{}]{2,300}\}\s*$', '', cleaned)
     return cleaned.strip()
 
 
@@ -2058,6 +2105,10 @@ def handle_chat(request):
         onboard_agent_id, onboard_turn = _check_onboarding_needed(user)
 
     redirect_agent = None
+    tool_profile_updates = {}
+    model_used = None
+    used_agentic = False
+
     if onboard_agent_id:
         print(f"[Chat] Onboarding: {onboard_agent_id} turn {onboard_turn}")
         agent_resp = _run_agent_onboarding(
@@ -2070,10 +2121,7 @@ def handle_chat(request):
             doc_response = "I'm having a little trouble right now — try again in a moment."
     else:
         # ── NORMAL CHAT FLOW ──────────────────────────────────────────────────
-        # Check keyword matches — 2+ means Cross AI, 1 means specialist, 0 means Doc alone
         keyword_agents = agent_registry.agents_for_message(user_input)
-
-        # Stage 0: Supervisor analysis — style + focus hints
         style_hint = style_module.build_style_instruction(user_input, recent_transcript)
         sup_hints = supervisor_module.analyze(
             user_input, profile, recent_transcript,
@@ -2081,63 +2129,76 @@ def handle_chat(request):
         )
         focus = sup_hints.get("focus") or None
 
-        # Stage 1: Doc generates initial response
+        # Optional specialist pre-fetch for multi-domain / keyword routing
         agent_context = None
-        try:
-            prompt = _build_prompt(
-                user_id=user_id,
-                session_id=session_id,
-                user_input=user_input,
-                style_hint=style_hint,
-                focus=focus
-            )
-            doc_response = utils.completion(
-                prompt=prompt,
-                temperature=0.7,
-                max_tokens=config.LLM_MAX_TOKENS
-            )
-        except Exception as e:
-            print(f"[Chat] Completion error: {e}")
-            doc_response = "I'm having trouble responding right now. Please try again."
+        if len(keyword_agents) >= 2:
+            print(f"[Chat] Cross AI pre-fetch: {keyword_agents}")
+            agent_context = _run_cross_ai(keyword_agents, user_input, profile, recent_transcript)
+        elif len(keyword_agents) == 1:
+            print(f"[Chat] Specialist pre-fetch: {keyword_agents[0]}")
+            agent_context = _run_agent(keyword_agents[0], user_input, profile, recent_transcript)
 
-        # Stage 2: Check for redirect first (takes priority over synthesis)
-        redirect_agent = _parse_redirect(doc_response)
-        if redirect_agent:
-            print(f"[Chat] Redirect to: {redirect_agent}")
+        # Logged-in users: real ListeningAI tool loop so profile writes actually land
+        if user_id:
+            used_agentic = True
+            chat_only = settings.get('chat_only_mode', True)
+            system = doc_v2.build_doc_system_for_tools(
+                user_input=user_input,
+                profile=profile,
+                recent_transcript=recent_transcript,
+                username=username,
+                agent_context=agent_context,
+                history_summary=utils.summarize_history(user),
+                style_hint=style_hint,
+                focus=focus,
+                chat_only_instructions=(
+                    chat_only_module.CHAT_ONLY_INSTRUCTIONS if chat_only else None
+                ),
+                injected_context=_build_injected_context(user, user_input.lower()) if chat_only else None,
+                sticker_context=_build_sticker_context_for_doc(user_id),
+            )
+            user_msg = doc_v2.build_doc_user_message(
+                user_input=user_input,
+                username=username,
+                recent_transcript=recent_transcript,
+            )
+            messages = [{"role": "user", "content": user_msg}]
+            print(f"[Chat] Agentic Doc loop (ListeningAI tools) user={user_id}")
+            doc_response, tool_profile_updates, model_used = _run_agentic_loop(
+                messages=messages,
+                system_prompt=system,
+                user_id=user_id,
+                agent_id="doc",
+                max_steps=8,
+            )
+            redirect_agent = _parse_redirect(doc_response)
         else:
-            doc_requested_agent = _parse_agent_dispatch(doc_response)
-            if len(keyword_agents) >= 2 or doc_requested_agent == 'cross_ai':
-                print(f"[Chat] Cross AI: synthesizing {keyword_agents}")
-                cross_context = _run_cross_ai(keyword_agents or [doc_requested_agent], user_input, profile, recent_transcript)
-                if cross_context:
-                    try:
-                        prompt_with_agent = doc_v2.build_doc_prompt(
-                            user_input=user_input, profile=profile,
-                            recent_transcript=recent_transcript, username=username,
-                            agent_context=cross_context,
-                            history_summary=utils.summarize_history(user),
-                            style_hint=style_hint, focus=focus
-                        )
-                        doc_response = utils.completion(prompt=prompt_with_agent, temperature=0.7, max_tokens=config.LLM_MAX_TOKENS)
-                    except Exception as e:
-                        print(f"[Chat] Cross AI error: {e}")
-            else:
-                agent_id = doc_requested_agent or (keyword_agents[0] if keyword_agents else None)
-                if agent_id and agent_id != 'cross_ai':
-                    print(f"[Chat] Specialist: {agent_id}")
-                    agent_context = _run_agent(agent_id, user_input, profile, recent_transcript)
-                    if agent_context:
-                        try:
-                            prompt_with_agent = doc_v2.build_doc_prompt(
-                                user_input=user_input, profile=profile,
-                                recent_transcript=recent_transcript, username=username,
-                                agent_context=agent_context,
-                                history_summary=utils.summarize_history(user),
-                                style_hint=style_hint, focus=focus
-                            )
-                            doc_response = utils.completion(prompt=prompt_with_agent, temperature=0.7, max_tokens=config.LLM_MAX_TOKENS)
-                        except Exception as e:
-                            print(f"[Chat] Agent-augmented error: {e}")
+            # Guests: plain completion (no persisted profile tools)
+            try:
+                prompt = _build_prompt(
+                    user_id=user_id,
+                    session_id=session_id,
+                    user_input=user_input,
+                    style_hint=style_hint,
+                    focus=focus
+                )
+                if agent_context:
+                    prompt = doc_v2.build_doc_prompt(
+                        user_input=user_input, profile=profile,
+                        recent_transcript=recent_transcript, username=username,
+                        agent_context=agent_context,
+                        history_summary=utils.summarize_history(user),
+                        style_hint=style_hint, focus=focus
+                    )
+                doc_response = utils.completion(
+                    prompt=prompt,
+                    temperature=0.7,
+                    max_tokens=config.LLM_MAX_TOKENS
+                )
+            except Exception as e:
+                print(f"[Chat] Completion error: {e}")
+                doc_response = "I'm having trouble responding right now. Please try again."
+            redirect_agent = _parse_redirect(doc_response)
 
     # Remove any residual markers from the response
     doc_response = _clean_agent_directive(doc_response)
@@ -2151,7 +2212,7 @@ def handle_chat(request):
             doc_response = _clean_action_markers(doc_response)
             print(f"[Chat] Action results: {action_results}")
 
-    # Process sticker updates
+    # Process sticker updates (text markers — tool write_sticker also handles this)
     if user_id:
         sticker_updates = _parse_sticker_updates(doc_response)
         for su in sticker_updates:
@@ -2166,26 +2227,35 @@ def handle_chat(request):
         if sticker_updates:
             doc_response = _clean_sticker_markers(doc_response)
 
-    # Extract and apply profile updates (with history tracking)
-    profile_updates = _parse_profile_updates(doc_response)
+    # Profile: tools already persisted; also apply text markers / bare JSON as fallback
+    text_profile_updates = _parse_profile_updates(doc_response)
+    profile_updates = {**(tool_profile_updates or {}), **(text_profile_updates or {})}
     updated_profile = None
-    needs_save = bool(profile_updates) or bool(onboard_agent_id)
 
-    if needs_save and user_id:
+    if user_id and (profile_updates or onboard_agent_id):
         user = get_user_data(user_id)
         if user:
             if profile_updates:
+                # Re-apply so null deletes + history tracking stay consistent
                 updated_profile = _apply_profile_updates_with_history(user, profile_updates)
                 if onboard_agent_id:
-                    missing_now = agent_registry.get_missing_onboarding_fields(onboard_agent_id, user['profile'])
+                    missing_now = agent_registry.get_missing_onboarding_fields(
+                        onboard_agent_id, user['profile']
+                    )
                     if len(missing_now) == 0:
-                        user.setdefault('settings', {}).setdefault('agent_prefs', {}).setdefault(onboard_agent_id, {})['onboarded'] = True
+                        user.setdefault('settings', {}).setdefault(
+                            'agent_prefs', {}
+                        ).setdefault(onboard_agent_id, {})['onboarded'] = True
             user['last_updated'] = datetime.utcnow().isoformat()
             _cache_user(user_id, user)
             try:
                 s3_storage.save_user(user_id, user)
             except Exception as e:
                 print(f"[Chat] Failed to save: {e}")
+    elif used_agentic and user_id and tool_profile_updates:
+        u = get_user_data(user_id)
+        if u:
+            updated_profile = u.get('profile')
 
     clean_response = _clean_profile_markers(doc_response)
     _update_transcript(user_id, user_input, clean_response, session_id)
@@ -2194,11 +2264,15 @@ def handle_chat(request):
         "response": clean_response,
         "session_id": session_id,
         "user_id": user_id,
-        "model_used": utils.get_last_model_used() or config.OPENROUTER_MODEL
+        "model_used": model_used or utils.get_last_model_used() or config.OPENROUTER_MODEL
     }
-    if updated_profile:
+    if profile_updates:
         response_data["profile_updated"] = True
-        response_data["profile"] = updated_profile
+        if updated_profile is None and user_id:
+            u = get_user_data(user_id)
+            updated_profile = (u or {}).get('profile')
+        if updated_profile is not None:
+            response_data["profile"] = updated_profile
     if redirect_agent:
         response_data["redirect_to_agent"] = redirect_agent
     if action_results:

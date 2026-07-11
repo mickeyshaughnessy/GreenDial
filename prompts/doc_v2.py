@@ -6,6 +6,7 @@ Builds the context-aware prompt for Doc, GreenDial's primary health coordinator.
 import json
 from prompts.shared.profile import PROFILE_UPDATE_SYNTAX
 from prompts.shared.stickers import STICKER_UPDATE_SYNTAX
+from prompts.shared.tools import TOOL_USE_INSTRUCTIONS
 
 # ============ CORE IDENTITY ============
 
@@ -179,6 +180,88 @@ def build_doc_prompt(user_input, profile, recent_transcript="", username="Guest"
         f"---\n"
         f"User ({username}): {user_input}\n\n"
         f"Doc:"
+    )
+
+
+def build_doc_system_for_tools(user_input, profile, recent_transcript="", username="Guest",
+                               agent_context=None, history_summary=None,
+                               style_hint=None, focus=None,
+                               chat_only_instructions=None, injected_context=None,
+                               sticker_context=None):
+    """System prompt for the agentic tool loop (ListeningAI ChatController).
+
+    Profile / stickers / specialist handoffs should go through tools, not
+    printed JSON. PROFILE_UPDATE remains as a legacy text fallback only.
+    """
+    stage = get_conversation_stage(profile)
+    stage_instruction = STAGE_INSTRUCTIONS.get(stage, STAGE_INSTRUCTIONS["introduction"])
+    missing = get_priority_missing_fields(profile)
+    missing_text = f"Missing: {', '.join(f[0] for f in missing[:5])}" if missing else "Profile complete"
+    profile_summary = json.dumps(profile, indent=2) if profile else "{empty}"
+
+    style_section = f"\n## STYLE\n{style_hint}" if style_hint else ""
+    focus_section = f"\n## FOCUS\n{focus}" if focus else ""
+    chat_only_section = f"\n{chat_only_instructions}" if chat_only_instructions else ""
+
+    agent_section = ""
+    if agent_context:
+        agent_section = (
+            "\n## AGENT CONTEXT\n"
+            "A specialist provided the following. Weave it into your reply naturally — "
+            "don't quote it or attribute it:\n\n"
+            f"{agent_context}"
+        )
+
+    history_section = ""
+    if history_summary:
+        history_section = (
+            "\n## TRACKED HEALTH HISTORY (last 14 days)\n"
+            f"{history_summary}\n\n"
+            "Use these numbers when the user asks about progress or trends."
+        )
+
+    context_section = f"\n{injected_context}" if injected_context else ""
+    sticker_section = ""
+    if sticker_context:
+        sticker_section = (
+            f"\n## TODAY'S STICKER BOARD\n{sticker_context}\n"
+            "Use write_sticker when the user shares how an area is going."
+        )
+
+    return (
+        f"{CORE_IDENTITY}\n\n"
+        f"{AGENT_DISPATCH_INSTRUCTIONS}"
+        f"{chat_only_section}\n\n"
+        f"{TOOL_USE_INSTRUCTIONS}\n\n"
+        f"## STAGE: {stage_instruction}\n\n"
+        f"## CURRENT PROFILE (may be stale — prefer read_profile tool for live data)\n"
+        f"{profile_summary}\n\n"
+        f"## STATUS\n{missing_text}"
+        f"{agent_section}"
+        f"{history_section}"
+        f"{sticker_section}"
+        f"{context_section}"
+        f"{style_section}"
+        f"{focus_section}\n\n"
+        f"## INSTRUCTIONS\n"
+        f"- When the user asks to update/clear profile fields, call update_profile (value=null to clear).\n"
+        f"- When the user asks to see their profile, call read_profile and show the tool result.\n"
+        f"- Never claim you cannot write to the profile — you have tools.\n"
+        f"- Never print raw JSON as a fake write; call tools instead.\n"
+        f"- End with one short question when appropriate.\n"
+        f"- Redirect to a specialist when the question is clearly one domain's territory.\n\n"
+        f"Legacy text fallback only if tools fail:\n{PROFILE_UPDATE_SYNTAX}\n"
+        f"{STICKER_UPDATE_SYNTAX}\n"
+    )
+
+
+def build_doc_user_message(user_input, username="Guest", recent_transcript=""):
+    """User turn for the agentic tool loop."""
+    recent_lines = (recent_transcript or '').strip().split('\n')[-8:]
+    recent_text = '\n'.join(recent_lines) if any(recent_lines) else "(start of conversation)"
+    return (
+        f"## RECENT CONVERSATION\n{recent_text}\n\n"
+        f"User ({username}): {user_input}"
     )
 
 
