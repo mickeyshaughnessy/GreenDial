@@ -6,12 +6,15 @@
   <title>GreenDial — How It Works</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { overflow-x: hidden; max-width: 100%; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: #1a1a2e;
       color: #eee;
       min-height: 100vh;
       line-height: 1.6;
+      overflow-x: hidden;
+      max-width: 100%;
     }
     a { color: #10b981; }
     a:hover { color: #059669; }
@@ -19,15 +22,23 @@
     /* ── HEADER ── */
     .header {
       background: linear-gradient(135deg, rgba(16,185,129,0.18), rgba(26,26,46,0.97));
-      padding: 14px 28px;
-      display: flex; align-items: center; gap: 16px;
+      padding: 12px 16px;
+      display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px;
       border-bottom: 1px solid rgba(255,255,255,0.1);
       position: sticky; top: 0; z-index: 50;
+      width: 100%; max-width: 100%; box-sizing: border-box;
     }
-    .logo { font-size: 20px; font-weight: 700; color: #10b981; text-decoration: none; }
-    .header-links { margin-left: auto; display: flex; gap: 16px; font-size: 13px; }
-    .header-links a { color: rgba(255,255,255,0.55); text-decoration: none; }
+    .logo { font-size: 20px; font-weight: 700; color: #10b981; text-decoration: none; flex: 0 0 auto; }
+    .header-crumb { color: rgba(255,255,255,0.35); font-size: 14px; flex: 0 1 auto; min-width: 0; }
+    .header-links {
+      margin-left: auto; display: flex; flex-wrap: wrap; align-items: center;
+      gap: 10px 14px; font-size: 13px; max-width: 100%;
+    }
+    .header-links a { color: rgba(255,255,255,0.55); text-decoration: none; white-space: nowrap; }
     .header-links a:hover { color: #10b981; }
+    @media (max-width: 640px) {
+      .header-crumb { display: none; }
+    }
 
     /* ── HERO ── */
     .hero {
@@ -181,7 +192,7 @@
 
 <div class="header">
   <a class="logo" href="/">🌿 GreenDial</a>
-  <span style="color:rgba(255,255,255,0.35);font-size:14px">/ How It Works</span>
+  <span class="header-crumb">/ How It Works</span>
   <div class="header-links">
     <a href="/about">About</a>
     <a href="/docs">API Docs</a>
