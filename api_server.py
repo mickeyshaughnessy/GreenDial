@@ -1,6 +1,11 @@
 """
 GreenDial API Server
 Flask HTTP server for the health assistant
+
+Reference deployment for the listening_ai package — mounts the portable
+ListeningAI API at /listening (see listening_bridge.py). Native GreenDial
+routes (/auth, /chat, …) are unchanged; the agentic health-tool loop inside
+handlers.py is powered by ListeningAI's ChatController.
 """
 import json
 from flask import Flask, request, send_from_directory, Response
@@ -8,6 +13,15 @@ import config
 import handlers
 
 app = Flask(__name__, static_folder='.')
+
+# ListeningAI reference surface (auth/profile/chat via portable API)
+try:
+    import listening_bridge
+    listening_bridge.ensure_configured()
+    app.register_blueprint(listening_bridge.make_blueprint(url_prefix="/listening"))
+    print("[ListeningAI] blueprint mounted at /listening")
+except Exception as e:
+    print(f"[ListeningAI] blueprint not mounted: {e}")
 
 
 @app.after_request
@@ -129,7 +143,21 @@ def push_unsubscribe(user_id):
 
 @app.route("/ping", methods=['GET'])
 def ping():
-    return Response(json.dumps({"status": "ok", "service": "greendial"}), mimetype='application/json')
+    payload = {"status": "ok", "service": "greendial"}
+    try:
+        import listening_ai
+        from listening_ai import get_settings, get_store
+        s = get_settings()
+        payload["listening_ai"] = {
+            "version": listening_ai.__version__,
+            "store": type(get_store()).__name__,
+            "store_backend": s.store_backend,
+            "prefix": s.spaces_prefix,
+            "mounted_at": "/listening",
+        }
+    except Exception as e:
+        payload["listening_ai"] = {"error": str(e)}
+    return Response(json.dumps(payload), mimetype='application/json')
 
 
 @app.route("/spec/openapi.yaml", methods=['GET'])
@@ -794,6 +822,7 @@ if __name__ == '__main__':
     print(f"")
     print(f"  LLM: {config.OPENROUTER_MODEL}")
     print(f"  Storage: {config.DO_SPACES_BUCKET}/{config.S3_PREFIX}")
+    print(f"  ListeningAI: /listening  (reference deployment)")
     print(f"")
     
     app.run(debug=config.DEBUG, host=config.FLASK_HOST, port=config.FLASK_PORT)

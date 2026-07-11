@@ -1,6 +1,9 @@
 #!/bin/bash
 # Deployment script for GreenDial
 # Usage: ./deploy.sh
+#
+# Also keeps the ListeningAI package in sync (reference deployment dependency).
+# Expects /root/ListeningAI on the server (clone once if missing).
 
 set -e
 
@@ -19,6 +22,29 @@ cd /root/GreenDial
 git fetch origin main
 git reset --hard origin/main
 echo "Code updated: $(git rev-parse --short HEAD)"
+
+# ListeningAI package (reference dependency)
+if [ -d /root/ListeningAI/.git ]; then
+  echo "Updating ListeningAI..."
+  cd /root/ListeningAI
+  git fetch origin main
+  git reset --hard origin/main
+  echo "ListeningAI: $(git rev-parse --short HEAD)"
+elif [ ! -d /root/ListeningAI ]; then
+  echo "Cloning ListeningAI..."
+  git clone https://github.com/mickeyshaughnessy/ListeningAI.git /root/ListeningAI
+fi
+# Install into the same env gunicorn uses (prefer venv if present)
+if [ -x /root/GreenDial/venv/bin/pip ]; then
+  /root/GreenDial/venv/bin/pip install -e "/root/ListeningAI[spaces]" -q
+elif command -v pip3 >/dev/null 2>&1; then
+  pip3 install -e "/root/ListeningAI[spaces]" -q
+else
+  pip install -e "/root/ListeningAI[spaces]" -q
+fi
+echo "listening-ai installed"
+
+cd /root/GreenDial
 # Sync web-served files to nginx webroot
 cp index.html /var/www/greendial/index.html
 cp stickers.html /var/www/greendial/stickers.html

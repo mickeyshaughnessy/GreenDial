@@ -4,3 +4,7 @@ requests==2.31.0
 boto3==1.34.0
 gunicorn==21.2.0
 pywebpush==2.0.0
+# ListeningAI reference integration — install editable from sibling checkout:
+#   pip install -e ../ListeningAI[spaces]
+# deploy.sh also installs from /root/ListeningAI on the production droplet.
+# listening-ai  # (when published to an index; path install preferred today)

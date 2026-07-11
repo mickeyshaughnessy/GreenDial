@@ -737,16 +737,36 @@ def _execute_health_tool(name, inputs, user_id, agent_id):
 
 def _run_agentic_loop(messages, system_prompt, user_id, agent_id, max_steps=6):
     """
-    Core agentic loop: call LLM with tools, execute tool calls, repeat until
-    end_turn or max_steps. Returns (final_text, profile_updates_dict, model_used).
+    Core agentic loop via ListeningAI ChatController.
+
+    GreenDial owns health tool handlers; ListeningAI owns the LLM + tool loop.
+    Falls back to a local loop (still using ListeningAI completions via utils)
+    only if the controller itself cannot be imported.
+    Returns (final_text, profile_updates_dict, model_used).
     """
+    try:
+        import listening_bridge
+        final_text, profile_updates, model_used = listening_bridge.run_agentic_loop(
+            messages=messages,
+            system_prompt=system_prompt,
+            user_id=user_id,
+            agent_id=agent_id,
+            max_steps=max_steps,
+        )
+        print(f"[AgentLoop] ListeningAI run_loop done model={model_used}")
+        return final_text, profile_updates, model_used
+    except Exception as e:
+        print(f"[AgentLoop] ListeningAI controller unavailable ({e}); using local loop")
+
+    # ---- local loop using ListeningAI completions (utils → listening_ai.llm) ----
     final_text = ""
     profile_updates = {}
     model_used = config.OPENROUTER_TOOLS_MODEL
+    working = list(messages)
 
     for step in range(max_steps):
         resp = utils.completion_with_tools(
-            messages=messages,
+            messages=working,
             tools=HEALTH_TOOLS,
             system_prompt=system_prompt
         )
@@ -754,7 +774,7 @@ def _run_agentic_loop(messages, system_prompt, user_id, agent_id, max_steps=6):
         if resp.get("error"):
             print(f"[AgentLoop] Error at step {step}: {resp['error']} — falling back")
             last_user_content = next(
-                (m["content"] for m in reversed(messages) if m.get("role") == "user"), ""
+                (m["content"] for m in reversed(working) if m.get("role") == "user"), ""
             )
             final_text = utils.completion(
                 prompt=last_user_content,
@@ -770,14 +790,14 @@ def _run_agentic_loop(messages, system_prompt, user_id, agent_id, max_steps=6):
         if resp.get("text"):
             final_text = resp["text"]
 
-        tool_uses = resp.get("tool_uses") or []
+        tool_uses = resp.get("tool_uses") or resp.get("tool_calls") or []
         if not tool_uses or resp.get("stop_reason") == "end_turn":
             break
 
-        # Append assistant turn
-        messages.append(resp["raw_content"])
+        raw = resp.get("raw_content") or resp.get("raw_message")
+        if raw:
+            working.append(raw)
 
-        # Execute tools and collect results
         tool_results = []
         for tc in tool_uses:
             result = _execute_health_tool(tc["name"], tc["input"], user_id, agent_id)
@@ -793,11 +813,11 @@ def _run_agentic_loop(messages, system_prompt, user_id, agent_id, max_steps=6):
             })
             print(f"[AgentLoop] step={step} {tc['name']}({tc['input']}) → {str(result)[:80]}")
 
-        messages.extend(tool_results)
+        working.extend(tool_results)
 
     if not final_text:
         resp = utils.completion_with_tools(
-            messages=messages,
+            messages=working,
             tools=HEALTH_TOOLS,
             system_prompt=system_prompt
         )

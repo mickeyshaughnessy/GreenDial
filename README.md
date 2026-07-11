@@ -2,14 +2,17 @@
 
 A HIPAA-waived personal health assistant with AI chat interface, user profile management, and third-party API integration.
 
+**Reference deployment for [ListeningAI](../ListeningAI)** — the portable conversational controller package. GreenDial mounts ListeningAI at `/listening`, routes all OpenRouter completions through `listening_ai.llm`, and runs its agentic health-tool loop through `listening_ai.ChatController` (see `listening_bridge.py` + `utils.py`).
+
 ## Features
 
 - **Chat with Doc**: AI-powered health assistant conversations
 - **User Profiles**: Store health data, goals, and preferences  
 - **Authentication**: Username/passphrase login via conversation
 - **Third-Party API**: External services can update user profiles
-- **S3 Storage**: All data persisted to AWS S3
-- **LLM Fallback**: Configurable API with Ollama fallback
+- **S3 Storage**: All data persisted to DigitalOcean Spaces (S3-compatible)
+- **ListeningAI**: Portable `/listening/*` API + shared agentic tool loop
+- **LLM Fallback**: Configurable OpenRouter model chain
 
 ## Quick Start
 
@@ -17,6 +20,7 @@ A HIPAA-waived personal health assistant with AI chat interface, user profile ma
 
 ```bash
 pip install -r requirements.txt
+pip install -e ../ListeningAI[spaces]   # reference ListeningAI package
 ```
 
 ### 2. Configure Environment
