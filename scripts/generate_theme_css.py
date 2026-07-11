@@ -691,6 +691,12 @@ def pattern_css(t: dict) -> str:
 {sel} body > header {{
   z-index: 1000;
 }}
+/* Modals must keep position:fixed and stack above the header (Donate, auth, etc.) */
+{sel} body > .popup-overlay,
+{sel} body > .sticker-picker-backdrop {{
+  position: fixed !important;
+  z-index: 5000 !important;
+}}
 """)
 
     if kind == "mesh":

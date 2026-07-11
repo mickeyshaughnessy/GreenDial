@@ -654,7 +654,8 @@
       display: none;
       align-items: center;
       justify-content: center;
-      z-index: 100;
+      /* Must beat .header (z-index 1000) and theme body > * { z-index: 1 } */
+      z-index: 5000;
     }
     .popup-overlay.show { display: flex; }
     .popup {
@@ -1120,7 +1121,7 @@
       <button class="nav-tab" id="nav-history-tab" onclick="switchView('history')"><span data-i18n="app.nav.history">📜 History</span></button>
       <button class="nav-tab" id="nav-feedback-tab" onclick="switchView('feedback')"><span data-i18n="app.nav.feedback">📣 Feedback</span></button>
       <button class="nav-tab" id="nav-getstarted-tab" onclick="switchView('getstarted')"><span data-i18n="app.nav.getstarted">🚀 Get Started</span></button>
-      <button class="nav-tab" id="admin-tab" style="display:none" onclick="switchView('admin')">🛡️ Admin</button>
+      <button class="nav-tab" id="admin-tab" style="display:none" onclick="switchView('admin')">🛡️ Admin/Stats</button>
       <a class="nav-tab" id="nav-about-tab" href="/about" target="_blank" style="text-decoration:none"><span data-i18n="app.nav.about">ℹ️ About</span></a>
       <a class="nav-tab" id="nav-docs-tab" href="/docs" target="_blank" style="text-decoration:none"><span data-i18n="app.nav.docs">📄 Docs</span></a>
     </div>
@@ -2002,7 +2003,19 @@
     }
 
     function isAdminUser() {
-      return !!(currentUser && String(currentUser.username || '').toLowerCase() === 'mickey');
+      if (!currentUser) return false;
+      // Match backend ADMIN_USER_IDS / _is_mickey (user_id preferred; username fallback)
+      const uid = String(currentUser.user_id || '').toLowerCase();
+      const uname = String(currentUser.username || '').trim().toLowerCase();
+      return uid === 'user_mickey' || uname === 'mickey';
+    }
+
+    function setAdminTabVisible(visible) {
+      const adminTab = document.getElementById('admin-tab');
+      if (!adminTab) return;
+      // Explicit values — clearing display:'' can leave the HTML style="display:none" sticky in some paths
+      adminTab.style.display = visible ? 'block' : 'none';
+      adminTab.setAttribute('aria-hidden', visible ? 'false' : 'true');
     }
 
     function applyChatOnlyMode(enabled) {
@@ -2176,6 +2189,10 @@
         if (!res.ok) { clearSession(); currentUser = null; return false; }
         const data = await res.json();
         if (data.error) { clearSession(); currentUser = null; return false; }
+        // Keep session identity in sync with server (admin tab keys off username/user_id)
+        if (data.username) currentUser.username = data.username;
+        if (data.user_id) currentUser.user_id = data.user_id;
+        saveSession();
         userProfile = data.profile || {};
         userSettings = data.settings || userSettings;
         if (window.GDThemes) GDThemes.hydrateFromSettings(userSettings);
@@ -2731,6 +2748,11 @@
         <div class="settings-group">
           <div class="settings-group-title">${t('app.settings.account','Account')}</div>
           <div class="settings-item"><div><div class="settings-label">${t('app.settings.username','Username')}</div><div class="settings-desc">${escapeHtml(currentUser.username)}</div></div></div>
+          ${isAdminUser() ? `
+          <div class="settings-item">
+            <div><div class="settings-label">🛡️ Admin/Stats</div><div class="settings-desc">Users, balances, payments, bounties</div></div>
+            <button class="btn btn-secondary btn-sm" onclick="switchView('admin')">Open</button>
+          </div>` : ''}
           <div class="settings-item"><div><div class="settings-label">${t('app.signout','Sign Out')}</div></div><button class="btn btn-danger btn-sm" onclick="logout()">${t('app.signout','Sign Out')}</button></div>
         </div>
       `;
@@ -3756,7 +3778,6 @@
     
     function updateUserUI() {
       const userArea = document.getElementById('user-area');
-      const adminTab = document.getElementById('admin-tab');
       const chatOnly = isChatOnly();
 
       const todayDropdownHtml = (signedIn) => `
@@ -3784,8 +3805,8 @@
         </div>`;
 
       if (currentUser) {
-        // Admin tab: only username "mickey", always visible (even in chat-only)
-        if (adminTab) adminTab.style.display = isAdminUser() ? '' : 'none';
+        // Admin/Stats: mickey only (user_id user_mickey), always visible even in chat-only
+        setAdminTabVisible(isAdminUser());
 
         if (chatOnly) {
           userArea.innerHTML = `
@@ -3808,7 +3829,7 @@
         taskMode = false;
         const toggleBtn = document.getElementById('task-toggle-btn');
         if (toggleBtn) { toggleBtn.style.display = 'none'; toggleBtn.classList.remove('on'); }
-        if (adminTab) adminTab.style.display = 'none';
+        setAdminTabVisible(false);
 
         if (chatOnly) {
           userArea.innerHTML = `<button class="btn btn-primary btn-sm" onclick="showAuthPopup()">${t('app.signin','Sign In')}</button>`;
@@ -3824,23 +3845,35 @@
     }
     
     // ---- Donate modal ----
+    // Coinbase deposit addresses (keep in sync with handlers.BTC_ADDRESS / ETH_ADDRESS)
+    const DONATION_BTC_ADDRESS = '3M6nzmM6T5WsfJkGHxGFs1YRTtp8TXpBpv';
+    const DONATION_ETH_ADDRESS = '0x3EbF65C9D212F3978cB5105Aa6877F6013cAfD57';
+    const BASE_CHAIN_ID = '0x2105'; // 8453
+
     function showDonateModal() {
+      const btcEl = document.getElementById('btc-addr');
+      const ethEl = document.getElementById('eth-addr');
+      if (btcEl) btcEl.textContent = DONATION_BTC_ADDRESS;
+      if (ethEl) ethEl.textContent = DONATION_ETH_ADDRESS;
+      // Ensure crypto rows are visible (older deploys had display:none)
+      document.querySelectorAll('#donate-popup .crypto-row').forEach(el => {
+        el.style.display = '';
+      });
       document.getElementById('donate-popup').classList.add('show');
     }
     function hideDonateModal() {
       document.getElementById('donate-popup').classList.remove('show');
     }
     function copyAddr(elemId, btn) {
-      const addr = document.getElementById(elemId).textContent;
+      const el = document.getElementById(elemId);
+      const addr = (el && el.textContent || '').trim();
+      if (!addr) return;
       navigator.clipboard.writeText(addr).then(() => {
         btn.textContent = 'Copied!';
         btn.classList.add('copied');
         setTimeout(() => { btn.textContent = 'Copy address'; btn.classList.remove('copied'); }, 2000);
       });
     }
-
-    const DONATION_ETH_ADDRESS = '0x3EbF65C9D212F3978cB5105Aa6877F6013cAfD57';
-    const BASE_CHAIN_ID = '0x2105'; // 8453
 
     async function connectPhantom() {
       const provider = window.phantom?.ethereum ?? window.ethereum;

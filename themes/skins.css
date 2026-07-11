@@ -377,6 +377,12 @@ html[data-gd-theme="emerald_protocol"] body > .header,
 html[data-gd-theme="emerald_protocol"] body > header {
   z-index: 1000;
 }
+/* Modals must keep position:fixed and stack above the header (Donate, auth, etc.) */
+html[data-gd-theme="emerald_protocol"] body > .popup-overlay,
+html[data-gd-theme="emerald_protocol"] body > .sticker-picker-backdrop {
+  position: fixed !important;
+  z-index: 5000 !important;
+}
 
 
 html[data-gd-theme="emerald_protocol"] body::before {
@@ -696,6 +702,12 @@ html[data-gd-theme="borland"] body > * { position: relative; z-index: 1; }
 html[data-gd-theme="borland"] body > .header,
 html[data-gd-theme="borland"] body > header {
   z-index: 1000;
+}
+/* Modals must keep position:fixed and stack above the header (Donate, auth, etc.) */
+html[data-gd-theme="borland"] body > .popup-overlay,
+html[data-gd-theme="borland"] body > .sticker-picker-backdrop {
+  position: fixed !important;
+  z-index: 5000 !important;
 }
 
 
@@ -1029,6 +1041,12 @@ html[data-gd-theme="deep_plasma"] body > .header,
 html[data-gd-theme="deep_plasma"] body > header {
   z-index: 1000;
 }
+/* Modals must keep position:fixed and stack above the header (Donate, auth, etc.) */
+html[data-gd-theme="deep_plasma"] body > .popup-overlay,
+html[data-gd-theme="deep_plasma"] body > .sticker-picker-backdrop {
+  position: fixed !important;
+  z-index: 5000 !important;
+}
 
 
 html[data-gd-theme="deep_plasma"] body::before {
@@ -1354,6 +1372,12 @@ html[data-gd-theme="faster_than_lightspeed"] body > * { position: relative; z-in
 html[data-gd-theme="faster_than_lightspeed"] body > .header,
 html[data-gd-theme="faster_than_lightspeed"] body > header {
   z-index: 1000;
+}
+/* Modals must keep position:fixed and stack above the header (Donate, auth, etc.) */
+html[data-gd-theme="faster_than_lightspeed"] body > .popup-overlay,
+html[data-gd-theme="faster_than_lightspeed"] body > .sticker-picker-backdrop {
+  position: fixed !important;
+  z-index: 5000 !important;
 }
 
 
@@ -1685,6 +1709,12 @@ html[data-gd-theme="ghost_recon"] body > * { position: relative; z-index: 1; }
 html[data-gd-theme="ghost_recon"] body > .header,
 html[data-gd-theme="ghost_recon"] body > header {
   z-index: 1000;
+}
+/* Modals must keep position:fixed and stack above the header (Donate, auth, etc.) */
+html[data-gd-theme="ghost_recon"] body > .popup-overlay,
+html[data-gd-theme="ghost_recon"] body > .sticker-picker-backdrop {
+  position: fixed !important;
+  z-index: 5000 !important;
 }
 
 
@@ -2023,6 +2053,12 @@ html[data-gd-theme="magic_the_gathering"] body > .header,
 html[data-gd-theme="magic_the_gathering"] body > header {
   z-index: 1000;
 }
+/* Modals must keep position:fixed and stack above the header (Donate, auth, etc.) */
+html[data-gd-theme="magic_the_gathering"] body > .popup-overlay,
+html[data-gd-theme="magic_the_gathering"] body > .sticker-picker-backdrop {
+  position: fixed !important;
+  z-index: 5000 !important;
+}
 
 
 html[data-gd-theme="magic_the_gathering"] body::before {
@@ -2353,6 +2389,12 @@ html[data-gd-theme="dungeon_crawler_rpg"] body > .header,
 html[data-gd-theme="dungeon_crawler_rpg"] body > header {
   z-index: 1000;
 }
+/* Modals must keep position:fixed and stack above the header (Donate, auth, etc.) */
+html[data-gd-theme="dungeon_crawler_rpg"] body > .popup-overlay,
+html[data-gd-theme="dungeon_crawler_rpg"] body > .sticker-picker-backdrop {
+  position: fixed !important;
+  z-index: 5000 !important;
+}
 
 
 html[data-gd-theme="dungeon_crawler_rpg"] body::before {
@@ -2676,6 +2718,12 @@ html[data-gd-theme="graph_trotterization"] body > * { position: relative; z-inde
 html[data-gd-theme="graph_trotterization"] body > .header,
 html[data-gd-theme="graph_trotterization"] body > header {
   z-index: 1000;
+}
+/* Modals must keep position:fixed and stack above the header (Donate, auth, etc.) */
+html[data-gd-theme="graph_trotterization"] body > .popup-overlay,
+html[data-gd-theme="graph_trotterization"] body > .sticker-picker-backdrop {
+  position: fixed !important;
+  z-index: 5000 !important;
 }
 
 
@@ -3001,6 +3049,12 @@ html[data-gd-theme="crt_phosphor"] body > * { position: relative; z-index: 1; }
 html[data-gd-theme="crt_phosphor"] body > .header,
 html[data-gd-theme="crt_phosphor"] body > header {
   z-index: 1000;
+}
+/* Modals must keep position:fixed and stack above the header (Donate, auth, etc.) */
+html[data-gd-theme="crt_phosphor"] body > .popup-overlay,
+html[data-gd-theme="crt_phosphor"] body > .sticker-picker-backdrop {
+  position: fixed !important;
+  z-index: 5000 !important;
 }
 
 
@@ -3340,6 +3394,12 @@ html[data-gd-theme="velvet_clinic"] body > .header,
 html[data-gd-theme="velvet_clinic"] body > header {
   z-index: 1000;
 }
+/* Modals must keep position:fixed and stack above the header (Donate, auth, etc.) */
+html[data-gd-theme="velvet_clinic"] body > .popup-overlay,
+html[data-gd-theme="velvet_clinic"] body > .sticker-picker-backdrop {
+  position: fixed !important;
+  z-index: 5000 !important;
+}
 
 
 html[data-gd-theme="velvet_clinic"] body::before {
@@ -3658,6 +3718,12 @@ html[data-gd-theme="illuminated_manuscript"] body > * { position: relative; z-in
 html[data-gd-theme="illuminated_manuscript"] body > .header,
 html[data-gd-theme="illuminated_manuscript"] body > header {
   z-index: 1000;
+}
+/* Modals must keep position:fixed and stack above the header (Donate, auth, etc.) */
+html[data-gd-theme="illuminated_manuscript"] body > .popup-overlay,
+html[data-gd-theme="illuminated_manuscript"] body > .sticker-picker-backdrop {
+  position: fixed !important;
+  z-index: 5000 !important;
 }
 
 
@@ -3990,6 +4056,12 @@ html[data-gd-theme="ethos_marble"] body > .header,
 html[data-gd-theme="ethos_marble"] body > header {
   z-index: 1000;
 }
+/* Modals must keep position:fixed and stack above the header (Donate, auth, etc.) */
+html[data-gd-theme="ethos_marble"] body > .popup-overlay,
+html[data-gd-theme="ethos_marble"] body > .sticker-picker-backdrop {
+  position: fixed !important;
+  z-index: 5000 !important;
+}
 
 
 html[data-gd-theme="ethos_marble"] body::before {
@@ -4309,6 +4381,12 @@ html[data-gd-theme="founder_atelier"] body > .header,
 html[data-gd-theme="founder_atelier"] body > header {
   z-index: 1000;
 }
+/* Modals must keep position:fixed and stack above the header (Donate, auth, etc.) */
+html[data-gd-theme="founder_atelier"] body > .popup-overlay,
+html[data-gd-theme="founder_atelier"] body > .sticker-picker-backdrop {
+  position: fixed !important;
+  z-index: 5000 !important;
+}
 
 
 html[data-gd-theme="founder_atelier"] body::before {
@@ -4627,6 +4705,12 @@ html[data-gd-theme="bounty_treasury"] body > * { position: relative; z-index: 1;
 html[data-gd-theme="bounty_treasury"] body > .header,
 html[data-gd-theme="bounty_treasury"] body > header {
   z-index: 1000;
+}
+/* Modals must keep position:fixed and stack above the header (Donate, auth, etc.) */
+html[data-gd-theme="bounty_treasury"] body > .popup-overlay,
+html[data-gd-theme="bounty_treasury"] body > .sticker-picker-backdrop {
+  position: fixed !important;
+  z-index: 5000 !important;
 }
 
 
@@ -4953,6 +5037,12 @@ html[data-gd-theme="quiet_library"] body > .header,
 html[data-gd-theme="quiet_library"] body > header {
   z-index: 1000;
 }
+/* Modals must keep position:fixed and stack above the header (Donate, auth, etc.) */
+html[data-gd-theme="quiet_library"] body > .popup-overlay,
+html[data-gd-theme="quiet_library"] body > .sticker-picker-backdrop {
+  position: fixed !important;
+  z-index: 5000 !important;
+}
 
 
 html[data-gd-theme="quiet_library"] body::before {
@@ -5271,6 +5361,12 @@ html[data-gd-theme="openapi_blueprint"] body > * { position: relative; z-index: 
 html[data-gd-theme="openapi_blueprint"] body > .header,
 html[data-gd-theme="openapi_blueprint"] body > header {
   z-index: 1000;
+}
+/* Modals must keep position:fixed and stack above the header (Donate, auth, etc.) */
+html[data-gd-theme="openapi_blueprint"] body > .popup-overlay,
+html[data-gd-theme="openapi_blueprint"] body > .sticker-picker-backdrop {
+  position: fixed !important;
+  z-index: 5000 !important;
 }
 
 
@@ -5594,6 +5690,12 @@ html[data-gd-theme="schema_noir"] body > .header,
 html[data-gd-theme="schema_noir"] body > header {
   z-index: 1000;
 }
+/* Modals must keep position:fixed and stack above the header (Donate, auth, etc.) */
+html[data-gd-theme="schema_noir"] body > .popup-overlay,
+html[data-gd-theme="schema_noir"] body > .sticker-picker-backdrop {
+  position: fixed !important;
+  z-index: 5000 !important;
+}
 
 
 html[data-gd-theme="schema_noir"] body::before { opacity: 0; }
@@ -5914,6 +6016,12 @@ html[data-gd-theme="spec_terminal"] body > * { position: relative; z-index: 1; }
 html[data-gd-theme="spec_terminal"] body > .header,
 html[data-gd-theme="spec_terminal"] body > header {
   z-index: 1000;
+}
+/* Modals must keep position:fixed and stack above the header (Donate, auth, etc.) */
+html[data-gd-theme="spec_terminal"] body > .popup-overlay,
+html[data-gd-theme="spec_terminal"] body > .sticker-picker-backdrop {
+  position: fixed !important;
+  z-index: 5000 !important;
 }
 
 
@@ -6241,6 +6349,12 @@ html[data-gd-theme="courier_manual"] body > .header,
 html[data-gd-theme="courier_manual"] body > header {
   z-index: 1000;
 }
+/* Modals must keep position:fixed and stack above the header (Donate, auth, etc.) */
+html[data-gd-theme="courier_manual"] body > .popup-overlay,
+html[data-gd-theme="courier_manual"] body > .sticker-picker-backdrop {
+  position: fixed !important;
+  z-index: 5000 !important;
+}
 
 
 html[data-gd-theme="courier_manual"] body::before {
@@ -6565,6 +6679,12 @@ html[data-gd-theme="grid_reference"] body > * { position: relative; z-index: 1; 
 html[data-gd-theme="grid_reference"] body > .header,
 html[data-gd-theme="grid_reference"] body > header {
   z-index: 1000;
+}
+/* Modals must keep position:fixed and stack above the header (Donate, auth, etc.) */
+html[data-gd-theme="grid_reference"] body > .popup-overlay,
+html[data-gd-theme="grid_reference"] body > .sticker-picker-backdrop {
+  position: fixed !important;
+  z-index: 5000 !important;
 }
 
 
@@ -6897,6 +7017,12 @@ html[data-gd-theme="scrapbook_pastel"] body > .header,
 html[data-gd-theme="scrapbook_pastel"] body > header {
   z-index: 1000;
 }
+/* Modals must keep position:fixed and stack above the header (Donate, auth, etc.) */
+html[data-gd-theme="scrapbook_pastel"] body > .popup-overlay,
+html[data-gd-theme="scrapbook_pastel"] body > .sticker-picker-backdrop {
+  position: fixed !important;
+  z-index: 5000 !important;
+}
 
 
 html[data-gd-theme="scrapbook_pastel"] body::before {
@@ -7216,6 +7342,12 @@ html[data-gd-theme="emoji_arcade"] body > * { position: relative; z-index: 1; }
 html[data-gd-theme="emoji_arcade"] body > .header,
 html[data-gd-theme="emoji_arcade"] body > header {
   z-index: 1000;
+}
+/* Modals must keep position:fixed and stack above the header (Donate, auth, etc.) */
+html[data-gd-theme="emoji_arcade"] body > .popup-overlay,
+html[data-gd-theme="emoji_arcade"] body > .sticker-picker-backdrop {
+  position: fixed !important;
+  z-index: 5000 !important;
 }
 
 
@@ -7543,6 +7675,12 @@ html[data-gd-theme="polaroid_wall"] body > .header,
 html[data-gd-theme="polaroid_wall"] body > header {
   z-index: 1000;
 }
+/* Modals must keep position:fixed and stack above the header (Donate, auth, etc.) */
+html[data-gd-theme="polaroid_wall"] body > .popup-overlay,
+html[data-gd-theme="polaroid_wall"] body > .sticker-picker-backdrop {
+  position: fixed !important;
+  z-index: 5000 !important;
+}
 
 
 html[data-gd-theme="polaroid_wall"] body::before {
@@ -7862,6 +8000,12 @@ html[data-gd-theme="bubble_pop"] body > * { position: relative; z-index: 1; }
 html[data-gd-theme="bubble_pop"] body > .header,
 html[data-gd-theme="bubble_pop"] body > header {
   z-index: 1000;
+}
+/* Modals must keep position:fixed and stack above the header (Donate, auth, etc.) */
+html[data-gd-theme="bubble_pop"] body > .popup-overlay,
+html[data-gd-theme="bubble_pop"] body > .sticker-picker-backdrop {
+  position: fixed !important;
+  z-index: 5000 !important;
 }
 
 
@@ -8183,6 +8327,12 @@ html[data-gd-theme="chalk_board"] body > * { position: relative; z-index: 1; }
 html[data-gd-theme="chalk_board"] body > .header,
 html[data-gd-theme="chalk_board"] body > header {
   z-index: 1000;
+}
+/* Modals must keep position:fixed and stack above the header (Donate, auth, etc.) */
+html[data-gd-theme="chalk_board"] body > .popup-overlay,
+html[data-gd-theme="chalk_board"] body > .sticker-picker-backdrop {
+  position: fixed !important;
+  z-index: 5000 !important;
 }
 
 
@@ -8511,6 +8661,12 @@ html[data-gd-theme="street_interview"] body > .header,
 html[data-gd-theme="street_interview"] body > header {
   z-index: 1000;
 }
+/* Modals must keep position:fixed and stack above the header (Donate, auth, etc.) */
+html[data-gd-theme="street_interview"] body > .popup-overlay,
+html[data-gd-theme="street_interview"] body > .sticker-picker-backdrop {
+  position: fixed !important;
+  z-index: 5000 !important;
+}
 
 
 html[data-gd-theme="street_interview"] body::before {
@@ -8829,6 +8985,12 @@ html[data-gd-theme="radio_wave"] body > * { position: relative; z-index: 1; }
 html[data-gd-theme="radio_wave"] body > .header,
 html[data-gd-theme="radio_wave"] body > header {
   z-index: 1000;
+}
+/* Modals must keep position:fixed and stack above the header (Donate, auth, etc.) */
+html[data-gd-theme="radio_wave"] body > .popup-overlay,
+html[data-gd-theme="radio_wave"] body > .sticker-picker-backdrop {
+  position: fixed !important;
+  z-index: 5000 !important;
 }
 
 
@@ -9154,6 +9316,12 @@ html[data-gd-theme="field_notes"] body > .header,
 html[data-gd-theme="field_notes"] body > header {
   z-index: 1000;
 }
+/* Modals must keep position:fixed and stack above the header (Donate, auth, etc.) */
+html[data-gd-theme="field_notes"] body > .popup-overlay,
+html[data-gd-theme="field_notes"] body > .sticker-picker-backdrop {
+  position: fixed !important;
+  z-index: 5000 !important;
+}
 
 
 html[data-gd-theme="field_notes"] body::before {
@@ -9473,6 +9641,12 @@ html[data-gd-theme="civic_bulletin"] body > * { position: relative; z-index: 1; 
 html[data-gd-theme="civic_bulletin"] body > .header,
 html[data-gd-theme="civic_bulletin"] body > header {
   z-index: 1000;
+}
+/* Modals must keep position:fixed and stack above the header (Donate, auth, etc.) */
+html[data-gd-theme="civic_bulletin"] body > .popup-overlay,
+html[data-gd-theme="civic_bulletin"] body > .sticker-picker-backdrop {
+  position: fixed !important;
+  z-index: 5000 !important;
 }
 
 
@@ -9796,6 +9970,12 @@ html[data-gd-theme="night_dispatch"] body > * { position: relative; z-index: 1; 
 html[data-gd-theme="night_dispatch"] body > .header,
 html[data-gd-theme="night_dispatch"] body > header {
   z-index: 1000;
+}
+/* Modals must keep position:fixed and stack above the header (Donate, auth, etc.) */
+html[data-gd-theme="night_dispatch"] body > .popup-overlay,
+html[data-gd-theme="night_dispatch"] body > .sticker-picker-backdrop {
+  position: fixed !important;
+  z-index: 5000 !important;
 }
 
 
