@@ -373,6 +373,10 @@
     .sb-dot.filled:hover { transform: scale(1.25); }
     .sb-dot.empty { font-size: 8px; color: rgba(255,255,255,0.1); }
     .sb-dot.today-border { border: 1px solid rgba(88,166,255,0.3); }
+    .sb-emoji {
+      font-size: 20px; line-height: 1;
+      display: inline-flex; align-items: center; justify-content: center;
+    }
     /* Custom 32×32 pixel stickers — crisp nearest-neighbor scaling */
     .px-sticker {
       width: 28px; height: 28px;
@@ -385,8 +389,12 @@
     }
     .ci-opt .px-sticker { width: 24px; height: 24px; }
     .ci-emoji .px-sticker { width: 22px; height: 22px; }
+    .ci-emoji .sb-emoji { font-size: 18px; }
 
     /* Sticker style toggle + picker modal */
+    .panel-header .sticker-style-toggle {
+      /* compact control in board header */
+    }
     .sticker-toolbar {
       display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px;
       margin-bottom: 14px;
@@ -2054,15 +2062,19 @@
     <div class="view" id="view-stickers">
       <div style="max-width:960px;width:100%;margin:0 auto;padding-bottom:40px">
         <div class="panel">
-          <div class="panel-header" style="display:flex;justify-content:space-between;align-items:center">
+          <div class="panel-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
             <span data-i18n="app.stickers.heading">🏷️ Daily Health Board</span>
-            <div style="display:flex;gap:8px;align-items:center">
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <div class="sticker-style-toggle" role="group" aria-label="Sticker style" id="sticker-header-style-toggle">
+                <button type="button" id="sticker-header-style-pixel" class="active" onclick="setStickerStyle('pixel')" data-i18n="app.stickers.style_pixel">🎨 Pixel</button>
+                <button type="button" id="sticker-header-style-emoji" onclick="setStickerStyle('emoji')" data-i18n="app.stickers.style_emoji">😀 Emoji</button>
+              </div>
               <button class="btn btn-secondary btn-sm" id="sticker-share-btn" onclick="copyShareLink()" style="display:none" data-i18n="app.stickers.share">🔗 Share</button>
               <button class="btn btn-secondary btn-sm" onclick="loadStickerBoard()" data-i18n="app.refresh">Refresh</button>
             </div>
           </div>
           <div class="panel-content">
-            <p style="color:rgba(255,255,255,0.5);font-size:13px;margin-bottom:12px" data-i18n="app.stickers.desc">Daily check-ins across health areas — pick a sticker for today, or answer polls in the bell.</p>
+            <p style="color:rgba(255,255,255,0.5);font-size:13px;margin-bottom:12px" data-i18n="app.stickers.desc">Daily check-ins across health areas — pick a sticker for today, or answer polls in the bell. Toggle Pixel / Emoji to switch how stickers look on the board.</p>
             <div class="sticker-toolbar" id="sticker-toolbar" style="display:none">
               <div class="sticker-style-toggle" role="group" aria-label="Sticker style">
                 <button type="button" id="sticker-style-pixel" class="active" onclick="setStickerStyle('pixel')" data-i18n="app.stickers.style_pixel">🎨 Pixel</button>
@@ -2420,10 +2432,16 @@
       '🧴':'pr_sun','🧼':'pr_hygiene','🩺':'pr_check','😷':'pr_careful','🦾':'pr_bullet',
       '🍵':'pr_boost','⭐':'pr_picture','🧬':'pr_opt'
     };
-    const PIXEL_TO_EMOJI = Object.fromEntries(
-      Object.entries(EMOJI_TO_PIXEL).map(([em, id]) => [id, em])
-    );
-    // Prefer first mapping if multiple emojis share an id — filled above order is fine
+    // Prefer first mapping if multiple emojis share a pixel id
+    const PIXEL_TO_EMOJI = {};
+    for (const [em, id] of Object.entries(EMOJI_TO_PIXEL)) {
+      if (!PIXEL_TO_EMOJI[id]) PIXEL_TO_EMOJI[id] = em;
+    }
+    // Area-default glyphs when a pixel sticker has no reverse emoji
+    const AREA_FALLBACK_EMOJI = {
+      sleep: '😴', diet: '🥗', exercise: '💪', mental_health: '🧠',
+      relationships: '❤️', environment: '🌿', protect: '🛡️',
+    };
 
     // Full emoji palettes for the picker (area → options)
     const EMOJI_PICKER = {
@@ -2490,22 +2508,41 @@
 
     let _pixelCatalog = null; // loaded once from /stickers/pixel/catalog.json
     let _pickerCtx = null;    // { area, date }
+    let _labelToEmoji = null; // built once from EMOJI_PICKER
+
+    function _buildLabelToEmoji() {
+      if (_labelToEmoji) return _labelToEmoji;
+      _labelToEmoji = {};
+      for (const opts of Object.values(EMOJI_PICKER)) {
+        for (const o of opts || []) {
+          if (o.label && o.emoji && !_labelToEmoji[o.label.toLowerCase()]) {
+            _labelToEmoji[o.label.toLowerCase()] = o.emoji;
+          }
+        }
+      }
+      return _labelToEmoji;
+    }
+
+    function syncStickerStyleButtons() {
+      document.querySelectorAll(
+        '#sticker-style-pixel, #picker-style-pixel, #sticker-header-style-pixel'
+      ).forEach(b => b.classList.toggle('active', stickerStyle === 'pixel'));
+      document.querySelectorAll(
+        '#sticker-style-emoji, #picker-style-emoji, #sticker-header-style-emoji'
+      ).forEach(b => b.classList.toggle('active', stickerStyle === 'emoji'));
+    }
 
     function setStickerStyle(style) {
       if (style !== 'pixel' && style !== 'emoji') return;
       stickerStyle = style;
       try { localStorage.setItem('gd_sticker_style', style); } catch (e) {}
-      document.querySelectorAll('#sticker-style-pixel, #picker-style-pixel').forEach(b => {
-        b.classList.toggle('active', style === 'pixel');
-      });
-      document.querySelectorAll('#sticker-style-emoji, #picker-style-emoji').forEach(b => {
-        b.classList.toggle('active', style === 'emoji');
-      });
+      syncStickerStyleButtons();
       if (stickerBoardData) renderStickerBoard(stickerBoardData);
       if (_pickerCtx) renderStickerPickerGrid();
       // Re-render check-in options in bell if open
       if (_todayData) renderCheckIns(_todayData.check_ins || []);
     }
+    window.setStickerStyle = setStickerStyle;
 
     async function ensurePixelCatalog() {
       if (_pixelCatalog) return _pixelCatalog;
@@ -2515,6 +2552,13 @@
         _pixelCatalog = data.stickers || [];
       } catch (e) {
         _pixelCatalog = [];
+      }
+      // Expand reverse map so emoji mode works for catalog stickers (label match)
+      const labels = _buildLabelToEmoji();
+      for (const s of _pixelCatalog) {
+        if (!s || !s.id || PIXEL_TO_EMOJI[s.id]) continue;
+        const lab = (s.label || '').toLowerCase();
+        if (lab && labels[lab]) PIXEL_TO_EMOJI[s.id] = labels[lab];
       }
       return _pixelCatalog;
     }
@@ -2534,40 +2578,65 @@
       return (EMOJI_PICKER[area] || []).map(o => ({ ...o }));
     }
 
-    /** Render a board sticker respecting stickerStyle preference. */
-    function stickerHTML(token, extraClass, explicitSrc) {
+    /**
+     * Render a board / check-in sticker respecting stickerStyle preference.
+     * opts: { area, label } — used for emoji-mode reverse mapping fallbacks
+     */
+    function stickerHTML(token, extraClass, explicitSrc, opts) {
       if (!token && !explicitSrc) return '';
+      opts = opts || {};
       const cls = extraClass ? `px-sticker ${extraClass}` : 'px-sticker';
 
-      // Resolve to pixel src if available
+      // Resolve to pixel src + unicode emoji when possible
       let src = explicitSrc || null;
       let emojiChar = null;
+      let pixelId = null;
       if (typeof token === 'string') {
         if (token.startsWith('px:')) {
-          src = src || `/stickers/pixel/${token.slice(3)}.png`;
-          emojiChar = PIXEL_TO_EMOJI[token.slice(3)] || null;
+          pixelId = token.slice(3);
+          src = src || `/stickers/pixel/${pixelId}.png`;
+          emojiChar = PIXEL_TO_EMOJI[pixelId] || null;
+        } else if (token.startsWith('/stickers/pixel/')) {
+          src = token;
+          const m = token.match(/\/([^/]+)\.png$/);
+          pixelId = m ? m[1] : null;
+          if (pixelId) emojiChar = PIXEL_TO_EMOJI[pixelId] || null;
         } else if (token.startsWith('/stickers/')) {
           src = token;
         } else {
+          // Unicode emoji (legacy board entries)
           emojiChar = token;
           if (!src && EMOJI_TO_PIXEL[token]) {
             src = `/stickers/pixel/${EMOJI_TO_PIXEL[token]}.png`;
+            pixelId = EMOJI_TO_PIXEL[token];
           }
         }
       }
 
+      // Label-based reverse map (manual picks store label in response)
+      if (!emojiChar && opts.label) {
+        const labels = _buildLabelToEmoji();
+        emojiChar = labels[String(opts.label).toLowerCase()] || null;
+      }
+      if (!emojiChar && pixelId && PIXEL_TO_EMOJI[pixelId]) {
+        emojiChar = PIXEL_TO_EMOJI[pixelId];
+      }
+
       if (stickerStyle === 'emoji') {
-        if (emojiChar) return `<span>${escapeHtml(emojiChar)}</span>`;
-        // px token without reverse map — still show pixel as last resort
-        if (src) return `<img class="${cls}" src="${src}" alt="" width="28" height="28" draggable="false">`;
-        return `<span>${escapeHtml(String(token || ''))}</span>`;
+        // Never show pixel art in emoji mode — fall back to area glyph if needed
+        const glyph = emojiChar
+          || AREA_FALLBACK_EMOJI[opts.area]
+          || '•';
+        const title = opts.label ? ` title="${escapeHtml(opts.label)}"` : '';
+        return `<span class="sb-emoji"${title}>${escapeHtml(glyph)}</span>`;
       }
 
       // pixel mode
       if (src) {
         return `<img class="${cls}" src="${src}" alt="" width="28" height="28" draggable="false">`;
       }
-      return `<span>${escapeHtml(String(token || ''))}</span>`;
+      // No pixel asset — show emoji glyph instead of blank
+      return `<span class="sb-emoji">${escapeHtml(emojiChar || String(token || ''))}</span>`;
     }
 
     function openStickerPicker(area, date) {
@@ -2583,9 +2652,7 @@
       if (title) {
         title.textContent = t('app.stickers.pick_for', 'Pick a sticker') + ' — ' + (labels[area] || area);
       }
-      // Sync toggle UI
-      document.querySelectorAll('#picker-style-pixel').forEach(b => b.classList.toggle('active', stickerStyle === 'pixel'));
-      document.querySelectorAll('#picker-style-emoji').forEach(b => b.classList.toggle('active', stickerStyle === 'emoji'));
+      syncStickerStyleButtons();
       const backdrop = document.getElementById('sticker-picker-backdrop');
       if (backdrop) backdrop.classList.add('show');
       setModalOpen(true);
@@ -3039,6 +3106,9 @@
       } catch (e) {}
       // PWA banner suppressed in easy-mobile CSS; still ok to schedule for full layout
       if (!isEasyMobile()) setTimeout(maybeShowPwaBanner, 1200);
+      syncStickerStyleButtons();
+      // Warm pixel catalog + reverse emoji map in background
+      ensurePixelCatalog().catch(() => {});
     }
     let _usingDefaultWelcome = false;
     
@@ -4213,7 +4283,7 @@
           return `<div class="ci-answered">
             <span class="ci-icon">${icon}</span>
             <span style="font-size:12px">${escapeHtml(ci.area_label)}</span>
-            <span class="ci-emoji">${stickerHTML(ci.emoji, '', ci.src)}</span>
+            <span class="ci-emoji">${stickerHTML(ci.emoji, '', ci.src, { area: ci.area, label: ci.area_label || '' })}</span>
             <span class="ci-check">✓</span>
           </div>`;
         }
@@ -4224,12 +4294,7 @@
           const jsLbl = lbl.replace(/'/g, "\\'");
           const title = o.rare ? `✨ Rare find — ${lbl}` : lbl;
           const token = (o.emoji || o.src || '').replace(/'/g, "\\'");
-          // In emoji mode, prefer showing unicode if we can reverse-map from px:
-          let display = stickerHTML(o.emoji || o.src, '', o.src);
-          if (stickerStyle === 'emoji' && typeof o.emoji === 'string' && o.emoji.startsWith('px:')) {
-            const rev = PIXEL_TO_EMOJI[o.emoji.slice(3)];
-            if (rev) display = `<span>${rev}</span>`;
-          }
+          const display = stickerHTML(o.emoji || o.src, '', o.src, { area: ci.area, label: o.label || '' });
           return `<button class="ci-opt${o.rare ? ' rare' : ''}" title="${title}" onclick="event.stopPropagation(); answerCheckin('${ci.area}','${token}','${jsLbl}','${safemsg}')">${display}</button>`;
         }).join('');
         return `<div class="ci-card" id="ci-card-${ci.area}">
@@ -4964,9 +5029,12 @@
     async function loadStickerBoard() {
       if (!currentUser) {
         document.getElementById('sticker-board-content').innerHTML = `<div style="color:rgba(255,255,255,0.4);text-align:center;padding:32px">${t('app.stickers.signin_prompt','Sign in to see your board')}</div>`;
+        syncStickerStyleButtons();
         return;
       }
       try {
+        // Prefetch catalog so emoji↔pixel reverse map is ready before first paint
+        await ensurePixelCatalog();
         const resp = await fetch(`${API}/sticker-board/${currentUser.user_id}`, {
           headers: {'X-Session-Token': currentUser.token||''}
         });
@@ -4995,11 +5063,10 @@
         protect: '🛡️ ' + t('app.area.protect','Protect')
       };
 
-      // Toolbar: style toggle visible when signed in
+      // Toolbar: style toggle visible when signed in (header toggle always visible)
       const toolbar = document.getElementById('sticker-toolbar');
       if (toolbar) toolbar.style.display = currentUser ? 'flex' : 'none';
-      document.querySelectorAll('#sticker-style-pixel').forEach(b => b.classList.toggle('active', stickerStyle === 'pixel'));
-      document.querySelectorAll('#sticker-style-emoji').forEach(b => b.classList.toggle('active', stickerStyle === 'emoji'));
+      syncStickerStyleButtons();
 
       // Build last 30 days oldest→newest (today on the right); skip days with no stickers.
       // Use UTC throughout so day keys match the server's utcnow-based storage.
@@ -5035,7 +5102,7 @@
             const pickAttr = day.isToday
               ? ` role="button" tabindex="0" onclick="openStickerPicker('${area}','${day.iso}')" title="${t('app.stickers.change','Change sticker')}"`
               : '';
-            html += `<td class="sb-cell"><div class="sb-dot filled${todayClass}${pickCls}"${pickAttr}>${stickerHTML(entry.emoji, '', entry.src)}${tip}</div></td>`;
+            html += `<td class="sb-cell"><div class="sb-dot filled${todayClass}${pickCls}"${pickAttr}>${stickerHTML(entry.emoji, '', entry.src, { area, label: entry.response || entry.prompt || '' })}${tip}</div></td>`;
           } else if (day.isToday) {
             html += `<td class="sb-cell"><div class="sb-dot empty${todayClass} sb-pickable" role="button" tabindex="0"
               onclick="openStickerPicker('${area}','${day.iso}')"
