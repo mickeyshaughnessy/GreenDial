@@ -450,5 +450,12 @@
   "app.pwa.install": "安装",
   "app.pwa.install_body": "安装 GreenDial，更快打开并可选接收提醒。",
   "app.pwa.ios_tip": "将 GreenDial 添加到主屏幕：点分享，然后“添加到主屏幕”。",
-  "app.mbn.language": "语言"
+  "app.mbn.language": "语言",
+  "app.chat.typing": "Doc 正在输入…",
+  "app.chat.thinking": "思考中…",
+  "app.chat.almost": "正在整理回答…",
+  "app.settings.easy_mobile": "简洁手机界面",
+  "app.settings.easy_mobile_desc": "仅与 Doc 聊天 — 隐藏菜单、看板和其他标签。关闭后显示完整应用。",
+  "app.settings.open_board": "每日看板",
+  "app.settings.open_board_desc": "打卡与贴纸看板"
 }

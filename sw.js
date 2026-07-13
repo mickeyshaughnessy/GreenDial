@@ -1,6 +1,6 @@
 /* GreenDial service worker — offline app shell + web push.
    Bump CACHE when shell assets change to force an update. */
-const CACHE = 'greendial-v3';
+const CACHE = 'greendial-v4';
 const SHELL = [
   '/',
   '/manifest.json',

@@ -519,6 +519,65 @@
     .msg.doc { background: rgba(255,255,255,0.1); align-self: flex-start; border-bottom-left-radius: 4px; }
     .msg.system { background: rgba(255,193,7,0.15); color: #ffc107; align-self: center; font-size: 12px; padding: 8px 16px; }
     .msg.loading { color: rgba(255,255,255,0.5); font-style: italic; }
+
+    /* Doc typing indicator */
+    .typing-row { align-self: flex-start; max-width: 92%; }
+    .typing-bubble {
+      background: rgba(255,255,255,0.1);
+      border-radius: 16px;
+      border-bottom-left-radius: 4px;
+      padding: 12px 16px;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 44px;
+    }
+    .typing-label {
+      font-size: 13px;
+      color: rgba(255,255,255,0.55);
+      font-style: italic;
+    }
+    .typing-dots {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      height: 14px;
+    }
+    .typing-dots span {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: rgba(16,185,129,0.85);
+      animation: typingBounce 1.2s ease-in-out infinite;
+    }
+    .typing-dots span:nth-child(2) { animation-delay: 0.15s; }
+    .typing-dots span:nth-child(3) { animation-delay: 0.3s; }
+    @keyframes typingBounce {
+      0%, 60%, 100% { transform: translateY(0); opacity: 0.45; }
+      30% { transform: translateY(-5px); opacity: 1; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .typing-dots span { animation: none; opacity: 0.7; }
+      .msg-enter { animation: none !important; }
+    }
+    .msg-enter {
+      animation: msgEnter 0.32s ease-out both;
+    }
+    @keyframes msgEnter {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .chat-input-area.busy .btn-primary {
+      opacity: 0.55;
+      pointer-events: none;
+    }
+    .chat-input-area.busy input {
+      opacity: 0.85;
+    }
+    #chat-messages[aria-busy="true"] {
+      /* scroll region is waiting on Doc */
+    }
+
     .chat-input-area {
       padding: 16px;
       background: rgba(0,0,0,0.2);
@@ -1594,6 +1653,56 @@
     @media (max-width: 700px) and (display-mode: standalone) {
       .header { padding-top: calc(10px + env(safe-area-inset-top, 0px)); }
     }
+
+    /* ============ EASY MOBILE: Doc chat only ============ */
+    body.easy-mobile .nav-tabs,
+    body.easy-mobile .mobile-bottom-nav,
+    body.easy-mobile .mobile-more-sheet,
+    body.easy-mobile .header .gd-style-toolbar,
+    body.easy-mobile .header .lang-switch,
+    body.easy-mobile #nav-about-tab,
+    body.easy-mobile #nav-docs-tab,
+    body.easy-mobile #view-chat .chat-hero,
+    body.easy-mobile #view-chat .board-nudge,
+    body.easy-mobile #chat-mode-escape,
+    body.easy-mobile #agent-tabs-row,
+    body.easy-mobile #task-toggle-btn,
+    body.easy-mobile .pwa-install-banner,
+    body.easy-mobile .msg-model,
+    body.easy-mobile .notif-bell-wrap,
+    body.easy-mobile .user-area button[onclick*="showDonateModal"],
+    body.easy-mobile .user-area button[onclick*="logout"] {
+      display: none !important;
+    }
+    body.easy-mobile {
+      --bottom-nav-h: 0px !important;
+    }
+    body.easy-mobile .main {
+      padding-bottom: var(--kb) !important;
+    }
+    body.easy-mobile .header {
+      gap: 8px;
+      padding: 10px 12px;
+      padding-top: calc(10px + env(safe-area-inset-top, 0px));
+    }
+    body.easy-mobile .chat-header {
+      display: none;
+    }
+    body.easy-mobile #view-chat .chat-container {
+      border-radius: 0;
+      background: transparent;
+    }
+    body.easy-mobile #view-chat .starter-prompts {
+      padding: 10px 12px 8px;
+    }
+    body.easy-mobile .user-area .btn-sm {
+      min-height: 40px;
+    }
+    /* Settings still reachable via avatar / Sign in — board link inside settings */
+    body.easy-mobile #view-user .settings-group:has([data-gd-style-picker]) {
+      /* style picker still available in settings for power users */
+    }
+
     body.modal-open { overflow: hidden !important; }
   </style>
 </head>
@@ -2486,7 +2595,8 @@
 
     async function initAgentChat(agentId, context = null) {
       if (!currentUser) return;
-      isLoading = true;
+      if (isEasyMobile()) return; // specialists not surfaced on easy phone layout
+      showDocTyping();
       if (currentAgent === agentId) renderMessages();
       try {
         const body = { user_id: currentUser.user_id, text: '', init: true };
@@ -2499,11 +2609,12 @@
         if (data.response) {
           if (!agentChats[agentId]) agentChats[agentId] = [];
           agentChats[agentId].push({ role: agentId, text: data.response, model: data.model_used || null });
+          markLastDocEnter();
         }
         if (data.session_id) agentSessionIds[agentId] = data.session_id;
         if (data.profile_updated && data.profile) { userProfile = data.profile; updateAllProfileDisplays(); }
       } catch (e) { console.error('initAgentChat', e); }
-      isLoading = false;
+      await hideDocTyping();
       if (currentAgent === agentId) renderMessages();
     }
 
@@ -2775,6 +2886,10 @@
       agentChats = { doc: [] };
       for (const aid of allIds) agentChats[aid] = [];
       agentSessionIds = {};
+      applyEasyMobile();
+      window.addEventListener('resize', () => {
+        applyEasyMobile();
+      });
       updateAgentTabs();
       renderMessages();
       // Avoid auto-focus on mobile (opens keyboard immediately)
@@ -2791,17 +2906,24 @@
         agentChats.doc = [{ role: 'doc', text: t('app.doc_welcome',"Hi! I'm Doc. I'll help you build your health profile and track your health over time. What brings you here today?") }];
         renderMessages();
       }
+      applyEasyMobile();
       updateChatCompactChrome();
       updateBoardNudge();
       // Deep link: /?view=stickers (push check-in, shared links)
+      // On easy mobile, only allow stickers/user deep links (not history/docs chrome)
       try {
         const params = new URLSearchParams(window.location.search);
         const view = params.get('view');
         if (view && document.getElementById('view-' + view)) {
-          switchView(view);
+          if (isEasyMobile() && view !== 'chat' && view !== 'user' && view !== 'stickers') {
+            switchView('chat');
+          } else {
+            switchView(view);
+          }
         }
       } catch (e) {}
-      setTimeout(maybeShowPwaBanner, 1200);
+      // PWA banner suppressed in easy-mobile CSS; still ok to schedule for full layout
+      if (!isEasyMobile()) setTimeout(maybeShowPwaBanner, 1200);
     }
     let _usingDefaultWelcome = false;
     
@@ -2920,10 +3042,14 @@
         document.documentElement.style.setProperty('--kb', kb + 'px');
         document.body.classList.toggle('kb-open', kb > 80);
         if (window.matchMedia('(max-width: 700px)').matches) {
-          document.documentElement.style.setProperty(
-            '--bottom-nav-h',
-            kb > 80 ? '0px' : 'calc(56px + env(safe-area-inset-bottom, 0px))'
-          );
+          if (isEasyMobile() || kb > 80) {
+            document.documentElement.style.setProperty('--bottom-nav-h', '0px');
+          } else {
+            document.documentElement.style.setProperty(
+              '--bottom-nav-h',
+              'calc(56px + env(safe-area-inset-bottom, 0px))'
+            );
+          }
         }
       };
       const schedule = () => {
@@ -3011,13 +3137,169 @@
       renderMessages();
     }
 
+    // ── Easy mobile + Doc typing ────────────────────────────────────────────
+    let _typingShownAt = 0;
+    let _typingCycleTimer = null;
+    let _typingLabelIdx = 0;
+    let _animateLastDoc = false;
+    const TYPING_MIN_MS = 550;
+
+    function isEasyMobile() {
+      try {
+        return window.matchMedia('(max-width: 700px)').matches
+          && localStorage.getItem('gd_easy_mobile') !== '0';
+      } catch (e) {
+        return window.matchMedia('(max-width: 700px)').matches;
+      }
+    }
+
+    function applyEasyMobile() {
+      const on = isEasyMobile();
+      document.body.classList.toggle('easy-mobile', on);
+      if (on) {
+        currentAgent = 'doc';
+        document.documentElement.style.setProperty('--bottom-nav-h', '0px');
+        // Settings + Board still allowed (opened from Settings); hide other chrome views
+        const allowed = { chat: 1, user: 1, stickers: 1 };
+        if (currentView && !allowed[currentView]) {
+          switchView('chat');
+        }
+        updateAgentTabs();
+      } else if (window.matchMedia('(max-width: 700px)').matches) {
+        document.documentElement.style.setProperty(
+          '--bottom-nav-h',
+          'calc(56px + env(safe-area-inset-bottom, 0px))'
+        );
+      }
+      updateSendBusyState();
+      updateBoardNudge();
+    }
+
+    function toggleEasyMobileLayout() {
+      try {
+        if (localStorage.getItem('gd_easy_mobile') === '0') {
+          localStorage.removeItem('gd_easy_mobile');
+        } else {
+          localStorage.setItem('gd_easy_mobile', '0');
+        }
+      } catch (e) {}
+      applyEasyMobile();
+      if (currentView === 'user') {
+        try { refreshSettings({ skipFetch: true }); } catch (e) {}
+      }
+    }
+    window.toggleEasyMobileLayout = toggleEasyMobileLayout;
+
+    function typingLabels() {
+      return [
+        t('app.chat.typing', 'Doc is typing…'),
+        t('app.chat.thinking', 'Thinking…'),
+        t('app.chat.almost', 'Putting that together…'),
+      ];
+    }
+
+    function chatNearBottom(container, threshold) {
+      if (!container) return true;
+      const th = threshold == null ? 100 : threshold;
+      return container.scrollHeight - container.scrollTop - container.clientHeight < th;
+    }
+
+    function scrollChatIfNeeded(force) {
+      const container = document.getElementById('chat-messages');
+      if (!container) return;
+      if (force || chatNearBottom(container)) {
+        container.scrollTop = container.scrollHeight;
+      }
+    }
+
+    function updateSendBusyState() {
+      const area = document.querySelector('.chat-input-area');
+      const msgs = document.getElementById('chat-messages');
+      const sendBtn = area && area.querySelector('.btn-primary');
+      if (area) area.classList.toggle('busy', !!isLoading);
+      if (msgs) msgs.setAttribute('aria-busy', isLoading ? 'true' : 'false');
+      if (sendBtn) {
+        sendBtn.disabled = !!isLoading;
+        sendBtn.setAttribute('aria-disabled', isLoading ? 'true' : 'false');
+      }
+    }
+
+    function stopTypingCycle() {
+      if (_typingCycleTimer) {
+        clearInterval(_typingCycleTimer);
+        _typingCycleTimer = null;
+      }
+      _typingLabelIdx = 0;
+    }
+
+    function startTypingCycle() {
+      stopTypingCycle();
+      _typingLabelIdx = 0;
+      const labelEl = document.querySelector('#doc-typing .typing-label');
+      if (labelEl) labelEl.textContent = typingLabels()[0];
+      _typingCycleTimer = setInterval(() => {
+        const labels = typingLabels();
+        _typingLabelIdx = (_typingLabelIdx + 1) % labels.length;
+        const el = document.querySelector('#doc-typing .typing-label');
+        if (el) el.textContent = labels[_typingLabelIdx];
+      }, 4200);
+    }
+
+    function ensureTypingEl() {
+      const container = document.getElementById('chat-messages');
+      if (!container) return;
+      let el = document.getElementById('doc-typing');
+      const agMeta = getAgentMeta(currentAgent === 'doc' || isEasyMobile() ? 'doc' : currentAgent);
+      const emoji = agMeta.emoji || '🌿';
+      const label = typingLabels()[_typingLabelIdx] || typingLabels()[0];
+      if (!el) {
+        el = document.createElement('div');
+        el.id = 'doc-typing';
+        el.className = 'msg-row agent typing-row';
+        el.setAttribute('aria-live', 'polite');
+        el.setAttribute('aria-label', label);
+        container.appendChild(el);
+      }
+      el.innerHTML = `
+        <div class="msg-avatar"><span style="font-size:17px;line-height:1">${emoji}</span></div>
+        <div class="typing-bubble">
+          <span class="typing-dots" aria-hidden="true"><span></span><span></span><span></span></span>
+          <span class="typing-label">${escapeHtml(label)}</span>
+        </div>`;
+      scrollChatIfNeeded(true);
+    }
+
+    function showDocTyping() {
+      isLoading = true;
+      _typingShownAt = Date.now();
+      updateSendBusyState();
+      ensureTypingEl();
+      startTypingCycle();
+    }
+
+    async function hideDocTyping() {
+      const elapsed = Date.now() - (_typingShownAt || Date.now());
+      const wait = Math.max(0, TYPING_MIN_MS - elapsed);
+      if (wait) await new Promise(r => setTimeout(r, wait));
+      stopTypingCycle();
+      const el = document.getElementById('doc-typing');
+      if (el) el.remove();
+      isLoading = false;
+      updateSendBusyState();
+    }
+
+    function markLastDocEnter() {
+      _animateLastDoc = true;
+    }
+
     function renderMessages() {
       const container = document.getElementById('chat-messages');
+      if (!container) return;
+      const stickBottom = chatNearBottom(container);
       const history = agentChats[currentAgent] || [];
       const userAv = getUserAvatar();
-      const agMeta = getAgentMeta(currentAgent);
 
-      container.innerHTML = history.map(m => {
+      container.innerHTML = history.map((m, idx) => {
         const isUser = m.role === 'user';
         const av = isUser ? userAv : getAgentMeta(m.role).emoji;
         const avEl = (av && av.startsWith('data:'))
@@ -3025,22 +3307,27 @@
           : `<span style="font-size:17px;line-height:1">${av || '🤖'}</span>`;
         const content = isUser ? escapeHtml(m.text) : renderMarkdown(m.text);
         const msgCls = isUser ? 'user' : (m.role === 'doc' ? 'doc' : 'agent-msg');
-        const modelBadge = (!isUser && m.model) ? `<div class="msg-model">${escapeHtml(formatModel(m.model))}</div>` : '';
-        return `<div class="msg-row ${isUser?'user':'agent'}">
+        const modelBadge = (!isUser && m.model && !isEasyMobile())
+          ? `<div class="msg-model">${escapeHtml(formatModel(m.model))}</div>` : '';
+        const enterCls = (!isUser && _animateLastDoc && idx === history.length - 1) ? ' msg-enter' : '';
+        return `<div class="msg-row ${isUser?'user':'agent'}${enterCls}">
           ${!isUser ? `<div class="msg-avatar">${avEl}</div>` : ''}
           <div><div class="msg ${msgCls}">${content}</div>${modelBadge}</div>
           ${isUser ? `<div class="msg-avatar user-av">${avEl}</div>` : ''}
         </div>`;
       }).join('');
 
-      if (isLoading) {
-        const ag = agMeta.emoji;
-        container.innerHTML += `<div class="msg-row agent">
-          <div class="msg-avatar"><span style="font-size:17px">${ag}</span></div>
-          <div class="msg doc loading">${agMeta.name} is typing…</div>
-        </div>`;
+      _animateLastDoc = false;
+
+      if (isLoading) ensureTypingEl();
+      else {
+        const typing = document.getElementById('doc-typing');
+        if (typing) typing.remove();
       }
-      container.scrollTop = container.scrollHeight;
+
+      if (stickBottom || isLoading) {
+        container.scrollTop = container.scrollHeight;
+      }
     }
     
     function formatModel(model) {
@@ -3082,6 +3369,11 @@
       if (!text || isLoading) return;
       _usingDefaultWelcome = false;
 
+      // Easy phone layout: always Doc
+      if (isEasyMobile()) {
+        currentAgent = 'doc';
+      }
+
       if (!currentUser) {
         addMessage('user', text);
         input.value = '';
@@ -3096,22 +3388,24 @@
       }
 
       // Capture active agent NOW — async response must go to this tab regardless of later tab switches
-      const activeAgent = currentAgent;
+      const activeAgent = isEasyMobile() ? 'doc' : currentAgent;
 
-      addMessage('user', text);
       input.value = '';
-      isLoading = true;
-      renderMessages();
+      if (!agentChats[activeAgent]) agentChats[activeAgent] = [];
+      agentChats[activeAgent].push({ role: 'user', text });
+      // Typing on before first paint so user msg + typing appear together
+      showDocTyping();
+      if (currentAgent === activeAgent) renderMessages();
       updateChatCompactChrome();
 
       try {
         let endpoint, body;
-        if (activeAgent === 'doc' && taskMode) {
-          // Task mode: agentic Gemini Flash loop with real tools
+        if (activeAgent === 'doc' && taskMode && !isEasyMobile()) {
+          // Task mode: agentic Gemini Flash loop with real tools (desktop / full mobile only)
           endpoint = `${API}/task`;
           body = { text, user_id: currentUser.user_id };
         } else if (activeAgent === 'doc') {
-          // Conversational Doc: free llama model
+          // Conversational Doc
           endpoint = `${API}/chat`;
           body = { text, user_id: currentUser.user_id, session_id: agentSessionIds['doc'] };
         } else {
@@ -3130,9 +3424,13 @@
         if (activeAgent === 'doc') agentSessionIds['doc'] = data.session_id || agentSessionIds['doc'];
         else agentSessionIds[activeAgent] = data.session_id || agentSessionIds[activeAgent];
 
+        // Hold typing bubble for min duration, then reveal reply
+        await hideDocTyping();
+
         if (data.response) {
           if (!agentChats[activeAgent]) agentChats[activeAgent] = [];
           agentChats[activeAgent].push({ role: activeAgent, text: data.response, model: data.model_used || null });
+          markLastDocEnter();
           if (currentAgent === activeAgent) renderMessages();
         }
         if (data.profile_updated && data.profile) { userProfile = data.profile; updateAllProfileDisplays(); }
@@ -3162,8 +3460,8 @@
           }
         }
 
-        // Doc is redirecting the user to a specialist
-        if (data.redirect_to_agent && activeAgent === 'doc') {
+        // Doc is redirecting the user to a specialist — skip on easy mobile (stay with Doc)
+        if (data.redirect_to_agent && activeAgent === 'doc' && !isEasyMobile()) {
           const targetAgent = data.redirect_to_agent;
           setTimeout(async () => {
             await switchChatAgent(targetAgent);
@@ -3176,6 +3474,7 @@
         }
       } catch (error) {
         console.error('Chat error:', error);
+        await hideDocTyping();
         const offline = (typeof navigator !== 'undefined' && navigator.onLine === false)
           || (error && (error.name === 'TypeError' || /network|fetch/i.test(String(error.message || error))));
         if (offline) {
@@ -3188,11 +3487,10 @@
             ? t('app.offline.chat_msg', "You're offline. Check your connection and try again.")
             : t('app.connection_issue', 'Connection issue. Try again.')
         });
+        markLastDocEnter();
         if (currentAgent === activeAgent) renderMessages();
       }
 
-      isLoading = false;
-      if (currentAgent === activeAgent) renderMessages();
       updateChatCompactChrome();
       input.focus();
     }
@@ -3469,6 +3767,16 @@
             <div><div class="settings-label">${t('app.settings.chatonly','Chat-only mode')}</div><div class="settings-desc">${t('app.settings.chatonly_desc','Use only the chat interface — hides other panels')}</div></div>
             <div class="settings-toggle ${isChatOnly() ? 'on' : ''}" onclick="toggleChatOnlyMode()" role="switch" aria-checked="${isChatOnly() ? 'true' : 'false'}" title="${isChatOnly() ? 'On — click to show full interface' : 'Off — click to hide other panels'}"></div>
           </div>
+          ${window.matchMedia('(max-width: 700px)').matches ? `
+          <div class="settings-item">
+            <div><div class="settings-label">${t('app.settings.easy_mobile','Simple phone layout')}</div><div class="settings-desc">${t('app.settings.easy_mobile_desc','Chat with Doc only — hides menus, board, and extra tabs. Turn off for the full app.')}</div></div>
+            <div class="settings-toggle ${isEasyMobile() ? 'on' : ''}" onclick="toggleEasyMobileLayout()" role="switch" aria-checked="${isEasyMobile() ? 'true' : 'false'}"></div>
+          </div>
+          <div class="settings-item">
+            <div><div class="settings-label">🏷️ ${t('app.settings.open_board','Daily Board')}</div><div class="settings-desc">${t('app.settings.open_board_desc','Check-ins and sticker board')}</div></div>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="switchView('stickers')">${t('app.settings.open','Open')}</button>
+          </div>
+          ` : ''}
         </div>
         <div class="settings-group">
           <div class="settings-group-title">${t('app.settings.notifications','Notifications')}</div>

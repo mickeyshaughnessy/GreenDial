@@ -100,6 +100,13 @@ First-class phone experience for greendial.org (browser + Capacitor WebView):
 - Board nudge dismissible for the day; full-bleed notif sheet; smoother keyboard insets.
 - PWA visit counter session-scoped; install banner less aggressive.
 
+### Easy mobile (Doc-only) — default on phones
+- `body.easy-mobile` when `max-width: 700px` and `localStorage.gd_easy_mobile !== '0'`.
+- Hides nav, board chrome, style/lang, agent tabs, PWA banner; **chat with Doc only**.
+- Polished typing bubble (animated dots, status cycle, min display time, reply fade-in).
+- Settings → **Simple phone layout** toggle; **Daily Board** open button.
+- Escape: set `localStorage.gd_easy_mobile = '0'` or flip the toggle.
+
 ---
 
 ## 4. Remaining gaps for a true native app

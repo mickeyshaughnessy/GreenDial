@@ -450,5 +450,12 @@
   "app.pwa.install": "インストール",
   "app.pwa.install_body": "GreenDial をインストールすると、すばやく開けてリマインダーも使えます。",
   "app.pwa.ios_tip": "GreenDial をホーム画面に追加：共有をタップし、「ホーム画面に追加」を選びます。",
-  "app.mbn.language": "言語"
+  "app.mbn.language": "言語",
+  "app.chat.typing": "Docが入力中…",
+  "app.chat.thinking": "考え中…",
+  "app.chat.almost": "まとめているところです…",
+  "app.settings.easy_mobile": "シンプルなスマホ表示",
+  "app.settings.easy_mobile_desc": "Docとのチャットのみ — メニューやボード、他のタブを隠します。オフでフル表示。",
+  "app.settings.open_board": "デイリーボード",
+  "app.settings.open_board_desc": "チェックインとステッカーボード"
 }
