@@ -1,8 +1,8 @@
 {
-  "size": 48,
+  "size": 64,
   "count": 322,
   "style": "cartoon",
-  "description": "Funny NES/SNES-inspired original cartoon stickers (not Nintendo assets)",
+  "description": "Polished original SNES-style cartoon icons (not Nintendo assets)",
   "stickers": [
     {
       "id": "sleep_great",
@@ -13,7 +13,7 @@
       "rare": false,
       "file": "sleep_great.png",
       "src": "/stickers/cartoon/sleep_great.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -25,7 +25,7 @@
       "rare": false,
       "file": "sleep_rough.png",
       "src": "/stickers/cartoon/sleep_rough.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -37,7 +37,7 @@
       "rare": false,
       "file": "sleep_ok.png",
       "src": "/stickers/cartoon/sleep_ok.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -49,7 +49,7 @@
       "rare": false,
       "file": "sleep_good.png",
       "src": "/stickers/cartoon/sleep_good.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -61,7 +61,7 @@
       "rare": false,
       "file": "sleep_rested.png",
       "src": "/stickers/cartoon/sleep_rested.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -73,7 +73,7 @@
       "rare": false,
       "file": "sleep_dozy.png",
       "src": "/stickers/cartoon/sleep_dozy.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -85,7 +85,7 @@
       "rare": false,
       "file": "sleep_zzz.png",
       "src": "/stickers/cartoon/sleep_zzz.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -97,7 +97,7 @@
       "rare": false,
       "file": "sleep_moon.png",
       "src": "/stickers/cartoon/sleep_moon.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -109,7 +109,7 @@
       "rare": false,
       "file": "sleep_bed.png",
       "src": "/stickers/cartoon/sleep_bed.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -121,7 +121,7 @@
       "rare": false,
       "file": "sleep_alarm.png",
       "src": "/stickers/cartoon/sleep_alarm.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -133,7 +133,7 @@
       "rare": false,
       "file": "sleep_early.png",
       "src": "/stickers/cartoon/sleep_early.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -145,7 +145,7 @@
       "rare": false,
       "file": "sleep_late.png",
       "src": "/stickers/cartoon/sleep_late.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -157,7 +157,7 @@
       "rare": false,
       "file": "sleep_broken.png",
       "src": "/stickers/cartoon/sleep_broken.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -169,7 +169,7 @@
       "rare": false,
       "file": "sleep_in.png",
       "src": "/stickers/cartoon/sleep_in.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -181,7 +181,7 @@
       "rare": true,
       "file": "sleep_owl.png",
       "src": "/stickers/cartoon/sleep_owl.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -193,7 +193,7 @@
       "rare": true,
       "file": "sleep_sheep.png",
       "src": "/stickers/cartoon/sleep_sheep.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -205,7 +205,7 @@
       "rare": true,
       "file": "sleep_ufo.png",
       "src": "/stickers/cartoon/sleep_ufo.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -217,7 +217,7 @@
       "rare": true,
       "file": "sleep_stars.png",
       "src": "/stickers/cartoon/sleep_stars.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -229,7 +229,7 @@
       "rare": false,
       "file": "sleep_mug.png",
       "src": "/stickers/cartoon/sleep_mug.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -241,7 +241,7 @@
       "rare": false,
       "file": "sleep_book.png",
       "src": "/stickers/cartoon/sleep_book.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -253,7 +253,7 @@
       "rare": false,
       "file": "sleep_face_00.png",
       "src": "/stickers/cartoon/sleep_face_00.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -265,7 +265,7 @@
       "rare": false,
       "file": "sleep_face_01.png",
       "src": "/stickers/cartoon/sleep_face_01.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -277,7 +277,7 @@
       "rare": false,
       "file": "sleep_face_02.png",
       "src": "/stickers/cartoon/sleep_face_02.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -289,7 +289,7 @@
       "rare": false,
       "file": "sleep_face_03.png",
       "src": "/stickers/cartoon/sleep_face_03.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -301,7 +301,7 @@
       "rare": false,
       "file": "sleep_face_04.png",
       "src": "/stickers/cartoon/sleep_face_04.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -313,7 +313,7 @@
       "rare": false,
       "file": "sleep_face_05.png",
       "src": "/stickers/cartoon/sleep_face_05.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -325,7 +325,7 @@
       "rare": false,
       "file": "sleep_face_06.png",
       "src": "/stickers/cartoon/sleep_face_06.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -337,7 +337,7 @@
       "rare": false,
       "file": "sleep_face_07.png",
       "src": "/stickers/cartoon/sleep_face_07.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -349,7 +349,7 @@
       "rare": false,
       "file": "sleep_face_08.png",
       "src": "/stickers/cartoon/sleep_face_08.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -361,7 +361,7 @@
       "rare": false,
       "file": "sleep_face_09.png",
       "src": "/stickers/cartoon/sleep_face_09.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -373,7 +373,7 @@
       "rare": false,
       "file": "sleep_face_10.png",
       "src": "/stickers/cartoon/sleep_face_10.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -385,7 +385,7 @@
       "rare": false,
       "file": "sleep_face_11.png",
       "src": "/stickers/cartoon/sleep_face_11.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -397,7 +397,7 @@
       "rare": false,
       "file": "sleep_face_12.png",
       "src": "/stickers/cartoon/sleep_face_12.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -409,7 +409,7 @@
       "rare": false,
       "file": "sleep_face_13.png",
       "src": "/stickers/cartoon/sleep_face_13.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -421,7 +421,7 @@
       "rare": false,
       "file": "sleep_face_14.png",
       "src": "/stickers/cartoon/sleep_face_14.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -433,7 +433,7 @@
       "rare": false,
       "file": "sleep_moon_00.png",
       "src": "/stickers/cartoon/sleep_moon_00.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -445,7 +445,7 @@
       "rare": false,
       "file": "sleep_moon_01.png",
       "src": "/stickers/cartoon/sleep_moon_01.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -457,7 +457,7 @@
       "rare": false,
       "file": "sleep_moon_02.png",
       "src": "/stickers/cartoon/sleep_moon_02.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -469,7 +469,7 @@
       "rare": false,
       "file": "sleep_moon_03.png",
       "src": "/stickers/cartoon/sleep_moon_03.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -481,7 +481,7 @@
       "rare": false,
       "file": "sleep_moon_04.png",
       "src": "/stickers/cartoon/sleep_moon_04.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -493,7 +493,7 @@
       "rare": false,
       "file": "sleep_moon_05.png",
       "src": "/stickers/cartoon/sleep_moon_05.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -505,7 +505,7 @@
       "rare": false,
       "file": "sleep_moon_06.png",
       "src": "/stickers/cartoon/sleep_moon_06.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -517,7 +517,7 @@
       "rare": false,
       "file": "sleep_moon_07.png",
       "src": "/stickers/cartoon/sleep_moon_07.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -529,7 +529,7 @@
       "rare": false,
       "file": "sleep_moon_08.png",
       "src": "/stickers/cartoon/sleep_moon_08.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -541,7 +541,7 @@
       "rare": true,
       "file": "sleep_moon_09.png",
       "src": "/stickers/cartoon/sleep_moon_09.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -553,7 +553,7 @@
       "rare": true,
       "file": "sleep_moon_10.png",
       "src": "/stickers/cartoon/sleep_moon_10.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -565,7 +565,7 @@
       "rare": true,
       "file": "sleep_moon_11.png",
       "src": "/stickers/cartoon/sleep_moon_11.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -577,7 +577,7 @@
       "rare": false,
       "file": "diet_clean.png",
       "src": "/stickers/cartoon/diet_clean.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -589,7 +589,7 @@
       "rare": false,
       "file": "diet_struggle.png",
       "src": "/stickers/cartoon/diet_struggle.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -601,7 +601,7 @@
       "rare": false,
       "file": "diet_enjoy.png",
       "src": "/stickers/cartoon/diet_enjoy.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -613,7 +613,7 @@
       "rare": false,
       "file": "diet_onpoint.png",
       "src": "/stickers/cartoon/diet_onpoint.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -625,7 +625,7 @@
       "rare": false,
       "file": "diet_apple.png",
       "src": "/stickers/cartoon/diet_apple.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -637,7 +637,7 @@
       "rare": false,
       "file": "diet_veg.png",
       "src": "/stickers/cartoon/diet_veg.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -649,7 +649,7 @@
       "rare": false,
       "file": "diet_water.png",
       "src": "/stickers/cartoon/diet_water.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -661,7 +661,7 @@
       "rare": false,
       "file": "diet_pizza.png",
       "src": "/stickers/cartoon/diet_pizza.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -673,7 +673,7 @@
       "rare": false,
       "file": "diet_sweet.png",
       "src": "/stickers/cartoon/diet_sweet.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -685,7 +685,7 @@
       "rare": false,
       "file": "diet_comfort.png",
       "src": "/stickers/cartoon/diet_comfort.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -697,7 +697,7 @@
       "rare": true,
       "file": "diet_chef.png",
       "src": "/stickers/cartoon/diet_chef.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -709,7 +709,7 @@
       "rare": true,
       "file": "diet_avo.png",
       "src": "/stickers/cartoon/diet_avo.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -721,7 +721,7 @@
       "rare": true,
       "file": "diet_grape.png",
       "src": "/stickers/cartoon/diet_grape.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -733,7 +733,7 @@
       "rare": true,
       "file": "diet_feast.png",
       "src": "/stickers/cartoon/diet_feast.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -745,7 +745,7 @@
       "rare": false,
       "file": "diet_salad2.png",
       "src": "/stickers/cartoon/diet_salad2.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -757,7 +757,7 @@
       "rare": false,
       "file": "diet_food_00.png",
       "src": "/stickers/cartoon/diet_food_00.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -769,7 +769,7 @@
       "rare": false,
       "file": "diet_food_01.png",
       "src": "/stickers/cartoon/diet_food_01.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -781,7 +781,7 @@
       "rare": false,
       "file": "diet_food_02.png",
       "src": "/stickers/cartoon/diet_food_02.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -793,7 +793,7 @@
       "rare": false,
       "file": "diet_food_03.png",
       "src": "/stickers/cartoon/diet_food_03.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -805,7 +805,7 @@
       "rare": false,
       "file": "diet_food_04.png",
       "src": "/stickers/cartoon/diet_food_04.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -817,7 +817,7 @@
       "rare": false,
       "file": "diet_food_05.png",
       "src": "/stickers/cartoon/diet_food_05.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -829,7 +829,7 @@
       "rare": false,
       "file": "diet_food_06.png",
       "src": "/stickers/cartoon/diet_food_06.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -841,7 +841,7 @@
       "rare": false,
       "file": "diet_food_07.png",
       "src": "/stickers/cartoon/diet_food_07.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -853,7 +853,7 @@
       "rare": false,
       "file": "diet_food_08.png",
       "src": "/stickers/cartoon/diet_food_08.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -865,7 +865,7 @@
       "rare": false,
       "file": "diet_food_09.png",
       "src": "/stickers/cartoon/diet_food_09.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -877,7 +877,7 @@
       "rare": false,
       "file": "diet_food_10.png",
       "src": "/stickers/cartoon/diet_food_10.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -889,7 +889,7 @@
       "rare": false,
       "file": "diet_food_11.png",
       "src": "/stickers/cartoon/diet_food_11.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -901,7 +901,7 @@
       "rare": true,
       "file": "diet_food_12.png",
       "src": "/stickers/cartoon/diet_food_12.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -913,7 +913,7 @@
       "rare": true,
       "file": "diet_food_13.png",
       "src": "/stickers/cartoon/diet_food_13.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -925,7 +925,7 @@
       "rare": true,
       "file": "diet_food_14.png",
       "src": "/stickers/cartoon/diet_food_14.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -937,7 +937,7 @@
       "rare": false,
       "file": "diet_face_00.png",
       "src": "/stickers/cartoon/diet_face_00.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -949,7 +949,7 @@
       "rare": false,
       "file": "diet_face_01.png",
       "src": "/stickers/cartoon/diet_face_01.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -961,7 +961,7 @@
       "rare": false,
       "file": "diet_face_02.png",
       "src": "/stickers/cartoon/diet_face_02.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -973,7 +973,7 @@
       "rare": false,
       "file": "diet_face_03.png",
       "src": "/stickers/cartoon/diet_face_03.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -985,7 +985,7 @@
       "rare": false,
       "file": "diet_face_04.png",
       "src": "/stickers/cartoon/diet_face_04.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -997,7 +997,7 @@
       "rare": false,
       "file": "diet_face_05.png",
       "src": "/stickers/cartoon/diet_face_05.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1009,7 +1009,7 @@
       "rare": false,
       "file": "diet_face_06.png",
       "src": "/stickers/cartoon/diet_face_06.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1021,7 +1021,7 @@
       "rare": false,
       "file": "diet_face_07.png",
       "src": "/stickers/cartoon/diet_face_07.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1033,7 +1033,7 @@
       "rare": false,
       "file": "diet_face_08.png",
       "src": "/stickers/cartoon/diet_face_08.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1045,7 +1045,7 @@
       "rare": false,
       "file": "diet_face_09.png",
       "src": "/stickers/cartoon/diet_face_09.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1057,7 +1057,7 @@
       "rare": false,
       "file": "diet_face_10.png",
       "src": "/stickers/cartoon/diet_face_10.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1069,7 +1069,7 @@
       "rare": false,
       "file": "diet_face_11.png",
       "src": "/stickers/cartoon/diet_face_11.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1081,7 +1081,7 @@
       "rare": false,
       "file": "ex_crush.png",
       "src": "/stickers/cartoon/ex_crush.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1093,7 +1093,7 @@
       "rare": false,
       "file": "ex_skip.png",
       "src": "/stickers/cartoon/ex_skip.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1105,7 +1105,7 @@
       "rare": false,
       "file": "ex_active.png",
       "src": "/stickers/cartoon/ex_active.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1117,7 +1117,7 @@
       "rare": false,
       "file": "ex_walk.png",
       "src": "/stickers/cartoon/ex_walk.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1129,7 +1129,7 @@
       "rare": false,
       "file": "ex_stretch.png",
       "src": "/stickers/cartoon/ex_stretch.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1141,7 +1141,7 @@
       "rare": false,
       "file": "ex_bike.png",
       "src": "/stickers/cartoon/ex_bike.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1153,7 +1153,7 @@
       "rare": false,
       "file": "ex_lift.png",
       "src": "/stickers/cartoon/ex_lift.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1165,7 +1165,7 @@
       "rare": false,
       "file": "ex_sweat.png",
       "src": "/stickers/cartoon/ex_sweat.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1177,7 +1177,7 @@
       "rare": true,
       "file": "ex_pr.png",
       "src": "/stickers/cartoon/ex_pr.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1189,7 +1189,7 @@
       "rare": true,
       "file": "ex_champ.png",
       "src": "/stickers/cartoon/ex_champ.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1201,7 +1201,7 @@
       "rare": true,
       "file": "ex_beast.png",
       "src": "/stickers/cartoon/ex_beast.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1213,7 +1213,7 @@
       "rare": true,
       "file": "ex_electric.png",
       "src": "/stickers/cartoon/ex_electric.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1225,7 +1225,7 @@
       "rare": false,
       "file": "ex_move_00.png",
       "src": "/stickers/cartoon/ex_move_00.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1237,7 +1237,7 @@
       "rare": false,
       "file": "ex_move_01.png",
       "src": "/stickers/cartoon/ex_move_01.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1249,7 +1249,7 @@
       "rare": false,
       "file": "ex_move_02.png",
       "src": "/stickers/cartoon/ex_move_02.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1261,7 +1261,7 @@
       "rare": false,
       "file": "ex_move_03.png",
       "src": "/stickers/cartoon/ex_move_03.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1273,7 +1273,7 @@
       "rare": false,
       "file": "ex_move_04.png",
       "src": "/stickers/cartoon/ex_move_04.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1285,7 +1285,7 @@
       "rare": false,
       "file": "ex_move_05.png",
       "src": "/stickers/cartoon/ex_move_05.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1297,7 +1297,7 @@
       "rare": false,
       "file": "ex_move_06.png",
       "src": "/stickers/cartoon/ex_move_06.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1309,7 +1309,7 @@
       "rare": false,
       "file": "ex_move_07.png",
       "src": "/stickers/cartoon/ex_move_07.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1321,7 +1321,7 @@
       "rare": false,
       "file": "ex_move_08.png",
       "src": "/stickers/cartoon/ex_move_08.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1333,7 +1333,7 @@
       "rare": false,
       "file": "ex_move_09.png",
       "src": "/stickers/cartoon/ex_move_09.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1345,7 +1345,7 @@
       "rare": false,
       "file": "ex_move_10.png",
       "src": "/stickers/cartoon/ex_move_10.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1357,7 +1357,7 @@
       "rare": false,
       "file": "ex_move_11.png",
       "src": "/stickers/cartoon/ex_move_11.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1369,7 +1369,7 @@
       "rare": false,
       "file": "ex_move_12.png",
       "src": "/stickers/cartoon/ex_move_12.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1381,7 +1381,7 @@
       "rare": false,
       "file": "ex_move_13.png",
       "src": "/stickers/cartoon/ex_move_13.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1393,7 +1393,7 @@
       "rare": false,
       "file": "ex_move_14.png",
       "src": "/stickers/cartoon/ex_move_14.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1405,7 +1405,7 @@
       "rare": true,
       "file": "ex_move_15.png",
       "src": "/stickers/cartoon/ex_move_15.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1417,7 +1417,7 @@
       "rare": true,
       "file": "ex_move_16.png",
       "src": "/stickers/cartoon/ex_move_16.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1429,7 +1429,7 @@
       "rare": true,
       "file": "ex_move_17.png",
       "src": "/stickers/cartoon/ex_move_17.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1441,7 +1441,7 @@
       "rare": false,
       "file": "ex_face_00.png",
       "src": "/stickers/cartoon/ex_face_00.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1453,7 +1453,7 @@
       "rare": false,
       "file": "ex_face_01.png",
       "src": "/stickers/cartoon/ex_face_01.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1465,7 +1465,7 @@
       "rare": false,
       "file": "ex_face_02.png",
       "src": "/stickers/cartoon/ex_face_02.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1477,7 +1477,7 @@
       "rare": false,
       "file": "ex_face_03.png",
       "src": "/stickers/cartoon/ex_face_03.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1489,7 +1489,7 @@
       "rare": false,
       "file": "ex_face_04.png",
       "src": "/stickers/cartoon/ex_face_04.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1501,7 +1501,7 @@
       "rare": false,
       "file": "ex_face_05.png",
       "src": "/stickers/cartoon/ex_face_05.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1513,7 +1513,7 @@
       "rare": false,
       "file": "ex_face_06.png",
       "src": "/stickers/cartoon/ex_face_06.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1525,7 +1525,7 @@
       "rare": false,
       "file": "ex_face_07.png",
       "src": "/stickers/cartoon/ex_face_07.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1537,7 +1537,7 @@
       "rare": false,
       "file": "ex_face_08.png",
       "src": "/stickers/cartoon/ex_face_08.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1549,7 +1549,7 @@
       "rare": false,
       "file": "ex_face_09.png",
       "src": "/stickers/cartoon/ex_face_09.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1561,7 +1561,7 @@
       "rare": false,
       "file": "ex_face_10.png",
       "src": "/stickers/cartoon/ex_face_10.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1573,7 +1573,7 @@
       "rare": false,
       "file": "ex_face_11.png",
       "src": "/stickers/cartoon/ex_face_11.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1585,7 +1585,7 @@
       "rare": false,
       "file": "mh_calm.png",
       "src": "/stickers/cartoon/mh_calm.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1597,7 +1597,7 @@
       "rare": false,
       "file": "mh_struggle.png",
       "src": "/stickers/cartoon/mh_struggle.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1609,7 +1609,7 @@
       "rare": false,
       "file": "mh_good.png",
       "src": "/stickers/cartoon/mh_good.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1621,7 +1621,7 @@
       "rare": false,
       "file": "mh_mixed.png",
       "src": "/stickers/cartoon/mh_mixed.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1633,7 +1633,7 @@
       "rare": false,
       "file": "mh_focus.png",
       "src": "/stickers/cartoon/mh_focus.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1645,7 +1645,7 @@
       "rare": false,
       "file": "mh_light.png",
       "src": "/stickers/cartoon/mh_light.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1657,7 +1657,7 @@
       "rare": false,
       "file": "mh_stress.png",
       "src": "/stickers/cartoon/mh_stress.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1669,7 +1669,7 @@
       "rare": false,
       "file": "mh_cloudy.png",
       "src": "/stickers/cartoon/mh_cloudy.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1681,7 +1681,7 @@
       "rare": false,
       "file": "mh_burnout.png",
       "src": "/stickers/cartoon/mh_burnout.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1693,7 +1693,7 @@
       "rare": false,
       "file": "mh_fog.png",
       "src": "/stickers/cartoon/mh_fog.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1705,7 +1705,7 @@
       "rare": true,
       "file": "mh_hope.png",
       "src": "/stickers/cartoon/mh_hope.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1717,7 +1717,7 @@
       "rare": true,
       "file": "mh_inspired.png",
       "src": "/stickers/cartoon/mh_inspired.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1729,7 +1729,7 @@
       "rare": true,
       "file": "mh_transform.png",
       "src": "/stickers/cartoon/mh_transform.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1741,7 +1741,7 @@
       "rare": true,
       "file": "mh_center.png",
       "src": "/stickers/cartoon/mh_center.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1753,7 +1753,7 @@
       "rare": false,
       "file": "mh_mind_00.png",
       "src": "/stickers/cartoon/mh_mind_00.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1765,7 +1765,7 @@
       "rare": false,
       "file": "mh_mind_01.png",
       "src": "/stickers/cartoon/mh_mind_01.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1777,7 +1777,7 @@
       "rare": false,
       "file": "mh_mind_02.png",
       "src": "/stickers/cartoon/mh_mind_02.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1789,7 +1789,7 @@
       "rare": false,
       "file": "mh_mind_03.png",
       "src": "/stickers/cartoon/mh_mind_03.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1801,7 +1801,7 @@
       "rare": false,
       "file": "mh_mind_04.png",
       "src": "/stickers/cartoon/mh_mind_04.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1813,7 +1813,7 @@
       "rare": false,
       "file": "mh_mind_05.png",
       "src": "/stickers/cartoon/mh_mind_05.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1825,7 +1825,7 @@
       "rare": false,
       "file": "mh_mind_06.png",
       "src": "/stickers/cartoon/mh_mind_06.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1837,7 +1837,7 @@
       "rare": false,
       "file": "mh_mind_07.png",
       "src": "/stickers/cartoon/mh_mind_07.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1849,7 +1849,7 @@
       "rare": false,
       "file": "mh_mind_08.png",
       "src": "/stickers/cartoon/mh_mind_08.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1861,7 +1861,7 @@
       "rare": false,
       "file": "mh_mind_09.png",
       "src": "/stickers/cartoon/mh_mind_09.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1873,7 +1873,7 @@
       "rare": false,
       "file": "mh_mind_10.png",
       "src": "/stickers/cartoon/mh_mind_10.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1885,7 +1885,7 @@
       "rare": false,
       "file": "mh_mind_11.png",
       "src": "/stickers/cartoon/mh_mind_11.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1897,7 +1897,7 @@
       "rare": false,
       "file": "mh_mind_12.png",
       "src": "/stickers/cartoon/mh_mind_12.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1909,7 +1909,7 @@
       "rare": true,
       "file": "mh_mind_13.png",
       "src": "/stickers/cartoon/mh_mind_13.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1921,7 +1921,7 @@
       "rare": true,
       "file": "mh_mind_14.png",
       "src": "/stickers/cartoon/mh_mind_14.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1933,7 +1933,7 @@
       "rare": true,
       "file": "mh_mind_15.png",
       "src": "/stickers/cartoon/mh_mind_15.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1945,7 +1945,7 @@
       "rare": false,
       "file": "mh_face_00.png",
       "src": "/stickers/cartoon/mh_face_00.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1957,7 +1957,7 @@
       "rare": false,
       "file": "mh_face_01.png",
       "src": "/stickers/cartoon/mh_face_01.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1969,7 +1969,7 @@
       "rare": false,
       "file": "mh_face_02.png",
       "src": "/stickers/cartoon/mh_face_02.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1981,7 +1981,7 @@
       "rare": false,
       "file": "mh_face_03.png",
       "src": "/stickers/cartoon/mh_face_03.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -1993,7 +1993,7 @@
       "rare": false,
       "file": "mh_face_04.png",
       "src": "/stickers/cartoon/mh_face_04.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2005,7 +2005,7 @@
       "rare": false,
       "file": "mh_face_05.png",
       "src": "/stickers/cartoon/mh_face_05.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2017,7 +2017,7 @@
       "rare": false,
       "file": "mh_face_06.png",
       "src": "/stickers/cartoon/mh_face_06.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2029,7 +2029,7 @@
       "rare": false,
       "file": "mh_face_07.png",
       "src": "/stickers/cartoon/mh_face_07.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2041,7 +2041,7 @@
       "rare": false,
       "file": "mh_face_08.png",
       "src": "/stickers/cartoon/mh_face_08.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2053,7 +2053,7 @@
       "rare": false,
       "file": "mh_face_09.png",
       "src": "/stickers/cartoon/mh_face_09.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2065,7 +2065,7 @@
       "rare": false,
       "file": "rel_connect.png",
       "src": "/stickers/cartoon/rel_connect.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2077,7 +2077,7 @@
       "rare": false,
       "file": "rel_distant.png",
       "src": "/stickers/cartoon/rel_distant.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2089,7 +2089,7 @@
       "rare": false,
       "file": "rel_loved.png",
       "src": "/stickers/cartoon/rel_loved.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2101,7 +2101,7 @@
       "rare": false,
       "file": "rel_good.png",
       "src": "/stickers/cartoon/rel_good.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2113,7 +2113,7 @@
       "rare": false,
       "file": "rel_grateful.png",
       "src": "/stickers/cartoon/rel_grateful.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2125,7 +2125,7 @@
       "rare": false,
       "file": "rel_support.png",
       "src": "/stickers/cartoon/rel_support.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2137,7 +2137,7 @@
       "rare": false,
       "file": "rel_reach.png",
       "src": "/stickers/cartoon/rel_reach.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2149,7 +2149,7 @@
       "rare": false,
       "file": "rel_talk.png",
       "src": "/stickers/cartoon/rel_talk.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2161,7 +2161,7 @@
       "rare": false,
       "file": "rel_social.png",
       "src": "/stickers/cartoon/rel_social.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2173,7 +2173,7 @@
       "rare": false,
       "file": "rel_quiet.png",
       "src": "/stickers/cartoon/rel_quiet.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2185,7 +2185,7 @@
       "rare": true,
       "file": "rel_bond.png",
       "src": "/stickers/cartoon/rel_bond.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2197,7 +2197,7 @@
       "rare": true,
       "file": "rel_cherish.png",
       "src": "/stickers/cartoon/rel_cherish.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2209,7 +2209,7 @@
       "rare": true,
       "file": "rel_peace.png",
       "src": "/stickers/cartoon/rel_peace.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2221,7 +2221,7 @@
       "rare": true,
       "file": "rel_celeb.png",
       "src": "/stickers/cartoon/rel_celeb.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2233,7 +2233,7 @@
       "rare": false,
       "file": "rel_social_00.png",
       "src": "/stickers/cartoon/rel_social_00.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2245,7 +2245,7 @@
       "rare": false,
       "file": "rel_social_01.png",
       "src": "/stickers/cartoon/rel_social_01.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2257,7 +2257,7 @@
       "rare": false,
       "file": "rel_social_02.png",
       "src": "/stickers/cartoon/rel_social_02.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2269,7 +2269,7 @@
       "rare": false,
       "file": "rel_social_03.png",
       "src": "/stickers/cartoon/rel_social_03.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2281,7 +2281,7 @@
       "rare": false,
       "file": "rel_social_04.png",
       "src": "/stickers/cartoon/rel_social_04.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2293,7 +2293,7 @@
       "rare": false,
       "file": "rel_social_05.png",
       "src": "/stickers/cartoon/rel_social_05.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2305,7 +2305,7 @@
       "rare": false,
       "file": "rel_social_06.png",
       "src": "/stickers/cartoon/rel_social_06.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2317,7 +2317,7 @@
       "rare": false,
       "file": "rel_social_07.png",
       "src": "/stickers/cartoon/rel_social_07.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2329,7 +2329,7 @@
       "rare": false,
       "file": "rel_social_08.png",
       "src": "/stickers/cartoon/rel_social_08.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2341,7 +2341,7 @@
       "rare": false,
       "file": "rel_social_09.png",
       "src": "/stickers/cartoon/rel_social_09.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2353,7 +2353,7 @@
       "rare": false,
       "file": "rel_social_10.png",
       "src": "/stickers/cartoon/rel_social_10.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2365,7 +2365,7 @@
       "rare": false,
       "file": "rel_social_11.png",
       "src": "/stickers/cartoon/rel_social_11.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2377,7 +2377,7 @@
       "rare": false,
       "file": "rel_social_12.png",
       "src": "/stickers/cartoon/rel_social_12.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2389,7 +2389,7 @@
       "rare": true,
       "file": "rel_social_13.png",
       "src": "/stickers/cartoon/rel_social_13.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2401,7 +2401,7 @@
       "rare": true,
       "file": "rel_social_14.png",
       "src": "/stickers/cartoon/rel_social_14.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2413,7 +2413,7 @@
       "rare": true,
       "file": "rel_social_15.png",
       "src": "/stickers/cartoon/rel_social_15.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2425,7 +2425,7 @@
       "rare": false,
       "file": "rel_face_00.png",
       "src": "/stickers/cartoon/rel_face_00.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2437,7 +2437,7 @@
       "rare": false,
       "file": "rel_face_01.png",
       "src": "/stickers/cartoon/rel_face_01.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2449,7 +2449,7 @@
       "rare": false,
       "file": "rel_face_02.png",
       "src": "/stickers/cartoon/rel_face_02.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2461,7 +2461,7 @@
       "rare": false,
       "file": "rel_face_03.png",
       "src": "/stickers/cartoon/rel_face_03.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2473,7 +2473,7 @@
       "rare": false,
       "file": "rel_face_04.png",
       "src": "/stickers/cartoon/rel_face_04.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2485,7 +2485,7 @@
       "rare": false,
       "file": "rel_face_05.png",
       "src": "/stickers/cartoon/rel_face_05.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2497,7 +2497,7 @@
       "rare": false,
       "file": "rel_face_06.png",
       "src": "/stickers/cartoon/rel_face_06.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2509,7 +2509,7 @@
       "rare": false,
       "file": "rel_face_07.png",
       "src": "/stickers/cartoon/rel_face_07.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2521,7 +2521,7 @@
       "rare": false,
       "file": "rel_face_08.png",
       "src": "/stickers/cartoon/rel_face_08.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2533,7 +2533,7 @@
       "rare": false,
       "file": "rel_face_09.png",
       "src": "/stickers/cartoon/rel_face_09.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2545,7 +2545,7 @@
       "rare": false,
       "file": "rel_face_10.png",
       "src": "/stickers/cartoon/rel_face_10.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2557,7 +2557,7 @@
       "rare": false,
       "file": "rel_face_11.png",
       "src": "/stickers/cartoon/rel_face_11.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2569,7 +2569,7 @@
       "rare": false,
       "file": "env_fresh.png",
       "src": "/stickers/cartoon/env_fresh.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2581,7 +2581,7 @@
       "rare": false,
       "file": "env_heavy.png",
       "src": "/stickers/cartoon/env_heavy.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2593,7 +2593,7 @@
       "rare": false,
       "file": "env_bright.png",
       "src": "/stickers/cartoon/env_bright.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2605,7 +2605,7 @@
       "rare": false,
       "file": "env_cozy.png",
       "src": "/stickers/cartoon/env_cozy.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2617,7 +2617,7 @@
       "rare": false,
       "file": "env_tidy.png",
       "src": "/stickers/cartoon/env_tidy.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2629,7 +2629,7 @@
       "rare": false,
       "file": "env_outdoors.png",
       "src": "/stickers/cartoon/env_outdoors.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2641,7 +2641,7 @@
       "rare": false,
       "file": "env_clean.png",
       "src": "/stickers/cartoon/env_clean.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2653,7 +2653,7 @@
       "rare": false,
       "file": "env_air.png",
       "src": "/stickers/cartoon/env_air.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2665,7 +2665,7 @@
       "rare": false,
       "file": "env_clutter.png",
       "src": "/stickers/cartoon/env_clutter.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2677,7 +2677,7 @@
       "rare": false,
       "file": "env_busy.png",
       "src": "/stickers/cartoon/env_busy.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2689,7 +2689,7 @@
       "rare": true,
       "file": "env_nature.png",
       "src": "/stickers/cartoon/env_nature.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2701,7 +2701,7 @@
       "rare": true,
       "file": "env_golden.png",
       "src": "/stickers/cartoon/env_golden.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2713,7 +2713,7 @@
       "rare": true,
       "file": "env_water.png",
       "src": "/stickers/cartoon/env_water.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2725,7 +2725,7 @@
       "rare": true,
       "file": "env_wild.png",
       "src": "/stickers/cartoon/env_wild.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2737,7 +2737,7 @@
       "rare": false,
       "file": "env_place_00.png",
       "src": "/stickers/cartoon/env_place_00.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2749,7 +2749,7 @@
       "rare": false,
       "file": "env_place_01.png",
       "src": "/stickers/cartoon/env_place_01.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2761,7 +2761,7 @@
       "rare": false,
       "file": "env_place_02.png",
       "src": "/stickers/cartoon/env_place_02.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2773,7 +2773,7 @@
       "rare": false,
       "file": "env_place_03.png",
       "src": "/stickers/cartoon/env_place_03.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2785,7 +2785,7 @@
       "rare": false,
       "file": "env_place_04.png",
       "src": "/stickers/cartoon/env_place_04.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2797,7 +2797,7 @@
       "rare": false,
       "file": "env_place_05.png",
       "src": "/stickers/cartoon/env_place_05.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2809,7 +2809,7 @@
       "rare": false,
       "file": "env_place_06.png",
       "src": "/stickers/cartoon/env_place_06.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2821,7 +2821,7 @@
       "rare": false,
       "file": "env_place_07.png",
       "src": "/stickers/cartoon/env_place_07.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2833,7 +2833,7 @@
       "rare": false,
       "file": "env_place_08.png",
       "src": "/stickers/cartoon/env_place_08.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2845,7 +2845,7 @@
       "rare": false,
       "file": "env_place_09.png",
       "src": "/stickers/cartoon/env_place_09.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2857,7 +2857,7 @@
       "rare": false,
       "file": "env_place_10.png",
       "src": "/stickers/cartoon/env_place_10.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2869,7 +2869,7 @@
       "rare": true,
       "file": "env_place_11.png",
       "src": "/stickers/cartoon/env_place_11.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2881,7 +2881,7 @@
       "rare": true,
       "file": "env_place_12.png",
       "src": "/stickers/cartoon/env_place_12.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2893,7 +2893,7 @@
       "rare": true,
       "file": "env_place_13.png",
       "src": "/stickers/cartoon/env_place_13.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2905,7 +2905,7 @@
       "rare": false,
       "file": "env_face_00.png",
       "src": "/stickers/cartoon/env_face_00.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2917,7 +2917,7 @@
       "rare": false,
       "file": "env_face_01.png",
       "src": "/stickers/cartoon/env_face_01.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2929,7 +2929,7 @@
       "rare": false,
       "file": "env_face_02.png",
       "src": "/stickers/cartoon/env_face_02.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2941,7 +2941,7 @@
       "rare": false,
       "file": "env_face_03.png",
       "src": "/stickers/cartoon/env_face_03.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2953,7 +2953,7 @@
       "rare": false,
       "file": "env_face_04.png",
       "src": "/stickers/cartoon/env_face_04.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2965,7 +2965,7 @@
       "rare": false,
       "file": "env_face_05.png",
       "src": "/stickers/cartoon/env_face_05.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2977,7 +2977,7 @@
       "rare": false,
       "file": "env_face_06.png",
       "src": "/stickers/cartoon/env_face_06.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -2989,7 +2989,7 @@
       "rare": false,
       "file": "env_face_07.png",
       "src": "/stickers/cartoon/env_face_07.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3001,7 +3001,7 @@
       "rare": false,
       "file": "env_face_08.png",
       "src": "/stickers/cartoon/env_face_08.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3013,7 +3013,7 @@
       "rare": false,
       "file": "env_face_09.png",
       "src": "/stickers/cartoon/env_face_09.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3025,7 +3025,7 @@
       "rare": false,
       "file": "env_face_10.png",
       "src": "/stickers/cartoon/env_face_10.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3037,7 +3037,7 @@
       "rare": false,
       "file": "env_face_11.png",
       "src": "/stickers/cartoon/env_face_11.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3049,7 +3049,7 @@
       "rare": false,
       "file": "pr_ontop.png",
       "src": "/stickers/cartoon/pr_ontop.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3061,7 +3061,7 @@
       "rare": false,
       "file": "pr_notgreat.png",
       "src": "/stickers/cartoon/pr_notgreat.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3073,7 +3073,7 @@
       "rare": false,
       "file": "pr_strong.png",
       "src": "/stickers/cartoon/pr_strong.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3085,7 +3085,7 @@
       "rare": false,
       "file": "pr_manage.png",
       "src": "/stickers/cartoon/pr_manage.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3097,7 +3097,7 @@
       "rare": false,
       "file": "pr_natural.png",
       "src": "/stickers/cartoon/pr_natural.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3109,7 +3109,7 @@
       "rare": false,
       "file": "pr_sun.png",
       "src": "/stickers/cartoon/pr_sun.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3121,7 +3121,7 @@
       "rare": false,
       "file": "pr_hygiene.png",
       "src": "/stickers/cartoon/pr_hygiene.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3133,7 +3133,7 @@
       "rare": false,
       "file": "pr_check.png",
       "src": "/stickers/cartoon/pr_check.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3145,7 +3145,7 @@
       "rare": false,
       "file": "pr_careful.png",
       "src": "/stickers/cartoon/pr_careful.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3157,7 +3157,7 @@
       "rare": false,
       "file": "pr_rest.png",
       "src": "/stickers/cartoon/pr_rest.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3169,7 +3169,7 @@
       "rare": true,
       "file": "pr_bullet.png",
       "src": "/stickers/cartoon/pr_bullet.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3181,7 +3181,7 @@
       "rare": true,
       "file": "pr_boost.png",
       "src": "/stickers/cartoon/pr_boost.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3193,7 +3193,7 @@
       "rare": true,
       "file": "pr_picture.png",
       "src": "/stickers/cartoon/pr_picture.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3205,7 +3205,7 @@
       "rare": true,
       "file": "pr_opt.png",
       "src": "/stickers/cartoon/pr_opt.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3217,7 +3217,7 @@
       "rare": false,
       "file": "pr_pill.png",
       "src": "/stickers/cartoon/pr_pill.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3229,7 +3229,7 @@
       "rare": false,
       "file": "pr_cross.png",
       "src": "/stickers/cartoon/pr_cross.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3241,7 +3241,7 @@
       "rare": false,
       "file": "pr_germ.png",
       "src": "/stickers/cartoon/pr_germ.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3253,7 +3253,7 @@
       "rare": false,
       "file": "pr_care_00.png",
       "src": "/stickers/cartoon/pr_care_00.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3265,7 +3265,7 @@
       "rare": false,
       "file": "pr_care_01.png",
       "src": "/stickers/cartoon/pr_care_01.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3277,7 +3277,7 @@
       "rare": false,
       "file": "pr_care_02.png",
       "src": "/stickers/cartoon/pr_care_02.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3289,7 +3289,7 @@
       "rare": false,
       "file": "pr_care_03.png",
       "src": "/stickers/cartoon/pr_care_03.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3301,7 +3301,7 @@
       "rare": false,
       "file": "pr_care_04.png",
       "src": "/stickers/cartoon/pr_care_04.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3313,7 +3313,7 @@
       "rare": false,
       "file": "pr_care_05.png",
       "src": "/stickers/cartoon/pr_care_05.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3325,7 +3325,7 @@
       "rare": false,
       "file": "pr_care_06.png",
       "src": "/stickers/cartoon/pr_care_06.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3337,7 +3337,7 @@
       "rare": false,
       "file": "pr_care_07.png",
       "src": "/stickers/cartoon/pr_care_07.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3349,7 +3349,7 @@
       "rare": false,
       "file": "pr_care_08.png",
       "src": "/stickers/cartoon/pr_care_08.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3361,7 +3361,7 @@
       "rare": false,
       "file": "pr_care_09.png",
       "src": "/stickers/cartoon/pr_care_09.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3373,7 +3373,7 @@
       "rare": false,
       "file": "pr_care_10.png",
       "src": "/stickers/cartoon/pr_care_10.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3385,7 +3385,7 @@
       "rare": true,
       "file": "pr_care_11.png",
       "src": "/stickers/cartoon/pr_care_11.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3397,7 +3397,7 @@
       "rare": true,
       "file": "pr_care_12.png",
       "src": "/stickers/cartoon/pr_care_12.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3409,7 +3409,7 @@
       "rare": true,
       "file": "pr_care_13.png",
       "src": "/stickers/cartoon/pr_care_13.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3421,7 +3421,7 @@
       "rare": false,
       "file": "pr_face_00.png",
       "src": "/stickers/cartoon/pr_face_00.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3433,7 +3433,7 @@
       "rare": false,
       "file": "pr_face_01.png",
       "src": "/stickers/cartoon/pr_face_01.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3445,7 +3445,7 @@
       "rare": false,
       "file": "pr_face_02.png",
       "src": "/stickers/cartoon/pr_face_02.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3457,7 +3457,7 @@
       "rare": false,
       "file": "pr_face_03.png",
       "src": "/stickers/cartoon/pr_face_03.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3469,7 +3469,7 @@
       "rare": false,
       "file": "pr_face_04.png",
       "src": "/stickers/cartoon/pr_face_04.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3481,7 +3481,7 @@
       "rare": false,
       "file": "pr_face_05.png",
       "src": "/stickers/cartoon/pr_face_05.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3493,7 +3493,7 @@
       "rare": false,
       "file": "pr_face_06.png",
       "src": "/stickers/cartoon/pr_face_06.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3505,7 +3505,7 @@
       "rare": false,
       "file": "pr_face_07.png",
       "src": "/stickers/cartoon/pr_face_07.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3517,7 +3517,7 @@
       "rare": false,
       "file": "pr_face_08.png",
       "src": "/stickers/cartoon/pr_face_08.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3529,7 +3529,7 @@
       "rare": false,
       "file": "pr_face_09.png",
       "src": "/stickers/cartoon/pr_face_09.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3541,7 +3541,7 @@
       "rare": false,
       "file": "shared_sleep_0.png",
       "src": "/stickers/cartoon/shared_sleep_0.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3553,7 +3553,7 @@
       "rare": false,
       "file": "shared_sleep_1.png",
       "src": "/stickers/cartoon/shared_sleep_1.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3565,7 +3565,7 @@
       "rare": false,
       "file": "shared_sleep_2.png",
       "src": "/stickers/cartoon/shared_sleep_2.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3577,7 +3577,7 @@
       "rare": true,
       "file": "shared_sleep_3.png",
       "src": "/stickers/cartoon/shared_sleep_3.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3589,7 +3589,7 @@
       "rare": false,
       "file": "shared_diet_0.png",
       "src": "/stickers/cartoon/shared_diet_0.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3601,7 +3601,7 @@
       "rare": false,
       "file": "shared_diet_1.png",
       "src": "/stickers/cartoon/shared_diet_1.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3613,7 +3613,7 @@
       "rare": false,
       "file": "shared_diet_2.png",
       "src": "/stickers/cartoon/shared_diet_2.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3625,7 +3625,7 @@
       "rare": true,
       "file": "shared_diet_3.png",
       "src": "/stickers/cartoon/shared_diet_3.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3637,7 +3637,7 @@
       "rare": false,
       "file": "shared_exercise_0.png",
       "src": "/stickers/cartoon/shared_exercise_0.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3649,7 +3649,7 @@
       "rare": false,
       "file": "shared_exercise_1.png",
       "src": "/stickers/cartoon/shared_exercise_1.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3661,7 +3661,7 @@
       "rare": false,
       "file": "shared_exercise_2.png",
       "src": "/stickers/cartoon/shared_exercise_2.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3673,7 +3673,7 @@
       "rare": true,
       "file": "shared_exercise_3.png",
       "src": "/stickers/cartoon/shared_exercise_3.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3685,7 +3685,7 @@
       "rare": false,
       "file": "shared_mental_health_0.png",
       "src": "/stickers/cartoon/shared_mental_health_0.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3697,7 +3697,7 @@
       "rare": false,
       "file": "shared_mental_health_1.png",
       "src": "/stickers/cartoon/shared_mental_health_1.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3709,7 +3709,7 @@
       "rare": false,
       "file": "shared_mental_health_2.png",
       "src": "/stickers/cartoon/shared_mental_health_2.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3721,7 +3721,7 @@
       "rare": true,
       "file": "shared_mental_health_3.png",
       "src": "/stickers/cartoon/shared_mental_health_3.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3733,7 +3733,7 @@
       "rare": false,
       "file": "shared_relationships_0.png",
       "src": "/stickers/cartoon/shared_relationships_0.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3745,7 +3745,7 @@
       "rare": false,
       "file": "shared_relationships_1.png",
       "src": "/stickers/cartoon/shared_relationships_1.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3757,7 +3757,7 @@
       "rare": false,
       "file": "shared_relationships_2.png",
       "src": "/stickers/cartoon/shared_relationships_2.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3769,7 +3769,7 @@
       "rare": true,
       "file": "shared_relationships_3.png",
       "src": "/stickers/cartoon/shared_relationships_3.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3781,7 +3781,7 @@
       "rare": false,
       "file": "shared_environment_0.png",
       "src": "/stickers/cartoon/shared_environment_0.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3793,7 +3793,7 @@
       "rare": false,
       "file": "shared_environment_1.png",
       "src": "/stickers/cartoon/shared_environment_1.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3805,7 +3805,7 @@
       "rare": false,
       "file": "shared_environment_2.png",
       "src": "/stickers/cartoon/shared_environment_2.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3817,7 +3817,7 @@
       "rare": true,
       "file": "shared_environment_3.png",
       "src": "/stickers/cartoon/shared_environment_3.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3829,7 +3829,7 @@
       "rare": false,
       "file": "shared_protect_0.png",
       "src": "/stickers/cartoon/shared_protect_0.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3841,7 +3841,7 @@
       "rare": false,
       "file": "shared_protect_1.png",
       "src": "/stickers/cartoon/shared_protect_1.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3853,7 +3853,7 @@
       "rare": false,
       "file": "shared_protect_2.png",
       "src": "/stickers/cartoon/shared_protect_2.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     },
     {
@@ -3865,7 +3865,7 @@
       "rare": true,
       "file": "shared_protect_3.png",
       "src": "/stickers/cartoon/shared_protect_3.png",
-      "size": 48,
+      "size": 64,
       "style": "cartoon"
     }
   ]
