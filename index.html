@@ -30,15 +30,23 @@
     }
     .lang-btn:hover { background: rgba(255,255,255,0.16); color: #fff; }
     .lang-btn.active { background: #10b981; border-color: #10b981; color: #fff; }
-    html { overflow-x: hidden; max-width: 100%; }
+    html {
+      overflow-x: hidden;
+      max-width: 100%;
+      height: 100%;
+      height: 100dvh;
+    }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: #1a1a2e;
       color: #eee;
-      min-height: 100vh;
-      min-height: 100dvh;
-      overflow-x: hidden;
+      height: 100%;
+      height: 100dvh;
+      max-height: 100dvh;
+      overflow: hidden; /* page never scrolls — views scroll internally */
       max-width: 100%;
+      display: flex;
+      flex-direction: column;
     }
     
     .header {
@@ -51,6 +59,7 @@
       border-bottom: 1px solid rgba(255,255,255,0.1);
       position: sticky;
       top: 0;
+      flex-shrink: 0;
       /* Must beat theme body > * {{ z-index: 1 }} so dropdowns paint above .main */
       z-index: 1000;
       width: 100%;
@@ -308,17 +317,44 @@
     .main {
       display: flex;
       flex-direction: column;
-      padding: 20px;
+      padding: 12px 20px 16px;
       max-width: 1400px;
+      width: 100%;
       margin: 0 auto;
-      min-height: calc(100vh - 60px);
-      min-height: calc(100dvh - 60px);
+      flex: 1 1 auto;
+      min-height: 0; /* fill remaining viewport under sticky header */
+      overflow: hidden;
+      box-sizing: border-box;
     }
     
     .view { display: none; }
-    .view.active { display: flex; flex-direction: column; }
+    .view.active {
+      display: flex;
+      flex-direction: column;
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow-y: auto; /* stickers / settings / etc. scroll here */
+      -webkit-overflow-scrolling: touch;
+    }
 
-    #view-chat { flex: 1; }
+    /* Chat: no outer scroll — messages pane + sticky composer */
+    #view-chat.active {
+      overflow: hidden;
+    }
+    #view-chat {
+      flex: 1 1 auto;
+      min-height: 0;
+    }
+    #view-chat .chat-hero,
+    #view-chat .board-nudge,
+    #view-chat .starter-prompts {
+      flex-shrink: 0;
+    }
+    /* Collapse marketing chrome once signed in or after first user message */
+    body.chat-compact #view-chat .chat-hero,
+    body.chat-compact #view-chat .starter-prompts {
+      display: none;
+    }
 
     /* Sticker Board */
     .sb-table { border-collapse: collapse; min-width: 500px; }
@@ -438,17 +474,31 @@
 
     /* Poll notification cards */
     .chat-hero {
-      padding: 14px 2px 4px;
+      padding: 2px 2px 0;
       color: rgba(255,255,255,0.45);
-      font-size: 13px;
-      line-height: 1.6;
-      max-width: 700px;
+      font-size: 12px;
+      line-height: 1.4;
+      max-width: 900px;
     }
+    .chat-hero-text {
+      display: inline;
+    }
+    .chat-hero-tour {
+      display: inline;
+      margin-left: 8px;
+      white-space: nowrap;
+    }
+    .chat-hero-tour a {
+      color: #10b981;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .chat-hero-tour a:hover { text-decoration: underline; }
     .starter-prompts {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
-      padding: 8px 0 12px;
+      padding: 6px 0 8px;
     }
     .starter-btn {
       padding: 7px 14px;
@@ -487,11 +537,11 @@
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      flex: 1;
-      min-height: 0;
+      flex: 1 1 auto;
+      min-height: 0; /* critical: lets messages scroll instead of growing the page */
     }
     .chat-header {
-      padding: 14px 20px;
+      padding: 10px 16px;
       background: rgba(0,0,0,0.2);
       border-bottom: 1px solid rgba(255,255,255,0.1);
       font-weight: 600;
@@ -499,11 +549,15 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+      flex-shrink: 0;
     }
     .chat-messages {
-      flex: 1;
+      flex: 1 1 auto;
+      min-height: 0;
       overflow-y: auto;
-      padding: 20px;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+      padding: 16px 20px;
       display: flex;
       flex-direction: column;
       gap: 12px;
@@ -579,11 +633,13 @@
     }
 
     .chat-input-area {
-      padding: 16px;
-      background: rgba(0,0,0,0.2);
+      padding: 12px 16px;
+      background: rgba(0,0,0,0.28);
       border-top: 1px solid rgba(255,255,255,0.1);
       display: flex;
       gap: 12px;
+      flex-shrink: 0; /* always visible at bottom of chat shell */
+      align-items: center;
     }
     .chat-input-area input {
       flex: 1;
@@ -960,6 +1016,7 @@
       overflow-x: auto; background: rgba(0,0,0,0.15);
       border-bottom: 1px solid rgba(255,255,255,0.06);
       scrollbar-width: none;
+      flex-shrink: 0;
     }
     .agent-tabs-row::-webkit-scrollbar { display: none; }
     .agent-tab-btn {
@@ -1132,6 +1189,7 @@
       background: rgba(16,185,129,0.06);
       border: 1px solid rgba(16,185,129,0.22);
       border-radius: 12px; display: none;
+      flex-shrink: 0;
     }
     .chat-login-card h4 {
       margin: 0 0 2px; font-size: 15px; color: #10b981; font-weight: 700;
@@ -1731,9 +1789,28 @@
     body.easy-mobile #view-chat .chat-container {
       border-radius: 0;
       background: transparent;
+      flex: 1 1 auto;
+      min-height: 0;
     }
     body.easy-mobile #view-chat .starter-prompts {
-      padding: 10px 12px 8px;
+      padding: 6px 10px 4px;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    body.easy-mobile #view-chat .starter-prompts::-webkit-scrollbar { display: none; }
+    body.easy-mobile #view-chat .starter-btn {
+      flex-shrink: 0;
+    }
+    body.easy-mobile #view-chat .chat-messages {
+      min-height: 0;
+    }
+    body.easy-mobile #view-chat .chat-input-area {
+      /* Keep composer pinned at the bottom of the chat shell */
+      position: sticky;
+      bottom: 0;
+      z-index: 5;
     }
     body.easy-mobile .user-area .btn-sm {
       min-height: 40px;
@@ -1802,10 +1879,10 @@
   <div class="main">
     <div class="view active" id="view-chat">
       <div class="chat-hero">
-        <span data-i18n="app.chat.hero">GreenDial is a free AI health companion. Chat with Doc to get personalized guidance on sleep, diet, exercise, stress, and more. Your health profile builds automatically as you talk — no forms, no appointments.</span>
-        <div style="margin-top:6px">
-          <a href="#" onclick="switchView('getstarted');return false;" style="color:#10b981;text-decoration:none" data-i18n="app.chat.tour_link">🚀 New here? Take the 60-second tour →</a>
-        </div>
+        <span class="chat-hero-text" data-i18n="app.chat.hero">GreenDial is a free AI health companion. Chat with Doc for personalized guidance — your profile builds as you talk.</span>
+        <span class="chat-hero-tour">
+          <a href="#" onclick="switchView('getstarted');return false;" data-i18n="app.chat.tour_link">🚀 Tour →</a>
+        </span>
       </div>
       <div class="board-nudge" id="board-nudge">
         <button type="button" class="board-nudge-go" onclick="switchView('stickers')" data-i18n-html="app.chat.board_nudge">
