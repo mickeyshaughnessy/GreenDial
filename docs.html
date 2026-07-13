@@ -701,32 +701,44 @@ POST /chat/agent/protect
     </div>
   </div>
 
-  <h3><span data-i18n="docs.sab.bounties_heading">Bounties</span> <span class="badge">X-API-Key</span></h3>
-  <p data-i18n-html="docs.sab.bounties_desc">Anyone can sponsor a Universal Bounty — friends and family, health insurers, government health programs, employers — by authenticating with <code>X-API-Key: &lt;DEMAND_API_KEY&gt;</code>. A UB targets an explicit list of <code>user_ids</code>; matching users see it as a priced Suggestion.</p>
+  <h3><span data-i18n="docs.sab.bounties_heading">Bounties</span> <span class="badge">Demand-side</span></h3>
+  <p>Anyone can sponsor a Universal Bounty — friends and family (signed-in session on <a href="/sponsor">/sponsor</a>), or insurers, employers, and government programs with <code>X-API-Key: &lt;DEMAND_API_KEY&gt;</code>. A UB targets an explicit list of <code>user_ids</code>; matching users see it as a priced Suggestion. Supports <code>recurrence</code>: <code>once</code> | <code>weekly</code> | <code>monthly</code>.</p>
+
+  <h4 style="font-size:14px;color:rgba(255,255,255,0.85);margin:16px 0 8px">Demand-side account model</h4>
+  <ul style="margin:0 0 16px 18px;color:rgba(255,255,255,0.7);font-size:13.5px;line-height:1.65">
+    <li><strong>Friends/family:</strong> normal GreenDial login + <code>X-Session-Token</code> (or the Sponsor UI). No demand API key required.</li>
+    <li><strong>Institutions:</strong> demand-side API key; create/list/delete UBs and call <code>/generate</code> for previews.</li>
+    <li><strong>Recipients:</strong> opt into public discovery under Settings → Universal Bounty (default off). Directory: <code>GET /bounty/directory</code>.</li>
+    <li><strong>Drafting:</strong> <code>POST /bounty/autocomplete</code> (public) returns chips, activity text, and suggested price. Default: “Take a walk sometime in the next day”.</li>
+  </ul>
 
   <h4 style="font-size:14px;color:rgba(255,255,255,0.85);margin:16px 0 8px" data-i18n="docs.sab.quickstart_heading">Quick start: sponsor an activity end-to-end</h4>
-  <p data-i18n-html="docs.sab.quickstart_desc">A minimal integration for a new demand-side sponsor — preview a suggestion, turn it into a real UB, then check on it. Swap in your own <code>X-API-Key</code> and real <code>user_id</code>s.</p>
-  <div class="code-block"># 1. Preview what GreenDial would suggest for a user, and get a ready-to-post UB payload back
+  <p>A minimal integration for a new demand-side sponsor — or use <a href="/sponsor">/sponsor</a> in the browser.</p>
+  <div class="code-block"># 0. Autocomplete a draft (no key) — chips + suggested price
+curl -X POST https://greendial.org/bounty/autocomplete \
+  -H "Content-Type: application/json" \
+  -d '{"description": "walk", "enrich": true}'
+
+# 0b. Discover opt-in recipients
+curl "https://greendial.org/bounty/directory?q="
+
+# 1. Preview a UB payload for a user
 curl -X POST https://greendial.org/generate \
   -H "X-API-Key: $DEMAND_API_KEY" -H "Content-Type: application/json" \
-  -d '{"user_id": "user_abc", "health_area": "exercise", "price": 5.00}'
+  -d '{"user_id": "user_abc", "description": "walk", "recurrence": "weekly"}'
 
-# → {"suggestion": {...}, "bounty_payload": {...}, "bounty_post_url": "/bounty"}
-
-# 2. Create the UB for real — pass the bounty_payload straight through, or your own list of user_ids
+# 2. Create the UB — once or subscription-style
 curl -X POST https://greendial.org/bounty \
   -H "X-API-Key: $DEMAND_API_KEY" -H "Content-Type: application/json" \
-  -d '{"activity": "Walk 10,000 steps", "health_area": "exercise", "price": 5.00,
-       "currency": "ETH", "user_ids": ["user_abc"], "expires": "2026-08-01"}'
+  -d '{"activity": "Take a walk sometime in the next day", "health_area": "exercise",
+       "price": 5.00, "currency": "USD", "user_ids": ["user_abc"],
+       "recurrence": "once", "expires": "2026-12-01"}'
 
-# → {"bounty_id": "bty_a1b2c3d4e5f6", "status": "active"}
-# Targeted users now see this as a priced Suggestion the next time theirs are generated.
-
-# 3. Check on it later — has anyone accepted and completed it?
+# 3. Check later
 curl https://greendial.org/bounty/bty_a1b2c3d4e5f6 \
   -H "X-API-Key: $DEMAND_API_KEY"
 
-# 4. When you're done sponsoring it (expired, budget spent, etc.)
+# 4. Delete when done
 curl -X DELETE https://greendial.org/bounty/bty_a1b2c3d4e5f6 \
   -H "X-API-Key: $DEMAND_API_KEY"</div>
   <p style="margin-top:8px" data-i18n-html="docs.sab.quickstart_footer">Don't have a key yet? See the <a href="/about#faq">FAQ</a> for how to request one. Remember: UB is <a href="#bounty-honor-system">honor-system payment</a>, not on-chain escrow — see the note below.</p>
@@ -737,20 +749,22 @@ curl -X DELETE https://greendial.org/bounty/bty_a1b2c3d4e5f6 \
       <span class="path">/bounty</span>
     </div>
     <div class="endpoint-desc">
-      <span data-i18n="docs.sab.create_bounty_desc">Create a UB.</span>
+      <span data-i18n="docs.sab.create_bounty_desc">Create a UB.</span> Auth: <code>X-API-Key</code> <em>or</em> session + <code>sponsor_user_id</code>.
       <div class="code-block">POST /bounty
-X-API-Key: &lt;key&gt;
+X-API-Key: &lt;key&gt;   # or X-Session-Token + sponsor_user_id in body
 
 {
-  "activity": "Walk 10,000 steps",
+  "activity": "Take a walk sometime in the next day",
   "health_area": "exercise",
   "price": 5.00,
-  "currency": "ETH",
+  "currency": "USD",
   "user_ids": ["user_abc", "user_def"],
-  "expires": "2026-08-01"
+  "recurrence": "once",
+  "expires": "2026-12-01",
+  "sponsor_note": "optional"
 }
 
-→ {"bounty_id": "bty_a1b2c3d4e5f6", "status": "active"}</div>
+→ {"bounty_id": "bty_…", "status": "active", "recurrence": "once"}</div>
     </div>
   </div>
 
@@ -759,7 +773,36 @@ X-API-Key: &lt;key&gt;
       <span class="method get">GET</span>
       <span class="path">/bounty</span>
     </div>
-    <div class="endpoint-desc"><span data-i18n="docs.sab.list_bounties_desc">List all UBs.</span> <div class="code-block">→ {"bounties": [ {...}, {...} ]}</div></div>
+    <div class="endpoint-desc"><span data-i18n="docs.sab.list_bounties_desc">List UBs (API key: all; session sponsor: own only).</span> <div class="code-block">→ {"bounties": [ {...}, {...} ]}</div></div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method get">GET</span>
+      <span class="path">/bounty/directory</span>
+    </div>
+    <div class="endpoint-desc">Public discover: users with <code>bounty_discoverable</code> enabled. Query <code>?q=</code> optional. No secrets returned.</div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method post">POST</span>
+      <span class="path">/bounty/autocomplete</span>
+    </div>
+    <div class="endpoint-desc">
+      Public AI/catalog draft helper (TSE-style chips + suggested price). Generic default activity when empty.
+      <div class="code-block">POST /bounty/autocomplete
+{"description": "sleep", "enrich": true}
+
+→ {
+  "activity": "Go to bed 30 minutes earlier tonight",
+  "health_area": "sleep",
+  "price": 5,
+  "currency": "USD",
+  "chips": [{"label":"…","hint":"Sleep","price":5}, …],
+  "defaults": {"activity":"Take a walk sometime in the next day","price":5,"currency":"USD"}
+}</div>
+    </div>
   </div>
 
   <div class="endpoint">
@@ -784,15 +827,16 @@ X-API-Key: &lt;key&gt;
       <span class="path">/generate</span>
     </div>
     <div class="endpoint-desc">
-      <span data-i18n="docs.sab.preview_desc">Preview what suggestion GreenDial would generate for a user in a given health area, and get a ready-to-POST UB payload back. Does not create the UB.</span>
+      <span data-i18n="docs.sab.preview_desc">Preview a UB payload for a user. Pass <code>description</code> for autocomplete-style drafts, or <code>health_area</code> for profile-aware institutional suggestions. Does not create the UB.</span>
       <div class="code-block">POST /generate
-X-API-Key: &lt;key&gt;
+X-API-Key: &lt;key&gt;   # or session + sponsor_user_id
 
-{"user_id": "user_abc", "health_area": "diet", "price": 10.00}
+{"user_id": "user_abc", "description": "walk", "recurrence": "weekly"}
 
 → {
-  "suggestion": {"text": "...", "agent_id": "diet", "health_area": "diet"},
-  "bounty_payload": {"activity": "...", "health_area": "diet", "price": 10.00, "currency": "ETH", "user_ids": ["user_abc"]},
+  "suggestion": {"text": "...", "agent_id": "exercise", "health_area": "exercise"},
+  "bounty_payload": {"activity": "...", "health_area": "exercise", "price": 5, "currency": "USD",
+                     "user_ids": ["user_abc"], "recurrence": "weekly"},
   "bounty_post_url": "/bounty"
 }</div>
     </div>

@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en" data-gd-page="sponsor">
+<head>
+  <script>(function(){try{var l=localStorage.getItem('gd_lang');if(l&&l!=='en')document.documentElement.classList.add('i18n-loading');var p=localStorage.getItem('gd_ui_style');var r=localStorage.getItem('gd_ui_style_resolved');if(p&&p!=='page_default')document.documentElement.setAttribute('data-gd-theme',p);else if(r)document.documentElement.setAttribute('data-gd-theme',r);}catch(e){}})();</script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Sponsor a Universal Bounty — GreenDial</title>
+  <link rel="stylesheet" href="/themes/skins.css">
+  <meta name="description" content="Universal Bounty demand-side: sponsor healthy actions for friends, family, members, or constituents on GreenDial.">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html.i18n-loading body { visibility: hidden; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #1a1a2e; color: #eee; min-height: 100vh; line-height: 1.55;
+    }
+    a { color: #10b981; }
+    a:hover { color: #059669; }
+    .header {
+      background: linear-gradient(135deg, rgba(16,185,129,0.18), rgba(26,26,46,0.97));
+      padding: 12px 16px;
+      padding-top: calc(12px + env(safe-area-inset-top, 0px));
+      display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      position: sticky; top: 0; z-index: 50;
+    }
+    .logo { font-size: 20px; font-weight: 700; color: #10b981; text-decoration: none; }
+    .header-crumb { color: rgba(255,255,255,0.35); font-size: 14px; }
+    .header-links { margin-left: auto; display: flex; flex-wrap: wrap; gap: 12px; font-size: 13px; }
+    .header-links a { color: rgba(255,255,255,0.55); text-decoration: none; }
+    .header-links a:hover { color: #10b981; }
+    .hero {
+      padding: 40px 24px 28px; text-align: center;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      background: linear-gradient(180deg, rgba(16,185,129,0.08), transparent);
+    }
+    .hero h1 { font-size: 28px; margin-bottom: 10px; }
+    .hero h1 span { color: #10b981; }
+    .hero p { max-width: 640px; margin: 0 auto; color: rgba(255,255,255,0.6); font-size: 15px; }
+    .badge {
+      display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: .04em;
+      padding: 3px 8px; border-radius: 4px; background: rgba(16,185,129,0.15); color: #10b981;
+      vertical-align: middle; margin-left: 8px;
+    }
+    .wrap { max-width: 920px; margin: 0 auto; padding: 28px 20px 80px; }
+    h2 { font-size: 18px; color: #10b981; margin: 36px 0 12px; }
+    h2:first-child { margin-top: 0; }
+    p, li { font-size: 14px; color: rgba(255,255,255,0.72); margin-bottom: 10px; }
+    ul { margin: 0 0 12px 20px; }
+    .note {
+      background: rgba(255,193,7,0.08); border-left: 3px solid #ffc107;
+      padding: 12px 14px; border-radius: 0 8px 8px 0; font-size: 13px;
+      color: rgba(255,255,255,0.75); margin: 16px 0;
+    }
+    .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 16px 0; }
+    @media (max-width: 700px) { .cards { grid-template-columns: 1fr; } }
+    .card {
+      background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px; padding: 18px;
+    }
+    .card h3 { font-size: 15px; color: #fff; margin-bottom: 8px; }
+    .card p { margin-bottom: 0; font-size: 13.5px; }
+    .panel {
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px; padding: 20px; margin-top: 12px;
+    }
+    .panel h3 { font-size: 16px; margin-bottom: 6px; color: #fff; }
+    .panel .sub { font-size: 13px; color: rgba(255,255,255,0.45); margin-bottom: 16px; }
+    label { display: block; font-size: 12px; color: rgba(255,255,255,0.5); text-transform: uppercase; margin-bottom: 6px; letter-spacing: .04em; }
+    input, textarea, select {
+      width: 100%; padding: 12px 14px; border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.06);
+      color: #fff; font-size: 16px; font-family: inherit; margin-bottom: 14px;
+    }
+    textarea { min-height: 88px; resize: vertical; line-height: 1.45; }
+    input:focus, textarea:focus, select:focus { outline: none; border-color: rgba(16,185,129,0.55); }
+    .row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+    @media (max-width: 640px) { .row { grid-template-columns: 1fr; } }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 12px 18px; border: none; border-radius: 24px; font-size: 14px; font-weight: 600;
+      cursor: pointer; font-family: inherit;
+    }
+    .btn-primary { background: #10b981; color: #fff; }
+    .btn-primary:hover { background: #059669; }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-secondary { background: rgba(255,255,255,0.1); color: #fff; }
+    .btn-secondary:hover { background: rgba(255,255,255,0.16); }
+    .btn-sm { padding: 8px 14px; font-size: 13px; }
+    .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px; }
+    .suggest-row {
+      display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: -6px 0 14px;
+      min-height: 28px;
+    }
+    .suggest-label { font-size: 11px; color: rgba(255,255,255,0.35); width: 100%; margin-bottom: 2px; }
+    .suggest-chip {
+      border: 1px solid rgba(255,255,255,0.14); background: rgba(255,255,255,0.05);
+      color: rgba(255,255,255,0.85); border-radius: 20px; padding: 7px 12px;
+      font-size: 12.5px; cursor: pointer; font-family: inherit; text-align: left;
+    }
+    .suggest-chip:hover { border-color: rgba(16,185,129,0.45); background: rgba(16,185,129,0.12); }
+    .chip-meta { color: rgba(255,255,255,0.4); font-size: 11px; margin-left: 6px; }
+    .recipient-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; max-height: 280px; overflow-y: auto; }
+    .recipient {
+      display: flex; align-items: center; gap: 12px; padding: 12px 14px;
+      border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(0,0,0,0.15); cursor: pointer;
+    }
+    .recipient:hover, .recipient.selected { border-color: rgba(16,185,129,0.5); background: rgba(16,185,129,0.1); }
+    .recipient .name { font-weight: 600; color: #fff; font-size: 14px; }
+    .recipient .meta { font-size: 12px; color: rgba(255,255,255,0.45); }
+    .recipient .blurb { font-size: 12px; color: rgba(255,255,255,0.55); margin-top: 2px; }
+    .status { font-size: 13px; margin-top: 12px; min-height: 20px; }
+    .status.ok { color: #10b981; }
+    .status.err { color: #ef4444; }
+    .auth-bar {
+      display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+      padding: 12px 14px; border-radius: 12px; background: rgba(16,185,129,0.08);
+      border: 1px solid rgba(16,185,129,0.2); margin-bottom: 16px; font-size: 13px;
+    }
+    .auth-bar strong { color: #10b981; }
+    .tabs { display: flex; gap: 6px; margin-bottom: 14px; }
+    .tab {
+      padding: 8px 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.12);
+      background: transparent; color: rgba(255,255,255,0.55); cursor: pointer; font-size: 13px;
+      font-family: inherit;
+    }
+    .tab.active { background: rgba(16,185,129,0.18); color: #10b981; border-color: rgba(16,185,129,0.4); }
+    .hidden { display: none !important; }
+    code { color: #fcd34d; font-size: 12.5px; }
+    footer {
+      border-top: 1px solid rgba(255,255,255,0.07); padding: 28px 24px 60px; text-align: center;
+    }
+    footer a { font-size: 13px; margin: 0 10px; text-decoration: none; color: rgba(255,255,255,0.5); }
+    details.inst { margin-top: 20px; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 14px 16px; background: rgba(0,0,0,0.15); }
+    details.inst summary { cursor: pointer; font-weight: 600; color: #fff; font-size: 14px; }
+    details.inst .body { margin-top: 12px; }
+    .code-block {
+      background: rgba(0,0,0,0.35); border-radius: 10px; padding: 14px; font-size: 12px;
+      font-family: ui-monospace, Menlo, monospace; color: #d1fae5; overflow-x: auto;
+      white-space: pre; line-height: 1.5; margin: 10px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <a class="logo" href="/">🌿 GreenDial</a>
+    <span class="header-crumb">/ Sponsor</span>
+    <div class="header-links">
+      <a href="/about#bounty">About UB</a>
+      <a href="/docs">API Docs</a>
+      <a href="/">Open GreenDial</a>
+    </div>
+  </div>
+
+  <div class="hero">
+    <h1>Universal <span>Bounty</span> <span class="badge">Demand-side</span></h1>
+    <p>Put real support behind a healthy action — for someone you love, or people you serve. This page is for sponsors. Everyday chat with Doc stays simple on the main app.</p>
+  </div>
+
+  <div class="wrap">
+    <h2>How a demand-side account works</h2>
+    <p>On GreenDial, the <strong>supply side</strong> is the person chatting with Doc and checking in. The <strong>demand side</strong> is anyone who sponsors a priced activity for them — a Universal Bounty (UB).</p>
+    <div class="cards">
+      <div class="card">
+        <h3>Friends &amp; family</h3>
+        <p>Sign in with your GreenDial account on this page. Find someone who opted into discovery (or enter their username), draft a simple activity with AI help, choose one-time or recurring, and post. They see it as a priced suggestion in their app.</p>
+      </div>
+      <div class="card">
+        <h3>Institutions</h3>
+        <p>Insurers, employers, and public programs use a demand-side <code>X-API-Key</code> to create UBs at scale via API — targeting known <code>user_id</code>s, previewing with <code>/generate</code>, and listing bounties programmatically. Full shapes live in the API docs.</p>
+      </div>
+    </div>
+    <div class="note">
+      <strong>Honor system:</strong> GreenDial records price, currency, and a wallet snapshot when the person completes the activity, and flags payment as pending. Settlement is off-platform today (you pay them how you already pay them). Not medical care; not escrow.
+    </div>
+    <ul>
+      <li><strong>One-time bounty</strong> — offered once until they accept (or you delete it).</li>
+      <li><strong>Weekly / monthly</strong> — after they complete one cycle, it can reappear for the next period.</li>
+      <li><strong>Discovery</strong> — only people who turn on “Open to Universal Bounties” in Settings appear in the public directory. Everyone else can decline simply by leaving that off.</li>
+    </ul>
+
+    <h2>Create a bounty</h2>
+    <div class="panel">
+      <div class="auth-bar" id="auth-bar">
+        <span id="auth-status">Checking sign-in…</span>
+        <button type="button" class="btn btn-secondary btn-sm" id="btn-open-app" onclick="location.href='/'">Sign in on GreenDial →</button>
+      </div>
+
+      <div class="tabs" role="tablist">
+        <button type="button" class="tab active" data-tab="friends" onclick="switchSponsorTab('friends')">Friends &amp; family</button>
+        <button type="button" class="tab" data-tab="institution" onclick="switchSponsorTab('institution')">Institution / API key</button>
+      </div>
+
+      <div id="tab-friends">
+        <h3>1. Find who to support</h3>
+        <p class="sub">Search people who opted into the public bounty directory, or type a GreenDial username you already know.</p>
+        <label for="discover-q">Search directory</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+          <input id="discover-q" type="search" placeholder="Name or username" style="flex:1;min-width:180px;margin-bottom:0" autocomplete="off">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="loadDirectory()">Search</button>
+        </div>
+        <div class="recipient-list" id="recipient-list">
+          <div class="meta" style="padding:8px;color:rgba(255,255,255,0.4)">Loading directory…</div>
+        </div>
+        <label for="manual-username">Or username / user_id</label>
+        <input id="manual-username" type="text" placeholder="e.g. jordan or user_jordan" autocomplete="off">
+
+        <h3>2. Describe the activity</h3>
+        <p class="sub">Start typing — we suggest common healthy actions and a price. Default is intentionally simple.</p>
+        <label for="activity">Activity</label>
+        <textarea id="activity" placeholder="Take a walk sometime in the next day"></textarea>
+        <div class="suggest-row" id="suggest-row" aria-label="Optional suggestions"></div>
+
+        <div class="row">
+          <div>
+            <label for="health-area">Health area</label>
+            <select id="health-area">
+              <option value="exercise">Exercise</option>
+              <option value="diet">Diet</option>
+              <option value="sleep">Sleep</option>
+              <option value="social">Social</option>
+              <option value="mental_health">Mind</option>
+              <option value="protect">Protect / prevent</option>
+            </select>
+          </div>
+          <div>
+            <label for="price">Suggested price</label>
+            <input id="price" type="number" step="0.01" min="0" value="5" inputmode="decimal">
+          </div>
+          <div>
+            <label for="currency">Currency</label>
+            <select id="currency">
+              <option value="USD">USD</option>
+              <option value="ETH">ETH</option>
+              <option value="EUR">EUR</option>
+            </select>
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label for="recurrence">One-time or subscription</label>
+            <select id="recurrence">
+              <option value="once">One-time</option>
+              <option value="weekly">Weekly subscription</option>
+              <option value="monthly">Monthly subscription</option>
+            </select>
+          </div>
+          <div>
+            <label for="expires">Expires (optional)</label>
+            <input id="expires" type="date">
+          </div>
+          <div>
+            <label for="sponsor-note">Note to them (optional)</label>
+            <input id="sponsor-note" type="text" placeholder="From Mom — proud of you" maxlength="300">
+          </div>
+        </div>
+
+        <div class="actions">
+          <button type="button" class="btn btn-secondary" onclick="runPreview()">Preview</button>
+          <button type="button" class="btn btn-primary" id="btn-create" onclick="createBounty()">Create bounty</button>
+        </div>
+        <div class="status" id="status"></div>
+      </div>
+
+      <div id="tab-institution" class="hidden">
+        <h3>API key workflow</h3>
+        <p class="sub">For insurers, employers, and government programs. Request a key via the About FAQ email. Then integrate against the live API.</p>
+        <label for="api-key">X-API-Key (stored only in this browser session)</label>
+        <input id="api-key" type="password" placeholder="Demand-side API key" autocomplete="off">
+        <label for="inst-user-ids">Target user_ids (comma-separated)</label>
+        <input id="inst-user-ids" type="text" placeholder="user_abc, user_def">
+        <label for="inst-activity">Activity</label>
+        <textarea id="inst-activity" placeholder="Take a walk sometime in the next day"></textarea>
+        <div class="row">
+          <div>
+            <label for="inst-price">Price</label>
+            <input id="inst-price" type="number" step="0.01" value="5">
+          </div>
+          <div>
+            <label for="inst-currency">Currency</label>
+            <select id="inst-currency"><option>USD</option><option>ETH</option><option>EUR</option></select>
+          </div>
+          <div>
+            <label for="inst-recurrence">Recurrence</label>
+            <select id="inst-recurrence">
+              <option value="once">once</option>
+              <option value="weekly">weekly</option>
+              <option value="monthly">monthly</option>
+            </select>
+          </div>
+        </div>
+        <div class="actions">
+          <button type="button" class="btn btn-primary" onclick="createInstitutionBounty()">POST /bounty</button>
+        </div>
+        <div class="status" id="inst-status"></div>
+        <div class="code-block"># Preview (profile-aware or description-first)
+curl -X POST https://greendial.org/generate \
+  -H "X-API-Key: $DEMAND_API_KEY" -H "Content-Type: application/json" \
+  -d '{"user_id":"user_abc","description":"walk","recurrence":"weekly"}'
+
+# Create
+curl -X POST https://greendial.org/bounty \
+  -H "X-API-Key: $DEMAND_API_KEY" -H "Content-Type: application/json" \
+  -d '{"activity":"Take a walk sometime in the next day","health_area":"exercise",
+       "price":5,"currency":"USD","user_ids":["user_abc"],"recurrence":"once"}'
+
+# Discover opt-in recipients
+curl "https://greendial.org/bounty/directory?q="
+
+# Autocomplete (no key)
+curl -X POST https://greendial.org/bounty/autocomplete \
+  -H "Content-Type: application/json" \
+  -d '{"description":"sleep better","enrich":true}'</div>
+        <p>Full reference: <a href="/docs">API Docs → Suggestions, Activities &amp; UB</a>.</p>
+      </div>
+    </div>
+
+    <details class="inst">
+      <summary>For institutions — end-to-end mental model</summary>
+      <div class="body">
+        <ol style="margin-left:18px;color:rgba(255,255,255,0.72);font-size:14px;line-height:1.7">
+          <li>Member already uses GreenDial (or you onboard them to create an account).</li>
+          <li>You obtain a demand-side API key and map your member IDs to GreenDial <code>user_id</code>s (or usernames).</li>
+          <li>Optionally call <code>POST /generate</code> to preview wording from their health profile, or use <code>/bounty/autocomplete</code> for generic habits.</li>
+          <li><code>POST /bounty</code> with <code>user_ids</code>, price, recurrence, and expiry. The member sees a priced suggestion (UB first in their list).</li>
+          <li>On accept → activity; on complete → wallet snapshot + <code>payment_pending</code>. Your ops settle payment off-platform and can mark paid in admin tools where applicable.</li>
+          <li>Weekly/monthly UBs re-surface after a completed cycle, so a subscription-style program needs only one bounty record.</li>
+        </ol>
+      </div>
+    </details>
+
+    <p style="margin-top:28px;font-size:13px;color:rgba(255,255,255,0.4)">
+      Want to be findable by sponsors? In GreenDial → Settings → Universal Bounty → turn on “Open to Universal Bounties.” You can decline anytime by turning it off.
+    </p>
+  </div>
+
+  <footer>
+    <a href="/">🌿 GreenDial</a>
+    <a href="/about">About</a>
+    <a href="/privacy">Privacy</a>
+    <a href="/docs">API Docs</a>
+  </footer>
+
+  <script>
+    const API = location.origin;
+    let selectedRecipient = null;
+    let session = null;
+    let enrichTimer = null;
+    let priceUserSet = false;
+
+    function loadSession() {
+      session = null;
+      try {
+        // Main app: localStorage.gd_session = { user_id, username, token, ... }
+        const raw = localStorage.getItem('gd_session');
+        if (raw) {
+          const saved = JSON.parse(raw);
+          if (saved && saved.user_id && saved.token) {
+            session = {
+              user_id: saved.user_id,
+              session_token: saved.token,
+              username: saved.username || saved.user_id,
+            };
+          }
+        }
+      } catch (e) { session = null; }
+      renderAuth();
+    }
+
+    function renderAuth() {
+      const el = document.getElementById('auth-status');
+      const btn = document.getElementById('btn-open-app');
+      if (session && session.user_id && session.session_token) {
+        el.innerHTML = `Signed in as <strong>${escapeHtml(session.username || session.user_id)}</strong> — you can sponsor as a friend/family account.`;
+        btn.textContent = 'Open app →';
+      } else {
+        el.textContent = 'Not signed in. Sign in on GreenDial first (same browser), then return here to sponsor friends and family.';
+        btn.textContent = 'Sign in on GreenDial →';
+      }
+    }
+
+    function escapeHtml(s) {
+      const d = document.createElement('div');
+      d.textContent = s == null ? '' : String(s);
+      return d.innerHTML;
+    }
+
+    function switchSponsorTab(name) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+      document.getElementById('tab-friends').classList.toggle('hidden', name !== 'friends');
+      document.getElementById('tab-institution').classList.toggle('hidden', name !== 'institution');
+    }
+
+    async function loadDirectory() {
+      const q = document.getElementById('discover-q').value.trim();
+      const list = document.getElementById('recipient-list');
+      list.innerHTML = '<div style="padding:8px;color:rgba(255,255,255,0.4)">Loading…</div>';
+      try {
+        const res = await fetch(`${API}/bounty/directory?q=${encodeURIComponent(q)}&limit=40`);
+        const data = await res.json();
+        const rec = data.recipients || [];
+        if (!rec.length) {
+          list.innerHTML = `<div style="padding:10px;color:rgba(255,255,255,0.45);font-size:13px">No opt-in recipients${q ? ' for that search' : ' yet'}. People appear here only if they enable “Open to Universal Bounties” in Settings. You can still type a username you know.</div>`;
+          return;
+        }
+        list.innerHTML = rec.map(r => `
+          <div class="recipient" data-uid="${escapeHtml(r.user_id)}" data-username="${escapeHtml(r.username || '')}" onclick="selectRecipient(this)">
+            <div style="flex:1;min-width:0">
+              <div class="name">${escapeHtml(r.display_name || r.username)}</div>
+              <div class="meta">@${escapeHtml(r.username)} · ${escapeHtml(r.user_id)}</div>
+              ${r.blurb ? `<div class="blurb">${escapeHtml(r.blurb)}</div>` : ''}
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm">Select</button>
+          </div>
+        `).join('');
+      } catch (e) {
+        list.innerHTML = '<div style="padding:8px;color:#ef4444">Could not load directory</div>';
+      }
+    }
+
+    function selectRecipient(el) {
+      document.querySelectorAll('.recipient').forEach(n => n.classList.remove('selected'));
+      el.classList.add('selected');
+      selectedRecipient = {
+        user_id: el.dataset.uid,
+        username: el.dataset.username,
+      };
+      document.getElementById('manual-username').value = el.dataset.username || el.dataset.uid;
+    }
+
+    function applyChip(label, area, price) {
+      const ta = document.getElementById('activity');
+      const cur = (ta.value || '').trim();
+      if (!cur) ta.value = label;
+      else if (!cur.toLowerCase().includes(String(label).toLowerCase())) {
+        ta.value = cur + (/\s$/.test(ta.value) ? '' : ' — ') + label;
+      }
+      if (area) document.getElementById('health-area').value = area === 'social' ? 'social' : area;
+      if (price != null && !priceUserSet) document.getElementById('price').value = price;
+      ta.dispatchEvent(new Event('input', { bubbles: true }));
+      ta.focus();
+    }
+
+    async function runAutocomplete(enrich) {
+      const description = document.getElementById('activity').value.trim();
+      try {
+        const res = await fetch(`${API}/bounty/autocomplete`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ description, enrich: !!enrich }),
+        });
+        const data = await res.json();
+        const row = document.getElementById('suggest-row');
+        const chips = data.chips || [];
+        row.innerHTML = chips.length
+          ? `<span class="suggest-label">Suggestions (optional)</span>` + chips.map(c =>
+              `<button type="button" class="suggest-chip" data-label="${escapeHtml(c.label)}" data-area="${escapeHtml(c.health_area || '')}" data-price="${c.price != null ? c.price : ''}">
+                ${escapeHtml(c.label)}${c.hint ? `<span class="chip-meta">${escapeHtml(c.hint)}</span>` : ''}
+              </button>`
+            ).join('')
+          : '';
+        row.querySelectorAll('.suggest-chip').forEach(btn => {
+          btn.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            applyChip(btn.dataset.label, btn.dataset.area, btn.dataset.price !== '' ? parseFloat(btn.dataset.price) : null);
+          });
+        });
+        if (enrich) {
+          if (data.activity && description.length < 8) {
+            document.getElementById('activity').value = data.activity;
+          } else if (data.activity && enrich && description.length >= 8) {
+            // Soft fill only if still default-ish
+            const cur = document.getElementById('activity').value.trim();
+            if (!cur || cur === 'Take a walk sometime in the next day') {
+              document.getElementById('activity').value = data.activity;
+            }
+          }
+          if (data.health_area) {
+            const sel = document.getElementById('health-area');
+            if ([...sel.options].some(o => o.value === data.health_area)) sel.value = data.health_area;
+          }
+          if (!priceUserSet && data.price != null) {
+            document.getElementById('price').value = data.price;
+          }
+          if (data.currency) document.getElementById('currency').value = data.currency;
+        }
+      } catch (e) { /* ignore */ }
+    }
+
+    function resolveUserIds() {
+      const manual = document.getElementById('manual-username').value.trim();
+      if (selectedRecipient && selectedRecipient.user_id) return [selectedRecipient.user_id];
+      if (!manual) return [];
+      // Accept raw user_id or username → user_username convention
+      if (manual.startsWith('user_')) return [manual];
+      return [`user_${manual.toLowerCase().replace(/\s+/g, '_').replace(/@/g, '_')}`];
+    }
+
+    function setStatus(msg, ok) {
+      const el = document.getElementById('status');
+      el.textContent = msg || '';
+      el.className = 'status ' + (ok === true ? 'ok' : ok === false ? 'err' : '');
+    }
+
+    async function runPreview() {
+      const userIds = resolveUserIds();
+      if (!userIds.length) { setStatus('Select a recipient or enter a username first.', false); return; }
+      if (!session || !session.session_token) { setStatus('Sign in on GreenDial first (same browser).', false); return; }
+      setStatus('Generating preview…');
+      try {
+        const res = await fetch(`${API}/generate`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Session-Token': session.session_token,
+          },
+          body: JSON.stringify({
+            user_id: userIds[0],
+            sponsor_user_id: session.user_id,
+            description: document.getElementById('activity').value.trim(),
+            health_area: document.getElementById('health-area').value,
+            price: parseFloat(document.getElementById('price').value) || 5,
+            recurrence: document.getElementById('recurrence').value,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) { setStatus(data.error || 'Preview failed', false); return; }
+        const p = data.bounty_payload || {};
+        if (p.activity) document.getElementById('activity').value = p.activity;
+        if (p.health_area) document.getElementById('health-area').value = p.health_area === 'relationships' ? 'social' : p.health_area;
+        if (p.price != null && !priceUserSet) document.getElementById('price').value = p.price;
+        if (p.currency) document.getElementById('currency').value = p.currency;
+        setStatus(`Preview ready: “${p.activity}” · ${p.price} ${p.currency}`, true);
+      } catch (e) {
+        setStatus('Preview failed — network error', false);
+      }
+    }
+
+    async function createBounty() {
+      const userIds = resolveUserIds();
+      if (!userIds.length) { setStatus('Select a recipient or enter a username first.', false); return; }
+      if (!session || !session.session_token) { setStatus('Sign in on GreenDial first (same browser).', false); return; }
+      const activity = document.getElementById('activity').value.trim() || 'Take a walk sometime in the next day';
+      const btn = document.getElementById('btn-create');
+      btn.disabled = true;
+      setStatus('Creating bounty…');
+      try {
+        const res = await fetch(`${API}/bounty`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Session-Token': session.session_token,
+          },
+          body: JSON.stringify({
+            activity,
+            health_area: document.getElementById('health-area').value,
+            price: parseFloat(document.getElementById('price').value) || 5,
+            currency: document.getElementById('currency').value,
+            user_ids: userIds,
+            recurrence: document.getElementById('recurrence').value,
+            expires: document.getElementById('expires').value || '',
+            sponsor_note: document.getElementById('sponsor-note').value.trim(),
+            sponsor_user_id: session.user_id,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) { setStatus(data.error || 'Create failed', false); btn.disabled = false; return; }
+        setStatus(`Bounty created: ${data.bounty_id} (${data.recurrence || 'once'}). They’ll see it as a priced suggestion.`, true);
+      } catch (e) {
+        setStatus('Create failed — network error', false);
+      }
+      btn.disabled = false;
+    }
+
+    async function createInstitutionBounty() {
+      const key = document.getElementById('api-key').value.trim();
+      const ids = document.getElementById('inst-user-ids').value.split(',').map(s => s.trim()).filter(Boolean);
+      const status = document.getElementById('inst-status');
+      status.className = 'status';
+      if (!key) { status.textContent = 'API key required'; status.className = 'status err'; return; }
+      if (!ids.length) { status.textContent = 'Add at least one user_id'; status.className = 'status err'; return; }
+      status.textContent = 'Posting…';
+      try {
+        const res = await fetch(`${API}/bounty`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-API-Key': key,
+          },
+          body: JSON.stringify({
+            activity: document.getElementById('inst-activity').value.trim() || 'Take a walk sometime in the next day',
+            health_area: 'exercise',
+            price: parseFloat(document.getElementById('inst-price').value) || 5,
+            currency: document.getElementById('inst-currency').value,
+            user_ids: ids,
+            recurrence: document.getElementById('inst-recurrence').value,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) { status.textContent = data.error || 'Failed'; status.className = 'status err'; return; }
+        status.textContent = `Created ${data.bounty_id}`;
+        status.className = 'status ok';
+      } catch (e) {
+        status.textContent = 'Network error';
+        status.className = 'status err';
+      }
+    }
+
+    // Wire activity field
+    (function initActivity() {
+      const ta = document.getElementById('activity');
+      ta.value = 'Take a walk sometime in the next day';
+      ta.addEventListener('input', () => {
+        clearTimeout(enrichTimer);
+        enrichTimer = setTimeout(() => runAutocomplete(false), 120);
+        if (ta.value.trim().length >= 12) {
+          clearTimeout(enrichTimer);
+          enrichTimer = setTimeout(() => runAutocomplete(true), 500);
+        }
+      });
+      ta.addEventListener('blur', () => runAutocomplete(true));
+      document.getElementById('price').addEventListener('input', () => { priceUserSet = true; });
+      document.getElementById('discover-q').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); loadDirectory(); }
+      });
+      runAutocomplete(false);
+    })();
+
+    loadSession();
+    loadDirectory();
+  </script>
+  <script src="/themes/catalog.js"></script>
+  <script src="/themes/apply.js"></script>
+  <script>if (window.GDThemes) GDThemes.init({ page: 'sponsor' });</script>
+</body>
+</html>

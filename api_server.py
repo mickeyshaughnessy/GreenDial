@@ -83,6 +83,12 @@ def privacy():
     return send_from_directory('.', 'privacy.html')
 
 
+@app.route("/sponsor", methods=['GET'])
+def sponsor_page():
+    """Demand-side Universal Bounty UI — tucked away from main chat flow."""
+    return send_from_directory('.', 'sponsor.html')
+
+
 @app.route("/stickers/<token>", methods=['GET'])
 def sticker_board_public(token):
     return send_from_directory('.', 'stickers.html')
@@ -688,19 +694,52 @@ def update_activity(user_id, activity_id):
     return Response(result, mimetype='application/json')
 
 
-# ============ BOUNTIES ============
+# ============ BOUNTIES / DEMAND-SIDE ============
 
 @app.route("/bounty", methods=['GET', 'POST', 'OPTIONS'])
 def bounty():
     if request.method == 'OPTIONS':
         return Response('', status=200)
     if request.method == 'GET':
-        if not handlers.demand_key_ok(_api_key()):
-            return _unauthorized()
-        result = handlers.handle_list_bounties()
+        sponsor_user_id = request.args.get('sponsor_user_id', '')
+        result = handlers.handle_list_bounties(
+            api_key=_api_key(),
+            sponsor_user_id=sponsor_user_id,
+            session_token=_session_token(),
+        )
+        if isinstance(result, tuple):
+            return Response(result[0], status=result[1], mimetype='application/json')
         return Response(result, mimetype='application/json')
     req = request.get_json() or {}
-    result = handlers.handle_create_bounty(req, api_key=_api_key())
+    result = handlers.handle_create_bounty(
+        req, api_key=_api_key(), session_token=_session_token()
+    )
+    if isinstance(result, tuple):
+        return Response(result[0], status=result[1], mimetype='application/json')
+    return Response(result, mimetype='application/json')
+
+
+# Static paths before /bounty/<id>
+@app.route("/bounty/directory", methods=['GET', 'OPTIONS'])
+def bounty_directory():
+    """Public list of users who opted into bounty discovery."""
+    if request.method == 'OPTIONS':
+        return Response('', status=200)
+    q = request.args.get('q', '')
+    limit = request.args.get('limit', 30)
+    result = handlers.handle_discover_recipients(query=q, limit=limit)
+    if isinstance(result, tuple):
+        return Response(result[0], status=result[1], mimetype='application/json')
+    return Response(result, mimetype='application/json')
+
+
+@app.route("/bounty/autocomplete", methods=['POST', 'OPTIONS'])
+def bounty_autocomplete():
+    """Public AI/catalog autocomplete for drafting a UB (activity + price)."""
+    if request.method == 'OPTIONS':
+        return Response('', status=200)
+    req = request.get_json() or {}
+    result = handlers.handle_bounty_autocomplete(req)
     if isinstance(result, tuple):
         return Response(result[0], status=result[1], mimetype='application/json')
     return Response(result, mimetype='application/json')
@@ -710,10 +749,19 @@ def bounty():
 def get_bounty(bounty_id):
     if request.method == 'OPTIONS':
         return Response('', status=200)
+    if bounty_id in ('directory', 'autocomplete'):
+        return Response(json.dumps({"error": "Not found"}), status=404, mimetype='application/json')
+    sponsor_user_id = request.args.get('sponsor_user_id', '') or (request.get_json(silent=True) or {}).get('sponsor_user_id', '')
     if request.method == 'DELETE':
-        result = handlers.handle_delete_bounty(bounty_id, api_key=_api_key())
+        result = handlers.handle_delete_bounty(
+            bounty_id, api_key=_api_key(),
+            sponsor_user_id=sponsor_user_id, session_token=_session_token(),
+        )
     else:
-        result = handlers.handle_get_bounty(bounty_id, api_key=_api_key())
+        result = handlers.handle_get_bounty(
+            bounty_id, api_key=_api_key(),
+            sponsor_user_id=sponsor_user_id, session_token=_session_token(),
+        )
     if isinstance(result, tuple):
         return Response(result[0], status=result[1], mimetype='application/json')
     return Response(result, mimetype='application/json')
@@ -773,7 +821,9 @@ def generate_demand():
     if request.method == 'OPTIONS':
         return Response('', status=200)
     req = request.get_json() or {}
-    result = handlers.handle_generate_demand(req, api_key=_api_key())
+    result = handlers.handle_generate_demand(
+        req, api_key=_api_key(), session_token=_session_token()
+    )
     if isinstance(result, tuple):
         return Response(result[0], status=result[1], mimetype='application/json')
     return Response(result, mimetype='application/json')

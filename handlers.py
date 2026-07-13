@@ -342,12 +342,17 @@ def handle_get_settings(user_id):
         "theme": "dark",
         "ui_style": "page_default",
         "notifications_enabled": True,
-        "chat_only_mode": True
+        "chat_only_mode": True,
+        "bounty_discoverable": False,  # opt-in to public sponsor directory
+        "bounty_public_blurb": "",
     }
     
     settings = {**default_settings, **user.get('settings', {})}
     settings['notifications_enabled'] = _coerce_bool(settings.get('notifications_enabled'), True)
     settings['chat_only_mode'] = _coerce_bool(settings.get('chat_only_mode'), True)
+    settings['bounty_discoverable'] = _coerce_bool(settings.get('bounty_discoverable'), False)
+    if settings.get('bounty_public_blurb') is None:
+        settings['bounty_public_blurb'] = ''
     return json.dumps({"settings": settings})
 
 
@@ -3034,19 +3039,88 @@ def handle_update_feedback_post(post_id, req, token=None):
         return (json.dumps({"error": str(e)}), 500)
 
 
-# ============ BOUNTIES ============
+# ============ BOUNTIES / DEMAND-SIDE ============
 
-def handle_create_bounty(req, api_key=None):
-    if not demand_key_ok(api_key):
-        return (json.dumps({"error": "Unauthorized — valid API key required"}), 401)
-    activity = (req.get('activity') or '').strip()
-    if not activity:
-        return (json.dumps({"error": "activity required"}), 400)
-    health_area = (req.get('health_area') or 'exercise').strip()
-    price = req.get('price')
-    currency = (req.get('currency') or 'ETH').strip()
-    user_ids = req.get('user_ids', [])
-    expires = req.get('expires', '')
+# Generic default used when a sponsor types little or nothing (friends & family UX).
+DEFAULT_BOUNTY_ACTIVITY = "Take a walk sometime in the next day"
+DEFAULT_BOUNTY_PRICE = 5
+DEFAULT_BOUNTY_CURRENCY = "USD"
+DEFAULT_BOUNTY_AREA = "exercise"
+
+# Quiet suggestion chips (TSE-style catalog) — non-clobbering autocomplete.
+BOUNTY_ACTIVITY_CATALOG = [
+    {"label": "Take a walk sometime in the next day", "aliases": ["walk", "stroll", "step"], "hint": "Exercise", "health_area": "exercise", "price": 5},
+    {"label": "Drink water with each meal today", "aliases": ["water", "hydrate"], "hint": "Diet", "health_area": "diet", "price": 3},
+    {"label": "Go to bed 30 minutes earlier tonight", "aliases": ["sleep", "bed", "rest"], "hint": "Sleep", "health_area": "sleep", "price": 5},
+    {"label": "Stretch for 10 minutes today", "aliases": ["stretch", "mobility"], "hint": "Exercise", "health_area": "exercise", "price": 4},
+    {"label": "Call or text someone you care about", "aliases": ["call", "friend", "family", "social"], "hint": "Social", "health_area": "social", "price": 5},
+    {"label": "Cook one home meal this week", "aliases": ["cook", "dinner", "meal"], "hint": "Diet", "health_area": "diet", "price": 10},
+    {"label": "Take a short outdoor break today", "aliases": ["outside", "fresh air", "sun"], "hint": "Environment", "health_area": "exercise", "price": 4},
+    {"label": "Do a calm breathing exercise once today", "aliases": ["breath", "calm", "stress", "mind"], "hint": "Mind", "health_area": "mental_health", "price": 5},
+    {"label": "Schedule a preventive check-up this month", "aliases": ["doctor", "screen", "prevent"], "hint": "Protect", "health_area": "protect", "price": 25},
+    {"label": "Take your usual evening walk three times this week", "aliases": ["weekly", "habit", "walk"], "hint": "Recurring", "health_area": "exercise", "price": 15},
+]
+
+_VALID_RECURRENCE = ("once", "weekly", "monthly")
+_VALID_HEALTH_AREAS = ("exercise", "diet", "social", "sleep", "mental_health", "protect", "relationships", "environment")
+
+
+def _bounty_auth(api_key=None, sponsor_user_id=None, token=None):
+    """Authorize demand-side create/list: API key (institutions) or session (friends/family).
+
+    Returns (ok, mode, sponsor_user_id_or_None).
+    """
+    if demand_key_ok(api_key):
+        return True, "api_key", None
+    sid = (sponsor_user_id or "").strip()
+    if sid and session_ok(sid, token or ""):
+        return True, "session", sid
+    return False, None, None
+
+
+def handle_create_bounty(req, api_key=None, session_token=None):
+    """Create a Universal Bounty (one-time or recurring).
+
+    Auth: X-API-Key (institutions) OR sponsor session (friends/family).
+    """
+    sponsor_user_id = (req.get("sponsor_user_id") or req.get("user_id") or "").strip()
+    ok, mode, sponsor = _bounty_auth(api_key, sponsor_user_id, session_token)
+    if not ok:
+        return (json.dumps({
+            "error": "Unauthorized — sign in as a GreenDial user, or pass a valid demand-side X-API-Key"
+        }), 401)
+
+    activity = (req.get("activity") or "").strip() or DEFAULT_BOUNTY_ACTIVITY
+    health_area = (req.get("health_area") or DEFAULT_BOUNTY_AREA).strip()
+    if health_area not in _VALID_HEALTH_AREAS:
+        health_area = DEFAULT_BOUNTY_AREA
+    # relationships maps to social for suggestion typing
+    if health_area == "relationships":
+        health_area = "social"
+
+    price = req.get("price")
+    if price is None or price == "":
+        price = DEFAULT_BOUNTY_PRICE
+    try:
+        price = float(price)
+    except (TypeError, ValueError):
+        price = float(DEFAULT_BOUNTY_PRICE)
+
+    currency = (req.get("currency") or DEFAULT_BOUNTY_CURRENCY).strip() or DEFAULT_BOUNTY_CURRENCY
+    user_ids = req.get("user_ids") or []
+    if isinstance(user_ids, str):
+        user_ids = [u.strip() for u in user_ids.split(",") if u.strip()]
+    if not isinstance(user_ids, list) or not user_ids:
+        return (json.dumps({"error": "user_ids required — at least one GreenDial user to sponsor"}), 400)
+    user_ids = [str(u).strip() for u in user_ids if str(u).strip()][:50]
+
+    expires = (req.get("expires") or "").strip()
+    recurrence = (req.get("recurrence") or "once").strip().lower()
+    if recurrence not in _VALID_RECURRENCE:
+        recurrence = "once"
+    note = (req.get("sponsor_note") or req.get("note") or "").strip()[:300]
+    title = (req.get("title") or "").strip()[:120]
+
     try:
         bounties = s3_storage.get_bounties()
         bounty = {
@@ -3057,49 +3131,274 @@ def handle_create_bounty(req, api_key=None):
             "currency": currency,
             "user_ids": user_ids,
             "expires": expires,
+            "recurrence": recurrence,  # once | weekly | monthly
+            "sponsor_mode": mode,      # api_key | session
+            "sponsor_user_id": sponsor if mode == "session" else (req.get("sponsor_label") or "institution"),
+            "sponsor_note": note,
+            "title": title,
             "created": datetime.utcnow().isoformat(),
-            "status": "active"
+            "status": "active",
         }
         bounties.append(bounty)
         s3_storage.save_bounties(bounties)
-        return json.dumps({"bounty_id": bounty["id"], "status": "active"})
+        return json.dumps({
+            "bounty_id": bounty["id"],
+            "status": "active",
+            "recurrence": recurrence,
+            "activity": bounty["activity"],
+            "price": price,
+            "currency": currency,
+            "user_ids": user_ids,
+        })
     except Exception as e:
         return (json.dumps({"error": str(e)}), 500)
 
 
-def handle_list_bounties():
+def handle_list_bounties(api_key=None, sponsor_user_id=None, session_token=None):
+    ok, mode, sponsor = _bounty_auth(api_key, sponsor_user_id, session_token)
+    if not ok:
+        return (json.dumps({"error": "Unauthorized"}), 401)
     try:
         bounties = s3_storage.get_bounties()
+        if mode == "session" and sponsor:
+            # Friends/family only see bounties they sponsored
+            bounties = [b for b in bounties if b.get("sponsor_user_id") == sponsor]
         return json.dumps({"bounties": bounties})
     except Exception as e:
         return json.dumps({"bounties": [], "error": str(e)})
 
 
-def handle_get_bounty(bounty_id, api_key=None):
-    if not demand_key_ok(api_key):
-        return (json.dumps({"error": "Unauthorized — valid API key required"}), 401)
+def handle_get_bounty(bounty_id, api_key=None, sponsor_user_id=None, session_token=None):
+    ok, mode, sponsor = _bounty_auth(api_key, sponsor_user_id, session_token)
+    if not ok:
+        return (json.dumps({"error": "Unauthorized"}), 401)
     try:
         bounties = s3_storage.get_bounties()
         for b in bounties:
-            if b.get('id') == bounty_id:
+            if b.get("id") == bounty_id:
+                if mode == "session" and sponsor and b.get("sponsor_user_id") != sponsor:
+                    return (json.dumps({"error": "Not found"}), 404)
                 return json.dumps({"bounty": b})
         return (json.dumps({"error": "Not found"}), 404)
     except Exception as e:
         return (json.dumps({"error": str(e)}), 500)
 
 
-def handle_delete_bounty(bounty_id, api_key=None):
-    if not demand_key_ok(api_key):
-        return (json.dumps({"error": "Unauthorized — valid API key required"}), 401)
+def handle_delete_bounty(bounty_id, api_key=None, sponsor_user_id=None, session_token=None):
+    ok, mode, sponsor = _bounty_auth(api_key, sponsor_user_id, session_token)
+    if not ok:
+        return (json.dumps({"error": "Unauthorized"}), 401)
     try:
         bounties = s3_storage.get_bounties()
-        remaining = [b for b in bounties if b.get('id') != bounty_id]
-        if len(remaining) == len(bounties):
+        target = None
+        for b in bounties:
+            if b.get("id") == bounty_id:
+                target = b
+                break
+        if not target:
             return (json.dumps({"error": "Not found"}), 404)
+        if mode == "session" and sponsor and target.get("sponsor_user_id") != sponsor:
+            return (json.dumps({"error": "Not found"}), 404)
+        remaining = [b for b in bounties if b.get("id") != bounty_id]
         s3_storage.save_bounties(remaining)
         return json.dumps({"ok": True})
     except Exception as e:
         return (json.dumps({"error": str(e)}), 500)
+
+
+def handle_discover_recipients(query="", limit=30):
+    """Public directory of users who opted into bounty discovery (partial public).
+
+    Returns only non-sensitive fields. Users with bounty_discoverable=false are omitted
+    (decline / opt-out). Default for new accounts is false until they opt in.
+    """
+    q = (query or "").strip().lower()
+    try:
+        limit = max(1, min(int(limit or 30), 50))
+    except (TypeError, ValueError):
+        limit = 30
+
+    results = []
+    try:
+        user_ids = s3_storage.list_users()
+    except Exception as e:
+        return (json.dumps({"error": str(e), "recipients": []}), 500)
+
+    for uid in user_ids:
+        if len(results) >= limit:
+            break
+        try:
+            user = get_user_data(uid)
+        except Exception:
+            continue
+        if not user:
+            continue
+        settings = user.get("settings") or {}
+        # Opt-in only — "decline" = leave off or turn off
+        if not coerce_settings_bool(settings.get("bounty_discoverable"), False):
+            continue
+        username = (user.get("username") or uid or "").strip()
+        first = (user.get("first_name") or "").strip()
+        last = (user.get("last_name") or "").strip()
+        display = " ".join(x for x in (first, last) if x) or username
+        blurb = (settings.get("bounty_public_blurb") or "").strip()[:160]
+        if q:
+            hay = f"{username} {display} {blurb} {uid}".lower()
+            if q not in hay:
+                continue
+        results.append({
+            "user_id": uid,
+            "username": username,
+            "display_name": display,
+            "blurb": blurb,
+        })
+
+    return json.dumps({
+        "recipients": results,
+        "count": len(results),
+        "note": "Only users who opted in under Settings → Universal Bounty appear here.",
+    })
+
+
+def coerce_settings_bool(v, default=False):
+    """Local bool coercion for settings flags (avoid circular imports of client JS)."""
+    if v is True or v == 1 or v == "1":
+        return True
+    if v is False or v == 0 or v == "0":
+        return False
+    if isinstance(v, str):
+        s = v.strip().lower()
+        if s in ("true", "yes", "on"):
+            return True
+        if s in ("false", "no", "off", ""):
+            return False
+    if v is None:
+        return default
+    return bool(v)
+
+
+def _score_bounty_catalog(item, query):
+    q = re.sub(r"[^a-z0-9\s]", " ", (query or "").lower())
+    q = re.sub(r"\s+", " ", q).strip()
+    if not q or len(q) < 2:
+        return 2 if item.get("label") == DEFAULT_BOUNTY_ACTIVITY else 1
+    label = item["label"].lower()
+    hay = " ".join([label] + list(item.get("aliases") or []) + [item.get("hint") or ""]).lower()
+    score = 0
+    if label.startswith(q):
+        score += 50
+    elif q in label:
+        score += 30
+    for w in q.split():
+        if len(w) > 1 and w in hay:
+            score += 10
+    return score
+
+
+def handle_bounty_autocomplete(req):
+    """AI / catalog autocomplete for demand-side bounty drafting (public, rate-friendly).
+
+    Mirrors The Services Exchange homepage bid flow: chips that refine text without
+    clobbering, plus optional LLM enrichment for activity wording + suggested price.
+    Very generic by default.
+    """
+    description = (req.get("description") or req.get("activity") or "").strip()
+    want_llm = bool(req.get("enrich") or req.get("ai") or len(description) >= 12)
+
+    # Catalog chips
+    scored = sorted(
+        ({**c, "score": _score_bounty_catalog(c, description)} for c in BOUNTY_ACTIVITY_CATALOG),
+        key=lambda x: -x["score"],
+    )
+    chips = []
+    seen = set()
+    for row in scored:
+        key = row["label"].lower()
+        if key in seen:
+            continue
+        if description and len(description) >= 2 and row["score"] < 10:
+            continue
+        seen.add(key)
+        chips.append({
+            "label": row["label"],
+            "hint": row.get("hint"),
+            "health_area": row.get("health_area"),
+            "price": row.get("price"),
+        })
+        if len(chips) >= 5:
+            break
+    if not chips:
+        chips = [{
+            "label": DEFAULT_BOUNTY_ACTIVITY,
+            "hint": "Default",
+            "health_area": DEFAULT_BOUNTY_AREA,
+            "price": DEFAULT_BOUNTY_PRICE,
+        }]
+
+    activity = description if len(description) >= 8 else DEFAULT_BOUNTY_ACTIVITY
+    health_area = DEFAULT_BOUNTY_AREA
+    price = DEFAULT_BOUNTY_PRICE
+    currency = DEFAULT_BOUNTY_CURRENCY
+
+    # Prefer top chip metadata when description is thin
+    if chips and len(description) < 8:
+        top = chips[0]
+        activity = top["label"]
+        health_area = top.get("health_area") or health_area
+        price = top.get("price") if top.get("price") is not None else price
+
+    if want_llm and description:
+        prompt = (
+            "You help sponsors draft a short Universal Bounty (a small paid healthy action) "
+            "for a friend or family member on GreenDial.\n"
+            f"Sponsor draft (may be incomplete): {description!r}\n\n"
+            "Return ONLY valid JSON with keys:\n"
+            '- "activity": one clear, kind, specific action (1 short sentence). '
+            "Default style if vague: something as generic as "
+            f"{DEFAULT_BOUNTY_ACTIVITY!r}.\n"
+            '- "health_area": one of exercise, diet, social, sleep, mental_health, protect\n'
+            '- "price": number — modest suggested reward in USD (typically 3–25 for daily habits; '
+            "higher only for medical/admin tasks)\n"
+            '- "currency": "USD"\n'
+            "No markdown, no extra keys."
+        )
+        try:
+            raw = utils.completion(prompt=prompt, temperature=0.4, max_tokens=120).strip()
+            # strip code fences if any
+            if raw.startswith("```"):
+                raw = re.sub(r"^```(?:json)?\s*", "", raw)
+                raw = re.sub(r"\s*```$", "", raw)
+            data = json.loads(raw)
+            if isinstance(data, dict):
+                if data.get("activity"):
+                    activity = str(data["activity"]).strip()[:500]
+                ha = (data.get("health_area") or "").strip()
+                if ha in _VALID_HEALTH_AREAS:
+                    health_area = "social" if ha == "relationships" else ha
+                try:
+                    p = float(data.get("price"))
+                    if p > 0:
+                        price = p
+                except (TypeError, ValueError):
+                    pass
+                if data.get("currency"):
+                    currency = str(data["currency"]).strip()[:8]
+        except Exception as e:
+            print(f"[Bounty autocomplete] LLM enrich failed: {e}")
+
+    return json.dumps({
+        "activity": activity or DEFAULT_BOUNTY_ACTIVITY,
+        "health_area": health_area,
+        "price": price,
+        "currency": currency,
+        "chips": chips,
+        "defaults": {
+            "activity": DEFAULT_BOUNTY_ACTIVITY,
+            "price": DEFAULT_BOUNTY_PRICE,
+            "currency": DEFAULT_BOUNTY_CURRENCY,
+            "health_area": DEFAULT_BOUNTY_AREA,
+        },
+    })
 
 
 # ============ SUGGESTIONS ============
@@ -3137,12 +3436,45 @@ def _generate_suggestion_text(area_label, agent_name, profile):
         return None
 
 
+def _bounty_offerable_to_user(b, user):
+    """Whether this bounty should surface as a suggestion for the user now.
+
+    - once: only if never accepted into an activity
+    - weekly / monthly: re-offer if last completed accept is older than the period
+      (or never completed)
+    """
+    bounty_id = b.get("id")
+    activities = user.get("activities") or []
+    related = [a for a in activities if a.get("bounty_id") == bounty_id]
+    recurrence = (b.get("recurrence") or "once").lower()
+
+    if recurrence == "once":
+        return not related
+
+    # Recurring: if there's an active (not completed/abandoned) activity, don't re-offer
+    for a in related:
+        if a.get("status") in ("active", "accepted", "pending"):
+            return False
+
+    completed = [a for a in related if a.get("status") == "completed" and a.get("completed_at")]
+    if not completed:
+        return True
+    last = max(completed, key=lambda a: a.get("completed_at") or "")
+    try:
+        last_dt = datetime.fromisoformat(str(last["completed_at"]).replace("Z", ""))
+    except Exception:
+        return True
+    days = 7 if recurrence == "weekly" else 30
+    return (datetime.utcnow() - last_dt).days >= days
+
+
 def _get_active_bounties_for_user(user_id):
-    """Return active, non-expired bounties that list this user_id."""
+    """Return active, non-expired bounties that list this user_id and are offerable now."""
     try:
         bounties = s3_storage.get_bounties()
     except Exception:
         return []
+    user = get_user_data(user_id) or {}
     today = datetime.utcnow().strftime('%Y-%m-%d')
     result = []
     for b in bounties:
@@ -3151,8 +3483,11 @@ def _get_active_bounties_for_user(user_id):
         expires = b.get('expires', '')
         if expires and expires < today:
             continue
-        if user_id in b.get('user_ids', []):
-            result.append(b)
+        if user_id not in b.get('user_ids', []):
+            continue
+        if not _bounty_offerable_to_user(b, user):
+            continue
+        result.append(b)
     return result
 
 
@@ -3201,17 +3536,12 @@ def generate_suggestions(user_id, max_free=2, include_meta=True, include_profile
     profile = user.get('profile', {})
     suggestions = []
 
-    # 1) UB / bounty-backed — always first, skip already-accepted
-    accepted_bounty_ids = {
-        a.get('bounty_id') for a in user.get('activities', []) if a.get('bounty_id')
-    }
-    bounties = [
-        b for b in _get_active_bounties_for_user(user_id)
-        if b.get('id') not in accepted_bounty_ids
-    ]
+    # 1) UB / bounty-backed — always first (respects once vs weekly/monthly recurrence)
+    bounties = _get_active_bounties_for_user(user_id)
     _area_to_agent = {
         'exercise': 'exercise', 'diet': 'diet', 'social': 'relationships',
         'sleep': 'sleep', 'mental_health': 'mental_health', 'protect': 'protect',
+        'environment': 'environment',
     }
     for b in bounties[:3]:
         area = b.get('health_area', 'exercise')
@@ -3223,6 +3553,7 @@ def generate_suggestions(user_id, max_free=2, include_meta=True, include_profile
             "bounty_id": b.get('id'),
             "price": b.get('price'),
             "currency": b.get('currency'),
+            "recurrence": b.get('recurrence') or 'once',
             "destination": "activity",  # accept → trackable UB activity
             "created": datetime.utcnow().isoformat(),
             "status": "pending",
@@ -3483,46 +3814,97 @@ def handle_update_activity(user_id, activity_id, req):
 
 # ============ DEMAND-SIDE /generate ============
 
-def handle_generate_demand(req, api_key=None):
-    if not demand_key_ok(api_key):
-        return (json.dumps({"error": "Unauthorized — valid API key required"}), 401)
+def handle_generate_demand(req, api_key=None, session_token=None):
+    """Preview a UB for a recipient.
+
+    Auth: demand API key OR signed-in sponsor session.
+    If description is provided, uses bounty autocomplete path (generic-friendly).
+    Otherwise generates from recipient profile (institutions).
+    """
+    sponsor_user_id = (req.get("sponsor_user_id") or "").strip()
+    ok, mode, sponsor = _bounty_auth(api_key, sponsor_user_id, session_token)
+    if not ok:
+        return (json.dumps({"error": "Unauthorized"}), 401)
+
     user_id = (req.get('user_id') or '').strip()
     if not user_id:
         return (json.dumps({"error": "user_id required"}), 400)
 
     health_area = (req.get('health_area') or '').strip()
     price = req.get('price')
+    description = (req.get('description') or req.get('activity') or '').strip()
+    recurrence = (req.get('recurrence') or 'once').strip().lower()
+    if recurrence not in _VALID_RECURRENCE:
+        recurrence = 'once'
 
     user = get_user_data(user_id)
     if not user:
         return (json.dumps({"error": "User not found"}), 404)
 
     profile = user.get('profile', {})
-    if not health_area:
-        health_area = random.choice(['exercise', 'diet', 'social'])
 
-    _area_map = {
-        'exercise': ('exercise', 'Exercise Coach'),
-        'diet': ('diet', 'Diet Advisor'),
-        'social': ('relationships', 'Relationships Advisor'),
-    }
-    agent_id, agent_name = _area_map.get(health_area, ('exercise', 'Exercise Coach'))
+    # Path A: description-first (friends/family autocomplete style)
+    if description or not health_area:
+        ac = json.loads(handle_bounty_autocomplete({
+            "description": description or DEFAULT_BOUNTY_ACTIVITY,
+            "enrich": bool(description and len(description) >= 8),
+        }))
+        text = ac.get("activity") or DEFAULT_BOUNTY_ACTIVITY
+        health_area = health_area or ac.get("health_area") or DEFAULT_BOUNTY_AREA
+        if price is None or price == "":
+            price = ac.get("price", DEFAULT_BOUNTY_PRICE)
+        currency = ac.get("currency") or DEFAULT_BOUNTY_CURRENCY
+        agent_id = {
+            'exercise': 'exercise', 'diet': 'diet', 'social': 'relationships',
+            'sleep': 'sleep', 'mental_health': 'mental_health', 'protect': 'protect',
+        }.get(health_area, 'exercise')
+    else:
+        # Path B: profile-aware institutional generate
+        _area_map = {
+            'exercise': ('exercise', 'Exercise Coach'),
+            'diet': ('diet', 'Diet Advisor'),
+            'social': ('relationships', 'Relationships Advisor'),
+            'sleep': ('sleep', 'Sleep Coach'),
+            'mental_health': ('mental_health', 'Mind Coach'),
+            'protect': ('protect', 'Protect AI'),
+        }
+        if not health_area:
+            health_area = random.choice(['exercise', 'diet', 'social'])
+        agent_id, agent_name = _area_map.get(health_area, ('exercise', 'Exercise Coach'))
+        text = _generate_suggestion_text(health_area, agent_name, profile)
+        if not text:
+            text = DEFAULT_BOUNTY_ACTIVITY
+            health_area = DEFAULT_BOUNTY_AREA
+            agent_id = 'exercise'
+        if price is None or price == "":
+            price = DEFAULT_BOUNTY_PRICE
+        currency = (req.get('currency') or DEFAULT_BOUNTY_CURRENCY)
 
-    text = _generate_suggestion_text(health_area, agent_name, profile)
-    if not text:
-        return (json.dumps({"error": "Could not generate suggestion"}), 500)
+    try:
+        price = float(price)
+    except (TypeError, ValueError):
+        price = float(DEFAULT_BOUNTY_PRICE)
 
     bounty_payload = {
         "activity": text,
         "health_area": health_area,
         "price": price,
-        "currency": "ETH",
-        "user_ids": [user_id]
+        "currency": currency,
+        "user_ids": [user_id],
+        "recurrence": recurrence,
     }
+    if mode == "session" and sponsor:
+        bounty_payload["sponsor_user_id"] = sponsor
+
     return json.dumps({
         "suggestion": {"text": text, "agent_id": agent_id, "health_area": health_area},
         "bounty_payload": bounty_payload,
-        "bounty_post_url": "/bounty"
+        "bounty_post_url": "/bounty",
+        "defaults": {
+            "activity": DEFAULT_BOUNTY_ACTIVITY,
+            "price": DEFAULT_BOUNTY_PRICE,
+            "currency": DEFAULT_BOUNTY_CURRENCY,
+        },
     })
 
 

@@ -457,5 +457,12 @@
   "app.settings.easy_mobile": "简洁手机界面",
   "app.settings.easy_mobile_desc": "仅与 Doc 聊天 — 隐藏菜单、看板和其他标签。关闭后显示完整应用。",
   "app.settings.open_board": "每日看板",
-  "app.settings.open_board_desc": "打卡与贴纸看板"
+  "app.settings.open_board_desc": "打卡与贴纸看板",
+  "app.settings.ub_title": "通用赏金",
+  "app.settings.ub_discoverable": "开放通用赏金发现",
+  "app.settings.ub_discoverable_desc": "允许赞助方在赞助页公开目录中找到您。默认关闭——默认即拒绝公开。",
+  "app.settings.ub_blurb": "公开备注（可选）",
+  "app.settings.ub_blurb_desc": "开启发现后显示在您名字旁的简短说明（例如「本月关注睡眠」）。",
+  "app.settings.ub_sponsor": "赞助他人",
+  "app.settings.ub_sponsor_desc": "亲友或机构 — 独立的需求侧页面"
 }

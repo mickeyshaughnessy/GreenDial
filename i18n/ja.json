@@ -457,5 +457,12 @@
   "app.settings.easy_mobile": "シンプルなスマホ表示",
   "app.settings.easy_mobile_desc": "Docとのチャットのみ — メニューやボード、他のタブを隠します。オフでフル表示。",
   "app.settings.open_board": "デイリーボード",
-  "app.settings.open_board_desc": "チェックインとステッカーボード"
+  "app.settings.open_board_desc": "チェックインとステッカーボード",
+  "app.settings.ub_title": "ユニバーサルバウンティ",
+  "app.settings.ub_discoverable": "UBの公開を許可",
+  "app.settings.ub_discoverable_desc": "スポンサーページの公開ディレクトリに表示されます。デフォルトはオフ（非公開）です。",
+  "app.settings.ub_blurb": "公開メモ（任意）",
+  "app.settings.ub_blurb_desc": "公開ONのとき名前の横に表示される短い一言（例：睡眠に取り組み中）。",
+  "app.settings.ub_sponsor": "誰かをスポンサーする",
+  "app.settings.ub_sponsor_desc": "家族・友人または機関向け — 専用のデマンド側ページ"
 }

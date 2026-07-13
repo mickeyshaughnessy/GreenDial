@@ -3791,6 +3791,28 @@
           ${isChatOnly() ? `<div id="settings-notif-list" style="margin-top:8px"></div>` : ''}
         </div>
         <div class="settings-group">
+          <div class="settings-group-title">${t('app.settings.ub_title','Universal Bounty')}</div>
+          <div class="settings-item">
+            <div>
+              <div class="settings-label">${t('app.settings.ub_discoverable','Open to Universal Bounties')}</div>
+              <div class="settings-desc">${t('app.settings.ub_discoverable_desc','Allow sponsors to find you in the public directory on the Sponsor page. Off by default — decline is the default.')}</div>
+            </div>
+            <div class="settings-toggle ${coerceBool(userSettings.bounty_discoverable, false) ? 'on' : ''}" onclick="toggleBountyDiscoverable()" role="switch" aria-checked="${coerceBool(userSettings.bounty_discoverable, false) ? 'true' : 'false'}"></div>
+          </div>
+          <div class="settings-item" style="flex-direction:column;align-items:stretch;gap:8px">
+            <div class="settings-label">${t('app.settings.ub_blurb','Public note (optional)')}</div>
+            <div class="settings-desc">${t('app.settings.ub_blurb_desc','Short line shown next to your name if discovery is on (e.g. “working on sleep”).')}</div>
+            <input type="text" id="bounty-public-blurb" maxlength="160" value="${escapeHtml(userSettings.bounty_public_blurb || '')}"
+              placeholder="e.g. Focusing on sleep this month"
+              style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.06);color:#fff;font-size:14px"
+              onchange="saveBountyBlurb(this.value)">
+          </div>
+          <div class="settings-item">
+            <div><div class="settings-label">${t('app.settings.ub_sponsor','Sponsor someone')}</div><div class="settings-desc">${t('app.settings.ub_sponsor_desc','Friends, family, or institutions — separate demand-side page')}</div></div>
+            <a href="/sponsor" class="btn btn-secondary btn-sm" style="text-decoration:none">${t('app.settings.open','Open')}</a>
+          </div>
+        </div>
+        <div class="settings-group">
           <div class="settings-group-title">${t('app.settings.custom_instructions','Custom Instructions')}</div>
           <div style="padding:0 0 10px;font-size:12px;color:rgba(255,255,255,0.5)">
             ${t('app.settings.custom_instructions_desc','Personalize the ⚙️ Custom chat tab with your own instructions for Doc.')}
@@ -4493,6 +4515,19 @@
       updateSetting('notifications_enabled', userSettings.notifications_enabled);
       refreshSettings();
     }
+
+    function toggleBountyDiscoverable() {
+      userSettings.bounty_discoverable = !coerceBool(userSettings.bounty_discoverable, false);
+      updateSetting('bounty_discoverable', userSettings.bounty_discoverable);
+      refreshSettings({ skipFetch: true });
+    }
+    window.toggleBountyDiscoverable = toggleBountyDiscoverable;
+
+    function saveBountyBlurb(value) {
+      userSettings.bounty_public_blurb = String(value || '').slice(0, 160);
+      updateSetting('bounty_public_blurb', userSettings.bounty_public_blurb);
+    }
+    window.saveBountyBlurb = saveBountyBlurb;
     
     function toggleNotifications() {
       const dropdown = document.getElementById('notif-dropdown');
