@@ -47,7 +47,7 @@
       max-width: 100%;
     }
     .header .gd-style-toolbar {
-      margin-left: auto;
+      margin-left: 0;
       display: inline-flex;
       align-items: center;
       gap: 6px;
@@ -61,6 +61,44 @@
     .logo { font-size: 28px; }
     .header h1 { font-size: 20px; font-weight: 600; color: #58a6ff; }
     .header p { font-size: 13px; color: rgba(230,237,243,0.5); margin-top: 2px; }
+    .header-actions {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      min-width: 0;
+    }
+    .sticker-style-toggle {
+      display: inline-flex;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 20px;
+      padding: 3px;
+      gap: 2px;
+    }
+    .sticker-style-toggle button {
+      border: none;
+      background: transparent;
+      color: rgba(255,255,255,0.55);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 16px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .sticker-style-toggle button.active {
+      background: rgba(16,185,129,0.25);
+      color: #6ee7b7;
+    }
+    .sb-emoji {
+      font-size: 22px;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
     .board-wrap {
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
@@ -157,10 +195,16 @@
       <h1>GreenDial Health Board</h1>
       <p>Daily wellness check-ins</p>
     </div>
-    <label class="gd-style-toolbar" title="UI style">
-      <span>Style</span>
-      <select data-gd-style-select="page" aria-label="UI style"></select>
-    </label>
+    <div class="header-actions">
+      <div class="sticker-style-toggle" role="group" aria-label="Sticker style">
+        <button type="button" id="style-pixel" class="active" onclick="setStickerStyle('pixel')">🎨 Pixel</button>
+        <button type="button" id="style-emoji" onclick="setStickerStyle('emoji')">😀 Emoji</button>
+      </div>
+      <label class="gd-style-toolbar" title="UI style">
+        <span>Theme</span>
+        <select data-gd-style-select="page" aria-label="UI theme"></select>
+      </label>
+    </div>
   </div>
 
   <div class="cta-own">
@@ -177,6 +221,44 @@
     const token = location.pathname.replace(/^\/stickers\//, '').replace(/\.html$/, '');
     const API = location.origin;
 
+    // Same preference key as the main app board
+    let stickerStyle = 'pixel';
+    try {
+      const s = localStorage.getItem('gd_sticker_style');
+      if (s === 'emoji' || s === 'pixel') stickerStyle = s;
+    } catch (e) {}
+
+    let boardData = null;
+
+    const EMOJI_PX = {
+      '😴':'sleep_great','🥱':'sleep_rough','😊':'sleep_good','😌':'sleep_rested','😐':'sleep_ok',
+      '💤':'sleep_zzz','🌗':'sleep_broken','⏰':'sleep_early','🛌':'sleep_in','🌃':'sleep_late',
+      '🦉':'sleep_owl','🌌':'sleep_stars','🐑':'sleep_sheep','🛸':'sleep_ufo','🌙':'sleep_moon',
+      '🥗':'diet_clean','😤':'diet_struggle','😋':'diet_enjoy','💪':'ex_crush','🍎':'diet_apple',
+      '🥦':'diet_veg','💧':'diet_water','🍕':'diet_pizza','🍰':'diet_sweet','🍜':'diet_comfort',
+      '🥑':'diet_avo','🍇':'diet_grape','🦞':'diet_feast','🛋️':'ex_skip','🏃':'ex_active',
+      '🚶':'ex_walk','🧘':'ex_stretch','🚴':'ex_bike','🏋️':'ex_lift','😅':'ex_sweat',
+      '🧗':'ex_crush','🏆':'ex_pr','🥇':'ex_champ','🦸':'ex_beast','⚡':'ex_electric',
+      '😢':'mh_struggle','🧠':'mh_focus','🫧':'mh_light','😟':'mh_stress','🌥️':'mh_cloudy',
+      '🔥':'mh_burnout','🌀':'mh_fog','🌈':'mh_hope','✨':'mh_inspired','🦋':'mh_transform',
+      '🕯️':'mh_center','🤗':'rel_connect','😞':'rel_distant','❤️':'rel_loved','🙏':'rel_grateful',
+      '🫂':'rel_support','📞':'rel_reach','💬':'rel_talk','👯':'rel_social','😶':'rel_quiet',
+      '💞':'rel_bond','🥰':'rel_cherish','🕊️':'rel_peace','🎉':'rel_celeb','🌿':'env_fresh',
+      '🌧️':'env_heavy','☀️':'env_bright','🏠':'env_cozy','🪴':'env_tidy','🌳':'env_outdoors',
+      '🧹':'env_clean','🔆':'env_air','🌆':'env_busy','🏞️':'env_nature','🌅':'env_golden',
+      '🌊':'env_water','🦜':'env_wild','🛡️':'pr_ontop','🤒':'pr_notgreat','💊':'pr_manage',
+      '🧴':'pr_sun','🧼':'pr_hygiene','🩺':'pr_check','😷':'pr_careful','🦾':'pr_bullet',
+      '🍵':'pr_boost','⭐':'pr_picture','🧬':'pr_opt'
+    };
+    const PX_EMOJI = {};
+    for (const [em, id] of Object.entries(EMOJI_PX)) {
+      if (!PX_EMOJI[id]) PX_EMOJI[id] = em;
+    }
+    const AREA_FALLBACK = {
+      sleep: '😴', diet: '🥗', exercise: '💪', mental_health: '🧠',
+      relationships: '❤️', environment: '🌿', protect: '🛡️',
+    };
+
     function pad2(n) { return String(n).padStart(2, '0'); }
     function isoDate(d) {
       // UTC to match the server's utcnow-based sticker keys
@@ -186,8 +268,82 @@
       const [, m, d] = iso.split('-');
       return `${parseInt(m)}/${parseInt(d)}`;
     }
+    function escapeHtml(s) {
+      return String(s || '')
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function syncStyleButtons() {
+      const p = document.getElementById('style-pixel');
+      const e = document.getElementById('style-emoji');
+      if (p) p.classList.toggle('active', stickerStyle === 'pixel');
+      if (e) e.classList.toggle('active', stickerStyle === 'emoji');
+    }
+
+    function setStickerStyle(style) {
+      if (style !== 'pixel' && style !== 'emoji') return;
+      stickerStyle = style;
+      try { localStorage.setItem('gd_sticker_style', style); } catch (err) {}
+      syncStyleButtons();
+      if (boardData) render(boardData);
+    }
+    window.setStickerStyle = setStickerStyle;
+
+    /** Resolve stored token to pixel src + unicode emoji */
+    function resolveSticker(em, area, entrySrc) {
+      let src = entrySrc || null;
+      let emojiChar = null;
+      let pixelId = null;
+      if (typeof em === 'string' && em) {
+        if (em.startsWith('px:')) {
+          pixelId = em.slice(3);
+          src = src || `/stickers/pixel/${pixelId}.png`;
+          emojiChar = PX_EMOJI[pixelId] || null;
+        } else if (em.startsWith('/stickers/pixel/')) {
+          src = em;
+          const m = em.match(/\/([^/]+)\.png$/);
+          pixelId = m ? m[1] : null;
+          if (pixelId) emojiChar = PX_EMOJI[pixelId] || null;
+        } else if (em.startsWith('/stickers/')) {
+          src = em;
+        } else {
+          emojiChar = em;
+          // Area-aware remaps for ambiguous emoji
+          let pid = EMOJI_PX[em] || null;
+          if (em === '💪' && area === 'diet') pid = 'diet_onpoint';
+          else if (em === '💪' && area === 'protect') pid = 'pr_strong';
+          else if (em === '😊' && area === 'sleep') pid = 'sleep_good';
+          else if (em === '😊' && area === 'mental_health') pid = 'mh_good';
+          else if (em === '😊' && area === 'relationships') pid = 'rel_good';
+          else if (em === '😌' && area === 'mental_health') pid = 'mh_calm';
+          else if (em === '😐' && area === 'mental_health') pid = 'mh_mixed';
+          else if (em === '🌿' && area === 'protect') pid = 'pr_natural';
+          else if (em === '🛌' && area === 'protect') pid = 'pr_rest';
+          if (pid) {
+            pixelId = pid;
+            src = src || `/stickers/pixel/${pid}.png`;
+          }
+        }
+      }
+      return { src, emojiChar, pixelId };
+    }
+
+    function stickerMark(em, area, entrySrc, label) {
+      const { src, emojiChar } = resolveSticker(em, area, entrySrc);
+      if (stickerStyle === 'emoji') {
+        const glyph = emojiChar || AREA_FALLBACK[area] || '•';
+        const title = label ? ` title="${escapeHtml(label)}"` : '';
+        return `<span class="sb-emoji"${title}>${escapeHtml(glyph)}</span>`;
+      }
+      if (src) {
+        return `<img class="px-sticker" src="${src}" width="28" height="28" alt="">`;
+      }
+      return `<span class="sb-emoji">${escapeHtml(emojiChar || em || '•')}</span>`;
+    }
 
     async function load() {
+      syncStyleButtons();
       if (!token) {
         document.getElementById('content').innerHTML = '<div class="error">No board token in URL.</div>';
         return;
@@ -196,6 +352,7 @@
         const resp = await fetch(`${API}/sticker-board/public/${token}`);
         if (!resp.ok) throw new Error('Board not found');
         const data = await resp.json();
+        boardData = data;
         render(data);
       } catch (e) {
         document.getElementById('content').innerHTML = `<div class="error">Board not found or unavailable.</div>`;
@@ -237,52 +394,17 @@
           const isToday = day === today;
           const entry = areaRows[day];
           if (entry) {
-            const prompt = (entry.prompt || '').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-            const response = (entry.response || '').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+            const prompt = escapeHtml(entry.prompt || '');
+            const response = escapeHtml(entry.response || '');
             const tip = prompt
               ? `<div class="tooltip"><div class="t-prompt">${prompt}</div>${response ? `<div class="t-response">${response}</div>` : ''}</div>`
               : '';
-            const em = entry.emoji || '';
-            let src = entry.src || null;
-            if (!src && typeof em === 'string') {
-              if (em.startsWith('px:')) src = `/stickers/pixel/${em.slice(3)}.png`;
-              else if (em.startsWith('/stickers/')) src = em;
-            }
-            // Legacy unicode → pixel (server also sends src; this is a client fallback)
-            const EMOJI_PX = {
-              '😴':'sleep_great','🥱':'sleep_rough','😊':'sleep_good','😌':'sleep_rested','😐':'sleep_ok',
-              '💤':'sleep_zzz','🌗':'sleep_broken','⏰':'sleep_early','🛌':'sleep_in','🌃':'sleep_late',
-              '🦉':'sleep_owl','🌌':'sleep_stars','🐑':'sleep_sheep','🛸':'sleep_ufo','🌙':'sleep_moon',
-              '🥗':'diet_clean','😤':'diet_struggle','😋':'diet_enjoy','💪':'ex_crush','🍎':'diet_apple',
-              '🥦':'diet_veg','💧':'diet_water','🍕':'diet_pizza','🍰':'diet_sweet','🍜':'diet_comfort',
-              '🥑':'diet_avo','🍇':'diet_grape','🦞':'diet_feast','🛋️':'ex_skip','🏃':'ex_active',
-              '🚶':'ex_walk','🧘':'ex_stretch','🚴':'ex_bike','🏋️':'ex_lift','😅':'ex_sweat',
-              '🧗':'ex_crush','🏆':'ex_pr','🥇':'ex_champ','🦸':'ex_beast','⚡':'ex_electric',
-              '😢':'mh_struggle','🧠':'mh_focus','🫧':'mh_light','😟':'mh_stress','🌥️':'mh_cloudy',
-              '🔥':'mh_burnout','🌀':'mh_fog','🌈':'mh_hope','✨':'mh_inspired','🦋':'mh_transform',
-              '🕯️':'mh_center','🤗':'rel_connect','😞':'rel_distant','❤️':'rel_loved','🙏':'rel_grateful',
-              '🫂':'rel_support','📞':'rel_reach','💬':'rel_talk','👯':'rel_social','😶':'rel_quiet',
-              '💞':'rel_bond','🥰':'rel_cherish','🕊️':'rel_peace','🎉':'rel_celeb','🌿':'env_fresh',
-              '🌧️':'env_heavy','☀️':'env_bright','🏠':'env_cozy','🪴':'env_tidy','🌳':'env_outdoors',
-              '🧹':'env_clean','🔆':'env_air','🌆':'env_busy','🏞️':'env_nature','🌅':'env_golden',
-              '🌊':'env_water','🦜':'env_wild','🛡️':'pr_ontop','🤒':'pr_notgreat','💊':'pr_manage',
-              '🧴':'pr_sun','🧼':'pr_hygiene','🩺':'pr_check','😷':'pr_careful','🦾':'pr_bullet',
-              '🍵':'pr_boost','⭐':'pr_picture','🧬':'pr_opt'
-            };
-            if (!src && EMOJI_PX[em]) src = `/stickers/pixel/${EMOJI_PX[em]}.png`;
-            // Area-aware remaps for ambiguous emoji
-            if (em === '💪' && area === 'diet') src = '/stickers/pixel/diet_onpoint.png';
-            if (em === '💪' && area === 'protect') src = '/stickers/pixel/pr_strong.png';
-            if (em === '😊' && area === 'sleep') src = '/stickers/pixel/sleep_good.png';
-            if (em === '😊' && area === 'mental_health') src = '/stickers/pixel/mh_good.png';
-            if (em === '😊' && area === 'relationships') src = '/stickers/pixel/rel_good.png';
-            if (em === '😌' && area === 'mental_health') src = '/stickers/pixel/mh_calm.png';
-            if (em === '😐' && area === 'mental_health') src = '/stickers/pixel/mh_mixed.png';
-            if (em === '🌿' && area === 'protect') src = '/stickers/pixel/pr_natural.png';
-            if (em === '🛌' && area === 'protect') src = '/stickers/pixel/pr_rest.png';
-            const mark = src
-              ? `<img class="px-sticker" src="${src}" width="28" height="28" alt="">`
-              : em;
+            const mark = stickerMark(
+              entry.emoji || '',
+              area,
+              entry.src || null,
+              entry.response || entry.prompt || ''
+            );
             html += `<td><div class="cell filled${isToday?' today-col':''}">${mark}${tip}</div></td>`;
           } else {
             html += `<td><div class="cell empty${isToday?' today-col':''}">·</div></td>`;
