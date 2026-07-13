@@ -407,6 +407,39 @@
 
   <div class="endpoint">
     <div class="endpoint-header">
+      <span class="method get">GET</span>
+      <span class="path">/Doc</span>
+    </div>
+    <div class="endpoint-desc">
+      <span data-i18n-html="docs.docpoll.desc">Poll for an <strong>unprompted Doc message</strong>. The SPA calls this every ~2 minutes while signed in. Rate-limited so Doc stays quiet: max <strong>2 per UTC day</strong>, min <strong>6 hours</strong> between messages, and a <strong>30-minute quiet window</strong> after any Doc chat activity. Requires <code>X-Session-Token</code>. Empty <code>messages</code> means nothing to say (no LLM cost when gated). Delivery is Doc chat only — not the notification bell.</span>
+      <table class="field-table" style="margin-top:12px">
+        <thead><tr><th data-i18n="docs.field.field">Field</th><th data-i18n="docs.field.type">Type</th><th data-i18n="docs.field.description">Description</th></tr></thead>
+        <tbody>
+          <tr><td>user_id</td><td>query string</td><td data-i18n="docs.docpoll.f_user_id">Required — must match the session token</td></tr>
+          <tr><td>force</td><td>query string</td><td data-i18n="docs.docpoll.f_force">Admin only (<code>1</code>) — bypass time gates for testing</td></tr>
+        </tbody>
+      </table>
+      <div class="code-block">GET /Doc?user_id=user_alice
+X-Session-Token: …
+
+// Gated (nothing to send)
+{"messages": [], "reason": "min_interval", "next_eligible_at": "2026-07-13T18:00:00"}
+
+// Message delivered into Doc transcript
+{
+  "messages": [{
+    "id": "msg_…",
+    "text": "How did last night's sleep feel after your early meeting?",
+    "created": "2026-07-13T12:00:00",
+    "source": "unprompted"
+  }],
+  "next_eligible_at": "2026-07-13T18:00:00"
+}</div>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
       <span class="method post">POST</span>
       <span class="path">/chat/agent/{agent_id}</span>
     </div>

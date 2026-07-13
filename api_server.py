@@ -239,6 +239,41 @@ def chat():
     return Response(result, mimetype='application/json')
 
 
+# ============ DOC UNPROMPTED POLL ============
+
+@app.route("/Doc", methods=['GET', 'OPTIONS'])
+@app.route("/doc", methods=['GET', 'OPTIONS'])
+def doc_poll():
+    """
+    Poll for an on-demand unprompted Doc message (rate-limited).
+    Query: user_id (required). Optional force=1 for admin/dev.
+    """
+    if request.method == 'OPTIONS':
+        return Response('', status=200)
+
+    user_id = (request.args.get('user_id') or '').strip()
+    if not user_id:
+        return Response(
+            json.dumps({"error": "user_id required", "messages": []}),
+            status=400,
+            mimetype='application/json',
+        )
+    denied = _require_session(user_id)
+    if denied:
+        return denied
+
+    force = (request.args.get('force') or '').strip().lower() in ('1', 'true', 'yes')
+    # force is only for admin/mickey — never for arbitrary users
+    if force and not handlers._is_mickey(user_id):
+        force = False
+
+    result = handlers.handle_doc_poll(user_id, force=force)
+    if isinstance(result, tuple):
+        return Response(result[0], status=result[1], mimetype='application/json')
+    return Response(result, mimetype='application/json')
+
+
+
 # ============ USER ============
 
 @app.route("/user/<user_id>", methods=['GET', 'OPTIONS'])

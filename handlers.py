@@ -13,6 +13,7 @@ import config
 import utils
 import s3_storage
 from prompts import doc_v2, notifications, facilitator, supervisor as supervisor_module
+from prompts import doc_unprompted
 from prompts import agents as agent_registry
 from prompts.agents import base as agent_base
 from prompts.shared.tools import TOOL_USE_INSTRUCTIONS
@@ -2346,12 +2347,218 @@ def handle_chat(request):
     return json.dumps(response_data)
 
 
+# ============ DOC UNPROMPTED POLL (GET /Doc) ============
+
+def _doc_proactive_policy():
+    """ListeningAI ProactivePolicy with GreenDial Doc defaults; local fallback if missing."""
+    try:
+        from listening_ai import DOC_DEFAULT_POLICY, is_nothing_message
+        return DOC_DEFAULT_POLICY, is_nothing_message
+    except Exception as e:
+        print(f"[Doc] ProactivePolicy unavailable ({e}); using local gates")
+
+        def _is_nothing(text):
+            if not text or not str(text).strip():
+                return True
+            t = str(text).strip().lower()
+            return t in ("nothing", "no message", "skip", "n/a", "none", "(none)")
+
+        class _LocalPolicy:
+            min_interval_hours = 6.0
+            max_per_day = 2
+            quiet_after_activity_minutes = 30.0
+
+            def evaluate(self, **kwargs):
+                force = kwargs.get("force")
+                if force:
+                    return {"allowed": True, "reason": None, "next_eligible_at": None}
+                if kwargs.get("require_notifications_enabled", True) is not False:
+                    if not kwargs.get("notifications_enabled", True):
+                        return {"allowed": False, "reason": "notifications_disabled", "next_eligible_at": None}
+                if not (kwargs.get("has_profile") or kwargs.get("has_transcript")):
+                    return {"allowed": False, "reason": "empty_context", "next_eligible_at": None}
+                # Minimal fallback: allow (server still has LLM path)
+                return {"allowed": True, "reason": None, "next_eligible_at": None}
+
+            def record_send(self, state=None, message_id=None, now=None):
+                now_iso = datetime.utcnow().isoformat()
+                out = dict(state or {})
+                out["last_sent_at"] = now_iso
+                dates = list(out.get("sent_dates") or [])
+                dates.append(now_iso[:10])
+                out["sent_dates"] = dates[-14:]
+                if message_id:
+                    out["last_message_id"] = message_id
+                return out
+
+        return _LocalPolicy(), _is_nothing
+
+
+def handle_doc_poll(user_id, force=False):
+    """
+    On-demand unprompted Doc message for the SPA (GET /Doc).
+
+    Cheap rate gates first (no LLM if blocked). When allowed, generate one short
+    Doc line via ListeningAI completion, inject into Doc transcript, return it.
+    """
+    if not user_id:
+        return json.dumps({"error": "user_id required", "messages": []}), 400
+
+    # Short lock to reduce multi-worker double generation
+    lock_key = f"doc_unprompted_lock:{user_id}"
+    if _cache_get('lock', lock_key) and not force:
+        return json.dumps({
+            "messages": [],
+            "reason": "in_flight",
+            "next_eligible_at": None,
+        })
+    _cache_set('lock', lock_key, True, 60)
+
+    try:
+        # Always re-fetch so gates see latest transcript / last_chat
+        try:
+            user = s3_storage.get_user(user_id)
+        except Exception as e:
+            print(f"[Doc] load user failed: {e}")
+            user = None
+        if not user:
+            return json.dumps({"error": "User not found", "messages": []}), 404
+
+        policy, is_nothing = _doc_proactive_policy()
+        state = user.get("doc_unprompted") or {}
+        if not isinstance(state, dict):
+            state = {}
+        settings = user.get("settings") or {}
+        profile = user.get("profile") or {}
+        transcript = user.get("transcript") or ""
+
+        decision = policy.evaluate(
+            last_sent_at=state.get("last_sent_at"),
+            sent_dates=state.get("sent_dates") or [],
+            last_activity_at=user.get("last_chat"),
+            notifications_enabled=settings.get("notifications_enabled", True),
+            has_profile=bool(profile),
+            has_transcript=bool(transcript.strip()),
+            force=bool(force),
+        )
+        if not decision.get("allowed"):
+            return json.dumps({
+                "messages": [],
+                "reason": decision.get("reason"),
+                "next_eligible_at": decision.get("next_eligible_at"),
+            })
+
+        recent = _get_recent_transcript(transcript, max_lines=12)
+        sticker_ctx = _build_sticker_context_for_doc(user_id)
+        prompt = doc_unprompted.build_unprompted_prompt(
+            username=user.get("username") or user.get("first_name") or "friend",
+            profile=profile,
+            recent_transcript=recent,
+            history_summary=utils.summarize_history(user),
+            sticker_context=sticker_ctx,
+            doc_style=settings.get("doc_style", "questioning"),
+        )
+
+        try:
+            text = utils.completion(
+                prompt=prompt,
+                system_prompt=doc_unprompted.SYSTEM_PROMPT,
+                temperature=0.7,
+                max_tokens=80,
+            )
+        except Exception as e:
+            print(f"[Doc] unprompted generation error: {e}")
+            return json.dumps({
+                "messages": [],
+                "reason": "generation_error",
+                "next_eligible_at": decision.get("next_eligible_at"),
+            })
+
+        text = (text or "").strip()
+        # Strip accidental quotes / fences
+        if text.startswith("```"):
+            text = text.strip("`").strip()
+            if text.lower().startswith("text"):
+                text = text[4:].strip()
+        if is_nothing(text):
+            # Do not burn daily cap on intentional silence
+            return json.dumps({
+                "messages": [],
+                "reason": "nothing",
+                "next_eligible_at": decision.get("next_eligible_at"),
+            })
+
+        # Cap length hard
+        if len(text) > 400:
+            text = text[:397].rstrip() + "…"
+
+        msg_id = f"msg_{uuid.uuid4().hex[:12]}"
+        created = datetime.utcnow().isoformat()
+
+        # Re-fetch before save (agent_runner pattern)
+        try:
+            fresh = s3_storage.get_user(user_id)
+            if fresh:
+                user = fresh
+        except Exception:
+            pass
+
+        _inject_suggestion_into_chat(user, "doc", text)
+        user["last_chat"] = created
+        user["last_updated"] = created
+        user["doc_unprompted"] = policy.record_send(
+            user.get("doc_unprompted") if isinstance(user.get("doc_unprompted"), dict) else state,
+            message_id=msg_id,
+        )
+
+        try:
+            s3_storage.save_user(user_id, user)
+            _cache_user(user_id, user)
+        except Exception as e:
+            print(f"[Doc] failed to save unprompted message: {e}")
+            return json.dumps({
+                "messages": [],
+                "reason": "save_error",
+                "next_eligible_at": None,
+            }), 500
+
+        next_eligible = None
+        try:
+            next_decision = policy.evaluate(
+                last_sent_at=user["doc_unprompted"].get("last_sent_at"),
+                sent_dates=user["doc_unprompted"].get("sent_dates") or [],
+                last_activity_at=created,
+                notifications_enabled=settings.get("notifications_enabled", True),
+                has_profile=bool(profile),
+                has_transcript=True,
+                force=False,
+            )
+            next_eligible = next_decision.get("next_eligible_at")
+        except Exception:
+            pass
+
+        print(f"[Doc] unprompted → {user_id}: {text[:80]}")
+        return json.dumps({
+            "messages": [{
+                "id": msg_id,
+                "text": text,
+                "created": created,
+                "source": "unprompted",
+            }],
+            "next_eligible_at": next_eligible,
+        })
+    finally:
+        _cache_store.pop(('lock', lock_key), None)
+        _cache_ts.pop(('lock', lock_key), None)
+
+
 # ============ CONVERSATIONS ============
 
 def handle_get_conversations(user_id):
     """Get conversation history"""
     if not user_id:
         return json.dumps({"conversations": [], "transcript": ""})
+
     
     user = get_user_data(user_id)
     transcript = user.get('transcript', '')

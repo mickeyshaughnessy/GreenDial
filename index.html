@@ -2774,8 +2774,7 @@
             agentChats.doc = [{ role: 'doc', text: `Welcome back, ${data.username}! What's on your mind today?` }];
           }
           renderMessages();
-          if (window._notifInterval) clearInterval(window._notifInterval);
-          window._notifInterval = setInterval(fetchToday, 120000);
+          startBackgroundPolls();
           applyChatOnlyMode(isChatOnly());
         }
       } catch (e) {
@@ -2871,8 +2870,7 @@
           agentChats.doc = [{ role: 'doc', text: `Welcome back, ${saved.username}! Let's continue building your health profile.` }];
         }
         renderMessages();
-        if (window._notifInterval) clearInterval(window._notifInterval);
-        window._notifInterval = setInterval(fetchToday, 120000);
+        startBackgroundPolls();
         applyChatOnlyMode(isChatOnly());
         return true;
       } catch (e) {
@@ -3942,6 +3940,74 @@
       } catch (e) { renderToday(null); }
     }
 
+    // ── Doc unprompted poll (GET /Doc) ───────────────────────────────────────
+    let _docPollInFlight = false;
+    const _seenDocMsgIds = new Set();
+
+    async function pollDoc() {
+      if (!currentUser || !currentUser.user_id) return;
+      // Avoid racing an active Doc send / concurrent poll
+      if (isLoading || _docPollInFlight) return;
+      _docPollInFlight = true;
+      try {
+        const r = await fetch(
+          `${API}/Doc?user_id=${encodeURIComponent(currentUser.user_id)}`,
+          { headers: { 'X-Session-Token': currentUser.token || '' } }
+        );
+        if (!r.ok) return;
+        const data = await r.json();
+        const messages = data.messages || [];
+        if (!messages.length) return;
+        if (!agentChats.doc) agentChats.doc = [];
+        let added = false;
+        for (const m of messages) {
+          const id = m.id || m.created || m.text;
+          if (id && _seenDocMsgIds.has(id)) continue;
+          if (id) _seenDocMsgIds.add(id);
+          const text = (m.text || '').trim();
+          if (!text) continue;
+          agentChats.doc.push({ role: 'doc', text, source: m.source || 'unprompted' });
+          added = true;
+        }
+        if (added && currentAgent === 'doc') {
+          markLastDocEnter();
+          renderMessages();
+          updateChatCompactChrome();
+        }
+      } catch (e) {
+        // silent — next interval retries
+      } finally {
+        _docPollInFlight = false;
+      }
+    }
+
+    function startBackgroundPolls() {
+      if (window._notifInterval) clearInterval(window._notifInterval);
+      window._notifInterval = setInterval(() => {
+        fetchToday();
+        pollDoc();
+      }, 120000);
+      // One immediate Doc poll a few seconds after login (after gates allow)
+      setTimeout(() => { pollDoc(); }, 4000);
+    }
+
+    function stopBackgroundPolls() {
+      if (window._notifInterval) {
+        clearInterval(window._notifInterval);
+        window._notifInterval = null;
+      }
+    }
+
+    // Resume Doc poll when tab becomes visible again
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && currentUser) {
+        pollDoc();
+      }
+    });
+    window.addEventListener('focus', () => {
+      if (currentUser) pollDoc();
+    });
+
     function renderToday(data) {
       const badge = document.getElementById('notif-badge');
       if (!data || !currentUser) {
@@ -4816,8 +4882,7 @@
           }
           renderMessages();
 
-          if (window._notifInterval) clearInterval(window._notifInterval);
-          window._notifInterval = setInterval(fetchToday, 120000);
+          startBackgroundPolls();
           applyChatOnlyMode(isChatOnly());
         }
       } catch (error) {
@@ -4867,8 +4932,7 @@
           updateAllProfileDisplays();
           startFreshChat(`${t('app.welcome_new','Welcome')}, ${data.username}! ${t('app.welcome_new_rest',"I'm Doc. I'll help you build your health profile. What's your main health focus right now?")}`);
 
-          if (window._notifInterval) clearInterval(window._notifInterval);
-          window._notifInterval = setInterval(fetchToday, 120000);
+          startBackgroundPolls();
           applyChatOnlyMode(isChatOnly());
         }
       } catch (error) {
@@ -4886,7 +4950,8 @@
       userSettings = { doc_style: 'questioning', notifications_enabled: true, chat_only_mode: true, ui_style: 'page_default' };
       currentAgent = 'doc';
       currentHistoryAgent = 'doc';
-      if (window._notifInterval) { clearInterval(window._notifInterval); window._notifInterval = null; }
+      stopBackgroundPolls();
+      _seenDocMsgIds.clear();
       _suggestions = [];
       _activities = [];
       _todayData = null;

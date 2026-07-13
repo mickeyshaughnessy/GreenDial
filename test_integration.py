@@ -104,6 +104,11 @@ class IntegrationTests:
                 data = response.json()
                 if data.get("status") == "ok":
                     log_success("API is responding")
+                    lai = data.get("listening_ai") or {}
+                    if isinstance(lai, dict) and lai.get("version") and not lai.get("error"):
+                        log_success(f"ListeningAI {lai.get('version')} store={lai.get('store')}")
+                    else:
+                        log_info(f"ListeningAI info: {lai}")
                     self.passed += 1
                     return True
         except Exception as e:
@@ -353,6 +358,56 @@ class IntegrationTests:
         self.errors.append("Conversation history failed")
         return False
     
+    def test_9b_doc_poll(self):
+        """GET /Doc unprompted poll — auth + empty/gated response shape"""
+        log_test("Doc Unprompted Poll (GET /Doc)")
+        if not self.test_user_id or not self.token:
+            log_error("No test user for Doc poll")
+            self.failed += 1
+            return False
+        try:
+            # Unauthenticated should fail
+            bare = requests.get(
+                f"{self.base_url}/Doc",
+                params={"user_id": self.test_user_id},
+                timeout=15,
+            )
+            if bare.status_code not in (401, 403):
+                log_error(f"Expected 401 without token, got {bare.status_code}")
+                self.failed += 1
+                return False
+            log_success("Doc poll rejects missing session")
+
+            r = requests.get(
+                f"{self.base_url}/Doc",
+                params={"user_id": self.test_user_id},
+                headers=self._headers(),
+                timeout=60,
+            )
+            if r.status_code != 200:
+                log_error(f"Doc poll status {r.status_code}: {r.text[:200]}")
+                self.failed += 1
+                return False
+            data = r.json()
+            if "messages" not in data or not isinstance(data["messages"], list):
+                log_error(f"Bad Doc poll payload: {data}")
+                self.failed += 1
+                return False
+            # After chat, may be gated (recent_activity) or empty/nothing — both OK
+            n = len(data["messages"])
+            if n > 1:
+                log_error(f"Doc poll returned {n} messages; expected 0 or 1")
+                self.failed += 1
+                return False
+            log_success(f"Doc poll OK (messages={n}, reason={data.get('reason')})")
+            self.passed += 1
+            return True
+        except Exception as e:
+            log_error(f"Doc poll error: {e}")
+            self.failed += 1
+            self.errors.append(f"Doc poll failed: {e}")
+            return False
+
     def test_10_notifications(self):
         """Test notifications endpoint"""
         log_test("Notifications")
@@ -610,6 +665,7 @@ class IntegrationTests:
             self.test_7_get_user,
             self.test_8_settings,
             self.test_9_conversations,
+            self.test_9b_doc_poll,
             self.test_10_notifications,
             self.test_11_auth_enforcement,
             self.test_12_identity_validation,

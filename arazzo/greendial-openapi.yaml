@@ -115,6 +115,45 @@ paths:
                   profile_updated: {type: boolean}
                   profile: {type: object, description: "Updated profile if profile_updated is true"}
 
+  /Doc:
+    get:
+      operationId: getDocUnprompted
+      summary: Poll for an unprompted Doc message
+      description: |
+        On-demand unprompted Doc check-in for the SPA. Rate-limited (max 2/day UTC,
+        6h min interval, 30m quiet after chat). When eligible, generates one short
+        message via ListeningAI and appends it to the Doc transcript.
+        Requires X-Session-Token matching user_id.
+      parameters:
+        - name: user_id
+          in: query
+          required: true
+          schema: {type: string}
+        - name: force
+          in: query
+          required: false
+          schema: {type: string, description: "Admin only — bypass time gates"}
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  messages:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: {type: string}
+                        text: {type: string}
+                        created: {type: string}
+                        source: {type: string}
+                  reason: {type: string, description: "Gate reason when messages is empty"}
+                  next_eligible_at: {type: string, nullable: true}
+        "401": {description: Missing or invalid session}
+        "404": {description: User not found}
+
   # ── USER PROFILE ─────────────────────────────────────────────
   /user/{user_id}:
     get:
