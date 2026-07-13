@@ -449,5 +449,6 @@
   "app.pwa.browser_tip": "ブラウザのメニューから GreenDial をインストールすると、全画面アプリとして使えます。",
   "app.pwa.install": "インストール",
   "app.pwa.install_body": "GreenDial をインストールすると、すばやく開けてリマインダーも使えます。",
-  "app.pwa.ios_tip": "GreenDial をホーム画面に追加：共有をタップし、「ホーム画面に追加」を選びます。"
+  "app.pwa.ios_tip": "GreenDial をホーム画面に追加：共有をタップし、「ホーム画面に追加」を選びます。",
+  "app.mbn.language": "言語"
 }

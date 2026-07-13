@@ -94,6 +94,12 @@ First-class phone experience for greendial.org (browser + Capacitor WebView):
 - **Deep link:** `/?view=stickers` (also used by daily push reminders).
 - **Shared board** CTA + larger cells; About/Privacy safe-area headers.
 
+### Polish pass (follow-up)
+- No double safe-area under composer (nav owns the inset).
+- Starter chips horizontal-scroll; quieter header (icon donate, langs in More).
+- Board nudge dismissible for the day; full-bleed notif sheet; smoother keyboard insets.
+- PWA visit counter session-scoped; install banner less aggressive.
+
 ---
 
 ## 4. Remaining gaps for a true native app

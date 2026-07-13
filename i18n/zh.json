@@ -449,5 +449,6 @@
   "app.pwa.browser_tip": "从浏览器菜单安装 GreenDial，获得全屏应用体验。",
   "app.pwa.install": "安装",
   "app.pwa.install_body": "安装 GreenDial，更快打开并可选接收提醒。",
-  "app.pwa.ios_tip": "将 GreenDial 添加到主屏幕：点分享，然后“添加到主屏幕”。"
+  "app.pwa.ios_tip": "将 GreenDial 添加到主屏幕：点分享，然后“添加到主屏幕”。",
+  "app.mbn.language": "语言"
 }

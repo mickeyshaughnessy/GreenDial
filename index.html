@@ -1098,17 +1098,25 @@
       html, body {
         height: 100%;
         height: 100dvh;
+        max-height: 100dvh;
         overflow: hidden;
+        /* iOS Safari address-bar friendly */
+        min-height: -webkit-fill-available;
       }
       body {
         display: flex;
         flex-direction: column;
         padding-bottom: 0;
+        overscroll-behavior: none;
+        -webkit-tap-highlight-color: transparent;
       }
       .header {
         flex-shrink: 0;
-        padding-left: calc(10px + env(safe-area-inset-left));
-        padding-right: calc(10px + env(safe-area-inset-right));
+        gap: 6px 8px;
+        padding: 8px 10px;
+        padding-top: calc(8px + env(safe-area-inset-top, 0px));
+        padding-left: calc(10px + env(safe-area-inset-left, 0px));
+        padding-right: calc(10px + env(safe-area-inset-right, 0px));
       }
       /* Bottom nav owns primary destinations — hide top tab strip */
       .nav-tabs { display: none !important; }
@@ -1117,6 +1125,8 @@
       .header .gd-style-toolbar { display: none; }
       /* About / Docs only in More menu */
       #nav-about-tab, #nav-docs-tab { display: none !important; }
+      /* Languages live under More on phones to free header space */
+      .header .lang-switch { display: none; }
 
       .main {
         flex: 1;
@@ -1125,11 +1135,13 @@
         width: 100%;
         margin: 0;
         padding: 0;
+        /* Reserve bottom nav; keyboard adds --kb on top when open */
         padding-bottom: calc(var(--bottom-nav-h) + var(--kb));
         overflow: hidden;
         display: flex;
         flex-direction: column;
         box-sizing: border-box;
+        transition: padding-bottom 0.12s ease-out;
       }
       .view {
         display: none;
@@ -1150,11 +1162,24 @@
         flex-shrink: 0;
         font-size: 12px;
         padding: 8px 12px 4px;
+        line-height: 1.45;
       }
       #view-chat .starter-prompts {
         flex-shrink: 0;
         padding: 0 10px 8px;
-        gap: 6px;
+        gap: 8px;
+        /* horizontal scroll chips instead of wrapping to 2–3 rows */
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+      }
+      #view-chat .starter-prompts::-webkit-scrollbar { display: none; }
+      #view-chat .starter-btn {
+        flex-shrink: 0;
+        min-height: 40px;
+        padding: 8px 14px;
+        font-size: 13px;
       }
       body.chat-compact #view-chat .chat-hero,
       body.chat-compact #view-chat .starter-prompts {
@@ -1166,32 +1191,69 @@
         border-radius: 0;
         border-left: none;
         border-right: none;
+        background: transparent;
       }
       .chat-header {
-        padding: 10px 12px;
+        padding: 8px 12px;
         flex-shrink: 0;
+        min-height: 44px;
+      }
+      /* Escape hatch is secondary on mobile (Me → Settings has chat-only toggle) */
+      #chat-mode-escape {
+        font-size: 11px;
+        padding: 6px 10px;
+        min-height: 36px;
+        white-space: nowrap;
       }
       .agent-tabs-row {
         flex-shrink: 0;
         padding: 6px 10px;
       }
       .agent-tab-btn {
-        min-height: 36px;
-        padding: 6px 12px;
+        min-height: 40px;
+        padding: 8px 14px;
       }
       .chat-messages {
         flex: 1;
         min-height: 0;
-        padding: 12px;
+        padding: 12px 12px 8px;
+        gap: 10px;
+      }
+      .msg {
+        max-width: 92%;
+        padding: 10px 14px;
+        font-size: 15px;
+        line-height: 1.45;
+      }
+      .msg-row { max-width: 100%; }
+      /* Login card sits above composer, full width */
+      .chat-login-card {
+        max-width: none;
+        margin: 0;
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
+        padding: 14px 14px 12px;
+        flex-shrink: 0;
+      }
+      .chat-login-card .form-group input {
+        min-height: 44px;
+        padding: 12px 14px;
+        font-size: 16px !important;
       }
       .chat-input-area {
         flex-shrink: 0;
-        padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px));
+        /* Bottom nav already owns safe-area — don't double-pad here */
+        padding: 8px 10px 10px;
         gap: 8px;
-        padding-left: calc(12px + env(safe-area-inset-left));
-        padding-right: calc(12px + env(safe-area-inset-right));
-        /* When bottom nav is present, composer sits above it; --kb lifts for keyboard */
-        margin-bottom: 0;
+        padding-left: calc(10px + env(safe-area-inset-left, 0px));
+        padding-right: calc(10px + env(safe-area-inset-right, 0px));
+        background: rgba(0, 0, 0, 0.35);
+        border-top: 1px solid rgba(255,255,255,0.08);
+      }
+      body.kb-open .chat-input-area {
+        /* Small cushion when keyboard is open (no bottom nav) */
+        padding-bottom: 8px;
       }
       /* iOS zooms when focused input is <16px */
       input, textarea, select,
@@ -1204,45 +1266,86 @@
       }
       .chat-input-area .btn {
         min-height: 44px;
-        min-width: 44px;
+        min-width: 64px;
         padding: 12px 16px;
+        font-weight: 600;
       }
-      .msg { max-width: 90%; }
+      .task-toggle {
+        min-height: 44px;
+        padding: 8px 10px;
+        flex-shrink: 0;
+      }
 
       .panel-content { padding: 12px; }
       #view-user > div,
       #view-stickers > div,
       #view-history > div,
       #view-feedback > div,
-      #view-getstarted > div {
-        padding: 12px 12px calc(16px + env(safe-area-inset-bottom));
+      #view-getstarted > div,
+      #view-admin > div {
+        padding: 12px;
         max-width: 100% !important;
         box-sizing: border-box;
+        width: 100%;
       }
       /* Hide developer JSON panel on phones */
       #profile-json-panel { display: none; }
 
+      /* Full-bleed notification sheet under header */
       .notification-dropdown {
-        width: min(360px, calc(100vw - 20px));
-        max-width: calc(100vw - 20px);
+        position: fixed;
+        top: auto;
+        left: 0;
         right: 0;
-        left: auto;
+        bottom: var(--bottom-nav-h);
+        width: 100%;
+        max-width: 100%;
+        max-height: min(70dvh, 520px);
+        border-radius: 16px 16px 0 0;
+        z-index: 1550;
       }
+      .notif-bell-wrap { position: static; }
 
-      .sb-area-label { font-size: 11px; padding-right: 8px; }
+      .sb-area-label { font-size: 12px; padding-right: 10px; }
       .sb-cell, .sb-dot { width: 44px; height: 44px; }
       .sb-dot { font-size: 22px; }
       .sb-dot.empty.sb-pickable { font-size: 18px; }
-      .sb-dot.filled:active { transform: scale(1.15); }
+      .sb-dot.filled:active { transform: scale(1.12); }
       .sb-dot img, .sb-dot .pixel-sticker { width: 36px !important; height: 36px !important; }
+      .sticker-toolbar {
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 10px;
+      }
+      .sticker-style-toggle button {
+        min-height: 40px;
+        padding: 8px 14px;
+      }
 
+      /* Compact header actions: keep bell + account; shrink donate */
       .user-area .btn-sm { min-height: 40px; padding: 8px 12px; }
+      .user-area button[onclick*="showDonateModal"] {
+        padding: 8px 10px;
+        font-size: 0; /* icon-only */
+        min-width: 40px;
+      }
+      .user-area button[onclick*="showDonateModal"]::before {
+        content: "💚";
+        font-size: 16px;
+      }
       .notification-bell { min-width: 44px; min-height: 44px; }
-      .lang-btn { min-width: 36px; min-height: 36px; padding: 6px 10px; }
-      .nav-tab { min-height: 40px; }
+      .user-badge {
+        max-width: 28vw;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        min-height: 40px;
+        display: inline-flex;
+        align-items: center;
+      }
       .sugg-item button, .sugg-accept, .sugg-dismiss {
-        min-height: 36px;
-        padding: 6px 12px !important;
+        min-height: 40px;
+        padding: 8px 12px !important;
       }
 
       /* Bottom sheets for modals */
@@ -1262,13 +1365,15 @@
         max-height: min(90dvh, 90vh);
         margin: 0;
         padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
       }
       .sticker-picker-grid {
-        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
         gap: 10px;
         padding: 14px;
       }
-      .sticker-pick-btn { min-height: 72px; padding: 12px 8px; }
+      .sticker-pick-btn { min-height: 76px; padding: 12px 8px; }
       .sticker-picker-close { width: 44px; height: 44px; }
 
       #sticker-share-section > div:last-child {
@@ -1276,6 +1381,7 @@
         align-items: stretch !important;
       }
       #sticker-share-section .btn { width: 100%; min-height: 44px; }
+      #sticker-share-url { min-height: 44px; font-size: 14px !important; }
 
       /* Bottom primary nav */
       .mobile-bottom-nav {
@@ -1284,21 +1390,23 @@
         left: 0; right: 0; bottom: 0;
         z-index: 1500;
         height: var(--bottom-nav-h);
-        padding: 0 env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-        background: rgba(26, 26, 46, 0.97);
+        padding: 0 env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+        background: rgba(22, 22, 40, 0.98);
         border-top: 1px solid rgba(255,255,255,0.1);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
         justify-content: space-around;
         align-items: stretch;
         box-sizing: border-box;
-        /* Lift with keyboard so bar doesn't cover composer awkwardly */
-        transform: translateY(var(--kb));
+        transition: transform 0.15s ease-out;
       }
       body.kb-open .mobile-bottom-nav {
-        /* Hide bottom nav while keyboard is open — more room for chat */
         transform: translateY(100%);
         pointer-events: none;
+      }
+      body.kb-open .pwa-install-banner,
+      body.kb-open .gd-toast {
+        display: none !important;
       }
       .mbn-item {
         flex: 1;
@@ -1309,18 +1417,18 @@
         gap: 2px;
         background: none;
         border: none;
-        color: rgba(255,255,255,0.5);
+        color: rgba(255,255,255,0.48);
         font-size: 10px;
         font-weight: 600;
         cursor: pointer;
         min-height: 48px;
-        padding: 6px 4px;
+        padding: 6px 4px 4px;
         font-family: inherit;
         -webkit-tap-highlight-color: transparent;
       }
       .mbn-item .mbn-icon { font-size: 20px; line-height: 1; }
       .mbn-item.active { color: #10b981; }
-      .mbn-item:active { opacity: 0.75; }
+      .mbn-item:active { opacity: 0.75; background: rgba(255,255,255,0.04); }
 
       .mobile-more-sheet {
         display: none;
@@ -1336,16 +1444,22 @@
         width: 100%;
         background: #2a2a4e;
         border-radius: 16px 16px 0 0;
-        padding: 12px 12px calc(16px + env(safe-area-inset-bottom));
-        max-height: 70dvh;
+        padding: 8px 12px calc(16px + env(safe-area-inset-bottom, 0px));
+        max-height: 75dvh;
         overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      .mobile-more-handle {
+        width: 36px; height: 4px; border-radius: 2px;
+        background: rgba(255,255,255,0.2);
+        margin: 6px auto 12px;
       }
       .mobile-more-panel h3 {
-        font-size: 13px;
+        font-size: 12px;
         color: rgba(255,255,255,0.45);
         text-transform: uppercase;
         letter-spacing: 0.06em;
-        margin: 4px 8px 10px;
+        margin: 4px 8px 8px;
       }
       .mobile-more-item {
         display: flex;
@@ -1368,28 +1482,37 @@
         background: rgba(255,255,255,0.08);
       }
       .mobile-more-item.hidden { display: none; }
+      .mobile-more-lang {
+        display: flex;
+        gap: 8px;
+        padding: 8px 12px 12px;
+      }
+      .mobile-more-lang .lang-btn {
+        min-width: 48px;
+        min-height: 40px;
+      }
 
       .pwa-install-banner {
         display: none;
         position: fixed;
-        left: 12px; right: 12px;
-        bottom: calc(var(--bottom-nav-h) + 10px);
+        left: 10px; right: 10px;
+        bottom: calc(var(--bottom-nav-h) + 8px);
         z-index: 1400;
         background: #2a2a4e;
         border: 1px solid rgba(16,185,129,0.35);
         border-radius: 14px;
-        padding: 12px 14px;
+        padding: 10px 12px;
         box-shadow: 0 12px 40px rgba(0,0,0,0.45);
         align-items: center;
-        gap: 12px;
+        gap: 10px;
       }
       .pwa-install-banner.show { display: flex; }
       .pwa-install-banner p {
         flex: 1;
-        font-size: 13px;
+        font-size: 12px;
         color: rgba(255,255,255,0.85);
         margin: 0;
-        line-height: 1.4;
+        line-height: 1.35;
       }
       .pwa-install-banner .btn { flex-shrink: 0; min-height: 40px; }
       .pwa-install-dismiss {
@@ -1402,7 +1525,7 @@
         position: fixed;
         left: 50%;
         transform: translateX(-50%);
-        bottom: calc(var(--bottom-nav-h) + 16px);
+        bottom: calc(var(--bottom-nav-h) + 14px);
         z-index: 6000;
         background: rgba(20,20,36,0.96);
         border: 1px solid rgba(255,255,255,0.12);
@@ -1414,30 +1537,62 @@
         text-align: center;
         box-shadow: 0 8px 32px rgba(0,0,0,0.4);
       }
-      .gd-toast.show { display: block; }
+      .gd-toast.show { display: block; animation: gdToastIn 0.2s ease-out; }
       .gd-toast.error { border-color: rgba(239,68,68,0.45); }
+      @keyframes gdToastIn {
+        from { opacity: 0; transform: translateX(-50%) translateY(8px); }
+        to { opacity: 1; transform: translateX(-50%) translateY(0); }
+      }
 
       .board-nudge {
         display: none;
+        flex-shrink: 0;
         margin: 0 12px 8px;
-        padding: 10px 12px;
+        padding: 0;
         background: rgba(16,185,129,0.12);
         border: 1px solid rgba(16,185,129,0.3);
         border-radius: 10px;
         font-size: 13px;
         color: rgba(255,255,255,0.85);
-        cursor: pointer;
         text-align: left;
         font-family: inherit;
         width: calc(100% - 24px);
+        overflow: hidden;
+        align-items: stretch;
       }
-      .board-nudge.show { display: block; }
-      .board-nudge strong { color: #10b981; }
+      .board-nudge.show { display: flex; }
+      .board-nudge-go {
+        flex: 1;
+        background: none;
+        border: none;
+        color: inherit;
+        font: inherit;
+        text-align: left;
+        padding: 11px 12px;
+        cursor: pointer;
+        min-height: 44px;
+      }
+      .board-nudge-go strong { color: #10b981; }
+      .board-nudge-x {
+        background: none;
+        border: none;
+        border-left: 1px solid rgba(16,185,129,0.25);
+        color: rgba(255,255,255,0.45);
+        font-size: 18px;
+        padding: 0 14px;
+        cursor: pointer;
+        min-width: 44px;
+      }
     }
     @media (max-width: 420px) {
-      .logo { font-size: 18px; }
-      .logo span:last-child { max-width: 9ch; overflow: hidden; text-overflow: ellipsis; }
+      .logo { font-size: 17px; }
+      .logo span:last-child { max-width: 8ch; overflow: hidden; text-overflow: ellipsis; }
       .mbn-item { font-size: 9px; }
+      .header .user-area .btn-sm:not([onclick*="showDonateModal"]) { padding: 8px 10px; }
+    }
+    /* Standalone PWA: slight extra top padding already via safe-area */
+    @media (max-width: 700px) and (display-mode: standalone) {
+      .header { padding-top: calc(10px + env(safe-area-inset-top, 0px)); }
     }
     body.modal-open { overflow: hidden !important; }
   </style>
@@ -1503,9 +1658,12 @@
           <a href="#" onclick="switchView('getstarted');return false;" style="color:#10b981;text-decoration:none" data-i18n="app.chat.tour_link">🚀 New here? Take the 60-second tour →</a>
         </div>
       </div>
-      <button type="button" class="board-nudge" id="board-nudge" onclick="switchView('stickers')" data-i18n-html="app.chat.board_nudge">
-        <strong>🏷️ Board</strong> — open today’s check-in board →
-      </button>
+      <div class="board-nudge" id="board-nudge">
+        <button type="button" class="board-nudge-go" onclick="switchView('stickers')" data-i18n-html="app.chat.board_nudge">
+          <strong>🏷️ Board</strong> — open today’s check-in board →
+        </button>
+        <button type="button" class="board-nudge-x" onclick="dismissBoardNudge()" aria-label="Dismiss" title="Dismiss">×</button>
+      </div>
       <div class="starter-prompts">
         <button class="starter-btn" onclick="sendMessage('Help me sleep better')" data-i18n="app.chat.starter1">😴 Help me sleep better</button>
         <button class="starter-btn" onclick="sendMessage('I want to lose 15 lbs')" data-i18n="app.chat.starter2">⚖️ I want to lose 15 lbs</button>
@@ -1748,14 +1906,22 @@
   </nav>
   <div class="mobile-more-sheet" id="mobile-more-sheet" onclick="if(event.target===this)closeMoreMenu()">
     <div class="mobile-more-panel" role="menu">
+      <div class="mobile-more-handle" aria-hidden="true"></div>
       <h3 data-i18n="app.mbn.more_heading">More</h3>
       <button type="button" class="mobile-more-item" id="more-history" onclick="moreGo('history')" data-i18n="app.nav.history">📜 History</button>
       <button type="button" class="mobile-more-item" id="more-feedback" onclick="moreGo('feedback')" data-i18n="app.nav.feedback">📣 Feedback</button>
       <button type="button" class="mobile-more-item" id="more-getstarted" onclick="moreGo('getstarted')" data-i18n="app.nav.getstarted">🚀 Get Started</button>
       <button type="button" class="mobile-more-item" id="more-admin" onclick="moreGo('admin')" style="display:none">🛡️ Admin/Stats</button>
+      <button type="button" class="mobile-more-item" onclick="closeMoreMenu();showDonateModal()" data-i18n="app.donate">💚 Donate</button>
       <a class="mobile-more-item" href="/about" data-i18n="app.nav.about">ℹ️ About</a>
       <a class="mobile-more-item" id="more-docs" href="/docs" data-i18n="app.nav.docs">📄 Docs</a>
       <a class="mobile-more-item" href="/privacy" data-i18n="app.mbn.privacy">🔒 Privacy</a>
+      <h3 data-i18n="app.mbn.language">Language</h3>
+      <div class="mobile-more-lang" role="group" aria-label="Language">
+        <button type="button" class="lang-btn" data-lang="en" onclick="setLanguage('en');closeMoreMenu()" title="English">T</button>
+        <button type="button" class="lang-btn" data-lang="zh" onclick="setLanguage('zh');closeMoreMenu()" title="中文">中</button>
+        <button type="button" class="lang-btn" data-lang="ja" onclick="setLanguage('ja');closeMoreMenu()" title="日本語">日</button>
+      </div>
     </div>
   </div>
 
@@ -2705,13 +2871,31 @@
       document.body.classList.toggle('chat-compact', compact);
     }
 
+    function boardNudgeDismissedToday() {
+      try {
+        return localStorage.getItem('gd_board_nudge_dismiss') === new Date().toISOString().slice(0, 10);
+      } catch (e) { return false; }
+    }
+    function dismissBoardNudge() {
+      try {
+        localStorage.setItem('gd_board_nudge_dismiss', new Date().toISOString().slice(0, 10));
+      } catch (e) {}
+      const el = document.getElementById('board-nudge');
+      if (el) el.classList.remove('show');
+    }
+    window.dismissBoardNudge = dismissBoardNudge;
+
     function updateBoardNudge() {
       const el = document.getElementById('board-nudge');
       if (!el) return;
-      const show = !!(currentUser && currentView === 'chat' && !document.body.classList.contains('chat-compact'));
-      // Also show for signed-in compact users occasionally? Plan: soft banner when signed in
-      const showSignedIn = !!(currentUser && currentView === 'chat');
-      el.classList.toggle('show', showSignedIn);
+      // Soft CTA for signed-in users on chat; once per day dismissible
+      const show = !!(
+        currentUser
+        && currentView === 'chat'
+        && window.matchMedia('(max-width: 700px)').matches
+        && !boardNudgeDismissedToday()
+      );
+      el.classList.toggle('show', show);
     }
 
     function showToast(msg, opts) {
@@ -2728,30 +2912,39 @@
     function setupKeyboardAvoidance() {
       const vv = window.visualViewport;
       if (!vv) return;
+      let _kbTimer = null;
       const apply = () => {
-        const inset = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
-        document.documentElement.style.setProperty('--kb', inset + 'px');
-        document.body.classList.toggle('kb-open', inset > 80);
-        // When keyboard open, drop bottom-nav space so chat can use it
+        const inset = Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop));
+        // Ignore tiny chrome jitter (< 48px)
+        const kb = inset > 48 ? inset : 0;
+        document.documentElement.style.setProperty('--kb', kb + 'px');
+        document.body.classList.toggle('kb-open', kb > 80);
         if (window.matchMedia('(max-width: 700px)').matches) {
           document.documentElement.style.setProperty(
             '--bottom-nav-h',
-            inset > 80 ? '0px' : 'calc(56px + env(safe-area-inset-bottom, 0px))'
+            kb > 80 ? '0px' : 'calc(56px + env(safe-area-inset-bottom, 0px))'
           );
         }
       };
-      vv.addEventListener('resize', apply);
-      vv.addEventListener('scroll', apply);
+      const schedule = () => {
+        clearTimeout(_kbTimer);
+        _kbTimer = setTimeout(apply, 16);
+      };
+      vv.addEventListener('resize', schedule);
+      vv.addEventListener('scroll', schedule);
+      window.addEventListener('orientationchange', () => setTimeout(apply, 200));
       window.addEventListener('focusin', (e) => {
-        if (e.target && (e.target.id === 'chat-input' || e.target.closest('.chat-input-area'))) {
+        const t = e.target;
+        if (!t) return;
+        if (t.id === 'chat-input' || t.closest('.chat-input-area') || t.closest('.chat-login-card')) {
           setTimeout(() => {
             apply();
             const msgs = document.getElementById('chat-messages');
             if (msgs) msgs.scrollTop = msgs.scrollHeight;
-          }, 50);
+          }, 80);
         }
       });
-      window.addEventListener('focusout', () => setTimeout(apply, 50));
+      window.addEventListener('focusout', () => setTimeout(apply, 80));
       apply();
     }
 
@@ -2764,8 +2957,14 @@
     function maybeShowPwaBanner() {
       if (isStandalonePwa()) return;
       if (localStorage.getItem('gd_pwa_dismiss') === '1') return;
-      const visits = parseInt(localStorage.getItem('gd_visit_count') || '0', 10) + 1;
-      localStorage.setItem('gd_visit_count', String(visits));
+      if (!window.matchMedia('(max-width: 700px)').matches && !_deferredPwaPrompt) return;
+      // Count at most once per browser session
+      let visits = parseInt(localStorage.getItem('gd_visit_count') || '0', 10);
+      if (!sessionStorage.getItem('gd_visit_counted')) {
+        visits += 1;
+        localStorage.setItem('gd_visit_count', String(visits));
+        try { sessionStorage.setItem('gd_visit_counted', '1'); } catch (e) {}
+      }
       const banner = document.getElementById('pwa-install-banner');
       const text = document.getElementById('pwa-install-text');
       const btn = document.getElementById('pwa-install-btn');
@@ -2779,8 +2978,8 @@
         if (text) text.textContent = t('app.pwa.ios_tip', 'Add GreenDial to your Home Screen: tap Share, then “Add to Home Screen”.');
         if (btn) btn.style.display = 'none';
         banner.classList.add('show');
-      } else if (visits >= 2 && window.matchMedia('(max-width: 700px)').matches) {
-        // Android without beforeinstallprompt yet — still soft tip
+      } else if (visits >= 3 && window.matchMedia('(max-width: 700px)').matches) {
+        // Soft tip only after a few visits when browser install prompt isn't available
         if (text) text.textContent = t('app.pwa.browser_tip', 'Install GreenDial from your browser menu for a full-screen app.');
         if (btn) btn.style.display = 'none';
         banner.classList.add('show');
