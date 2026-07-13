@@ -78,6 +78,11 @@ def about():
     return send_from_directory('.', 'about.html')
 
 
+@app.route("/privacy", methods=['GET'])
+def privacy():
+    return send_from_directory('.', 'privacy.html')
+
+
 @app.route("/stickers/<token>", methods=['GET'])
 def sticker_board_public(token):
     return send_from_directory('.', 'stickers.html')

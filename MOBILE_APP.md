@@ -68,20 +68,35 @@ reminders** (Chrome/Android/desktop today; iOS once installed to Home Screen).
 
 ---
 
-## 3. Remaining gaps for a true native app
+## 3. Android Capacitor shell ✅ (in repo)
+
+The Android app lives under `mobile/` — a Capacitor WebView that loads
+`https://greendial.org` (app ID `org.greendial.app`). Build and Play Console
+steps: **`mobile/README.md`**.
+
+- Privacy policy URL for Play: **https://greendial.org/privacy** (`privacy.html` + `/privacy` route).
+- Release AAB: `cd mobile && npm run bundle` → `android/app/build/outputs/bundle/release/app-release.aab`.
+- Upload keystore is local-only (`mobile/android/keystore/`, gitignored) — back it up.
+
+Ship path: Play Console → **Internal testing** with the AAB → tester opt-in on phone → promote to production when ready.
+
+---
+
+## 4. Remaining gaps for a true native app
 
 Ranked by leverage.
 
 | # | Gap | Why it matters | Effort |
 |---|-----|----------------|--------|
 | 1 | ~~Surface push opt-in~~ ✅ done | Live in Settings → Push reminders; cron sends daily. | — |
-| 2 | **Capacitor wrapper** | Wrap the existing site to ship to App Store / Play Store with native push, no rewrite. The PWA work makes this mostly config. | M |
-| 3 | **Native push (APNs/FCM)** | iOS web push is install-gated and limited; native tokens via Capacitor are more reliable. | M |
-| 4 | **Health integrations** | Apple Health / Google Fit / wearables auto-fill the sticker board (sleep, steps, HR) instead of manual check-ins — the biggest product upgrade. | L |
-| 5 | **Offline write queue** | Today the SW only caches the shell; check-ins/chat fail offline. Queue + replay for true app feel. | M |
-| 6 | **Passphrase hashing** | Plaintext passphrases are an app-store review and trust risk. bcrypt + migration. | M |
-| 7 | **Store assets** | Screenshots, descriptions, privacy policy, age rating, data-safety forms. | M |
-| 8 | **Deep links / universal links** | `/stickers/<token>` and chat should open the app, not Safari. | S |
+| 2 | ~~Capacitor wrapper (Android)~~ ✅ | `mobile/` loads greendial.org; Play Internal testing next. | — |
+| 3 | **Play production listing polish** | Screenshots, feature graphic, Data safety, content rating, production track. | S |
+| 4 | **Native push (APNs/FCM)** | iOS web push is install-gated; WebView push may be flaky vs FCM. | M |
+| 5 | **iOS / App Store** | Separate Capacitor iOS target + Apple Developer account. | M |
+| 6 | **Health integrations** | Apple Health / Google Fit / wearables auto-fill the sticker board. | L |
+| 7 | **Offline write queue** | Today the SW only caches the shell; check-ins/chat fail offline. | M |
+| 8 | **Passphrase hashing** | Plaintext passphrases are an app-store review and trust risk. bcrypt + migration. | M |
+| 9 | **Deep links / universal links** | `/stickers/<token>` and chat should open the app, not the browser. | S |
 
 ### Notes / corrections to earlier assumptions
 - **Sessions are persisted**, not purely in-memory: the session token lives on
@@ -92,7 +107,7 @@ Ranked by leverage.
 
 ---
 
-## 4. Landing-flow notes (Area 1)
+## 5. Landing-flow notes (Area 1)
 
 Decision this round: **keep the shared board (`stickers.html`) minimal** — no
 signup CTA added. It remains the highest-leverage growth surface if we later

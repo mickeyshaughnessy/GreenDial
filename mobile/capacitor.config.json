@@ -1,0 +1,14 @@
+{
+  "appId": "org.greendial.app",
+  "appName": "GreenDial",
+  "webDir": "www",
+  "server": {
+    "url": "https://greendial.org",
+    "cleartext": false,
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": false,
+    "backgroundColor": "#1a1a2e"
+  }
+}

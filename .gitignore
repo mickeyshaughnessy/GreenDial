@@ -5,3 +5,18 @@ __pycache__/
 .DS_Store
 *.log
 config.py
+
+# Node / Capacitor mobile
+mobile/node_modules/
+mobile/android/local.properties
+mobile/android/keystore.properties
+mobile/android/keystore/
+mobile/android/.gradle/
+mobile/android/app/build/
+mobile/android/build/
+mobile/android/captures/
+mobile/android/*.iml
+mobile/android/.idea/
+*.jks
+*.keystore
+mobile/dist/
