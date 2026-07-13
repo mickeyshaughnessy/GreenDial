@@ -1,11 +1,12 @@
 /* GreenDial service worker — offline app shell + web push.
    Bump CACHE when shell assets change to force an update. */
-const CACHE = 'greendial-v1';
+const CACHE = 'greendial-v2';
 const SHELL = [
   '/',
   '/manifest.json',
   '/icons/icon-192.png',
-  '/icons/icon-512.png'
+  '/icons/icon-512.png',
+  '/icons/icon-512-maskable.png'
 ];
 
 self.addEventListener('install', (event) => {

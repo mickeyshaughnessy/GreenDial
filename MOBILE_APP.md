@@ -82,6 +82,20 @@ Ship path: Play Console → **Internal testing** with the AAB → tester opt-in 
 
 ---
 
+## 3b. Mobile web optimization (2026-07) ✅
+
+First-class phone experience for greendial.org (browser + Capacitor WebView):
+
+- **Full-height chat** on ≤700px with sticky composer, `visualViewport` keyboard avoidance, and collapsed hero after engagement.
+- **Bottom nav:** Chat / Board / Me / More (top tab strip hidden on phones).
+- **Touch targets** ≥44px for board cells, send, bell; modals as bottom sheets.
+- **PWA install banner** (`beforeinstallprompt` + iOS Add-to-Home tip); dismissible.
+- **Offline honesty:** toast when chat send fails offline.
+- **Deep link:** `/?view=stickers` (also used by daily push reminders).
+- **Shared board** CTA + larger cells; About/Privacy safe-area headers.
+
+---
+
 ## 4. Remaining gaps for a true native app
 
 Ranked by leverage.

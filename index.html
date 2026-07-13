@@ -1060,10 +1060,23 @@
     .chat-login-error { font-size: 12px; color: #ef4444; margin-top: 6px; min-height: 16px; }
 
     /* ============ NARROW / MOBILE ============ */
+    :root {
+      --kb: 0px;
+      --bottom-nav-h: 0px;
+      --header-h: 56px;
+    }
+    .mobile-bottom-nav,
+    .mobile-more-sheet,
+    .pwa-install-banner,
+    .gd-toast {
+      display: none;
+    }
     @media (max-width: 900px) {
       .header {
         padding: 10px 12px;
         padding-top: calc(10px + env(safe-area-inset-top));
+        padding-left: calc(12px + env(safe-area-inset-left));
+        padding-right: calc(12px + env(safe-area-inset-right));
       }
       /* Logo + actions on first row; nav full-width scroll row below */
       .nav-tabs {
@@ -1079,18 +1092,135 @@
       .user-count { display: none; }
     }
     @media (max-width: 700px) {
-      .main { padding: 12px 12px calc(20px + env(safe-area-inset-bottom)); }
-      .panel-content { padding: 12px; }
+      :root {
+        --bottom-nav-h: calc(56px + env(safe-area-inset-bottom, 0px));
+      }
+      html, body {
+        height: 100%;
+        height: 100dvh;
+        overflow: hidden;
+      }
+      body {
+        display: flex;
+        flex-direction: column;
+        padding-bottom: 0;
+      }
+      .header {
+        flex-shrink: 0;
+        padding-left: calc(10px + env(safe-area-inset-left));
+        padding-right: calc(10px + env(safe-area-inset-right));
+      }
+      /* Bottom nav owns primary destinations — hide top tab strip */
+      .nav-tabs { display: none !important; }
 
-      /* iOS zooms the page when a focused input is <16px — force 16px */
+      /* Style picker lives in Settings on phone */
+      .header .gd-style-toolbar { display: none; }
+      /* About / Docs only in More menu */
+      #nav-about-tab, #nav-docs-tab { display: none !important; }
+
+      .main {
+        flex: 1;
+        min-height: 0;
+        max-width: none;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        padding-bottom: calc(var(--bottom-nav-h) + var(--kb));
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        box-sizing: border-box;
+      }
+      .view {
+        display: none;
+        flex: 1;
+        min-height: 0;
+        flex-direction: column;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
+      }
+      .view.active {
+        display: flex;
+      }
+      #view-chat.active {
+        overflow: hidden;
+      }
+      #view-chat .chat-hero {
+        flex-shrink: 0;
+        font-size: 12px;
+        padding: 8px 12px 4px;
+      }
+      #view-chat .starter-prompts {
+        flex-shrink: 0;
+        padding: 0 10px 8px;
+        gap: 6px;
+      }
+      body.chat-compact #view-chat .chat-hero,
+      body.chat-compact #view-chat .starter-prompts {
+        display: none;
+      }
+      #view-chat .chat-container {
+        flex: 1;
+        min-height: 0;
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
+      }
+      .chat-header {
+        padding: 10px 12px;
+        flex-shrink: 0;
+      }
+      .agent-tabs-row {
+        flex-shrink: 0;
+        padding: 6px 10px;
+      }
+      .agent-tab-btn {
+        min-height: 36px;
+        padding: 6px 12px;
+      }
+      .chat-messages {
+        flex: 1;
+        min-height: 0;
+        padding: 12px;
+      }
+      .chat-input-area {
+        flex-shrink: 0;
+        padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px));
+        gap: 8px;
+        padding-left: calc(12px + env(safe-area-inset-left));
+        padding-right: calc(12px + env(safe-area-inset-right));
+        /* When bottom nav is present, composer sits above it; --kb lifts for keyboard */
+        margin-bottom: 0;
+      }
+      /* iOS zooms when focused input is <16px */
       input, textarea, select,
       .chat-input-area input, .form-group input, .identity-field input,
-      .custom-prompt-textarea, .settings-select { font-size: 16px; }
+      .custom-prompt-textarea, .settings-select { font-size: 16px !important; }
 
-      .chat-input-area { padding: 12px; gap: 8px; }
-      .chat-input-area .btn { padding: 12px 16px; }
+      .chat-input-area input {
+        min-height: 44px;
+        padding: 12px 16px;
+      }
+      .chat-input-area .btn {
+        min-height: 44px;
+        min-width: 44px;
+        padding: 12px 16px;
+      }
       .msg { max-width: 90%; }
-      .chat-hero { font-size: 12px; padding-top: 10px; }
+
+      .panel-content { padding: 12px; }
+      #view-user > div,
+      #view-stickers > div,
+      #view-history > div,
+      #view-feedback > div,
+      #view-getstarted > div {
+        padding: 12px 12px calc(16px + env(safe-area-inset-bottom));
+        max-width: 100% !important;
+        box-sizing: border-box;
+      }
+      /* Hide developer JSON panel on phones */
+      #profile-json-panel { display: none; }
 
       .notification-dropdown {
         width: min(360px, calc(100vw - 20px));
@@ -1100,16 +1230,216 @@
       }
 
       .sb-area-label { font-size: 11px; padding-right: 8px; }
-      .sb-cell, .sb-dot { width: 30px; height: 30px; }
-      .sb-dot { font-size: 18px; }
+      .sb-cell, .sb-dot { width: 44px; height: 44px; }
+      .sb-dot { font-size: 22px; }
+      .sb-dot.empty.sb-pickable { font-size: 18px; }
+      .sb-dot.filled:active { transform: scale(1.15); }
+      .sb-dot img, .sb-dot .pixel-sticker { width: 36px !important; height: 36px !important; }
 
-      .user-area .btn-sm { padding: 6px 10px; }
+      .user-area .btn-sm { min-height: 40px; padding: 8px 12px; }
+      .notification-bell { min-width: 44px; min-height: 44px; }
+      .lang-btn { min-width: 36px; min-height: 36px; padding: 6px 10px; }
+      .nav-tab { min-height: 40px; }
+      .sugg-item button, .sugg-accept, .sugg-dismiss {
+        min-height: 36px;
+        padding: 6px 12px !important;
+      }
+
+      /* Bottom sheets for modals */
+      .popup-overlay.show,
+      .sticker-picker-backdrop.show {
+        align-items: flex-end;
+        justify-content: center;
+        padding: 0;
+      }
+      .popup-overlay .popup,
+      .popup-overlay .donate-popup,
+      .popup-overlay .waiver-popup,
+      .sticker-picker-modal {
+        width: 100%;
+        max-width: 100%;
+        border-radius: 16px 16px 0 0;
+        max-height: min(90dvh, 90vh);
+        margin: 0;
+        padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+      }
+      .sticker-picker-grid {
+        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+        gap: 10px;
+        padding: 14px;
+      }
+      .sticker-pick-btn { min-height: 72px; padding: 12px 8px; }
+      .sticker-picker-close { width: 44px; height: 44px; }
+
+      #sticker-share-section > div:last-child {
+        flex-direction: column;
+        align-items: stretch !important;
+      }
+      #sticker-share-section .btn { width: 100%; min-height: 44px; }
+
+      /* Bottom primary nav */
+      .mobile-bottom-nav {
+        display: flex;
+        position: fixed;
+        left: 0; right: 0; bottom: 0;
+        z-index: 1500;
+        height: var(--bottom-nav-h);
+        padding: 0 env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+        background: rgba(26, 26, 46, 0.97);
+        border-top: 1px solid rgba(255,255,255,0.1);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        justify-content: space-around;
+        align-items: stretch;
+        box-sizing: border-box;
+        /* Lift with keyboard so bar doesn't cover composer awkwardly */
+        transform: translateY(var(--kb));
+      }
+      body.kb-open .mobile-bottom-nav {
+        /* Hide bottom nav while keyboard is open — more room for chat */
+        transform: translateY(100%);
+        pointer-events: none;
+      }
+      .mbn-item {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 2px;
+        background: none;
+        border: none;
+        color: rgba(255,255,255,0.5);
+        font-size: 10px;
+        font-weight: 600;
+        cursor: pointer;
+        min-height: 48px;
+        padding: 6px 4px;
+        font-family: inherit;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .mbn-item .mbn-icon { font-size: 20px; line-height: 1; }
+      .mbn-item.active { color: #10b981; }
+      .mbn-item:active { opacity: 0.75; }
+
+      .mobile-more-sheet {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 1600;
+        background: rgba(0,0,0,0.55);
+        align-items: flex-end;
+        justify-content: center;
+      }
+      .mobile-more-sheet.show { display: flex; }
+      .mobile-more-panel {
+        width: 100%;
+        background: #2a2a4e;
+        border-radius: 16px 16px 0 0;
+        padding: 12px 12px calc(16px + env(safe-area-inset-bottom));
+        max-height: 70dvh;
+        overflow-y: auto;
+      }
+      .mobile-more-panel h3 {
+        font-size: 13px;
+        color: rgba(255,255,255,0.45);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin: 4px 8px 10px;
+      }
+      .mobile-more-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        width: 100%;
+        text-align: left;
+        padding: 14px 12px;
+        min-height: 48px;
+        background: none;
+        border: none;
+        border-radius: 10px;
+        color: #eee;
+        font-size: 15px;
+        font-family: inherit;
+        cursor: pointer;
+        text-decoration: none;
+      }
+      .mobile-more-item:hover, .mobile-more-item:active {
+        background: rgba(255,255,255,0.08);
+      }
+      .mobile-more-item.hidden { display: none; }
+
+      .pwa-install-banner {
+        display: none;
+        position: fixed;
+        left: 12px; right: 12px;
+        bottom: calc(var(--bottom-nav-h) + 10px);
+        z-index: 1400;
+        background: #2a2a4e;
+        border: 1px solid rgba(16,185,129,0.35);
+        border-radius: 14px;
+        padding: 12px 14px;
+        box-shadow: 0 12px 40px rgba(0,0,0,0.45);
+        align-items: center;
+        gap: 12px;
+      }
+      .pwa-install-banner.show { display: flex; }
+      .pwa-install-banner p {
+        flex: 1;
+        font-size: 13px;
+        color: rgba(255,255,255,0.85);
+        margin: 0;
+        line-height: 1.4;
+      }
+      .pwa-install-banner .btn { flex-shrink: 0; min-height: 40px; }
+      .pwa-install-dismiss {
+        background: none; border: none; color: rgba(255,255,255,0.45);
+        font-size: 20px; cursor: pointer; padding: 4px 8px; min-width: 40px; min-height: 40px;
+      }
+
+      .gd-toast {
+        display: none;
+        position: fixed;
+        left: 50%;
+        transform: translateX(-50%);
+        bottom: calc(var(--bottom-nav-h) + 16px);
+        z-index: 6000;
+        background: rgba(20,20,36,0.96);
+        border: 1px solid rgba(255,255,255,0.12);
+        color: #eee;
+        font-size: 13px;
+        padding: 12px 18px;
+        border-radius: 12px;
+        max-width: min(92vw, 360px);
+        text-align: center;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      }
+      .gd-toast.show { display: block; }
+      .gd-toast.error { border-color: rgba(239,68,68,0.45); }
+
+      .board-nudge {
+        display: none;
+        margin: 0 12px 8px;
+        padding: 10px 12px;
+        background: rgba(16,185,129,0.12);
+        border: 1px solid rgba(16,185,129,0.3);
+        border-radius: 10px;
+        font-size: 13px;
+        color: rgba(255,255,255,0.85);
+        cursor: pointer;
+        text-align: left;
+        font-family: inherit;
+        width: calc(100% - 24px);
+      }
+      .board-nudge.show { display: block; }
+      .board-nudge strong { color: #10b981; }
     }
     @media (max-width: 420px) {
-      .nav-tab { padding: 6px 10px; font-size: 12px; }
       .logo { font-size: 18px; }
       .logo span:last-child { max-width: 9ch; overflow: hidden; text-overflow: ellipsis; }
+      .mbn-item { font-size: 9px; }
     }
+    body.modal-open { overflow: hidden !important; }
   </style>
 </head>
 <body>
@@ -1173,6 +1503,9 @@
           <a href="#" onclick="switchView('getstarted');return false;" style="color:#10b981;text-decoration:none" data-i18n="app.chat.tour_link">🚀 New here? Take the 60-second tour →</a>
         </div>
       </div>
+      <button type="button" class="board-nudge" id="board-nudge" onclick="switchView('stickers')" data-i18n-html="app.chat.board_nudge">
+        <strong>🏷️ Board</strong> — open today’s check-in board →
+      </button>
       <div class="starter-prompts">
         <button class="starter-btn" onclick="sendMessage('Help me sleep better')" data-i18n="app.chat.starter1">😴 Help me sleep better</button>
         <button class="starter-btn" onclick="sendMessage('I want to lose 15 lbs')" data-i18n="app.chat.starter2">⚖️ I want to lose 15 lbs</button>
@@ -1201,7 +1534,7 @@
         </div>
         <div class="chat-input-area">
           <button class="task-toggle" id="task-toggle-btn" onclick="toggleTaskMode()" title="Task mode: uses Gemini Flash with real tools to log data, read history, and consult specialists" style="display:none" data-i18n="app.chat.task_btn">⚡ Task</button>
-          <input type="text" id="chat-input" placeholder="Type a message..." onkeypress="if(event.key==='Enter')sendMessage()" data-i18n-attr-placeholder="app.chat.input_placeholder">
+          <input type="text" id="chat-input" placeholder="Type a message..." enterkeyhint="send" autocomplete="off" autocorrect="on" onkeypress="if(event.key==='Enter')sendMessage()" data-i18n-attr-placeholder="app.chat.input_placeholder">
           <button class="btn btn-primary" onclick="sendMessage()" data-i18n="app.chat.send">Send</button>
         </div>
       </div>
@@ -1227,7 +1560,7 @@
           <div class="panel-header"><span data-i18n="app.healthprofile.heading">📋 Health Profile</span><button class="btn btn-secondary btn-sm" onclick="refreshUserTab()" data-i18n="app.refresh">Refresh</button></div>
           <div class="panel-content" id="full-profile-panel"><div class="profile-empty" data-i18n="app.healthprofile.empty">Sign in to view your health profile</div></div>
         </div>
-        <div class="panel">
+        <div class="panel" id="profile-json-panel">
           <div class="panel-header" data-i18n="app.profilejson.heading">📊 Profile JSON</div>
           <div class="panel-content"><div class="json-view" id="json-profile">{}</div></div>
         </div>
@@ -1393,6 +1726,45 @@
       </div>
     </div>
   </div>
+
+  <!-- Mobile bottom nav (visible ≤700px via CSS) -->
+  <nav class="mobile-bottom-nav" id="mobile-bottom-nav" aria-label="Primary">
+    <button type="button" class="mbn-item active" data-view="chat" onclick="switchView('chat')">
+      <span class="mbn-icon" aria-hidden="true">💬</span>
+      <span data-i18n="app.mbn.chat">Chat</span>
+    </button>
+    <button type="button" class="mbn-item" data-view="stickers" onclick="switchView('stickers')">
+      <span class="mbn-icon" aria-hidden="true">🏷️</span>
+      <span data-i18n="app.mbn.board">Board</span>
+    </button>
+    <button type="button" class="mbn-item" data-view="user" onclick="switchView('user')">
+      <span class="mbn-icon" aria-hidden="true">👤</span>
+      <span data-i18n="app.mbn.me">Me</span>
+    </button>
+    <button type="button" class="mbn-item" id="mbn-more-btn" onclick="toggleMoreMenu()">
+      <span class="mbn-icon" aria-hidden="true">⋯</span>
+      <span data-i18n="app.mbn.more">More</span>
+    </button>
+  </nav>
+  <div class="mobile-more-sheet" id="mobile-more-sheet" onclick="if(event.target===this)closeMoreMenu()">
+    <div class="mobile-more-panel" role="menu">
+      <h3 data-i18n="app.mbn.more_heading">More</h3>
+      <button type="button" class="mobile-more-item" id="more-history" onclick="moreGo('history')" data-i18n="app.nav.history">📜 History</button>
+      <button type="button" class="mobile-more-item" id="more-feedback" onclick="moreGo('feedback')" data-i18n="app.nav.feedback">📣 Feedback</button>
+      <button type="button" class="mobile-more-item" id="more-getstarted" onclick="moreGo('getstarted')" data-i18n="app.nav.getstarted">🚀 Get Started</button>
+      <button type="button" class="mobile-more-item" id="more-admin" onclick="moreGo('admin')" style="display:none">🛡️ Admin/Stats</button>
+      <a class="mobile-more-item" href="/about" data-i18n="app.nav.about">ℹ️ About</a>
+      <a class="mobile-more-item" id="more-docs" href="/docs" data-i18n="app.nav.docs">📄 Docs</a>
+      <a class="mobile-more-item" href="/privacy" data-i18n="app.mbn.privacy">🔒 Privacy</a>
+    </div>
+  </div>
+
+  <div class="pwa-install-banner" id="pwa-install-banner" role="dialog" aria-label="Install app">
+    <p id="pwa-install-text" data-i18n="app.pwa.install_body">Install GreenDial for quicker access and optional reminders.</p>
+    <button type="button" class="btn btn-primary btn-sm" id="pwa-install-btn" onclick="acceptPwaInstall()" data-i18n="app.pwa.install">Install</button>
+    <button type="button" class="pwa-install-dismiss" onclick="dismissPwaInstall()" aria-label="Dismiss">×</button>
+  </div>
+  <div class="gd-toast" id="gd-toast" role="status" aria-live="polite"></div>
   
   <div class="popup-overlay" id="donate-popup">
     <div class="donate-popup">
@@ -1824,12 +2196,14 @@
       document.querySelectorAll('#picker-style-emoji').forEach(b => b.classList.toggle('active', stickerStyle === 'emoji'));
       const backdrop = document.getElementById('sticker-picker-backdrop');
       if (backdrop) backdrop.classList.add('show');
+      setModalOpen(true);
       renderStickerPickerGrid();
     }
 
     function closeStickerPicker() {
       _pickerCtx = null;
       document.getElementById('sticker-picker-backdrop')?.classList.remove('show');
+      if (!document.querySelector('.popup-overlay.show')) setModalOpen(false);
     }
 
     async function renderStickerPickerGrid() {
@@ -2012,10 +2386,13 @@
 
     function setAdminTabVisible(visible) {
       const adminTab = document.getElementById('admin-tab');
-      if (!adminTab) return;
-      // Explicit values — clearing display:'' can leave the HTML style="display:none" sticky in some paths
-      adminTab.style.display = visible ? 'block' : 'none';
-      adminTab.setAttribute('aria-hidden', visible ? 'false' : 'true');
+      if (adminTab) {
+        // Explicit values — clearing display:'' can leave the HTML style="display:none" sticky in some paths
+        adminTab.style.display = visible ? 'block' : 'none';
+        adminTab.setAttribute('aria-hidden', visible ? 'false' : 'true');
+      }
+      const moreAdmin = document.getElementById('more-admin');
+      if (moreAdmin) moreAdmin.style.display = visible ? '' : 'none';
     }
 
     function applyChatOnlyMode(enabled) {
@@ -2027,6 +2404,13 @@
         const el = document.getElementById(id);
         if (el) el.style.display = chatOnly ? 'none' : '';
       });
+      // More sheet mirrors desktop chat-only rules
+      const moreHistory = document.getElementById('more-history');
+      const moreDocs = document.getElementById('more-docs');
+      if (moreHistory) moreHistory.classList.toggle('hidden', chatOnly);
+      if (moreDocs) moreDocs.classList.toggle('hidden', chatOnly);
+      const moreAdmin = document.getElementById('more-admin');
+      if (moreAdmin) moreAdmin.style.display = isAdminUser() ? '' : 'none';
 
       // Escape hatch + login card
       const escapeBtn = document.getElementById('chat-mode-escape');
@@ -2036,9 +2420,12 @@
 
       // Rebuild header user area (bell, donate, sign-out move into settings in chatOnly)
       updateUserUI();
+      updateChatCompactChrome();
+      updateBoardNudge();
 
       // If we hid the current view's tab, go back to chat
-      if (chatOnly && currentView !== 'chat' && currentView !== 'admin' && currentView !== 'stickers' && currentView !== 'feedback' && currentView !== 'getstarted') {
+      // Me (user) stays reachable for settings even in chat-only
+      if (chatOnly && currentView !== 'chat' && currentView !== 'admin' && currentView !== 'stickers' && currentView !== 'feedback' && currentView !== 'getstarted' && currentView !== 'user') {
         switchView('chat');
       }
     }
@@ -2224,8 +2611,12 @@
       agentSessionIds = {};
       updateAgentTabs();
       renderMessages();
-      document.getElementById('chat-input').focus();
+      // Avoid auto-focus on mobile (opens keyboard immediately)
+      if (!window.matchMedia('(max-width: 700px)').matches) {
+        try { document.getElementById('chat-input').focus(); } catch (e) {}
+      }
       updateAllProfileDisplays();
+      setupKeyboardAvoidance();
       // Apply chat-only defaults before restoring session (guests see it immediately)
       applyChatOnlyMode(true);
       const restored = await restoreSession();
@@ -2234,6 +2625,17 @@
         agentChats.doc = [{ role: 'doc', text: t('app.doc_welcome',"Hi! I'm Doc. I'll help you build your health profile and track your health over time. What brings you here today?") }];
         renderMessages();
       }
+      updateChatCompactChrome();
+      updateBoardNudge();
+      // Deep link: /?view=stickers (push check-in, shared links)
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const view = params.get('view');
+        if (view && document.getElementById('view-' + view)) {
+          switchView(view);
+        }
+      } catch (e) {}
+      setTimeout(maybeShowPwaBanner, 1200);
     }
     let _usingDefaultWelcome = false;
     
@@ -2245,20 +2647,164 @@
       currentView = view;
       document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
       document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-      document.getElementById(`view-${view}`).classList.add('active');
+      const viewEl = document.getElementById(`view-${view}`);
+      if (viewEl) viewEl.classList.add('active');
       const activeTab = document.querySelector(`.nav-tab[onclick="switchView('${view}')"]`);
       if (activeTab) activeTab.classList.add('active');
+
+      // Bottom nav active state (primary tabs only)
+      document.querySelectorAll('.mbn-item[data-view]').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-view') === view);
+      });
+      const moreBtn = document.getElementById('mbn-more-btn');
+      if (moreBtn) {
+        const secondary = ['history', 'feedback', 'getstarted', 'admin'].includes(view);
+        moreBtn.classList.toggle('active', secondary);
+      }
+      closeMoreMenu();
       
       if (view === 'user') refreshUserTab();
       if (view === 'history') refreshHistory();
       if (view === 'feedback') loadFeedback();
       if (view === 'admin') loadAdminStats();
       if (view === 'stickers') loadStickerBoard();
+      updateBoardNudge();
     }
     
     function goToSettings() {
       switchView('user');
     }
+
+    function moreGo(view) {
+      closeMoreMenu();
+      switchView(view);
+    }
+    function toggleMoreMenu() {
+      const sheet = document.getElementById('mobile-more-sheet');
+      if (!sheet) return;
+      const open = !sheet.classList.contains('show');
+      sheet.classList.toggle('show', open);
+      document.body.classList.toggle('modal-open', open);
+      const moreAdmin = document.getElementById('more-admin');
+      if (moreAdmin) moreAdmin.style.display = isAdminUser() ? '' : 'none';
+    }
+    function closeMoreMenu() {
+      const sheet = document.getElementById('mobile-more-sheet');
+      if (sheet) sheet.classList.remove('show');
+      // Don't clear modal-open if a popup is still open
+      if (!document.querySelector('.popup-overlay.show, .sticker-picker-backdrop.show')) {
+        document.body.classList.remove('modal-open');
+      }
+    }
+
+    function updateChatCompactChrome() {
+      // Collapse hero/starters once the user has engaged or is signed in
+      const history = agentChats[currentAgent] || agentChats.doc || [];
+      const hasUserMsg = history.some(m => m.role === 'user');
+      const compact = !!(currentUser || hasUserMsg);
+      document.body.classList.toggle('chat-compact', compact);
+    }
+
+    function updateBoardNudge() {
+      const el = document.getElementById('board-nudge');
+      if (!el) return;
+      const show = !!(currentUser && currentView === 'chat' && !document.body.classList.contains('chat-compact'));
+      // Also show for signed-in compact users occasionally? Plan: soft banner when signed in
+      const showSignedIn = !!(currentUser && currentView === 'chat');
+      el.classList.toggle('show', showSignedIn);
+    }
+
+    function showToast(msg, opts) {
+      const el = document.getElementById('gd-toast');
+      if (!el) return;
+      el.textContent = msg;
+      el.classList.toggle('error', !!(opts && opts.error));
+      el.classList.add('show');
+      clearTimeout(showToast._t);
+      showToast._t = setTimeout(() => el.classList.remove('show'), (opts && opts.ms) || 3200);
+    }
+
+    /** Soft-keyboard avoidance via visualViewport (iOS Safari / Android Chrome). */
+    function setupKeyboardAvoidance() {
+      const vv = window.visualViewport;
+      if (!vv) return;
+      const apply = () => {
+        const inset = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+        document.documentElement.style.setProperty('--kb', inset + 'px');
+        document.body.classList.toggle('kb-open', inset > 80);
+        // When keyboard open, drop bottom-nav space so chat can use it
+        if (window.matchMedia('(max-width: 700px)').matches) {
+          document.documentElement.style.setProperty(
+            '--bottom-nav-h',
+            inset > 80 ? '0px' : 'calc(56px + env(safe-area-inset-bottom, 0px))'
+          );
+        }
+      };
+      vv.addEventListener('resize', apply);
+      vv.addEventListener('scroll', apply);
+      window.addEventListener('focusin', (e) => {
+        if (e.target && (e.target.id === 'chat-input' || e.target.closest('.chat-input-area'))) {
+          setTimeout(() => {
+            apply();
+            const msgs = document.getElementById('chat-messages');
+            if (msgs) msgs.scrollTop = msgs.scrollHeight;
+          }, 50);
+        }
+      });
+      window.addEventListener('focusout', () => setTimeout(apply, 50));
+      apply();
+    }
+
+    // PWA install prompt
+    let _deferredPwaPrompt = null;
+    function isStandalonePwa() {
+      return window.matchMedia('(display-mode: standalone)').matches
+        || window.navigator.standalone === true;
+    }
+    function maybeShowPwaBanner() {
+      if (isStandalonePwa()) return;
+      if (localStorage.getItem('gd_pwa_dismiss') === '1') return;
+      const visits = parseInt(localStorage.getItem('gd_visit_count') || '0', 10) + 1;
+      localStorage.setItem('gd_visit_count', String(visits));
+      const banner = document.getElementById('pwa-install-banner');
+      const text = document.getElementById('pwa-install-text');
+      const btn = document.getElementById('pwa-install-btn');
+      if (!banner) return;
+      const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      if (_deferredPwaPrompt) {
+        if (text) text.textContent = t('app.pwa.install_body', 'Install GreenDial for quicker access and optional reminders.');
+        if (btn) btn.style.display = '';
+        banner.classList.add('show');
+      } else if (isIos && visits >= 2) {
+        if (text) text.textContent = t('app.pwa.ios_tip', 'Add GreenDial to your Home Screen: tap Share, then “Add to Home Screen”.');
+        if (btn) btn.style.display = 'none';
+        banner.classList.add('show');
+      } else if (visits >= 2 && window.matchMedia('(max-width: 700px)').matches) {
+        // Android without beforeinstallprompt yet — still soft tip
+        if (text) text.textContent = t('app.pwa.browser_tip', 'Install GreenDial from your browser menu for a full-screen app.');
+        if (btn) btn.style.display = 'none';
+        banner.classList.add('show');
+      }
+    }
+    function dismissPwaInstall() {
+      localStorage.setItem('gd_pwa_dismiss', '1');
+      const banner = document.getElementById('pwa-install-banner');
+      if (banner) banner.classList.remove('show');
+    }
+    async function acceptPwaInstall() {
+      if (!_deferredPwaPrompt) return;
+      _deferredPwaPrompt.prompt();
+      try { await _deferredPwaPrompt.userChoice; } catch (e) {}
+      _deferredPwaPrompt = null;
+      dismissPwaInstall();
+    }
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      _deferredPwaPrompt = e;
+      maybeShowPwaBanner();
+    });
+    window.dismissPwaInstall = dismissPwaInstall;
+    window.acceptPwaInstall = acceptPwaInstall;
     
     function addMessage(role, text) {
       if (!agentChats[currentAgent]) agentChats[currentAgent] = [];
@@ -2341,6 +2887,12 @@
         addMessage('user', text);
         input.value = '';
         addMessage('doc', t('app.signin_to_chat','Sign in to chat and save your profile.'));
+        updateChatCompactChrome();
+        return;
+      }
+
+      if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+        showToast(t('app.offline.send', "You're offline — message not sent."), { error: true });
         return;
       }
 
@@ -2351,6 +2903,7 @@
       input.value = '';
       isLoading = true;
       renderMessages();
+      updateChatCompactChrome();
 
       try {
         let endpoint, body;
@@ -2372,6 +2925,7 @@
           method: 'POST', headers: {'Content-Type':'application/json'},
           body: JSON.stringify(body)
         });
+        if (!response.ok && response.status === 0) throw new TypeError('network');
         const data = await response.json();
 
         if (activeAgent === 'doc') agentSessionIds['doc'] = data.session_id || agentSessionIds['doc'];
@@ -2423,13 +2977,24 @@
         }
       } catch (error) {
         console.error('Chat error:', error);
+        const offline = (typeof navigator !== 'undefined' && navigator.onLine === false)
+          || (error && (error.name === 'TypeError' || /network|fetch/i.test(String(error.message || error))));
+        if (offline) {
+          showToast(t('app.offline.send', "You're offline — message not sent."), { error: true });
+        }
         if (!agentChats[activeAgent]) agentChats[activeAgent] = [];
-        agentChats[activeAgent].push({ role: activeAgent, text: 'Connection issue. Try again.' });
+        agentChats[activeAgent].push({
+          role: activeAgent,
+          text: offline
+            ? t('app.offline.chat_msg', "You're offline. Check your connection and try again.")
+            : t('app.connection_issue', 'Connection issue. Try again.')
+        });
         if (currentAgent === activeAgent) renderMessages();
       }
 
       isLoading = false;
       if (currentAgent === activeAgent) renderMessages();
+      updateChatCompactChrome();
       input.focus();
     }
     
@@ -3607,14 +4172,28 @@
         if (dropdown) dropdown.classList.remove('show');
       }
     });
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== 'Escape') return;
+      closeMoreMenu();
+      closeStickerPicker();
+      const auth = document.getElementById('auth-popup');
+      if (auth && auth.classList.contains('show')) hideAuthPopup();
+      const donate = document.getElementById('donate-popup');
+      if (donate && donate.classList.contains('show')) hideDonateModal();
+    });
     
+    function setModalOpen(open) {
+      document.body.classList.toggle('modal-open', !!open);
+    }
     function showAuthPopup() {
       document.getElementById('auth-popup').classList.add('show');
+      setModalOpen(true);
       document.getElementById('login-username').focus();
     }
     
     function hideAuthPopup() {
       document.getElementById('auth-popup').classList.remove('show');
+      setModalOpen(false);
       document.getElementById('login-error').textContent = '';
       document.getElementById('signup-error').textContent = '';
       document.getElementById('login-form').reset();
@@ -3623,10 +4202,12 @@
     
     function showHipaaWaiver() {
       document.getElementById('hipaa-popup').classList.add('show');
+      setModalOpen(true);
     }
     
     function hideHipaaWaiver() {
       document.getElementById('hipaa-popup').classList.remove('show');
+      if (!document.getElementById('auth-popup').classList.contains('show')) setModalOpen(false);
     }
     
     function switchAuthTab(tab) {
@@ -3860,9 +4441,11 @@
         el.style.display = '';
       });
       document.getElementById('donate-popup').classList.add('show');
+      setModalOpen(true);
     }
     function hideDonateModal() {
       document.getElementById('donate-popup').classList.remove('show');
+      if (!document.querySelector('.popup-overlay.show, .sticker-picker-backdrop.show')) setModalOpen(false);
     }
     function copyAddr(elemId, btn) {
       const el = document.getElementById(elemId);

@@ -435,5 +435,19 @@
   "docs.userprofile.delete_desc": "自分のアカウントと会話データを削除します。<code>X-Session-Token</code> が必要です。",
   "docs.userprofile.get_desc": "ユーザーの完全なレコードを取得します（パスフレーズとセッショントークンは除外）。<code>/auth</code> からの <code>X-Session-Token</code> ヘッダーが必要です。",
   "docs.userprofile.heading": "ユーザー & プロフィール",
-  "docs.userprofile.put_desc": "部分的な更新。<code>X-Session-Token</code> が必要です。許可されたトップレベルキー: <code>username</code>、<code>settings</code>、<code>profile</code>、<code>first_name</code>、<code>last_name</code>、<code>email</code>、<code>wallets</code>。ネストされたオブジェクトはマージされます。"
+  "docs.userprofile.put_desc": "部分的な更新。<code>X-Session-Token</code> が必要です。許可されたトップレベルキー: <code>username</code>、<code>settings</code>、<code>profile</code>、<code>first_name</code>、<code>last_name</code>、<code>email</code>、<code>wallets</code>。ネストされたオブジェクトはマージされます。",
+  "app.chat.board_nudge": "<strong>🏷️ ボード</strong> — 今日のチェックインを開く →",
+  "app.connection_issue": "接続に問題があります。もう一度お試しください。",
+  "app.mbn.board": "ボード",
+  "app.mbn.chat": "チャット",
+  "app.mbn.me": "マイページ",
+  "app.mbn.more": "その他",
+  "app.mbn.more_heading": "その他",
+  "app.mbn.privacy": "🔒 プライバシー",
+  "app.offline.chat_msg": "オフラインです。接続を確認してもう一度お試しください。",
+  "app.offline.send": "オフラインです — メッセージは送信されませんでした。",
+  "app.pwa.browser_tip": "ブラウザのメニューから GreenDial をインストールすると、全画面アプリとして使えます。",
+  "app.pwa.install": "インストール",
+  "app.pwa.install_body": "GreenDial をインストールすると、すばやく開けてリマインダーも使えます。",
+  "app.pwa.ios_tip": "GreenDial をホーム画面に追加：共有をタップし、「ホーム画面に追加」を選びます。"
 }

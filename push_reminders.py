@@ -23,7 +23,7 @@ import push
 REMINDER = {
     "title": "GreenDial 🌿",
     "body": "Time for your daily check-in — how are you feeling today?",
-    "url": "/",
+    "url": "/?view=stickers",
     "tag": "greendial-checkin",
 }
 

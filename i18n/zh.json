@@ -435,5 +435,19 @@
   "docs.userprofile.delete_desc": "删除您自己的账户和对话数据。需要 <code>X-Session-Token</code>。",
   "docs.userprofile.get_desc": "获取用户的完整记录（不包括密码和会话令牌）。需要来自 <code>/auth</code> 的 <code>X-Session-Token</code> 标头。",
   "docs.userprofile.heading": "用户与档案",
-  "docs.userprofile.put_desc": "部分更新。需要 <code>X-Session-Token</code>。允许的顶级键：<code>username</code>、<code>settings</code>、<code>profile</code>、<code>first_name</code>、<code>last_name</code>、<code>email</code>、<code>wallets</code>。嵌套对象会被合并。"
+  "docs.userprofile.put_desc": "部分更新。需要 <code>X-Session-Token</code>。允许的顶级键：<code>username</code>、<code>settings</code>、<code>profile</code>、<code>first_name</code>、<code>last_name</code>、<code>email</code>、<code>wallets</code>。嵌套对象会被合并。",
+  "app.chat.board_nudge": "<strong>🏷️ 看板</strong> — 打开今日打卡看板 →",
+  "app.connection_issue": "连接出现问题，请重试。",
+  "app.mbn.board": "看板",
+  "app.mbn.chat": "聊天",
+  "app.mbn.me": "我的",
+  "app.mbn.more": "更多",
+  "app.mbn.more_heading": "更多",
+  "app.mbn.privacy": "🔒 隐私",
+  "app.offline.chat_msg": "您处于离线状态。请检查网络后重试。",
+  "app.offline.send": "您处于离线状态 — 消息未发送。",
+  "app.pwa.browser_tip": "从浏览器菜单安装 GreenDial，获得全屏应用体验。",
+  "app.pwa.install": "安装",
+  "app.pwa.install_body": "安装 GreenDial，更快打开并可选接收提醒。",
+  "app.pwa.ios_tip": "将 GreenDial 添加到主屏幕：点分享，然后“添加到主屏幕”。"
 }
