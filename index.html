@@ -3866,12 +3866,6 @@
 
       panel.innerHTML = `
         <div class="settings-group">
-          <div class="settings-group-title">${t('app.settings.ui_style_title','Look &amp; Feel')}</div>
-          <div class="settings-desc" style="margin-bottom:8px">${t('app.settings.ui_style_desc','Choose a visual style for GreenDial. “Page default” picks a semi-random look for each page (stable for the day). The full menu includes page-exclusive skins.')}</div>
-          <div class="settings-desc" style="margin-bottom:6px;opacity:0.75">${t('app.settings.ui_style_current','Current')}: <strong id="gd-style-current-label"></strong></div>
-          <div data-gd-style-picker="full"></div>
-        </div>
-        <div class="settings-group">
           <div class="settings-group-title">${t('app.settings.profile_picture','Profile Picture')}</div>
           <div class="avatar-section">
             <div class="avatar-preview">${avHtml}</div>
@@ -3982,6 +3976,12 @@
             <button class="btn btn-secondary btn-sm" onclick="switchView('admin')">Open</button>
           </div>` : ''}
           <div class="settings-item"><div><div class="settings-label">${t('app.signout','Sign Out')}</div></div><button class="btn btn-danger btn-sm" onclick="logout()">${t('app.signout','Sign Out')}</button></div>
+        </div>
+        <div class="settings-group">
+          <div class="settings-group-title">${t('app.settings.ui_style_title','Look &amp; Feel')}</div>
+          <div class="settings-desc" style="margin-bottom:8px">${t('app.settings.ui_style_desc','Choose a visual style for GreenDial. “Page default” picks a semi-random look for each page (stable for the day). The full menu includes page-exclusive skins.')}</div>
+          <div class="settings-desc" style="margin-bottom:6px;opacity:0.75">${t('app.settings.ui_style_current','Current')}: <strong id="gd-style-current-label"></strong></div>
+          <div data-gd-style-picker="full"></div>
         </div>
 
         <div class="settings-do-bar">
