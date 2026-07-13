@@ -709,38 +709,42 @@
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
       margin-top: 8px;
-      padding: 14px 4px 4px;
-      border-top: 1px solid rgba(255,255,255,0.08);
+      padding: 12px 4px 4px;
+      border-top: 1px solid rgba(255,255,255,0.06);
       position: sticky;
       bottom: 0;
       background: linear-gradient(180deg, transparent, rgba(26,26,46,0.97) 18%);
-      padding-top: 20px;
+      padding-top: 16px;
       padding-bottom: 8px;
       z-index: 5;
     }
     .settings-do-bar .btn-do {
-      min-width: 120px;
-      min-height: 44px;
-      font-size: 15px;
-      font-weight: 700;
-      padding: 12px 28px;
+      min-width: 72px;
+      min-height: 36px;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 8px 16px;
+      background: rgba(16,185,129,0.2);
+      color: #10b981;
+      border: 1px solid rgba(16,185,129,0.35);
+    }
+    .settings-do-bar .btn-do:hover {
+      background: rgba(16,185,129,0.3);
+    }
+    .settings-do-bar .btn-do:disabled {
+      opacity: 0.5;
     }
     .settings-do-status {
-      font-size: 13px;
-      color: rgba(255,255,255,0.45);
+      font-size: 12px;
+      color: rgba(255,255,255,0.35);
       flex: 1;
       min-width: 140px;
     }
-    .settings-do-status.pending { color: #fbbf24; }
-    .settings-do-status.ok { color: #10b981; }
+    .settings-do-status.pending { color: rgba(255,255,255,0.5); }
+    .settings-do-status.ok { color: rgba(16,185,129,0.85); }
     .settings-do-status.err { color: #ef4444; }
-    .settings-dirty-hint {
-      font-size: 12px;
-      color: #fbbf24;
-      margin-top: 4px;
-    }
     
     .popup-overlay {
       position: fixed;
@@ -2962,6 +2966,10 @@
     let _usingDefaultWelcome = false;
     
     function switchView(view) {
+      // Flush staged settings when leaving Settings (Do is optional; autosave also runs)
+      if (typeof currentView !== 'undefined' && currentView === 'user' && view !== 'user') {
+        try { if (typeof flushSettingsIfNeeded === 'function') flushSettingsIfNeeded(); } catch (e) {}
+      }
       // Admin is mickey-only (UI + API both enforce this)
       if (view === 'admin' && !isAdminUser()) {
         view = 'chat';
@@ -3900,10 +3908,9 @@
         </div>
 
         <div class="settings-do-bar">
-          <button type="button" class="btn btn-primary btn-do" id="settings-do-btn" onclick="doApplySettings()">${t('app.settings.do','Do')}</button>
-          <div class="settings-do-status" id="settings-do-status">${_settingsDirty ? t('app.settings.do_pending','Changes ready — tap Do to save') : t('app.settings.do_hint','Change toggles or fields, then tap Do')}</div>
+          <button type="button" class="btn btn-do" id="settings-do-btn" onclick="doApplySettings()" title="${t('app.settings.do_title','Save now (optional — changes also auto-save)')}">${t('app.settings.do','Do')}</button>
+          <div class="settings-do-status" id="settings-do-status">${t('app.settings.do_hint','Changes save automatically')}</div>
         </div>
-        ${_settingsDirty ? `<div class="settings-dirty-hint" id="settings-dirty-hint">${t('app.settings.unsaved','Unsaved changes')}</div>` : ''}
       `;
 
       // Populate the in-panel notifications list when in chat-only mode
@@ -4622,9 +4629,13 @@
       } catch (e) {}
     }
     
-    // Draft settings — toggles/fields stage here until user taps Do
+    // Draft settings — stage changes; auto-save in background; Do is optional "save now"
     let _settingsDraft = null;
     let _settingsDirty = false;
+    let _settingsSaveTimer = null;
+    let _settingsSaving = false;
+    let _settingsSaveQueued = false;
+    const SETTINGS_AUTOSAVE_MS = 1600;
 
     async function updateSetting(key, value) {
       if (!currentUser) return;
@@ -4638,12 +4649,22 @@
       } catch (e) {}
     }
 
+    function scheduleSettingsAutosave() {
+      clearTimeout(_settingsSaveTimer);
+      if (!_settingsDirty) return;
+      _settingsSaveTimer = setTimeout(() => {
+        doApplySettings({ auto: true });
+      }, SETTINGS_AUTOSAVE_MS);
+    }
+
     function markSettingsDraft(key, value) {
       if (!_settingsDraft) _settingsDraft = {};
       if (key === 'bounty_public_blurb') value = String(value || '').slice(0, 160);
       _settingsDraft[key] = value;
       _settingsDirty = true;
+      if (_settingsSaving) _settingsSaveQueued = true;
       updateSettingsDoStatus();
+      scheduleSettingsAutosave();
     }
     window.markSettingsDraft = markSettingsDraft;
 
@@ -4652,38 +4673,34 @@
       const cur = coerceBool(_settingsDraft[key], false);
       _settingsDraft[key] = !cur;
       _settingsDirty = true;
+      if (_settingsSaving) _settingsSaveQueued = true;
       // Re-render from draft so toggle knobs reflect pending state
       refreshSettings({ skipFetch: true, keepDraft: true });
+      scheduleSettingsAutosave();
     }
     window.toggleSettingsDraftBool = toggleSettingsDraftBool;
 
     function updateSettingsDoStatus(msg, kind) {
       const el = document.getElementById('settings-do-status');
-      const hint = document.getElementById('settings-dirty-hint');
       if (!el) return;
       if (msg != null) {
         el.textContent = msg;
         el.className = 'settings-do-status' + (kind ? ' ' + kind : '');
         return;
       }
-      if (_settingsDirty) {
-        el.textContent = t('app.settings.do_pending', 'Changes ready — tap Do to save');
+      if (_settingsSaving) {
+        el.textContent = t('app.settings.doing', 'Saving…');
         el.className = 'settings-do-status pending';
-        if (hint) hint.style.display = '';
+      } else if (_settingsDirty) {
+        el.textContent = t('app.settings.do_autosave', 'Saving shortly…');
+        el.className = 'settings-do-status pending';
       } else {
-        el.textContent = t('app.settings.do_hint', 'Change toggles or fields, then tap Do');
+        el.textContent = t('app.settings.do_hint', 'Changes save automatically');
         el.className = 'settings-do-status';
-        if (hint) hint.style.display = 'none';
       }
     }
 
-    async function doApplySettings() {
-      if (!currentUser) return;
-      const btn = document.getElementById('settings-do-btn');
-      if (btn) { btn.disabled = true; btn.textContent = t('app.settings.doing', 'Saving…'); }
-      updateSettingsDoStatus(t('app.settings.doing', 'Saving…'), 'pending');
-
-      // Sync text fields from DOM in case oninput was missed
+    function syncSettingsDraftFromDom() {
       const blurbEl = document.getElementById('bounty-public-blurb');
       const promptEl = document.getElementById('custom-agent-prompt-input');
       const styleEl = document.getElementById('settings-doc-style');
@@ -4691,15 +4708,39 @@
       if (blurbEl) _settingsDraft.bounty_public_blurb = blurbEl.value.slice(0, 160);
       if (promptEl) _settingsDraft.custom_agent_prompt = promptEl.value;
       if (styleEl) _settingsDraft.doc_style = styleEl.value;
+    }
+
+    async function doApplySettings(opts) {
+      const auto = !!(opts && opts.auto);
+      if (!currentUser) return;
+      if (!_settingsDirty && auto) return;
+
+      // Coalesce concurrent autosaves
+      if (_settingsSaving) {
+        _settingsSaveQueued = true;
+        return;
+      }
+      clearTimeout(_settingsSaveTimer);
+      _settingsSaving = true;
+
+      const btn = document.getElementById('settings-do-btn');
+      if (btn && !auto) {
+        btn.disabled = true;
+        btn.textContent = t('app.settings.doing', 'Saving…');
+      }
+      updateSettingsDoStatus(t('app.settings.doing', 'Saving…'), 'pending');
+
+      syncSettingsDraftFromDom();
 
       const payload = {
-        doc_style: _settingsDraft.doc_style || 'questioning',
-        chat_only_mode: !!_settingsDraft.chat_only_mode,
-        notifications_enabled: !!_settingsDraft.notifications_enabled,
-        bounty_discoverable: !!_settingsDraft.bounty_discoverable,
-        bounty_public_blurb: String(_settingsDraft.bounty_public_blurb || '').slice(0, 160),
-        custom_agent_prompt: _settingsDraft.custom_agent_prompt || '',
+        doc_style: (_settingsDraft && _settingsDraft.doc_style) || 'questioning',
+        chat_only_mode: !!(_settingsDraft && _settingsDraft.chat_only_mode),
+        notifications_enabled: !!(_settingsDraft && _settingsDraft.notifications_enabled),
+        bounty_discoverable: !!(_settingsDraft && _settingsDraft.bounty_discoverable),
+        bounty_public_blurb: String((_settingsDraft && _settingsDraft.bounty_public_blurb) || '').slice(0, 160),
+        custom_agent_prompt: (_settingsDraft && _settingsDraft.custom_agent_prompt) || '',
       };
+      const wantEasy = !!(_settingsDraft && _settingsDraft.easy_mobile);
 
       try {
         const res = await fetch(`${API}/settings/${currentUser.user_id}`, {
@@ -4719,14 +4760,10 @@
         userSettings.notifications_enabled = coerceBool(userSettings.notifications_enabled, true);
         userSettings.bounty_discoverable = coerceBool(userSettings.bounty_discoverable, false);
 
-        // Apply chat-only layout from saved value
         applyChatOnlyMode(userSettings.chat_only_mode);
 
-        // Easy mobile: only touch localStorage when draft differs from current
-        const wantEasy = !!_settingsDraft.easy_mobile;
-        const haveEasy = localStorage.getItem('gd_easy_mobile') !== '0';
-        // isEasyMobile requires max-width; store preference regardless
         if (window.matchMedia('(max-width: 700px)').matches) {
+          const haveEasy = localStorage.getItem('gd_easy_mobile') !== '0';
           if (wantEasy && !haveEasy) {
             try { localStorage.removeItem('gd_easy_mobile'); } catch (e) {}
           } else if (!wantEasy && haveEasy) {
@@ -4735,23 +4772,56 @@
           applyEasyMobile();
         }
 
-        _settingsDirty = false;
-        _settingsDraft = null;
         const ubNote = coerceBool(userSettings.bounty_discoverable, false)
           ? t('app.settings.ub_now_open', 'You are open to Universal Bounties')
           : t('app.settings.ub_now_closed', 'Universal Bounty discovery is off');
-        const successMsg = t('app.settings.do_done', 'Done — settings saved') + ' · ' + ubNote;
-        await refreshSettings({ skipFetch: true });
-        updateSettingsDoStatus(successMsg, 'ok');
+        const successMsg = auto
+          ? t('app.settings.auto_saved', 'Saved') + ' · ' + ubNote
+          : t('app.settings.do_done', 'Done — settings saved') + ' · ' + ubNote;
+
+        // If user edited during this request, keep draft and resave; else clear
+        if (_settingsSaveQueued) {
+          _settingsDirty = true;
+          syncSettingsDraftFromDom();
+          updateSettingsDoStatus(successMsg, 'ok');
+        } else {
+          _settingsDirty = false;
+          _settingsDraft = null;
+          await refreshSettings({ skipFetch: true });
+          updateSettingsDoStatus(successMsg, 'ok');
+        }
+        clearTimeout(doApplySettings._fade);
+        doApplySettings._fade = setTimeout(() => {
+          if (!_settingsDirty && !_settingsSaving) updateSettingsDoStatus();
+        }, auto ? 2200 : 4000);
       } catch (e) {
         console.error('doApplySettings', e);
         updateSettingsDoStatus(t('app.settings.do_error', 'Could not save — try again'), 'err');
-        if (btn) { btn.disabled = false; btn.textContent = t('app.settings.do', 'Do'); }
-        return;
+        // Retry auto-save once after a beat
+        if (auto) {
+          clearTimeout(_settingsSaveTimer);
+          _settingsSaveTimer = setTimeout(() => doApplySettings({ auto: true }), 4000);
+        }
+      } finally {
+        _settingsSaving = false;
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = t('app.settings.do', 'Do');
+        }
+        if (_settingsSaveQueued) {
+          _settingsSaveQueued = false;
+          if (_settingsDirty) scheduleSettingsAutosave();
+        }
       }
-      if (btn) { btn.disabled = false; btn.textContent = t('app.settings.do', 'Do'); }
     }
     window.doApplySettings = doApplySettings;
+
+    function flushSettingsIfNeeded() {
+      if (_settingsDirty && currentUser) {
+        clearTimeout(_settingsSaveTimer);
+        return doApplySettings({ auto: true });
+      }
+    }
 
     // Legacy immediate toggles kept for any leftover callers — route through draft
     function toggleNotificationSetting() {

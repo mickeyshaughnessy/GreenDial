@@ -469,12 +469,15 @@
   "docs.docpoll.f_user_id": "必須 — セッショントークンと一致すること",
   "docs.docpoll.f_force": "管理者のみ（<code>1</code>）— テスト用に時間ゲートをバイパス",
   "app.settings.do": "実行",
-  "app.settings.do_hint": "トグルや項目を変えてから「実行」をタップ",
+  "app.settings.do_hint": "変更は自動で保存されます",
   "app.settings.do_pending": "変更の準備完了 — 「実行」で保存",
   "app.settings.doing": "保存中…",
   "app.settings.do_done": "完了 — 設定を保存しました",
   "app.settings.do_error": "保存できません — 再試行してください",
   "app.settings.unsaved": "未保存の変更",
   "app.settings.ub_now_open": "ユニバーサルバウンティの公開がオンです",
-  "app.settings.ub_now_closed": "ユニバーサルバウンティの公開はオフです"
+  "app.settings.ub_now_closed": "ユニバーサルバウンティの公開はオフです",
+  "app.settings.do_autosave": "まもなく保存…",
+  "app.settings.auto_saved": "保存済み",
+  "app.settings.do_title": "今すぐ保存（任意 — 自動保存もあります）"
 }
