@@ -467,5 +467,14 @@
   "docs.userprofile.put_desc": "部分的な更新。<code>X-Session-Token</code> が必要です。許可されたトップレベルキー: <code>username</code>、<code>settings</code>、<code>profile</code>、<code>first_name</code>、<code>last_name</code>、<code>email</code>、<code>wallets</code>。ネストされたオブジェクトはマージされます。",
   "docs.docpoll.desc": "<strong>Doc の自発メッセージ</strong>をポーリングします。サインイン中の SPA は約 2 分ごとに呼び出します。うるさくならないよう制限：UTC 日あたり最大 <strong>2</strong> 件、最低 <strong>6 時間</strong>間隔、Doc チャット後は <strong>30 分</strong>の静穏時間。<code>X-Session-Token</code> が必要。空の <code>messages</code> は送るものが無い状態（ゲート時は LLM コストなし）。配信は Doc チャットのみで、通知ベルには出しません。",
   "docs.docpoll.f_user_id": "必須 — セッショントークンと一致すること",
-  "docs.docpoll.f_force": "管理者のみ（<code>1</code>）— テスト用に時間ゲートをバイパス"
+  "docs.docpoll.f_force": "管理者のみ（<code>1</code>）— テスト用に時間ゲートをバイパス",
+  "app.settings.do": "実行",
+  "app.settings.do_hint": "トグルや項目を変えてから「実行」をタップ",
+  "app.settings.do_pending": "変更の準備完了 — 「実行」で保存",
+  "app.settings.doing": "保存中…",
+  "app.settings.do_done": "完了 — 設定を保存しました",
+  "app.settings.do_error": "保存できません — 再試行してください",
+  "app.settings.unsaved": "未保存の変更",
+  "app.settings.ub_now_open": "ユニバーサルバウンティの公開がオンです",
+  "app.settings.ub_now_closed": "ユニバーサルバウンティの公開はオフです"
 }

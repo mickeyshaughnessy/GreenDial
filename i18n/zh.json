@@ -467,5 +467,14 @@
   "docs.userprofile.put_desc": "部分更新。需要 <code>X-Session-Token</code>。允许的顶级键：<code>username</code>、<code>settings</code>、<code>profile</code>、<code>first_name</code>、<code>last_name</code>、<code>email</code>、<code>wallets</code>。嵌套对象会被合并。",
   "docs.docpoll.desc": "轮询<strong>Doc 主动消息</strong>。登录后 SPA 约每 2 分钟调用一次。有频率限制以免打扰：每个 UTC 日最多 <strong>2</strong> 条、间隔至少 <strong>6 小时</strong>，任意 Doc 聊天后有 <strong>30 分钟</strong>静默期。需要 <code>X-Session-Token</code>。空的 <code>messages</code> 表示暂无内容（被限流时不调用 LLM）。仅投递到 Doc 聊天，不会进通知铃。",
   "docs.docpoll.f_user_id": "必填 — 须与会话令牌匹配",
-  "docs.docpoll.f_force": "仅管理员（<code>1</code>）— 测试时跳过时间限制"
+  "docs.docpoll.f_force": "仅管理员（<code>1</code>）— 测试时跳过时间限制",
+  "app.settings.do": "执行",
+  "app.settings.do_hint": "更改开关或字段，然后点「执行」",
+  "app.settings.do_pending": "更改已就绪 — 点「执行」保存",
+  "app.settings.doing": "保存中…",
+  "app.settings.do_done": "完成 — 设置已保存",
+  "app.settings.do_error": "无法保存 — 请重试",
+  "app.settings.unsaved": "未保存的更改",
+  "app.settings.ub_now_open": "您已开放通用赏金发现",
+  "app.settings.ub_now_closed": "通用赏金发现已关闭"
 }

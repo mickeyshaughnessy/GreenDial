@@ -705,6 +705,42 @@
       transition: left 0.2s;
     }
     .settings-toggle.on::after { left: 22px; }
+    .settings-do-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+      margin-top: 8px;
+      padding: 14px 4px 4px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      position: sticky;
+      bottom: 0;
+      background: linear-gradient(180deg, transparent, rgba(26,26,46,0.97) 18%);
+      padding-top: 20px;
+      padding-bottom: 8px;
+      z-index: 5;
+    }
+    .settings-do-bar .btn-do {
+      min-width: 120px;
+      min-height: 44px;
+      font-size: 15px;
+      font-weight: 700;
+      padding: 12px 28px;
+    }
+    .settings-do-status {
+      font-size: 13px;
+      color: rgba(255,255,255,0.45);
+      flex: 1;
+      min-width: 140px;
+    }
+    .settings-do-status.pending { color: #fbbf24; }
+    .settings-do-status.ok { color: #10b981; }
+    .settings-do-status.err { color: #ef4444; }
+    .settings-dirty-hint {
+      font-size: 12px;
+      color: #fbbf24;
+      margin-top: 4px;
+    }
     
     .popup-overlay {
       position: fixed;
@@ -3728,6 +3764,21 @@
         ? `<img src="${av}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`
         : `<span style="font-size:28px">${av}</span>`;
 
+      // Draft for toggles/fields — applied only when user taps Do
+      if (!_settingsDraft || !opts || !opts.keepDraft) {
+        _settingsDraft = {
+          doc_style: userSettings.doc_style || 'questioning',
+          chat_only_mode: coerceBool(userSettings.chat_only_mode, true),
+          notifications_enabled: coerceBool(userSettings.notifications_enabled, true),
+          bounty_discoverable: coerceBool(userSettings.bounty_discoverable, false),
+          bounty_public_blurb: userSettings.bounty_public_blurb || '',
+          custom_agent_prompt: customPrompt,
+          easy_mobile: isEasyMobile(),
+        };
+        _settingsDirty = false;
+      }
+      const d = _settingsDraft;
+
       panel.innerHTML = `
         <div class="settings-group">
           <div class="settings-group-title">${t('app.settings.ui_style_title','Look &amp; Feel')}</div>
@@ -3752,10 +3803,10 @@
           <div class="settings-group-title">${t('app.settings.doc_style_title', "Doc's Communication Style")}</div>
           <div class="settings-item">
             <div><div class="settings-label">${t('app.settings.conversation_tone','Conversation Tone')}</div><div class="settings-desc">${t('app.settings.conversation_tone_desc','How Doc interacts with you')}</div></div>
-            <select class="settings-select" onchange="updateSetting('doc_style', this.value)">
-              <option value="questioning" ${userSettings.doc_style === 'questioning' ? 'selected' : ''}>${t('app.settings.questioning','Questioning')}</option>
-              <option value="professional" ${userSettings.doc_style === 'professional' ? 'selected' : ''}>${t('app.settings.professional','Professional')}</option>
-              <option value="friendly" ${userSettings.doc_style === 'friendly' ? 'selected' : ''}>${t('app.settings.friendly','Friendly')}</option>
+            <select class="settings-select" id="settings-doc-style" onchange="markSettingsDraft('doc_style', this.value)">
+              <option value="questioning" ${d.doc_style === 'questioning' ? 'selected' : ''}>${t('app.settings.questioning','Questioning')}</option>
+              <option value="professional" ${d.doc_style === 'professional' ? 'selected' : ''}>${t('app.settings.professional','Professional')}</option>
+              <option value="friendly" ${d.doc_style === 'friendly' ? 'selected' : ''}>${t('app.settings.friendly','Friendly')}</option>
             </select>
           </div>
         </div>
@@ -3763,12 +3814,12 @@
           <div class="settings-group-title">${t('app.settings.interface','Interface')}</div>
           <div class="settings-item">
             <div><div class="settings-label">${t('app.settings.chatonly','Chat-only mode')}</div><div class="settings-desc">${t('app.settings.chatonly_desc','Use only the chat interface — hides other panels')}</div></div>
-            <div class="settings-toggle ${isChatOnly() ? 'on' : ''}" onclick="toggleChatOnlyMode()" role="switch" aria-checked="${isChatOnly() ? 'true' : 'false'}" title="${isChatOnly() ? 'On — click to show full interface' : 'Off — click to hide other panels'}"></div>
+            <div class="settings-toggle ${d.chat_only_mode ? 'on' : ''}" onclick="toggleSettingsDraftBool('chat_only_mode')" role="switch" aria-checked="${d.chat_only_mode ? 'true' : 'false'}" title="${d.chat_only_mode ? 'On — click to show full interface' : 'Off — click to hide other panels'}"></div>
           </div>
           ${window.matchMedia('(max-width: 700px)').matches ? `
           <div class="settings-item">
             <div><div class="settings-label">${t('app.settings.easy_mobile','Simple phone layout')}</div><div class="settings-desc">${t('app.settings.easy_mobile_desc','Chat with Doc only — hides menus, board, and extra tabs. Turn off for the full app.')}</div></div>
-            <div class="settings-toggle ${isEasyMobile() ? 'on' : ''}" onclick="toggleEasyMobileLayout()" role="switch" aria-checked="${isEasyMobile() ? 'true' : 'false'}"></div>
+            <div class="settings-toggle ${d.easy_mobile ? 'on' : ''}" onclick="toggleSettingsDraftBool('easy_mobile')" role="switch" aria-checked="${d.easy_mobile ? 'true' : 'false'}"></div>
           </div>
           <div class="settings-item">
             <div><div class="settings-label">🏷️ ${t('app.settings.open_board','Daily Board')}</div><div class="settings-desc">${t('app.settings.open_board_desc','Check-ins and sticker board')}</div></div>
@@ -3780,13 +3831,13 @@
           <div class="settings-group-title">${t('app.settings.notifications','Notifications')}</div>
           <div class="settings-item">
             <div><div class="settings-label">${t('app.settings.enable_notif','Enable Notifications')}</div><div class="settings-desc">${t('app.settings.enable_notif_desc','Doc checks in on you daily with relevant tips')}</div></div>
-            <div class="settings-toggle ${userSettings.notifications_enabled ? 'on' : ''}" onclick="toggleNotificationSetting()"></div>
+            <div class="settings-toggle ${d.notifications_enabled ? 'on' : ''}" onclick="toggleSettingsDraftBool('notifications_enabled')"></div>
           </div>
           <div class="settings-item">
             <div><div class="settings-label">${t('app.settings.push','Push reminders')}</div><div class="settings-desc" id="push-desc">${t('app.settings.push_desc','Daily check-in reminders on this device')}</div></div>
             <div id="push-toggle-wrap"><span style="font-size:12px;color:rgba(255,255,255,0.35)">…</span></div>
           </div>
-          ${isChatOnly() ? `<div id="settings-notif-list" style="margin-top:8px"></div>` : ''}
+          ${coerceBool(d.chat_only_mode, true) ? `<div id="settings-notif-list" style="margin-top:8px"></div>` : ''}
         </div>
         <div class="settings-group">
           <div class="settings-group-title">${t('app.settings.ub_title','Universal Bounty')}</div>
@@ -3795,15 +3846,15 @@
               <div class="settings-label">${t('app.settings.ub_discoverable','Open to Universal Bounties')}</div>
               <div class="settings-desc">${t('app.settings.ub_discoverable_desc','Allow sponsors to find you in the public directory on the Sponsor page. Off by default — decline is the default.')}</div>
             </div>
-            <div class="settings-toggle ${coerceBool(userSettings.bounty_discoverable, false) ? 'on' : ''}" onclick="toggleBountyDiscoverable()" role="switch" aria-checked="${coerceBool(userSettings.bounty_discoverable, false) ? 'true' : 'false'}"></div>
+            <div class="settings-toggle ${d.bounty_discoverable ? 'on' : ''}" onclick="toggleSettingsDraftBool('bounty_discoverable')" role="switch" aria-checked="${d.bounty_discoverable ? 'true' : 'false'}"></div>
           </div>
           <div class="settings-item" style="flex-direction:column;align-items:stretch;gap:8px">
             <div class="settings-label">${t('app.settings.ub_blurb','Public note (optional)')}</div>
             <div class="settings-desc">${t('app.settings.ub_blurb_desc','Short line shown next to your name if discovery is on (e.g. “working on sleep”).')}</div>
-            <input type="text" id="bounty-public-blurb" maxlength="160" value="${escapeHtml(userSettings.bounty_public_blurb || '')}"
+            <input type="text" id="bounty-public-blurb" maxlength="160" value="${escapeHtml(d.bounty_public_blurb || '')}"
               placeholder="e.g. Focusing on sleep this month"
               style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.06);color:#fff;font-size:14px"
-              onchange="saveBountyBlurb(this.value)">
+              oninput="markSettingsDraft('bounty_public_blurb', this.value)">
           </div>
           <div class="settings-item">
             <div><div class="settings-label">${t('app.settings.ub_sponsor','Sponsor someone')}</div><div class="settings-desc">${t('app.settings.ub_sponsor_desc','Friends, family, or institutions — separate demand-side page')}</div></div>
@@ -3817,11 +3868,11 @@
           </div>
           <div class="custom-prompt-wrap">
             <textarea id="custom-agent-prompt-input" class="custom-prompt-textarea"
-              placeholder="You are a custom AI health agent, capable of...">${escapeHtml(customPrompt)}</textarea>
-            <button class="btn btn-secondary btn-sm" style="margin-top:8px" onclick="saveCustomPrompt()">${t('app.settings.save_prompt','Save Prompt')}</button>
+              placeholder="You are a custom AI health agent, capable of..."
+              oninput="markSettingsDraft('custom_agent_prompt', this.value)">${escapeHtml(d.custom_agent_prompt || '')}</textarea>
           </div>
         </div>
-        ${isChatOnly() ? `
+        ${coerceBool(d.chat_only_mode, true) ? `
         <div class="settings-group">
           <div class="settings-group-title">${t('app.settings.resources','Resources')}</div>
           <div class="settings-item">
@@ -3847,10 +3898,16 @@
           </div>` : ''}
           <div class="settings-item"><div><div class="settings-label">${t('app.signout','Sign Out')}</div></div><button class="btn btn-danger btn-sm" onclick="logout()">${t('app.signout','Sign Out')}</button></div>
         </div>
+
+        <div class="settings-do-bar">
+          <button type="button" class="btn btn-primary btn-do" id="settings-do-btn" onclick="doApplySettings()">${t('app.settings.do','Do')}</button>
+          <div class="settings-do-status" id="settings-do-status">${_settingsDirty ? t('app.settings.do_pending','Changes ready — tap Do to save') : t('app.settings.do_hint','Change toggles or fields, then tap Do')}</div>
+        </div>
+        ${_settingsDirty ? `<div class="settings-dirty-hint" id="settings-dirty-hint">${t('app.settings.unsaved','Unsaved changes')}</div>` : ''}
       `;
 
       // Populate the in-panel notifications list when in chat-only mode
-      if (isChatOnly()) fetchToday();
+      if (coerceBool(d.chat_only_mode, true)) fetchToday();
 
       // Reflect current push-permission/subscription state
       updatePushSettingUI();
@@ -3860,6 +3917,7 @@
         const lab = document.getElementById('gd-style-current-label');
         if (lab) lab.textContent = GDThemes.currentLabel();
       }
+      updateSettingsDoStatus();
     }
 
     async function refreshUserTab() {
@@ -4564,6 +4622,10 @@
       } catch (e) {}
     }
     
+    // Draft settings — toggles/fields stage here until user taps Do
+    let _settingsDraft = null;
+    let _settingsDirty = false;
+
     async function updateSetting(key, value) {
       if (!currentUser) return;
       userSettings[key] = value;
@@ -4575,23 +4637,132 @@
         });
       } catch (e) {}
     }
-    
-    function toggleNotificationSetting() {
-      userSettings.notifications_enabled = !userSettings.notifications_enabled;
-      updateSetting('notifications_enabled', userSettings.notifications_enabled);
-      refreshSettings();
+
+    function markSettingsDraft(key, value) {
+      if (!_settingsDraft) _settingsDraft = {};
+      if (key === 'bounty_public_blurb') value = String(value || '').slice(0, 160);
+      _settingsDraft[key] = value;
+      _settingsDirty = true;
+      updateSettingsDoStatus();
+    }
+    window.markSettingsDraft = markSettingsDraft;
+
+    function toggleSettingsDraftBool(key) {
+      if (!_settingsDraft) _settingsDraft = {};
+      const cur = coerceBool(_settingsDraft[key], false);
+      _settingsDraft[key] = !cur;
+      _settingsDirty = true;
+      // Re-render from draft so toggle knobs reflect pending state
+      refreshSettings({ skipFetch: true, keepDraft: true });
+    }
+    window.toggleSettingsDraftBool = toggleSettingsDraftBool;
+
+    function updateSettingsDoStatus(msg, kind) {
+      const el = document.getElementById('settings-do-status');
+      const hint = document.getElementById('settings-dirty-hint');
+      if (!el) return;
+      if (msg != null) {
+        el.textContent = msg;
+        el.className = 'settings-do-status' + (kind ? ' ' + kind : '');
+        return;
+      }
+      if (_settingsDirty) {
+        el.textContent = t('app.settings.do_pending', 'Changes ready — tap Do to save');
+        el.className = 'settings-do-status pending';
+        if (hint) hint.style.display = '';
+      } else {
+        el.textContent = t('app.settings.do_hint', 'Change toggles or fields, then tap Do');
+        el.className = 'settings-do-status';
+        if (hint) hint.style.display = 'none';
+      }
     }
 
+    async function doApplySettings() {
+      if (!currentUser) return;
+      const btn = document.getElementById('settings-do-btn');
+      if (btn) { btn.disabled = true; btn.textContent = t('app.settings.doing', 'Saving…'); }
+      updateSettingsDoStatus(t('app.settings.doing', 'Saving…'), 'pending');
+
+      // Sync text fields from DOM in case oninput was missed
+      const blurbEl = document.getElementById('bounty-public-blurb');
+      const promptEl = document.getElementById('custom-agent-prompt-input');
+      const styleEl = document.getElementById('settings-doc-style');
+      if (!_settingsDraft) _settingsDraft = {};
+      if (blurbEl) _settingsDraft.bounty_public_blurb = blurbEl.value.slice(0, 160);
+      if (promptEl) _settingsDraft.custom_agent_prompt = promptEl.value;
+      if (styleEl) _settingsDraft.doc_style = styleEl.value;
+
+      const payload = {
+        doc_style: _settingsDraft.doc_style || 'questioning',
+        chat_only_mode: !!_settingsDraft.chat_only_mode,
+        notifications_enabled: !!_settingsDraft.notifications_enabled,
+        bounty_discoverable: !!_settingsDraft.bounty_discoverable,
+        bounty_public_blurb: String(_settingsDraft.bounty_public_blurb || '').slice(0, 160),
+        custom_agent_prompt: _settingsDraft.custom_agent_prompt || '',
+      };
+
+      try {
+        const res = await fetch(`${API}/settings/${currentUser.user_id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || 'Save failed');
+
+        if (data.settings) {
+          userSettings = { ...userSettings, ...data.settings };
+        } else {
+          Object.assign(userSettings, payload);
+        }
+        userSettings.chat_only_mode = coerceBool(userSettings.chat_only_mode, true);
+        userSettings.notifications_enabled = coerceBool(userSettings.notifications_enabled, true);
+        userSettings.bounty_discoverable = coerceBool(userSettings.bounty_discoverable, false);
+
+        // Apply chat-only layout from saved value
+        applyChatOnlyMode(userSettings.chat_only_mode);
+
+        // Easy mobile: only touch localStorage when draft differs from current
+        const wantEasy = !!_settingsDraft.easy_mobile;
+        const haveEasy = localStorage.getItem('gd_easy_mobile') !== '0';
+        // isEasyMobile requires max-width; store preference regardless
+        if (window.matchMedia('(max-width: 700px)').matches) {
+          if (wantEasy && !haveEasy) {
+            try { localStorage.removeItem('gd_easy_mobile'); } catch (e) {}
+          } else if (!wantEasy && haveEasy) {
+            try { localStorage.setItem('gd_easy_mobile', '0'); } catch (e) {}
+          }
+          applyEasyMobile();
+        }
+
+        _settingsDirty = false;
+        _settingsDraft = null;
+        const ubNote = coerceBool(userSettings.bounty_discoverable, false)
+          ? t('app.settings.ub_now_open', 'You are open to Universal Bounties')
+          : t('app.settings.ub_now_closed', 'Universal Bounty discovery is off');
+        const successMsg = t('app.settings.do_done', 'Done — settings saved') + ' · ' + ubNote;
+        await refreshSettings({ skipFetch: true });
+        updateSettingsDoStatus(successMsg, 'ok');
+      } catch (e) {
+        console.error('doApplySettings', e);
+        updateSettingsDoStatus(t('app.settings.do_error', 'Could not save — try again'), 'err');
+        if (btn) { btn.disabled = false; btn.textContent = t('app.settings.do', 'Do'); }
+        return;
+      }
+      if (btn) { btn.disabled = false; btn.textContent = t('app.settings.do', 'Do'); }
+    }
+    window.doApplySettings = doApplySettings;
+
+    // Legacy immediate toggles kept for any leftover callers — route through draft
+    function toggleNotificationSetting() {
+      toggleSettingsDraftBool('notifications_enabled');
+    }
     function toggleBountyDiscoverable() {
-      userSettings.bounty_discoverable = !coerceBool(userSettings.bounty_discoverable, false);
-      updateSetting('bounty_discoverable', userSettings.bounty_discoverable);
-      refreshSettings({ skipFetch: true });
+      toggleSettingsDraftBool('bounty_discoverable');
     }
     window.toggleBountyDiscoverable = toggleBountyDiscoverable;
-
     function saveBountyBlurb(value) {
-      userSettings.bounty_public_blurb = String(value || '').slice(0, 160);
-      updateSetting('bounty_public_blurb', userSettings.bounty_public_blurb);
+      markSettingsDraft('bounty_public_blurb', value);
     }
     window.saveBountyBlurb = saveBountyBlurb;
     
