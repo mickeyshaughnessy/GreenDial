@@ -58,6 +58,9 @@ cp icons/*.png /var/www/greendial/icons/
 # Pixel-art sticker library (32×32)
 mkdir -p /var/www/greendial/stickers/pixel
 cp -r stickers/pixel/* /var/www/greendial/stickers/pixel/
+# Cartoon NES/SNES-inspired sticker library (48×48)
+mkdir -p /var/www/greendial/stickers/cartoon
+cp -r stickers/cartoon/* /var/www/greendial/stickers/cartoon/
 # UI style themes (also served via Flask /themes/ from /root/GreenDial)
 mkdir -p /var/www/greendial/themes
 cp -r themes/* /var/www/greendial/themes/

@@ -1,0 +1,3872 @@
+{
+  "size": 48,
+  "count": 322,
+  "style": "cartoon",
+  "description": "Funny NES/SNES-inspired original cartoon stickers (not Nintendo assets)",
+  "stickers": [
+    {
+      "id": "sleep_great",
+      "label": "Slept great",
+      "areas": [
+        "sleep"
+      ],
+      "rare": false,
+      "file": "sleep_great.png",
+      "src": "/stickers/cartoon/sleep_great.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "sleep_rough",
+      "label": "Rough night",
+      "areas": [
+        "sleep"
+      ],
+      "rare": false,
+      "file": "sleep_rough.png",
+      "src": "/stickers/cartoon/sleep_rough.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "sleep_ok",
+      "label": "OK sleep",
+      "areas": [
+        "sleep"
+      ],
+      "rare": false,
+      "file": "sleep_ok.png",
+      "src": "/stickers/cartoon/sleep_ok.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "sleep_good",
+      "label": "Good sleep",
+      "areas": [
+        "sleep"
+      ],
+      "rare": false,
+      "file": "sleep_good.png",
+      "src": "/stickers/cartoon/sleep_good.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "sleep_rested",
+      "label": "Rested",
+      "areas": [
+        "sleep"
+      ],
+      "rare": false,
+      "file": "sleep_rested.png",
+      "src": "/stickers/cartoon/sleep_rested.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "sleep_dozy",
+      "label": "Dozy",
+      "areas": [
+        "sleep"
+      ],
+      "rare": false,
+      "file": "sleep_dozy.png",
+      "src": "/stickers/cartoon/sleep_dozy.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "sleep_zzz",
+      "label": "Zzz",
+      "areas": [
+        "sleep"
+      ],
+      "rare": false,
+      "file": "sleep_zzz.png",
+      "src": "/stickers/cartoon/sleep_zzz.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "sleep_moon",
+      "label": "Moon",
+      "areas": [
+        "sleep"
+      ],
+      "rare": false,
+      "file": "sleep_moon.png",
+      "src": "/stickers/cartoon/sleep_moon.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "sleep_bed",
+      "label": "Bed",
+      "areas": [
+        "sleep"
+      ],
+      "rare": false,
+      "file": "sleep_bed.png",
+      "src": "/stickers/cartoon/sleep_bed.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "sleep_alarm",
+      "label": "Alarm",
+      "areas": [
+        "sleep"
+      ],
+      "rare": false,
+      "file": "sleep_alarm.png",
+      "src": "/stickers/cartoon/sleep_alarm.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "sleep_early",
+      "label": "Woke early",
+      "areas": [
+        "sleep"
+      ],
+      "rare": false,
+      "file": "sleep_early.png",
+      "src": "/stickers/cartoon/sleep_early.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "sleep_late",
+      "label": "Late night",
+      "areas": [
+        "sleep"
+      ],
+      "rare": false,
+      "file": "sleep_late.png",
+      "src": "/stickers/cartoon/sleep_late.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "sleep_broken",
+      "label": "Broken sleep",
+      "areas": [
+        "sleep"
+      ],
+      "rare": false,
+      "file": "sleep_broken.png",
+      "src": "/stickers/cartoon/sleep_broken.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "sleep_in",
+      "label": "Slept in",
+      "areas": [
+        "sleep"
+      ],
+      "rare": false,
+      "file": "sleep_in.png",
+      "src": "/stickers/cartoon/sleep_in.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "sleep_owl",
+      "label": "Night owl",
+      "areas": [
+        "sleep"
+      ],
+      "rare": true,
+      "file": "sleep_owl.png",
+      "src": "/stickers/cartoon/sleep_owl.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "sleep_sheep",
+      "label": "Counted sheep",
+      "areas": [
+        "sleep"
+      ],
+      "rare": true,
+      "file": "sleep_sheep.png",
+      "src": "/stickers/cartoon/sleep_sheep.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "sleep_ufo",
+      "label": "Wild dreams",
+      "areas": [
+        "sleep"
+      ],
+      "rare": true,
+      "file": "sleep_ufo.png",
+      "src": "/stickers/cartoon/sleep_ufo.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "sleep_stars",
+      "label": "Stargazer",
+      "areas": [
+        "sleep"
+      ],
+      "rare": true,
+      "file": "sleep_stars.png",
+      "src": "/stickers/cartoon/sleep_stars.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "sleep_mug",
+      "label": "Nightcap",
+      "areas": [
+        "sleep"
+      ],
+      "rare": false,
+      "file": "sleep_mug.png",
+      "src": "/stickers/cartoon/sleep_mug.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "sleep_book",
+      "label": "Read in bed",
+      "areas": [
+        "sleep"
+      ],
+      "rare": false,
+      "file": "sleep_book.png",
+      "src": "/stickers/cartoon/sleep_book.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "sleep_face_00",
+      "label": "Sleep face 1",
+      "areas": [
+        "sleep"
+      ],
+      "rare": false,
+      "file": "sleep_face_00.png",
+      "src": "/stickers/cartoon/sleep_face_00.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "sleep_face_01",
+      "label": "Sleep face 2",
+      "areas": [
+        "sleep"
+      ],
+      "rare": false,
+      "file": "sleep_face_01.png",
+      "src": "/stickers/cartoon/sleep_face_01.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "sleep_face_02",
+      "label": "Sleep face 3",
+      "areas": [
+        "sleep"
+      ],
+      "rare": false,
+      "file": "sleep_face_02.png",
+      "src": "/stickers/cartoon/sleep_face_02.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "sleep_face_03",
+      "label": "Sleep face 4",
+      "areas": [
+        "sleep"
+      ],
+      "rare": false,
+      "file": "sleep_face_03.png",
+      "src": "/stickers/cartoon/sleep_face_03.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "sleep_face_04",
+      "label": "Sleep face 5",
+      "areas": [
+        "sleep"
+      ],
+      "rare": false,
+      "file": "sleep_face_04.png",
+      "src": "/stickers/cartoon/sleep_face_04.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "sleep_face_05",
+      "label": "Sleep face 6",
+      "areas": [
+        "sleep"
+      ],
+      "rare": false,
+      "file": "sleep_face_05.png",
+      "src": "/stickers/cartoon/sleep_face_05.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "sleep_face_06",
+      "label": "Sleep face 7",
+      "areas": [
+        "sleep"
+      ],
+      "rare": false,
+      "file": "sleep_face_06.png",
+      "src": "/stickers/cartoon/sleep_face_06.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "sleep_face_07",
+      "label": "Sleep face 8",
+      "areas": [
+        "sleep"
+      ],
+      "rare": false,
+      "file": "sleep_face_07.png",
+      "src": "/stickers/cartoon/sleep_face_07.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "sleep_face_08",
+      "label": "Sleep face 9",
+      "areas": [
+        "sleep"
+      ],
+      "rare": false,
+      "file": "sleep_face_08.png",
+      "src": "/stickers/cartoon/sleep_face_08.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "sleep_face_09",
+      "label": "Sleep face 10",
+      "areas": [
+        "sleep"
+      ],
+      "rare": false,
+      "file": "sleep_face_09.png",
+      "src": "/stickers/cartoon/sleep_face_09.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "sleep_face_10",
+      "label": "Sleep face 11",
+      "areas": [
+        "sleep"
+      ],
+      "rare": false,
+      "file": "sleep_face_10.png",
+      "src": "/stickers/cartoon/sleep_face_10.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "sleep_face_11",
+      "label": "Sleep face 12",
+      "areas": [
+        "sleep"
+      ],
+      "rare": false,
+      "file": "sleep_face_11.png",
+      "src": "/stickers/cartoon/sleep_face_11.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "sleep_face_12",
+      "label": "Sleep face 13",
+      "areas": [
+        "sleep"
+      ],
+      "rare": false,
+      "file": "sleep_face_12.png",
+      "src": "/stickers/cartoon/sleep_face_12.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "sleep_face_13",
+      "label": "Sleep face 14",
+      "areas": [
+        "sleep"
+      ],
+      "rare": false,
+      "file": "sleep_face_13.png",
+      "src": "/stickers/cartoon/sleep_face_13.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "sleep_face_14",
+      "label": "Sleep face 15",
+      "areas": [
+        "sleep"
+      ],
+      "rare": false,
+      "file": "sleep_face_14.png",
+      "src": "/stickers/cartoon/sleep_face_14.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "sleep_moon_00",
+      "label": "Moon 1",
+      "areas": [
+        "sleep"
+      ],
+      "rare": false,
+      "file": "sleep_moon_00.png",
+      "src": "/stickers/cartoon/sleep_moon_00.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "sleep_moon_01",
+      "label": "Moon 2",
+      "areas": [
+        "sleep"
+      ],
+      "rare": false,
+      "file": "sleep_moon_01.png",
+      "src": "/stickers/cartoon/sleep_moon_01.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "sleep_moon_02",
+      "label": "Moon 3",
+      "areas": [
+        "sleep"
+      ],
+      "rare": false,
+      "file": "sleep_moon_02.png",
+      "src": "/stickers/cartoon/sleep_moon_02.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "sleep_moon_03",
+      "label": "Moon 4",
+      "areas": [
+        "sleep"
+      ],
+      "rare": false,
+      "file": "sleep_moon_03.png",
+      "src": "/stickers/cartoon/sleep_moon_03.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "sleep_moon_04",
+      "label": "Moon 5",
+      "areas": [
+        "sleep"
+      ],
+      "rare": false,
+      "file": "sleep_moon_04.png",
+      "src": "/stickers/cartoon/sleep_moon_04.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "sleep_moon_05",
+      "label": "Moon 6",
+      "areas": [
+        "sleep"
+      ],
+      "rare": false,
+      "file": "sleep_moon_05.png",
+      "src": "/stickers/cartoon/sleep_moon_05.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "sleep_moon_06",
+      "label": "Moon 7",
+      "areas": [
+        "sleep"
+      ],
+      "rare": false,
+      "file": "sleep_moon_06.png",
+      "src": "/stickers/cartoon/sleep_moon_06.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "sleep_moon_07",
+      "label": "Moon 8",
+      "areas": [
+        "sleep"
+      ],
+      "rare": false,
+      "file": "sleep_moon_07.png",
+      "src": "/stickers/cartoon/sleep_moon_07.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "sleep_moon_08",
+      "label": "Moon 9",
+      "areas": [
+        "sleep"
+      ],
+      "rare": false,
+      "file": "sleep_moon_08.png",
+      "src": "/stickers/cartoon/sleep_moon_08.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "sleep_moon_09",
+      "label": "Moon 10",
+      "areas": [
+        "sleep"
+      ],
+      "rare": true,
+      "file": "sleep_moon_09.png",
+      "src": "/stickers/cartoon/sleep_moon_09.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "sleep_moon_10",
+      "label": "Moon 11",
+      "areas": [
+        "sleep"
+      ],
+      "rare": true,
+      "file": "sleep_moon_10.png",
+      "src": "/stickers/cartoon/sleep_moon_10.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "sleep_moon_11",
+      "label": "Moon 12",
+      "areas": [
+        "sleep"
+      ],
+      "rare": true,
+      "file": "sleep_moon_11.png",
+      "src": "/stickers/cartoon/sleep_moon_11.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "diet_clean",
+      "label": "Clean & healthy",
+      "areas": [
+        "diet"
+      ],
+      "rare": false,
+      "file": "diet_clean.png",
+      "src": "/stickers/cartoon/diet_clean.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "diet_struggle",
+      "label": "Struggled",
+      "areas": [
+        "diet"
+      ],
+      "rare": false,
+      "file": "diet_struggle.png",
+      "src": "/stickers/cartoon/diet_struggle.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "diet_enjoy",
+      "label": "Enjoyed it",
+      "areas": [
+        "diet"
+      ],
+      "rare": false,
+      "file": "diet_enjoy.png",
+      "src": "/stickers/cartoon/diet_enjoy.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "diet_onpoint",
+      "label": "On point",
+      "areas": [
+        "diet"
+      ],
+      "rare": false,
+      "file": "diet_onpoint.png",
+      "src": "/stickers/cartoon/diet_onpoint.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "diet_apple",
+      "label": "Fruity",
+      "areas": [
+        "diet"
+      ],
+      "rare": false,
+      "file": "diet_apple.png",
+      "src": "/stickers/cartoon/diet_apple.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "diet_veg",
+      "label": "Veggies",
+      "areas": [
+        "diet"
+      ],
+      "rare": false,
+      "file": "diet_veg.png",
+      "src": "/stickers/cartoon/diet_veg.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "diet_water",
+      "label": "Hydrated",
+      "areas": [
+        "diet"
+      ],
+      "rare": false,
+      "file": "diet_water.png",
+      "src": "/stickers/cartoon/diet_water.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "diet_pizza",
+      "label": "Indulgent",
+      "areas": [
+        "diet"
+      ],
+      "rare": false,
+      "file": "diet_pizza.png",
+      "src": "/stickers/cartoon/diet_pizza.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "diet_sweet",
+      "label": "Sweet tooth",
+      "areas": [
+        "diet"
+      ],
+      "rare": false,
+      "file": "diet_sweet.png",
+      "src": "/stickers/cartoon/diet_sweet.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "diet_comfort",
+      "label": "Comfort food",
+      "areas": [
+        "diet"
+      ],
+      "rare": false,
+      "file": "diet_comfort.png",
+      "src": "/stickers/cartoon/diet_comfort.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "diet_chef",
+      "label": "Chef mode",
+      "areas": [
+        "diet"
+      ],
+      "rare": true,
+      "file": "diet_chef.png",
+      "src": "/stickers/cartoon/diet_chef.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "diet_avo",
+      "label": "Avocado win",
+      "areas": [
+        "diet"
+      ],
+      "rare": true,
+      "file": "diet_avo.png",
+      "src": "/stickers/cartoon/diet_avo.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "diet_grape",
+      "label": "Superfood",
+      "areas": [
+        "diet"
+      ],
+      "rare": true,
+      "file": "diet_grape.png",
+      "src": "/stickers/cartoon/diet_grape.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "diet_feast",
+      "label": "Feast",
+      "areas": [
+        "diet"
+      ],
+      "rare": true,
+      "file": "diet_feast.png",
+      "src": "/stickers/cartoon/diet_feast.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "diet_salad2",
+      "label": "Big salad",
+      "areas": [
+        "diet"
+      ],
+      "rare": false,
+      "file": "diet_salad2.png",
+      "src": "/stickers/cartoon/diet_salad2.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "diet_food_00",
+      "label": "Food 1",
+      "areas": [
+        "diet"
+      ],
+      "rare": false,
+      "file": "diet_food_00.png",
+      "src": "/stickers/cartoon/diet_food_00.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "diet_food_01",
+      "label": "Food 2",
+      "areas": [
+        "diet"
+      ],
+      "rare": false,
+      "file": "diet_food_01.png",
+      "src": "/stickers/cartoon/diet_food_01.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "diet_food_02",
+      "label": "Food 3",
+      "areas": [
+        "diet"
+      ],
+      "rare": false,
+      "file": "diet_food_02.png",
+      "src": "/stickers/cartoon/diet_food_02.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "diet_food_03",
+      "label": "Food 4",
+      "areas": [
+        "diet"
+      ],
+      "rare": false,
+      "file": "diet_food_03.png",
+      "src": "/stickers/cartoon/diet_food_03.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "diet_food_04",
+      "label": "Food 5",
+      "areas": [
+        "diet"
+      ],
+      "rare": false,
+      "file": "diet_food_04.png",
+      "src": "/stickers/cartoon/diet_food_04.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "diet_food_05",
+      "label": "Food 6",
+      "areas": [
+        "diet"
+      ],
+      "rare": false,
+      "file": "diet_food_05.png",
+      "src": "/stickers/cartoon/diet_food_05.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "diet_food_06",
+      "label": "Food 7",
+      "areas": [
+        "diet"
+      ],
+      "rare": false,
+      "file": "diet_food_06.png",
+      "src": "/stickers/cartoon/diet_food_06.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "diet_food_07",
+      "label": "Food 8",
+      "areas": [
+        "diet"
+      ],
+      "rare": false,
+      "file": "diet_food_07.png",
+      "src": "/stickers/cartoon/diet_food_07.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "diet_food_08",
+      "label": "Food 9",
+      "areas": [
+        "diet"
+      ],
+      "rare": false,
+      "file": "diet_food_08.png",
+      "src": "/stickers/cartoon/diet_food_08.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "diet_food_09",
+      "label": "Food 10",
+      "areas": [
+        "diet"
+      ],
+      "rare": false,
+      "file": "diet_food_09.png",
+      "src": "/stickers/cartoon/diet_food_09.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "diet_food_10",
+      "label": "Food 11",
+      "areas": [
+        "diet"
+      ],
+      "rare": false,
+      "file": "diet_food_10.png",
+      "src": "/stickers/cartoon/diet_food_10.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "diet_food_11",
+      "label": "Food 12",
+      "areas": [
+        "diet"
+      ],
+      "rare": false,
+      "file": "diet_food_11.png",
+      "src": "/stickers/cartoon/diet_food_11.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "diet_food_12",
+      "label": "Food 13",
+      "areas": [
+        "diet"
+      ],
+      "rare": true,
+      "file": "diet_food_12.png",
+      "src": "/stickers/cartoon/diet_food_12.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "diet_food_13",
+      "label": "Food 14",
+      "areas": [
+        "diet"
+      ],
+      "rare": true,
+      "file": "diet_food_13.png",
+      "src": "/stickers/cartoon/diet_food_13.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "diet_food_14",
+      "label": "Food 15",
+      "areas": [
+        "diet"
+      ],
+      "rare": true,
+      "file": "diet_food_14.png",
+      "src": "/stickers/cartoon/diet_food_14.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "diet_face_00",
+      "label": "Diet face 1",
+      "areas": [
+        "diet"
+      ],
+      "rare": false,
+      "file": "diet_face_00.png",
+      "src": "/stickers/cartoon/diet_face_00.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "diet_face_01",
+      "label": "Diet face 2",
+      "areas": [
+        "diet"
+      ],
+      "rare": false,
+      "file": "diet_face_01.png",
+      "src": "/stickers/cartoon/diet_face_01.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "diet_face_02",
+      "label": "Diet face 3",
+      "areas": [
+        "diet"
+      ],
+      "rare": false,
+      "file": "diet_face_02.png",
+      "src": "/stickers/cartoon/diet_face_02.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "diet_face_03",
+      "label": "Diet face 4",
+      "areas": [
+        "diet"
+      ],
+      "rare": false,
+      "file": "diet_face_03.png",
+      "src": "/stickers/cartoon/diet_face_03.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "diet_face_04",
+      "label": "Diet face 5",
+      "areas": [
+        "diet"
+      ],
+      "rare": false,
+      "file": "diet_face_04.png",
+      "src": "/stickers/cartoon/diet_face_04.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "diet_face_05",
+      "label": "Diet face 6",
+      "areas": [
+        "diet"
+      ],
+      "rare": false,
+      "file": "diet_face_05.png",
+      "src": "/stickers/cartoon/diet_face_05.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "diet_face_06",
+      "label": "Diet face 7",
+      "areas": [
+        "diet"
+      ],
+      "rare": false,
+      "file": "diet_face_06.png",
+      "src": "/stickers/cartoon/diet_face_06.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "diet_face_07",
+      "label": "Diet face 8",
+      "areas": [
+        "diet"
+      ],
+      "rare": false,
+      "file": "diet_face_07.png",
+      "src": "/stickers/cartoon/diet_face_07.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "diet_face_08",
+      "label": "Diet face 9",
+      "areas": [
+        "diet"
+      ],
+      "rare": false,
+      "file": "diet_face_08.png",
+      "src": "/stickers/cartoon/diet_face_08.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "diet_face_09",
+      "label": "Diet face 10",
+      "areas": [
+        "diet"
+      ],
+      "rare": false,
+      "file": "diet_face_09.png",
+      "src": "/stickers/cartoon/diet_face_09.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "diet_face_10",
+      "label": "Diet face 11",
+      "areas": [
+        "diet"
+      ],
+      "rare": false,
+      "file": "diet_face_10.png",
+      "src": "/stickers/cartoon/diet_face_10.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "diet_face_11",
+      "label": "Diet face 12",
+      "areas": [
+        "diet"
+      ],
+      "rare": false,
+      "file": "diet_face_11.png",
+      "src": "/stickers/cartoon/diet_face_11.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "ex_crush",
+      "label": "Crushed it",
+      "areas": [
+        "exercise"
+      ],
+      "rare": false,
+      "file": "ex_crush.png",
+      "src": "/stickers/cartoon/ex_crush.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "ex_skip",
+      "label": "Skipped it",
+      "areas": [
+        "exercise"
+      ],
+      "rare": false,
+      "file": "ex_skip.png",
+      "src": "/stickers/cartoon/ex_skip.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "ex_active",
+      "label": "Active",
+      "areas": [
+        "exercise"
+      ],
+      "rare": false,
+      "file": "ex_active.png",
+      "src": "/stickers/cartoon/ex_active.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "ex_walk",
+      "label": "Walked",
+      "areas": [
+        "exercise"
+      ],
+      "rare": false,
+      "file": "ex_walk.png",
+      "src": "/stickers/cartoon/ex_walk.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "ex_stretch",
+      "label": "Stretched",
+      "areas": [
+        "exercise"
+      ],
+      "rare": false,
+      "file": "ex_stretch.png",
+      "src": "/stickers/cartoon/ex_stretch.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "ex_bike",
+      "label": "Cycled",
+      "areas": [
+        "exercise"
+      ],
+      "rare": false,
+      "file": "ex_bike.png",
+      "src": "/stickers/cartoon/ex_bike.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "ex_lift",
+      "label": "Lifted",
+      "areas": [
+        "exercise"
+      ],
+      "rare": false,
+      "file": "ex_lift.png",
+      "src": "/stickers/cartoon/ex_lift.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "ex_sweat",
+      "label": "Sweaty",
+      "areas": [
+        "exercise"
+      ],
+      "rare": false,
+      "file": "ex_sweat.png",
+      "src": "/stickers/cartoon/ex_sweat.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "ex_pr",
+      "label": "Personal record",
+      "areas": [
+        "exercise"
+      ],
+      "rare": true,
+      "file": "ex_pr.png",
+      "src": "/stickers/cartoon/ex_pr.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "ex_champ",
+      "label": "Champion",
+      "areas": [
+        "exercise"
+      ],
+      "rare": true,
+      "file": "ex_champ.png",
+      "src": "/stickers/cartoon/ex_champ.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "ex_beast",
+      "label": "Beast mode",
+      "areas": [
+        "exercise"
+      ],
+      "rare": true,
+      "file": "ex_beast.png",
+      "src": "/stickers/cartoon/ex_beast.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "ex_electric",
+      "label": "Electric",
+      "areas": [
+        "exercise"
+      ],
+      "rare": true,
+      "file": "ex_electric.png",
+      "src": "/stickers/cartoon/ex_electric.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "ex_move_00",
+      "label": "Move 1",
+      "areas": [
+        "exercise"
+      ],
+      "rare": false,
+      "file": "ex_move_00.png",
+      "src": "/stickers/cartoon/ex_move_00.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "ex_move_01",
+      "label": "Move 2",
+      "areas": [
+        "exercise"
+      ],
+      "rare": false,
+      "file": "ex_move_01.png",
+      "src": "/stickers/cartoon/ex_move_01.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "ex_move_02",
+      "label": "Move 3",
+      "areas": [
+        "exercise"
+      ],
+      "rare": false,
+      "file": "ex_move_02.png",
+      "src": "/stickers/cartoon/ex_move_02.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "ex_move_03",
+      "label": "Move 4",
+      "areas": [
+        "exercise"
+      ],
+      "rare": false,
+      "file": "ex_move_03.png",
+      "src": "/stickers/cartoon/ex_move_03.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "ex_move_04",
+      "label": "Move 5",
+      "areas": [
+        "exercise"
+      ],
+      "rare": false,
+      "file": "ex_move_04.png",
+      "src": "/stickers/cartoon/ex_move_04.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "ex_move_05",
+      "label": "Move 6",
+      "areas": [
+        "exercise"
+      ],
+      "rare": false,
+      "file": "ex_move_05.png",
+      "src": "/stickers/cartoon/ex_move_05.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "ex_move_06",
+      "label": "Move 7",
+      "areas": [
+        "exercise"
+      ],
+      "rare": false,
+      "file": "ex_move_06.png",
+      "src": "/stickers/cartoon/ex_move_06.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "ex_move_07",
+      "label": "Move 8",
+      "areas": [
+        "exercise"
+      ],
+      "rare": false,
+      "file": "ex_move_07.png",
+      "src": "/stickers/cartoon/ex_move_07.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "ex_move_08",
+      "label": "Move 9",
+      "areas": [
+        "exercise"
+      ],
+      "rare": false,
+      "file": "ex_move_08.png",
+      "src": "/stickers/cartoon/ex_move_08.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "ex_move_09",
+      "label": "Move 10",
+      "areas": [
+        "exercise"
+      ],
+      "rare": false,
+      "file": "ex_move_09.png",
+      "src": "/stickers/cartoon/ex_move_09.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "ex_move_10",
+      "label": "Move 11",
+      "areas": [
+        "exercise"
+      ],
+      "rare": false,
+      "file": "ex_move_10.png",
+      "src": "/stickers/cartoon/ex_move_10.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "ex_move_11",
+      "label": "Move 12",
+      "areas": [
+        "exercise"
+      ],
+      "rare": false,
+      "file": "ex_move_11.png",
+      "src": "/stickers/cartoon/ex_move_11.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "ex_move_12",
+      "label": "Move 13",
+      "areas": [
+        "exercise"
+      ],
+      "rare": false,
+      "file": "ex_move_12.png",
+      "src": "/stickers/cartoon/ex_move_12.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "ex_move_13",
+      "label": "Move 14",
+      "areas": [
+        "exercise"
+      ],
+      "rare": false,
+      "file": "ex_move_13.png",
+      "src": "/stickers/cartoon/ex_move_13.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "ex_move_14",
+      "label": "Move 15",
+      "areas": [
+        "exercise"
+      ],
+      "rare": false,
+      "file": "ex_move_14.png",
+      "src": "/stickers/cartoon/ex_move_14.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "ex_move_15",
+      "label": "Move 16",
+      "areas": [
+        "exercise"
+      ],
+      "rare": true,
+      "file": "ex_move_15.png",
+      "src": "/stickers/cartoon/ex_move_15.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "ex_move_16",
+      "label": "Move 17",
+      "areas": [
+        "exercise"
+      ],
+      "rare": true,
+      "file": "ex_move_16.png",
+      "src": "/stickers/cartoon/ex_move_16.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "ex_move_17",
+      "label": "Move 18",
+      "areas": [
+        "exercise"
+      ],
+      "rare": true,
+      "file": "ex_move_17.png",
+      "src": "/stickers/cartoon/ex_move_17.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "ex_face_00",
+      "label": "Exercise face 1",
+      "areas": [
+        "exercise"
+      ],
+      "rare": false,
+      "file": "ex_face_00.png",
+      "src": "/stickers/cartoon/ex_face_00.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "ex_face_01",
+      "label": "Exercise face 2",
+      "areas": [
+        "exercise"
+      ],
+      "rare": false,
+      "file": "ex_face_01.png",
+      "src": "/stickers/cartoon/ex_face_01.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "ex_face_02",
+      "label": "Exercise face 3",
+      "areas": [
+        "exercise"
+      ],
+      "rare": false,
+      "file": "ex_face_02.png",
+      "src": "/stickers/cartoon/ex_face_02.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "ex_face_03",
+      "label": "Exercise face 4",
+      "areas": [
+        "exercise"
+      ],
+      "rare": false,
+      "file": "ex_face_03.png",
+      "src": "/stickers/cartoon/ex_face_03.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "ex_face_04",
+      "label": "Exercise face 5",
+      "areas": [
+        "exercise"
+      ],
+      "rare": false,
+      "file": "ex_face_04.png",
+      "src": "/stickers/cartoon/ex_face_04.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "ex_face_05",
+      "label": "Exercise face 6",
+      "areas": [
+        "exercise"
+      ],
+      "rare": false,
+      "file": "ex_face_05.png",
+      "src": "/stickers/cartoon/ex_face_05.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "ex_face_06",
+      "label": "Exercise face 7",
+      "areas": [
+        "exercise"
+      ],
+      "rare": false,
+      "file": "ex_face_06.png",
+      "src": "/stickers/cartoon/ex_face_06.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "ex_face_07",
+      "label": "Exercise face 8",
+      "areas": [
+        "exercise"
+      ],
+      "rare": false,
+      "file": "ex_face_07.png",
+      "src": "/stickers/cartoon/ex_face_07.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "ex_face_08",
+      "label": "Exercise face 9",
+      "areas": [
+        "exercise"
+      ],
+      "rare": false,
+      "file": "ex_face_08.png",
+      "src": "/stickers/cartoon/ex_face_08.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "ex_face_09",
+      "label": "Exercise face 10",
+      "areas": [
+        "exercise"
+      ],
+      "rare": false,
+      "file": "ex_face_09.png",
+      "src": "/stickers/cartoon/ex_face_09.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "ex_face_10",
+      "label": "Exercise face 11",
+      "areas": [
+        "exercise"
+      ],
+      "rare": false,
+      "file": "ex_face_10.png",
+      "src": "/stickers/cartoon/ex_face_10.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "ex_face_11",
+      "label": "Exercise face 12",
+      "areas": [
+        "exercise"
+      ],
+      "rare": false,
+      "file": "ex_face_11.png",
+      "src": "/stickers/cartoon/ex_face_11.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "mh_calm",
+      "label": "Calm & clear",
+      "areas": [
+        "mental_health"
+      ],
+      "rare": false,
+      "file": "mh_calm.png",
+      "src": "/stickers/cartoon/mh_calm.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "mh_struggle",
+      "label": "Struggling",
+      "areas": [
+        "mental_health"
+      ],
+      "rare": false,
+      "file": "mh_struggle.png",
+      "src": "/stickers/cartoon/mh_struggle.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "mh_good",
+      "label": "Good",
+      "areas": [
+        "mental_health"
+      ],
+      "rare": false,
+      "file": "mh_good.png",
+      "src": "/stickers/cartoon/mh_good.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "mh_mixed",
+      "label": "Mixed",
+      "areas": [
+        "mental_health"
+      ],
+      "rare": false,
+      "file": "mh_mixed.png",
+      "src": "/stickers/cartoon/mh_mixed.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "mh_focus",
+      "label": "Focused",
+      "areas": [
+        "mental_health"
+      ],
+      "rare": false,
+      "file": "mh_focus.png",
+      "src": "/stickers/cartoon/mh_focus.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "mh_light",
+      "label": "Light",
+      "areas": [
+        "mental_health"
+      ],
+      "rare": false,
+      "file": "mh_light.png",
+      "src": "/stickers/cartoon/mh_light.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "mh_stress",
+      "label": "Stressed",
+      "areas": [
+        "mental_health"
+      ],
+      "rare": false,
+      "file": "mh_stress.png",
+      "src": "/stickers/cartoon/mh_stress.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "mh_cloudy",
+      "label": "Cloudy",
+      "areas": [
+        "mental_health"
+      ],
+      "rare": false,
+      "file": "mh_cloudy.png",
+      "src": "/stickers/cartoon/mh_cloudy.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "mh_burnout",
+      "label": "Burnt out",
+      "areas": [
+        "mental_health"
+      ],
+      "rare": false,
+      "file": "mh_burnout.png",
+      "src": "/stickers/cartoon/mh_burnout.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "mh_fog",
+      "label": "Foggy",
+      "areas": [
+        "mental_health"
+      ],
+      "rare": false,
+      "file": "mh_fog.png",
+      "src": "/stickers/cartoon/mh_fog.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "mh_hope",
+      "label": "Hopeful",
+      "areas": [
+        "mental_health"
+      ],
+      "rare": true,
+      "file": "mh_hope.png",
+      "src": "/stickers/cartoon/mh_hope.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "mh_inspired",
+      "label": "Inspired",
+      "areas": [
+        "mental_health"
+      ],
+      "rare": true,
+      "file": "mh_inspired.png",
+      "src": "/stickers/cartoon/mh_inspired.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "mh_transform",
+      "label": "Transformed",
+      "areas": [
+        "mental_health"
+      ],
+      "rare": true,
+      "file": "mh_transform.png",
+      "src": "/stickers/cartoon/mh_transform.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "mh_center",
+      "label": "Centered",
+      "areas": [
+        "mental_health"
+      ],
+      "rare": true,
+      "file": "mh_center.png",
+      "src": "/stickers/cartoon/mh_center.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "mh_mind_00",
+      "label": "Mind 1",
+      "areas": [
+        "mental_health"
+      ],
+      "rare": false,
+      "file": "mh_mind_00.png",
+      "src": "/stickers/cartoon/mh_mind_00.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "mh_mind_01",
+      "label": "Mind 2",
+      "areas": [
+        "mental_health"
+      ],
+      "rare": false,
+      "file": "mh_mind_01.png",
+      "src": "/stickers/cartoon/mh_mind_01.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "mh_mind_02",
+      "label": "Mind 3",
+      "areas": [
+        "mental_health"
+      ],
+      "rare": false,
+      "file": "mh_mind_02.png",
+      "src": "/stickers/cartoon/mh_mind_02.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "mh_mind_03",
+      "label": "Mind 4",
+      "areas": [
+        "mental_health"
+      ],
+      "rare": false,
+      "file": "mh_mind_03.png",
+      "src": "/stickers/cartoon/mh_mind_03.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "mh_mind_04",
+      "label": "Mind 5",
+      "areas": [
+        "mental_health"
+      ],
+      "rare": false,
+      "file": "mh_mind_04.png",
+      "src": "/stickers/cartoon/mh_mind_04.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "mh_mind_05",
+      "label": "Mind 6",
+      "areas": [
+        "mental_health"
+      ],
+      "rare": false,
+      "file": "mh_mind_05.png",
+      "src": "/stickers/cartoon/mh_mind_05.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "mh_mind_06",
+      "label": "Mind 7",
+      "areas": [
+        "mental_health"
+      ],
+      "rare": false,
+      "file": "mh_mind_06.png",
+      "src": "/stickers/cartoon/mh_mind_06.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "mh_mind_07",
+      "label": "Mind 8",
+      "areas": [
+        "mental_health"
+      ],
+      "rare": false,
+      "file": "mh_mind_07.png",
+      "src": "/stickers/cartoon/mh_mind_07.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "mh_mind_08",
+      "label": "Mind 9",
+      "areas": [
+        "mental_health"
+      ],
+      "rare": false,
+      "file": "mh_mind_08.png",
+      "src": "/stickers/cartoon/mh_mind_08.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "mh_mind_09",
+      "label": "Mind 10",
+      "areas": [
+        "mental_health"
+      ],
+      "rare": false,
+      "file": "mh_mind_09.png",
+      "src": "/stickers/cartoon/mh_mind_09.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "mh_mind_10",
+      "label": "Mind 11",
+      "areas": [
+        "mental_health"
+      ],
+      "rare": false,
+      "file": "mh_mind_10.png",
+      "src": "/stickers/cartoon/mh_mind_10.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "mh_mind_11",
+      "label": "Mind 12",
+      "areas": [
+        "mental_health"
+      ],
+      "rare": false,
+      "file": "mh_mind_11.png",
+      "src": "/stickers/cartoon/mh_mind_11.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "mh_mind_12",
+      "label": "Mind 13",
+      "areas": [
+        "mental_health"
+      ],
+      "rare": false,
+      "file": "mh_mind_12.png",
+      "src": "/stickers/cartoon/mh_mind_12.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "mh_mind_13",
+      "label": "Mind 14",
+      "areas": [
+        "mental_health"
+      ],
+      "rare": true,
+      "file": "mh_mind_13.png",
+      "src": "/stickers/cartoon/mh_mind_13.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "mh_mind_14",
+      "label": "Mind 15",
+      "areas": [
+        "mental_health"
+      ],
+      "rare": true,
+      "file": "mh_mind_14.png",
+      "src": "/stickers/cartoon/mh_mind_14.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "mh_mind_15",
+      "label": "Mind 16",
+      "areas": [
+        "mental_health"
+      ],
+      "rare": true,
+      "file": "mh_mind_15.png",
+      "src": "/stickers/cartoon/mh_mind_15.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "mh_face_00",
+      "label": "Mind face 1",
+      "areas": [
+        "mental_health"
+      ],
+      "rare": false,
+      "file": "mh_face_00.png",
+      "src": "/stickers/cartoon/mh_face_00.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "mh_face_01",
+      "label": "Mind face 2",
+      "areas": [
+        "mental_health"
+      ],
+      "rare": false,
+      "file": "mh_face_01.png",
+      "src": "/stickers/cartoon/mh_face_01.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "mh_face_02",
+      "label": "Mind face 3",
+      "areas": [
+        "mental_health"
+      ],
+      "rare": false,
+      "file": "mh_face_02.png",
+      "src": "/stickers/cartoon/mh_face_02.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "mh_face_03",
+      "label": "Mind face 4",
+      "areas": [
+        "mental_health"
+      ],
+      "rare": false,
+      "file": "mh_face_03.png",
+      "src": "/stickers/cartoon/mh_face_03.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "mh_face_04",
+      "label": "Mind face 5",
+      "areas": [
+        "mental_health"
+      ],
+      "rare": false,
+      "file": "mh_face_04.png",
+      "src": "/stickers/cartoon/mh_face_04.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "mh_face_05",
+      "label": "Mind face 6",
+      "areas": [
+        "mental_health"
+      ],
+      "rare": false,
+      "file": "mh_face_05.png",
+      "src": "/stickers/cartoon/mh_face_05.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "mh_face_06",
+      "label": "Mind face 7",
+      "areas": [
+        "mental_health"
+      ],
+      "rare": false,
+      "file": "mh_face_06.png",
+      "src": "/stickers/cartoon/mh_face_06.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "mh_face_07",
+      "label": "Mind face 8",
+      "areas": [
+        "mental_health"
+      ],
+      "rare": false,
+      "file": "mh_face_07.png",
+      "src": "/stickers/cartoon/mh_face_07.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "mh_face_08",
+      "label": "Mind face 9",
+      "areas": [
+        "mental_health"
+      ],
+      "rare": false,
+      "file": "mh_face_08.png",
+      "src": "/stickers/cartoon/mh_face_08.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "mh_face_09",
+      "label": "Mind face 10",
+      "areas": [
+        "mental_health"
+      ],
+      "rare": false,
+      "file": "mh_face_09.png",
+      "src": "/stickers/cartoon/mh_face_09.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "rel_connect",
+      "label": "Very connected",
+      "areas": [
+        "relationships"
+      ],
+      "rare": false,
+      "file": "rel_connect.png",
+      "src": "/stickers/cartoon/rel_connect.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "rel_distant",
+      "label": "Distant",
+      "areas": [
+        "relationships"
+      ],
+      "rare": false,
+      "file": "rel_distant.png",
+      "src": "/stickers/cartoon/rel_distant.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "rel_loved",
+      "label": "Loved",
+      "areas": [
+        "relationships"
+      ],
+      "rare": false,
+      "file": "rel_loved.png",
+      "src": "/stickers/cartoon/rel_loved.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "rel_good",
+      "label": "Good",
+      "areas": [
+        "relationships"
+      ],
+      "rare": false,
+      "file": "rel_good.png",
+      "src": "/stickers/cartoon/rel_good.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "rel_grateful",
+      "label": "Grateful",
+      "areas": [
+        "relationships"
+      ],
+      "rare": false,
+      "file": "rel_grateful.png",
+      "src": "/stickers/cartoon/rel_grateful.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "rel_support",
+      "label": "Supported",
+      "areas": [
+        "relationships"
+      ],
+      "rare": false,
+      "file": "rel_support.png",
+      "src": "/stickers/cartoon/rel_support.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "rel_reach",
+      "label": "Reached out",
+      "areas": [
+        "relationships"
+      ],
+      "rare": false,
+      "file": "rel_reach.png",
+      "src": "/stickers/cartoon/rel_reach.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "rel_talk",
+      "label": "Good talk",
+      "areas": [
+        "relationships"
+      ],
+      "rare": false,
+      "file": "rel_talk.png",
+      "src": "/stickers/cartoon/rel_talk.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "rel_social",
+      "label": "Social",
+      "areas": [
+        "relationships"
+      ],
+      "rare": false,
+      "file": "rel_social.png",
+      "src": "/stickers/cartoon/rel_social.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "rel_quiet",
+      "label": "Quiet",
+      "areas": [
+        "relationships"
+      ],
+      "rare": false,
+      "file": "rel_quiet.png",
+      "src": "/stickers/cartoon/rel_quiet.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "rel_bond",
+      "label": "Deep bond",
+      "areas": [
+        "relationships"
+      ],
+      "rare": true,
+      "file": "rel_bond.png",
+      "src": "/stickers/cartoon/rel_bond.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "rel_cherish",
+      "label": "Cherished",
+      "areas": [
+        "relationships"
+      ],
+      "rare": true,
+      "file": "rel_cherish.png",
+      "src": "/stickers/cartoon/rel_cherish.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "rel_peace",
+      "label": "Made peace",
+      "areas": [
+        "relationships"
+      ],
+      "rare": true,
+      "file": "rel_peace.png",
+      "src": "/stickers/cartoon/rel_peace.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "rel_celeb",
+      "label": "Celebrated",
+      "areas": [
+        "relationships"
+      ],
+      "rare": true,
+      "file": "rel_celeb.png",
+      "src": "/stickers/cartoon/rel_celeb.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "rel_social_00",
+      "label": "Social 1",
+      "areas": [
+        "relationships"
+      ],
+      "rare": false,
+      "file": "rel_social_00.png",
+      "src": "/stickers/cartoon/rel_social_00.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "rel_social_01",
+      "label": "Social 2",
+      "areas": [
+        "relationships"
+      ],
+      "rare": false,
+      "file": "rel_social_01.png",
+      "src": "/stickers/cartoon/rel_social_01.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "rel_social_02",
+      "label": "Social 3",
+      "areas": [
+        "relationships"
+      ],
+      "rare": false,
+      "file": "rel_social_02.png",
+      "src": "/stickers/cartoon/rel_social_02.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "rel_social_03",
+      "label": "Social 4",
+      "areas": [
+        "relationships"
+      ],
+      "rare": false,
+      "file": "rel_social_03.png",
+      "src": "/stickers/cartoon/rel_social_03.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "rel_social_04",
+      "label": "Social 5",
+      "areas": [
+        "relationships"
+      ],
+      "rare": false,
+      "file": "rel_social_04.png",
+      "src": "/stickers/cartoon/rel_social_04.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "rel_social_05",
+      "label": "Social 6",
+      "areas": [
+        "relationships"
+      ],
+      "rare": false,
+      "file": "rel_social_05.png",
+      "src": "/stickers/cartoon/rel_social_05.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "rel_social_06",
+      "label": "Social 7",
+      "areas": [
+        "relationships"
+      ],
+      "rare": false,
+      "file": "rel_social_06.png",
+      "src": "/stickers/cartoon/rel_social_06.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "rel_social_07",
+      "label": "Social 8",
+      "areas": [
+        "relationships"
+      ],
+      "rare": false,
+      "file": "rel_social_07.png",
+      "src": "/stickers/cartoon/rel_social_07.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "rel_social_08",
+      "label": "Social 9",
+      "areas": [
+        "relationships"
+      ],
+      "rare": false,
+      "file": "rel_social_08.png",
+      "src": "/stickers/cartoon/rel_social_08.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "rel_social_09",
+      "label": "Social 10",
+      "areas": [
+        "relationships"
+      ],
+      "rare": false,
+      "file": "rel_social_09.png",
+      "src": "/stickers/cartoon/rel_social_09.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "rel_social_10",
+      "label": "Social 11",
+      "areas": [
+        "relationships"
+      ],
+      "rare": false,
+      "file": "rel_social_10.png",
+      "src": "/stickers/cartoon/rel_social_10.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "rel_social_11",
+      "label": "Social 12",
+      "areas": [
+        "relationships"
+      ],
+      "rare": false,
+      "file": "rel_social_11.png",
+      "src": "/stickers/cartoon/rel_social_11.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "rel_social_12",
+      "label": "Social 13",
+      "areas": [
+        "relationships"
+      ],
+      "rare": false,
+      "file": "rel_social_12.png",
+      "src": "/stickers/cartoon/rel_social_12.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "rel_social_13",
+      "label": "Social 14",
+      "areas": [
+        "relationships"
+      ],
+      "rare": true,
+      "file": "rel_social_13.png",
+      "src": "/stickers/cartoon/rel_social_13.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "rel_social_14",
+      "label": "Social 15",
+      "areas": [
+        "relationships"
+      ],
+      "rare": true,
+      "file": "rel_social_14.png",
+      "src": "/stickers/cartoon/rel_social_14.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "rel_social_15",
+      "label": "Social 16",
+      "areas": [
+        "relationships"
+      ],
+      "rare": true,
+      "file": "rel_social_15.png",
+      "src": "/stickers/cartoon/rel_social_15.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "rel_face_00",
+      "label": "Rel face 1",
+      "areas": [
+        "relationships"
+      ],
+      "rare": false,
+      "file": "rel_face_00.png",
+      "src": "/stickers/cartoon/rel_face_00.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "rel_face_01",
+      "label": "Rel face 2",
+      "areas": [
+        "relationships"
+      ],
+      "rare": false,
+      "file": "rel_face_01.png",
+      "src": "/stickers/cartoon/rel_face_01.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "rel_face_02",
+      "label": "Rel face 3",
+      "areas": [
+        "relationships"
+      ],
+      "rare": false,
+      "file": "rel_face_02.png",
+      "src": "/stickers/cartoon/rel_face_02.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "rel_face_03",
+      "label": "Rel face 4",
+      "areas": [
+        "relationships"
+      ],
+      "rare": false,
+      "file": "rel_face_03.png",
+      "src": "/stickers/cartoon/rel_face_03.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "rel_face_04",
+      "label": "Rel face 5",
+      "areas": [
+        "relationships"
+      ],
+      "rare": false,
+      "file": "rel_face_04.png",
+      "src": "/stickers/cartoon/rel_face_04.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "rel_face_05",
+      "label": "Rel face 6",
+      "areas": [
+        "relationships"
+      ],
+      "rare": false,
+      "file": "rel_face_05.png",
+      "src": "/stickers/cartoon/rel_face_05.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "rel_face_06",
+      "label": "Rel face 7",
+      "areas": [
+        "relationships"
+      ],
+      "rare": false,
+      "file": "rel_face_06.png",
+      "src": "/stickers/cartoon/rel_face_06.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "rel_face_07",
+      "label": "Rel face 8",
+      "areas": [
+        "relationships"
+      ],
+      "rare": false,
+      "file": "rel_face_07.png",
+      "src": "/stickers/cartoon/rel_face_07.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "rel_face_08",
+      "label": "Rel face 9",
+      "areas": [
+        "relationships"
+      ],
+      "rare": false,
+      "file": "rel_face_08.png",
+      "src": "/stickers/cartoon/rel_face_08.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "rel_face_09",
+      "label": "Rel face 10",
+      "areas": [
+        "relationships"
+      ],
+      "rare": false,
+      "file": "rel_face_09.png",
+      "src": "/stickers/cartoon/rel_face_09.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "rel_face_10",
+      "label": "Rel face 11",
+      "areas": [
+        "relationships"
+      ],
+      "rare": false,
+      "file": "rel_face_10.png",
+      "src": "/stickers/cartoon/rel_face_10.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "rel_face_11",
+      "label": "Rel face 12",
+      "areas": [
+        "relationships"
+      ],
+      "rare": false,
+      "file": "rel_face_11.png",
+      "src": "/stickers/cartoon/rel_face_11.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "env_fresh",
+      "label": "Fresh & calm",
+      "areas": [
+        "environment"
+      ],
+      "rare": false,
+      "file": "env_fresh.png",
+      "src": "/stickers/cartoon/env_fresh.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "env_heavy",
+      "label": "Heavy",
+      "areas": [
+        "environment"
+      ],
+      "rare": false,
+      "file": "env_heavy.png",
+      "src": "/stickers/cartoon/env_heavy.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "env_bright",
+      "label": "Bright",
+      "areas": [
+        "environment"
+      ],
+      "rare": false,
+      "file": "env_bright.png",
+      "src": "/stickers/cartoon/env_bright.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "env_cozy",
+      "label": "Cozy",
+      "areas": [
+        "environment"
+      ],
+      "rare": false,
+      "file": "env_cozy.png",
+      "src": "/stickers/cartoon/env_cozy.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "env_tidy",
+      "label": "Tidy",
+      "areas": [
+        "environment"
+      ],
+      "rare": false,
+      "file": "env_tidy.png",
+      "src": "/stickers/cartoon/env_tidy.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "env_outdoors",
+      "label": "Outdoors",
+      "areas": [
+        "environment"
+      ],
+      "rare": false,
+      "file": "env_outdoors.png",
+      "src": "/stickers/cartoon/env_outdoors.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "env_clean",
+      "label": "Cleaned up",
+      "areas": [
+        "environment"
+      ],
+      "rare": false,
+      "file": "env_clean.png",
+      "src": "/stickers/cartoon/env_clean.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "env_air",
+      "label": "Aired out",
+      "areas": [
+        "environment"
+      ],
+      "rare": false,
+      "file": "env_air.png",
+      "src": "/stickers/cartoon/env_air.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "env_clutter",
+      "label": "Cluttered",
+      "areas": [
+        "environment"
+      ],
+      "rare": false,
+      "file": "env_clutter.png",
+      "src": "/stickers/cartoon/env_clutter.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "env_busy",
+      "label": "Busy",
+      "areas": [
+        "environment"
+      ],
+      "rare": false,
+      "file": "env_busy.png",
+      "src": "/stickers/cartoon/env_busy.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "env_nature",
+      "label": "Nature day",
+      "areas": [
+        "environment"
+      ],
+      "rare": true,
+      "file": "env_nature.png",
+      "src": "/stickers/cartoon/env_nature.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "env_golden",
+      "label": "Golden hour",
+      "areas": [
+        "environment"
+      ],
+      "rare": true,
+      "file": "env_golden.png",
+      "src": "/stickers/cartoon/env_golden.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "env_water",
+      "label": "By the water",
+      "areas": [
+        "environment"
+      ],
+      "rare": true,
+      "file": "env_water.png",
+      "src": "/stickers/cartoon/env_water.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "env_wild",
+      "label": "Wildlife",
+      "areas": [
+        "environment"
+      ],
+      "rare": true,
+      "file": "env_wild.png",
+      "src": "/stickers/cartoon/env_wild.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "env_place_00",
+      "label": "Place 1",
+      "areas": [
+        "environment"
+      ],
+      "rare": false,
+      "file": "env_place_00.png",
+      "src": "/stickers/cartoon/env_place_00.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "env_place_01",
+      "label": "Place 2",
+      "areas": [
+        "environment"
+      ],
+      "rare": false,
+      "file": "env_place_01.png",
+      "src": "/stickers/cartoon/env_place_01.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "env_place_02",
+      "label": "Place 3",
+      "areas": [
+        "environment"
+      ],
+      "rare": false,
+      "file": "env_place_02.png",
+      "src": "/stickers/cartoon/env_place_02.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "env_place_03",
+      "label": "Place 4",
+      "areas": [
+        "environment"
+      ],
+      "rare": false,
+      "file": "env_place_03.png",
+      "src": "/stickers/cartoon/env_place_03.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "env_place_04",
+      "label": "Place 5",
+      "areas": [
+        "environment"
+      ],
+      "rare": false,
+      "file": "env_place_04.png",
+      "src": "/stickers/cartoon/env_place_04.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "env_place_05",
+      "label": "Place 6",
+      "areas": [
+        "environment"
+      ],
+      "rare": false,
+      "file": "env_place_05.png",
+      "src": "/stickers/cartoon/env_place_05.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "env_place_06",
+      "label": "Place 7",
+      "areas": [
+        "environment"
+      ],
+      "rare": false,
+      "file": "env_place_06.png",
+      "src": "/stickers/cartoon/env_place_06.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "env_place_07",
+      "label": "Place 8",
+      "areas": [
+        "environment"
+      ],
+      "rare": false,
+      "file": "env_place_07.png",
+      "src": "/stickers/cartoon/env_place_07.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "env_place_08",
+      "label": "Place 9",
+      "areas": [
+        "environment"
+      ],
+      "rare": false,
+      "file": "env_place_08.png",
+      "src": "/stickers/cartoon/env_place_08.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "env_place_09",
+      "label": "Place 10",
+      "areas": [
+        "environment"
+      ],
+      "rare": false,
+      "file": "env_place_09.png",
+      "src": "/stickers/cartoon/env_place_09.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "env_place_10",
+      "label": "Place 11",
+      "areas": [
+        "environment"
+      ],
+      "rare": false,
+      "file": "env_place_10.png",
+      "src": "/stickers/cartoon/env_place_10.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "env_place_11",
+      "label": "Place 12",
+      "areas": [
+        "environment"
+      ],
+      "rare": true,
+      "file": "env_place_11.png",
+      "src": "/stickers/cartoon/env_place_11.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "env_place_12",
+      "label": "Place 13",
+      "areas": [
+        "environment"
+      ],
+      "rare": true,
+      "file": "env_place_12.png",
+      "src": "/stickers/cartoon/env_place_12.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "env_place_13",
+      "label": "Place 14",
+      "areas": [
+        "environment"
+      ],
+      "rare": true,
+      "file": "env_place_13.png",
+      "src": "/stickers/cartoon/env_place_13.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "env_face_00",
+      "label": "Env face 1",
+      "areas": [
+        "environment"
+      ],
+      "rare": false,
+      "file": "env_face_00.png",
+      "src": "/stickers/cartoon/env_face_00.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "env_face_01",
+      "label": "Env face 2",
+      "areas": [
+        "environment"
+      ],
+      "rare": false,
+      "file": "env_face_01.png",
+      "src": "/stickers/cartoon/env_face_01.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "env_face_02",
+      "label": "Env face 3",
+      "areas": [
+        "environment"
+      ],
+      "rare": false,
+      "file": "env_face_02.png",
+      "src": "/stickers/cartoon/env_face_02.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "env_face_03",
+      "label": "Env face 4",
+      "areas": [
+        "environment"
+      ],
+      "rare": false,
+      "file": "env_face_03.png",
+      "src": "/stickers/cartoon/env_face_03.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "env_face_04",
+      "label": "Env face 5",
+      "areas": [
+        "environment"
+      ],
+      "rare": false,
+      "file": "env_face_04.png",
+      "src": "/stickers/cartoon/env_face_04.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "env_face_05",
+      "label": "Env face 6",
+      "areas": [
+        "environment"
+      ],
+      "rare": false,
+      "file": "env_face_05.png",
+      "src": "/stickers/cartoon/env_face_05.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "env_face_06",
+      "label": "Env face 7",
+      "areas": [
+        "environment"
+      ],
+      "rare": false,
+      "file": "env_face_06.png",
+      "src": "/stickers/cartoon/env_face_06.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "env_face_07",
+      "label": "Env face 8",
+      "areas": [
+        "environment"
+      ],
+      "rare": false,
+      "file": "env_face_07.png",
+      "src": "/stickers/cartoon/env_face_07.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "env_face_08",
+      "label": "Env face 9",
+      "areas": [
+        "environment"
+      ],
+      "rare": false,
+      "file": "env_face_08.png",
+      "src": "/stickers/cartoon/env_face_08.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "env_face_09",
+      "label": "Env face 10",
+      "areas": [
+        "environment"
+      ],
+      "rare": false,
+      "file": "env_face_09.png",
+      "src": "/stickers/cartoon/env_face_09.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "env_face_10",
+      "label": "Env face 11",
+      "areas": [
+        "environment"
+      ],
+      "rare": false,
+      "file": "env_face_10.png",
+      "src": "/stickers/cartoon/env_face_10.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "env_face_11",
+      "label": "Env face 12",
+      "areas": [
+        "environment"
+      ],
+      "rare": false,
+      "file": "env_face_11.png",
+      "src": "/stickers/cartoon/env_face_11.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "pr_ontop",
+      "label": "On top of it",
+      "areas": [
+        "protect"
+      ],
+      "rare": false,
+      "file": "pr_ontop.png",
+      "src": "/stickers/cartoon/pr_ontop.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "pr_notgreat",
+      "label": "Not great",
+      "areas": [
+        "protect"
+      ],
+      "rare": false,
+      "file": "pr_notgreat.png",
+      "src": "/stickers/cartoon/pr_notgreat.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "pr_strong",
+      "label": "Strong",
+      "areas": [
+        "protect"
+      ],
+      "rare": false,
+      "file": "pr_strong.png",
+      "src": "/stickers/cartoon/pr_strong.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "pr_manage",
+      "label": "Managing",
+      "areas": [
+        "protect"
+      ],
+      "rare": false,
+      "file": "pr_manage.png",
+      "src": "/stickers/cartoon/pr_manage.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "pr_natural",
+      "label": "Natural",
+      "areas": [
+        "protect"
+      ],
+      "rare": false,
+      "file": "pr_natural.png",
+      "src": "/stickers/cartoon/pr_natural.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "pr_sun",
+      "label": "Sun-safe",
+      "areas": [
+        "protect"
+      ],
+      "rare": false,
+      "file": "pr_sun.png",
+      "src": "/stickers/cartoon/pr_sun.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "pr_hygiene",
+      "label": "Hygiene",
+      "areas": [
+        "protect"
+      ],
+      "rare": false,
+      "file": "pr_hygiene.png",
+      "src": "/stickers/cartoon/pr_hygiene.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "pr_check",
+      "label": "Checked in",
+      "areas": [
+        "protect"
+      ],
+      "rare": false,
+      "file": "pr_check.png",
+      "src": "/stickers/cartoon/pr_check.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "pr_careful",
+      "label": "Careful",
+      "areas": [
+        "protect"
+      ],
+      "rare": false,
+      "file": "pr_careful.png",
+      "src": "/stickers/cartoon/pr_careful.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "pr_rest",
+      "label": "Resting up",
+      "areas": [
+        "protect"
+      ],
+      "rare": false,
+      "file": "pr_rest.png",
+      "src": "/stickers/cartoon/pr_rest.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "pr_bullet",
+      "label": "Bulletproof",
+      "areas": [
+        "protect"
+      ],
+      "rare": true,
+      "file": "pr_bullet.png",
+      "src": "/stickers/cartoon/pr_bullet.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "pr_boost",
+      "label": "Immunity boost",
+      "areas": [
+        "protect"
+      ],
+      "rare": true,
+      "file": "pr_boost.png",
+      "src": "/stickers/cartoon/pr_boost.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "pr_picture",
+      "label": "Picture of health",
+      "areas": [
+        "protect"
+      ],
+      "rare": true,
+      "file": "pr_picture.png",
+      "src": "/stickers/cartoon/pr_picture.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "pr_opt",
+      "label": "Optimized",
+      "areas": [
+        "protect"
+      ],
+      "rare": true,
+      "file": "pr_opt.png",
+      "src": "/stickers/cartoon/pr_opt.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "pr_pill",
+      "label": "Meds",
+      "areas": [
+        "protect"
+      ],
+      "rare": false,
+      "file": "pr_pill.png",
+      "src": "/stickers/cartoon/pr_pill.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "pr_cross",
+      "label": "Care",
+      "areas": [
+        "protect"
+      ],
+      "rare": false,
+      "file": "pr_cross.png",
+      "src": "/stickers/cartoon/pr_cross.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "pr_germ",
+      "label": "Bug day",
+      "areas": [
+        "protect"
+      ],
+      "rare": false,
+      "file": "pr_germ.png",
+      "src": "/stickers/cartoon/pr_germ.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "pr_care_00",
+      "label": "Protect 1",
+      "areas": [
+        "protect"
+      ],
+      "rare": false,
+      "file": "pr_care_00.png",
+      "src": "/stickers/cartoon/pr_care_00.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "pr_care_01",
+      "label": "Protect 2",
+      "areas": [
+        "protect"
+      ],
+      "rare": false,
+      "file": "pr_care_01.png",
+      "src": "/stickers/cartoon/pr_care_01.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "pr_care_02",
+      "label": "Protect 3",
+      "areas": [
+        "protect"
+      ],
+      "rare": false,
+      "file": "pr_care_02.png",
+      "src": "/stickers/cartoon/pr_care_02.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "pr_care_03",
+      "label": "Protect 4",
+      "areas": [
+        "protect"
+      ],
+      "rare": false,
+      "file": "pr_care_03.png",
+      "src": "/stickers/cartoon/pr_care_03.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "pr_care_04",
+      "label": "Protect 5",
+      "areas": [
+        "protect"
+      ],
+      "rare": false,
+      "file": "pr_care_04.png",
+      "src": "/stickers/cartoon/pr_care_04.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "pr_care_05",
+      "label": "Protect 6",
+      "areas": [
+        "protect"
+      ],
+      "rare": false,
+      "file": "pr_care_05.png",
+      "src": "/stickers/cartoon/pr_care_05.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "pr_care_06",
+      "label": "Protect 7",
+      "areas": [
+        "protect"
+      ],
+      "rare": false,
+      "file": "pr_care_06.png",
+      "src": "/stickers/cartoon/pr_care_06.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "pr_care_07",
+      "label": "Protect 8",
+      "areas": [
+        "protect"
+      ],
+      "rare": false,
+      "file": "pr_care_07.png",
+      "src": "/stickers/cartoon/pr_care_07.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "pr_care_08",
+      "label": "Protect 9",
+      "areas": [
+        "protect"
+      ],
+      "rare": false,
+      "file": "pr_care_08.png",
+      "src": "/stickers/cartoon/pr_care_08.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "pr_care_09",
+      "label": "Protect 10",
+      "areas": [
+        "protect"
+      ],
+      "rare": false,
+      "file": "pr_care_09.png",
+      "src": "/stickers/cartoon/pr_care_09.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "pr_care_10",
+      "label": "Protect 11",
+      "areas": [
+        "protect"
+      ],
+      "rare": false,
+      "file": "pr_care_10.png",
+      "src": "/stickers/cartoon/pr_care_10.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "pr_care_11",
+      "label": "Protect 12",
+      "areas": [
+        "protect"
+      ],
+      "rare": true,
+      "file": "pr_care_11.png",
+      "src": "/stickers/cartoon/pr_care_11.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "pr_care_12",
+      "label": "Protect 13",
+      "areas": [
+        "protect"
+      ],
+      "rare": true,
+      "file": "pr_care_12.png",
+      "src": "/stickers/cartoon/pr_care_12.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "pr_care_13",
+      "label": "Protect 14",
+      "areas": [
+        "protect"
+      ],
+      "rare": true,
+      "file": "pr_care_13.png",
+      "src": "/stickers/cartoon/pr_care_13.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "pr_face_00",
+      "label": "Protect face 1",
+      "areas": [
+        "protect"
+      ],
+      "rare": false,
+      "file": "pr_face_00.png",
+      "src": "/stickers/cartoon/pr_face_00.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "pr_face_01",
+      "label": "Protect face 2",
+      "areas": [
+        "protect"
+      ],
+      "rare": false,
+      "file": "pr_face_01.png",
+      "src": "/stickers/cartoon/pr_face_01.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "pr_face_02",
+      "label": "Protect face 3",
+      "areas": [
+        "protect"
+      ],
+      "rare": false,
+      "file": "pr_face_02.png",
+      "src": "/stickers/cartoon/pr_face_02.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "pr_face_03",
+      "label": "Protect face 4",
+      "areas": [
+        "protect"
+      ],
+      "rare": false,
+      "file": "pr_face_03.png",
+      "src": "/stickers/cartoon/pr_face_03.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "pr_face_04",
+      "label": "Protect face 5",
+      "areas": [
+        "protect"
+      ],
+      "rare": false,
+      "file": "pr_face_04.png",
+      "src": "/stickers/cartoon/pr_face_04.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "pr_face_05",
+      "label": "Protect face 6",
+      "areas": [
+        "protect"
+      ],
+      "rare": false,
+      "file": "pr_face_05.png",
+      "src": "/stickers/cartoon/pr_face_05.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "pr_face_06",
+      "label": "Protect face 7",
+      "areas": [
+        "protect"
+      ],
+      "rare": false,
+      "file": "pr_face_06.png",
+      "src": "/stickers/cartoon/pr_face_06.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "pr_face_07",
+      "label": "Protect face 8",
+      "areas": [
+        "protect"
+      ],
+      "rare": false,
+      "file": "pr_face_07.png",
+      "src": "/stickers/cartoon/pr_face_07.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "pr_face_08",
+      "label": "Protect face 9",
+      "areas": [
+        "protect"
+      ],
+      "rare": false,
+      "file": "pr_face_08.png",
+      "src": "/stickers/cartoon/pr_face_08.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "pr_face_09",
+      "label": "Protect face 10",
+      "areas": [
+        "protect"
+      ],
+      "rare": false,
+      "file": "pr_face_09.png",
+      "src": "/stickers/cartoon/pr_face_09.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "shared_sleep_0",
+      "label": "Mark 1",
+      "areas": [
+        "sleep"
+      ],
+      "rare": false,
+      "file": "shared_sleep_0.png",
+      "src": "/stickers/cartoon/shared_sleep_0.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "shared_sleep_1",
+      "label": "Mark 2",
+      "areas": [
+        "sleep"
+      ],
+      "rare": false,
+      "file": "shared_sleep_1.png",
+      "src": "/stickers/cartoon/shared_sleep_1.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "shared_sleep_2",
+      "label": "Mark 3",
+      "areas": [
+        "sleep"
+      ],
+      "rare": false,
+      "file": "shared_sleep_2.png",
+      "src": "/stickers/cartoon/shared_sleep_2.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "shared_sleep_3",
+      "label": "Mark 4",
+      "areas": [
+        "sleep"
+      ],
+      "rare": true,
+      "file": "shared_sleep_3.png",
+      "src": "/stickers/cartoon/shared_sleep_3.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "shared_diet_0",
+      "label": "Mark 1",
+      "areas": [
+        "diet"
+      ],
+      "rare": false,
+      "file": "shared_diet_0.png",
+      "src": "/stickers/cartoon/shared_diet_0.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "shared_diet_1",
+      "label": "Mark 2",
+      "areas": [
+        "diet"
+      ],
+      "rare": false,
+      "file": "shared_diet_1.png",
+      "src": "/stickers/cartoon/shared_diet_1.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "shared_diet_2",
+      "label": "Mark 3",
+      "areas": [
+        "diet"
+      ],
+      "rare": false,
+      "file": "shared_diet_2.png",
+      "src": "/stickers/cartoon/shared_diet_2.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "shared_diet_3",
+      "label": "Mark 4",
+      "areas": [
+        "diet"
+      ],
+      "rare": true,
+      "file": "shared_diet_3.png",
+      "src": "/stickers/cartoon/shared_diet_3.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "shared_exercise_0",
+      "label": "Mark 1",
+      "areas": [
+        "exercise"
+      ],
+      "rare": false,
+      "file": "shared_exercise_0.png",
+      "src": "/stickers/cartoon/shared_exercise_0.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "shared_exercise_1",
+      "label": "Mark 2",
+      "areas": [
+        "exercise"
+      ],
+      "rare": false,
+      "file": "shared_exercise_1.png",
+      "src": "/stickers/cartoon/shared_exercise_1.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "shared_exercise_2",
+      "label": "Mark 3",
+      "areas": [
+        "exercise"
+      ],
+      "rare": false,
+      "file": "shared_exercise_2.png",
+      "src": "/stickers/cartoon/shared_exercise_2.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "shared_exercise_3",
+      "label": "Mark 4",
+      "areas": [
+        "exercise"
+      ],
+      "rare": true,
+      "file": "shared_exercise_3.png",
+      "src": "/stickers/cartoon/shared_exercise_3.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "shared_mental_health_0",
+      "label": "Mark 1",
+      "areas": [
+        "mental_health"
+      ],
+      "rare": false,
+      "file": "shared_mental_health_0.png",
+      "src": "/stickers/cartoon/shared_mental_health_0.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "shared_mental_health_1",
+      "label": "Mark 2",
+      "areas": [
+        "mental_health"
+      ],
+      "rare": false,
+      "file": "shared_mental_health_1.png",
+      "src": "/stickers/cartoon/shared_mental_health_1.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "shared_mental_health_2",
+      "label": "Mark 3",
+      "areas": [
+        "mental_health"
+      ],
+      "rare": false,
+      "file": "shared_mental_health_2.png",
+      "src": "/stickers/cartoon/shared_mental_health_2.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "shared_mental_health_3",
+      "label": "Mark 4",
+      "areas": [
+        "mental_health"
+      ],
+      "rare": true,
+      "file": "shared_mental_health_3.png",
+      "src": "/stickers/cartoon/shared_mental_health_3.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "shared_relationships_0",
+      "label": "Mark 1",
+      "areas": [
+        "relationships"
+      ],
+      "rare": false,
+      "file": "shared_relationships_0.png",
+      "src": "/stickers/cartoon/shared_relationships_0.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "shared_relationships_1",
+      "label": "Mark 2",
+      "areas": [
+        "relationships"
+      ],
+      "rare": false,
+      "file": "shared_relationships_1.png",
+      "src": "/stickers/cartoon/shared_relationships_1.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "shared_relationships_2",
+      "label": "Mark 3",
+      "areas": [
+        "relationships"
+      ],
+      "rare": false,
+      "file": "shared_relationships_2.png",
+      "src": "/stickers/cartoon/shared_relationships_2.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "shared_relationships_3",
+      "label": "Mark 4",
+      "areas": [
+        "relationships"
+      ],
+      "rare": true,
+      "file": "shared_relationships_3.png",
+      "src": "/stickers/cartoon/shared_relationships_3.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "shared_environment_0",
+      "label": "Mark 1",
+      "areas": [
+        "environment"
+      ],
+      "rare": false,
+      "file": "shared_environment_0.png",
+      "src": "/stickers/cartoon/shared_environment_0.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "shared_environment_1",
+      "label": "Mark 2",
+      "areas": [
+        "environment"
+      ],
+      "rare": false,
+      "file": "shared_environment_1.png",
+      "src": "/stickers/cartoon/shared_environment_1.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "shared_environment_2",
+      "label": "Mark 3",
+      "areas": [
+        "environment"
+      ],
+      "rare": false,
+      "file": "shared_environment_2.png",
+      "src": "/stickers/cartoon/shared_environment_2.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "shared_environment_3",
+      "label": "Mark 4",
+      "areas": [
+        "environment"
+      ],
+      "rare": true,
+      "file": "shared_environment_3.png",
+      "src": "/stickers/cartoon/shared_environment_3.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "shared_protect_0",
+      "label": "Mark 1",
+      "areas": [
+        "protect"
+      ],
+      "rare": false,
+      "file": "shared_protect_0.png",
+      "src": "/stickers/cartoon/shared_protect_0.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "shared_protect_1",
+      "label": "Mark 2",
+      "areas": [
+        "protect"
+      ],
+      "rare": false,
+      "file": "shared_protect_1.png",
+      "src": "/stickers/cartoon/shared_protect_1.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "shared_protect_2",
+      "label": "Mark 3",
+      "areas": [
+        "protect"
+      ],
+      "rare": false,
+      "file": "shared_protect_2.png",
+      "src": "/stickers/cartoon/shared_protect_2.png",
+      "size": 48,
+      "style": "cartoon"
+    },
+    {
+      "id": "shared_protect_3",
+      "label": "Mark 4",
+      "areas": [
+        "protect"
+      ],
+      "rare": true,
+      "file": "shared_protect_3.png",
+      "src": "/stickers/cartoon/shared_protect_3.png",
+      "size": 48,
+      "style": "cartoon"
+    }
+  ]
+}

@@ -474,5 +474,6 @@
   "docs.userprofile.delete_desc": "Delete your own account and conversation data. Requires <code>X-Session-Token</code>.",
   "docs.userprofile.get_desc": "Fetch a user's full record (passphrase and session token excluded). Requires <code>X-Session-Token</code> header from <code>/auth</code>.",
   "docs.userprofile.heading": "User & Profile",
-  "docs.userprofile.put_desc": "Partial update. Requires <code>X-Session-Token</code>. Allowed top-level keys: <code>username</code>, <code>settings</code>, <code>profile</code>, <code>first_name</code>, <code>last_name</code>, <code>email</code>, <code>wallets</code>. Nested objects are merged."
+  "docs.userprofile.put_desc": "Partial update. Requires <code>X-Session-Token</code>. Allowed top-level keys: <code>username</code>, <code>settings</code>, <code>profile</code>, <code>first_name</code>, <code>last_name</code>, <code>email</code>, <code>wallets</code>. Nested objects are merged.",
+  "app.stickers.style_cartoon": "🕹️ Cartoon"
 }

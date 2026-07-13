@@ -479,5 +479,6 @@
   "app.settings.ub_now_closed": "通用赏金发现已关闭",
   "app.settings.do_autosave": "即将保存…",
   "app.settings.auto_saved": "已保存",
-  "app.settings.do_title": "立即保存（可选 — 也会自动保存）"
+  "app.settings.do_title": "立即保存（可选 — 也会自动保存）",
+  "app.stickers.style_cartoon": "🕹️ 卡通"
 }

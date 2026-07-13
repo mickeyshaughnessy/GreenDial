@@ -198,6 +198,7 @@
     <div class="header-actions">
       <div class="sticker-style-toggle" role="group" aria-label="Sticker style">
         <button type="button" id="style-pixel" class="active" onclick="setStickerStyle('pixel')">🎨 Pixel</button>
+        <button type="button" id="style-cartoon" onclick="setStickerStyle('cartoon')">🕹️ Cartoon</button>
         <button type="button" id="style-emoji" onclick="setStickerStyle('emoji')">😀 Emoji</button>
       </div>
       <label class="gd-style-toolbar" title="UI style">
@@ -225,7 +226,7 @@
     let stickerStyle = 'pixel';
     try {
       const s = localStorage.getItem('gd_sticker_style');
-      if (s === 'emoji' || s === 'pixel') stickerStyle = s;
+      if (s === 'emoji' || s === 'pixel' || s === 'cartoon') stickerStyle = s;
     } catch (e) {}
 
     let boardData = null;
@@ -274,15 +275,21 @@
         .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
+    function artBase() {
+      return stickerStyle === 'cartoon' ? '/stickers/cartoon' : '/stickers/pixel';
+    }
+
     function syncStyleButtons() {
       const p = document.getElementById('style-pixel');
+      const c = document.getElementById('style-cartoon');
       const e = document.getElementById('style-emoji');
       if (p) p.classList.toggle('active', stickerStyle === 'pixel');
+      if (c) c.classList.toggle('active', stickerStyle === 'cartoon');
       if (e) e.classList.toggle('active', stickerStyle === 'emoji');
     }
 
     function setStickerStyle(style) {
-      if (style !== 'pixel' && style !== 'emoji') return;
+      if (style !== 'pixel' && style !== 'emoji' && style !== 'cartoon') return;
       stickerStyle = style;
       try { localStorage.setItem('gd_sticker_style', style); } catch (err) {}
       syncStyleButtons();
@@ -290,20 +297,20 @@
     }
     window.setStickerStyle = setStickerStyle;
 
-    /** Resolve stored token to pixel src + unicode emoji */
+    /** Resolve stored token to art src + unicode emoji */
     function resolveSticker(em, area, entrySrc) {
-      let src = entrySrc || null;
+      let src = null;
       let emojiChar = null;
       let pixelId = null;
       if (typeof em === 'string' && em) {
         if (em.startsWith('px:')) {
           pixelId = em.slice(3);
-          src = src || `/stickers/pixel/${pixelId}.png`;
+          src = `${artBase()}/${pixelId}.png`;
           emojiChar = PX_EMOJI[pixelId] || null;
-        } else if (em.startsWith('/stickers/pixel/')) {
-          src = em;
+        } else if (em.startsWith('/stickers/pixel/') || em.startsWith('/stickers/cartoon/')) {
           const m = em.match(/\/([^/]+)\.png$/);
           pixelId = m ? m[1] : null;
+          src = pixelId ? `${artBase()}/${pixelId}.png` : em;
           if (pixelId) emojiChar = PX_EMOJI[pixelId] || null;
         } else if (em.startsWith('/stickers/')) {
           src = em;
@@ -322,9 +329,14 @@
           else if (em === '🛌' && area === 'protect') pid = 'pr_rest';
           if (pid) {
             pixelId = pid;
-            src = src || `/stickers/pixel/${pid}.png`;
+            src = `${artBase()}/${pid}.png`;
           }
         }
+      }
+      if (!src && entrySrc) {
+        const m = String(entrySrc).match(/\/([^/]+)\.png$/);
+        if (m && stickerStyle !== 'emoji') src = `${artBase()}/${m[1]}.png`;
+        else src = entrySrc;
       }
       return { src, emojiChar, pixelId };
     }

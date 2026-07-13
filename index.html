@@ -1876,6 +1876,7 @@
         <h3 id="sticker-picker-title">Pick a sticker</h3>
         <div class="sticker-style-toggle" role="group">
           <button type="button" id="picker-style-pixel" class="active" onclick="setStickerStyle('pixel')">🎨 Pixel</button>
+          <button type="button" id="picker-style-cartoon" onclick="setStickerStyle('cartoon')">🕹️ Cartoon</button>
           <button type="button" id="picker-style-emoji" onclick="setStickerStyle('emoji')">😀 Emoji</button>
         </div>
         <button type="button" class="sticker-picker-close" onclick="closeStickerPicker()" aria-label="Close">×</button>
@@ -2067,6 +2068,7 @@
             <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
               <div class="sticker-style-toggle" role="group" aria-label="Sticker style" id="sticker-header-style-toggle">
                 <button type="button" id="sticker-header-style-pixel" class="active" onclick="setStickerStyle('pixel')" data-i18n="app.stickers.style_pixel">🎨 Pixel</button>
+                <button type="button" id="sticker-header-style-cartoon" onclick="setStickerStyle('cartoon')" data-i18n="app.stickers.style_cartoon">🕹️ Cartoon</button>
                 <button type="button" id="sticker-header-style-emoji" onclick="setStickerStyle('emoji')" data-i18n="app.stickers.style_emoji">😀 Emoji</button>
               </div>
               <button class="btn btn-secondary btn-sm" id="sticker-share-btn" onclick="copyShareLink()" style="display:none" data-i18n="app.stickers.share">🔗 Share</button>
@@ -2078,6 +2080,7 @@
             <div class="sticker-toolbar" id="sticker-toolbar" style="display:none">
               <div class="sticker-style-toggle" role="group" aria-label="Sticker style">
                 <button type="button" id="sticker-style-pixel" class="active" onclick="setStickerStyle('pixel')" data-i18n="app.stickers.style_pixel">🎨 Pixel</button>
+                <button type="button" id="sticker-style-cartoon" onclick="setStickerStyle('cartoon')" data-i18n="app.stickers.style_cartoon">🕹️ Cartoon</button>
                 <button type="button" id="sticker-style-emoji" onclick="setStickerStyle('emoji')" data-i18n="app.stickers.style_emoji">😀 Emoji</button>
               </div>
               <span class="sticker-style-hint" data-i18n="app.stickers.picker_hint">Click today’s empty cells to pick a sticker</span>
@@ -2500,10 +2503,10 @@
       ],
     };
 
-    let stickerStyle = 'pixel'; // 'pixel' | 'emoji' — board display + picker default
+    let stickerStyle = 'pixel'; // 'pixel' | 'cartoon' | 'emoji'
     try {
       const s = localStorage.getItem('gd_sticker_style');
-      if (s === 'emoji' || s === 'pixel') stickerStyle = s;
+      if (s === 'emoji' || s === 'pixel' || s === 'cartoon') stickerStyle = s;
     } catch (e) {}
 
     let _pixelCatalog = null; // loaded once from /stickers/pixel/catalog.json
@@ -2528,12 +2531,15 @@
         '#sticker-style-pixel, #picker-style-pixel, #sticker-header-style-pixel'
       ).forEach(b => b.classList.toggle('active', stickerStyle === 'pixel'));
       document.querySelectorAll(
+        '#sticker-style-cartoon, #picker-style-cartoon, #sticker-header-style-cartoon'
+      ).forEach(b => b.classList.toggle('active', stickerStyle === 'cartoon'));
+      document.querySelectorAll(
         '#sticker-style-emoji, #picker-style-emoji, #sticker-header-style-emoji'
       ).forEach(b => b.classList.toggle('active', stickerStyle === 'emoji'));
     }
 
     function setStickerStyle(style) {
-      if (style !== 'pixel' && style !== 'emoji') return;
+      if (style !== 'pixel' && style !== 'emoji' && style !== 'cartoon') return;
       stickerStyle = style;
       try { localStorage.setItem('gd_sticker_style', style); } catch (e) {}
       syncStickerStyleButtons();
@@ -2578,6 +2584,11 @@
       return (EMOJI_PICKER[area] || []).map(o => ({ ...o }));
     }
 
+    /** Art pack base path for current style (pixel | cartoon). */
+    function stickerArtBase() {
+      return stickerStyle === 'cartoon' ? '/stickers/cartoon' : '/stickers/pixel';
+    }
+
     /**
      * Render a board / check-in sticker respecting stickerStyle preference.
      * opts: { area, label } — used for emoji-mode reverse mapping fallbacks
@@ -2587,30 +2598,42 @@
       opts = opts || {};
       const cls = extraClass ? `px-sticker ${extraClass}` : 'px-sticker';
 
-      // Resolve to pixel src + unicode emoji when possible
-      let src = explicitSrc || null;
+      // Resolve to art src + unicode emoji when possible
+      let src = null;
       let emojiChar = null;
       let pixelId = null;
       if (typeof token === 'string') {
         if (token.startsWith('px:')) {
           pixelId = token.slice(3);
-          src = src || `/stickers/pixel/${pixelId}.png`;
+          src = `${stickerArtBase()}/${pixelId}.png`;
           emojiChar = PIXEL_TO_EMOJI[pixelId] || null;
-        } else if (token.startsWith('/stickers/pixel/')) {
-          src = token;
+        } else if (token.startsWith('/stickers/pixel/') || token.startsWith('/stickers/cartoon/')) {
           const m = token.match(/\/([^/]+)\.png$/);
           pixelId = m ? m[1] : null;
+          src = pixelId ? `${stickerArtBase()}/${pixelId}.png` : token;
           if (pixelId) emojiChar = PIXEL_TO_EMOJI[pixelId] || null;
         } else if (token.startsWith('/stickers/')) {
           src = token;
         } else {
           // Unicode emoji (legacy board entries)
           emojiChar = token;
-          if (!src && EMOJI_TO_PIXEL[token]) {
-            src = `/stickers/pixel/${EMOJI_TO_PIXEL[token]}.png`;
+          if (EMOJI_TO_PIXEL[token]) {
             pixelId = EMOJI_TO_PIXEL[token];
+            src = `${stickerArtBase()}/${pixelId}.png`;
           }
         }
+      }
+      // Server-provided src is pixel-path; remap to cartoon when needed
+      if (!src && explicitSrc) {
+        const m = String(explicitSrc).match(/\/([^/]+)\.png$/);
+        if (m && (stickerStyle === 'pixel' || stickerStyle === 'cartoon')) {
+          src = `${stickerArtBase()}/${m[1]}.png`;
+          pixelId = m[1];
+        } else {
+          src = explicitSrc;
+        }
+      } else if (explicitSrc && stickerStyle === 'cartoon' && pixelId) {
+        src = `${stickerArtBase()}/${pixelId}.png`;
       }
 
       // Label-based reverse map (manual picks store label in response)
@@ -2623,7 +2646,7 @@
       }
 
       if (stickerStyle === 'emoji') {
-        // Never show pixel art in emoji mode — fall back to area glyph if needed
+        // Never show pixel/cartoon art in emoji mode — fall back to area glyph if needed
         const glyph = emojiChar
           || AREA_FALLBACK_EMOJI[opts.area]
           || '•';
@@ -2631,11 +2654,11 @@
         return `<span class="sb-emoji"${title}>${escapeHtml(glyph)}</span>`;
       }
 
-      // pixel mode
+      // pixel or cartoon art pack
       if (src) {
         return `<img class="${cls}" src="${src}" alt="" width="28" height="28" draggable="false">`;
       }
-      // No pixel asset — show emoji glyph instead of blank
+      // No asset — show emoji glyph instead of blank
       return `<span class="sb-emoji">${escapeHtml(emojiChar || String(token || ''))}</span>`;
     }
 
@@ -2671,15 +2694,13 @@
       const area = _pickerCtx.area;
       grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:20px;color:rgba(255,255,255,0.4)">${t('app.loading','Loading…')}</div>`;
       let options = [];
-      if (stickerStyle === 'pixel') {
+      if (stickerStyle === 'emoji') {
+        options = emojiOptionsForArea(area);
+      } else {
+        // pixel + cartoon share the same catalog IDs (px:<id>)
         await ensurePixelCatalog();
         options = pixelOptionsForArea(area);
-        if (!options.length) {
-          // fall back to emoji if catalog missing
-          options = emojiOptionsForArea(area);
-        }
-      } else {
-        options = emojiOptionsForArea(area);
+        if (!options.length) options = emojiOptionsForArea(area);
       }
       if (!options.length) {
         grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:20px;color:rgba(255,255,255,0.4)">${t('app.stickers.no_options','No stickers available')}</div>`;
@@ -2690,9 +2711,13 @@
       grid.innerHTML = options.map((o, i) => {
         const token = (o.emoji || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
         const label = escapeHtml(o.label || '');
-        const glyph = stickerStyle === 'pixel'
-          ? stickerHTML(o.emoji, '', o.src)
-          : `<span style="font-size:26px">${escapeHtml(o.emoji || '')}</span>`;
+        let glyph;
+        if (stickerStyle === 'emoji') {
+          glyph = `<span style="font-size:26px">${escapeHtml(o.emoji || '')}</span>`;
+        } else {
+          // Remap catalog src (pixel path) through stickerHTML for cartoon pack
+          glyph = stickerHTML(o.emoji, '', o.src, { area, label: o.label || '' });
+        }
         return `<button type="button" class="sticker-pick-btn${o.rare ? ' rare' : ''}" title="${label}"
           onclick="pickBoardSticker('${token}', '${label.replace(/'/g, "\\'")}')">
           <span class="pick-glyph">${glyph}</span>

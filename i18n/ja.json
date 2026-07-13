@@ -479,5 +479,6 @@
   "app.settings.ub_now_closed": "ユニバーサルバウンティの公開はオフです",
   "app.settings.do_autosave": "まもなく保存…",
   "app.settings.auto_saved": "保存済み",
-  "app.settings.do_title": "今すぐ保存（任意 — 自動保存もあります）"
+  "app.settings.do_title": "今すぐ保存（任意 — 自動保存もあります）",
+  "app.stickers.style_cartoon": "🕹️ カートゥーン"
 }

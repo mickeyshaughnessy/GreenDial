@@ -120,6 +120,12 @@ def pixel_stickers(filename):
     return send_from_directory('stickers/pixel', filename)
 
 
+@app.route("/stickers/cartoon/<path:filename>", methods=['GET'])
+def cartoon_stickers(filename):
+    """NES/SNES-inspired funny cartoon sticker library (48×48)."""
+    return send_from_directory('stickers/cartoon', filename)
+
+
 @app.route("/i18n/<path:filename>", methods=['GET'])
 def i18n_files(filename):
     return send_from_directory('i18n', filename, mimetype='application/json' if filename.endswith('.json') else 'application/javascript')
