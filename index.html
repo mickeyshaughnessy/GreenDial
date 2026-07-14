@@ -1941,6 +1941,8 @@
           <button type="button" class="hamburger-item" onclick="closeHamburger();showDonateModal()" data-i18n="app.donate">💚 Donate</button>
           <a class="hamburger-item" href="/about" target="_blank" onclick="closeHamburger()" data-i18n="app.nav.about">ℹ️ About</a>
           <a class="hamburger-item" href="/docs" target="_blank" onclick="closeHamburger()" data-i18n="app.nav.docs">📄 Docs</a>
+          <a class="hamburger-item" href="/arazzo" target="_blank" onclick="closeHamburger()"><span aria-hidden="true">🧭</span><span data-i18n="common.nav.how_it_works">How It Works</span></a>
+          <a class="hamburger-item" href="/sponsor" target="_blank" onclick="closeHamburger()">💚 Sponsor</a>
           <a class="hamburger-item" href="/privacy" target="_blank" onclick="closeHamburger()" data-i18n="app.mbn.privacy">🔒 Privacy</a>
           <div class="hamburger-divider"></div>
           <div class="hamburger-lang" role="group" aria-label="Language">
@@ -3196,17 +3198,12 @@
       applyEasyMobile();
       updateChatCompactChrome();
       updateBoardNudge();
-      // Deep link: /?view=stickers (push check-in, shared links)
-      // On easy mobile, only allow stickers/user deep links (not history/docs chrome)
+      // Deep link: /?view=stickers (push check-in, shared links, hamburger nav from other pages)
       try {
         const params = new URLSearchParams(window.location.search);
         const view = params.get('view');
         if (view && document.getElementById('view-' + view)) {
-          if (isEasyMobile() && view !== 'chat' && view !== 'user' && view !== 'stickers') {
-            switchView('chat');
-          } else {
-            switchView(view);
-          }
+          switchView(view);
         }
       } catch (e) {}
       // PWA banner suppressed in easy-mobile CSS; still ok to schedule for full layout
