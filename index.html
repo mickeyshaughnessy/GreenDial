@@ -84,9 +84,9 @@
       background: rgba(255,255,255,0.05);
       border-radius: 12px;
     }
-    /* Nav scrolls inside the header when space is tight — never pushes actions off-screen */
+    /* Tab strip retired — the hamburger menu is the default nav on all sizes */
     .nav-tabs {
-      display: flex;
+      display: none;
       gap: 4px;
       flex: 1 1 140px;
       min-width: 0;
@@ -122,6 +122,67 @@
       max-width: 100%;
       min-width: 0;
     }
+    .hamburger-wrap {
+      position: relative;
+      z-index: 21;
+      order: 99; /* rightmost header control at every breakpoint */
+    }
+    .hamburger-btn {
+      width: 40px;
+      height: 40px;
+      padding: 0;
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 10px;
+      background: rgba(255,255,255,0.06);
+      color: rgba(255,255,255,0.85);
+      font-size: 18px;
+      line-height: 1;
+      cursor: pointer;
+      transition: background 0.2s;
+      flex-shrink: 0;
+    }
+    .hamburger-btn:hover { background: rgba(255,255,255,0.14); color: #fff; }
+    .hamburger-menu {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      width: 250px;
+      max-width: calc(100vw - 16px);
+      background: #2a2a4e;
+      border-radius: 12px;
+      box-shadow: 0 12px 48px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.08);
+      display: none;
+      z-index: 2100;
+      padding: 8px;
+      max-height: min(85dvh, 640px);
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      box-sizing: border-box;
+    }
+    .hamburger-menu.show { display: block; }
+    .hamburger-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      text-align: left;
+      padding: 12px;
+      min-height: 46px;
+      background: none;
+      border: none;
+      border-radius: 8px;
+      color: #eee;
+      font-size: 14px;
+      font-family: inherit;
+      cursor: pointer;
+      text-decoration: none;
+      box-sizing: border-box;
+    }
+    .hamburger-item:hover, .hamburger-item:active { background: rgba(255,255,255,0.08); }
+    .hamburger-item.active { background: rgba(16,185,129,0.2); color: #10b981; }
+    .hamburger-divider { height: 1px; background: rgba(255,255,255,0.1); margin: 6px 4px; }
+    .hamburger-lang { display: flex; gap: 8px; padding: 8px 12px 4px; }
+    .hamburger-lang .lang-btn { min-width: 44px; min-height: 36px; }
     .gd-style-toolbar {
       display: inline-flex;
       align-items: center;
@@ -1866,6 +1927,29 @@
         <span class="user-badge" data-i18n="app.guest">Guest</span>
         <button class="btn btn-primary btn-sm" onclick="showAuthPopup()" data-i18n="app.signin">Sign In</button>
       </div>
+      <div class="hamburger-wrap" id="hamburger-wrap">
+        <button type="button" class="hamburger-btn" id="hamburger-btn" aria-label="Menu" aria-haspopup="true" aria-expanded="false" onclick="toggleHamburger()">☰</button>
+        <div class="hamburger-menu" id="hamburger-menu" role="menu">
+          <button type="button" class="hamburger-item" data-hview="chat" onclick="hamburgerGo('chat')"><span data-i18n="app.nav.chat">💬 Chat</span></button>
+          <button type="button" class="hamburger-item" data-hview="stickers" onclick="hamburgerGo('stickers')"><span data-i18n="app.nav.board">🏷️ Board</span></button>
+          <button type="button" class="hamburger-item" data-hview="history" onclick="hamburgerGo('history')"><span data-i18n="app.nav.history">📜 History</span></button>
+          <button type="button" class="hamburger-item" data-hview="feedback" onclick="hamburgerGo('feedback')"><span data-i18n="app.nav.feedback">📣 Feedback</span></button>
+          <button type="button" class="hamburger-item" data-hview="getstarted" onclick="hamburgerGo('getstarted')"><span data-i18n="app.nav.getstarted">🚀 Get Started</span></button>
+          <button type="button" class="hamburger-item" data-hview="user" onclick="hamburgerGo('user')"><span aria-hidden="true">👤</span><span data-i18n="app.mbn.me">Me</span></button>
+          <button type="button" class="hamburger-item" id="hamburger-admin" data-hview="admin" style="display:none" onclick="hamburgerGo('admin')">🛡️ Admin/Stats</button>
+          <div class="hamburger-divider"></div>
+          <button type="button" class="hamburger-item" onclick="closeHamburger();showDonateModal()" data-i18n="app.donate">💚 Donate</button>
+          <a class="hamburger-item" href="/about" target="_blank" onclick="closeHamburger()" data-i18n="app.nav.about">ℹ️ About</a>
+          <a class="hamburger-item" href="/docs" target="_blank" onclick="closeHamburger()" data-i18n="app.nav.docs">📄 Docs</a>
+          <a class="hamburger-item" href="/privacy" target="_blank" onclick="closeHamburger()" data-i18n="app.mbn.privacy">🔒 Privacy</a>
+          <div class="hamburger-divider"></div>
+          <div class="hamburger-lang" role="group" aria-label="Language">
+            <button type="button" class="lang-btn" data-lang="en" onclick="setLanguage('en');closeHamburger()" title="English">T</button>
+            <button type="button" class="lang-btn" data-lang="zh" onclick="setLanguage('zh');closeHamburger()" title="中文">中</button>
+            <button type="button" class="lang-btn" data-lang="ja" onclick="setLanguage('ja');closeHamburger()" title="日本語">日</button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
   
@@ -2909,11 +2993,7 @@
       updateChatCompactChrome();
       updateBoardNudge();
 
-      // If we hid the current view's tab, go back to chat
-      // Me (user) stays reachable for settings even in chat-only
-      if (chatOnly && currentView !== 'chat' && currentView !== 'admin' && currentView !== 'stickers' && currentView !== 'feedback' && currentView !== 'getstarted' && currentView !== 'user') {
-        switchView('chat');
-      }
+      // All views stay reachable via the hamburger menu, even in chat-only mode
     }
 
     async function setChatOnlyMode(enabled) {
@@ -3163,7 +3243,11 @@
         const secondary = ['history', 'feedback', 'getstarted', 'admin'].includes(view);
         moreBtn.classList.toggle('active', secondary);
       }
+      document.querySelectorAll('.hamburger-item[data-hview]').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-hview') === view);
+      });
       closeMoreMenu();
+      closeHamburger();
       
       if (view === 'user') refreshUserTab();
       if (view === 'history') refreshHistory();
@@ -3179,6 +3263,26 @@
 
     function moreGo(view) {
       closeMoreMenu();
+      switchView(view);
+    }
+    function toggleHamburger() {
+      const menu = document.getElementById('hamburger-menu');
+      const btn = document.getElementById('hamburger-btn');
+      if (!menu) return;
+      const open = !menu.classList.contains('show');
+      menu.classList.toggle('show', open);
+      if (btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      const adm = document.getElementById('hamburger-admin');
+      if (adm) adm.style.display = isAdminUser() ? '' : 'none';
+    }
+    function closeHamburger() {
+      const menu = document.getElementById('hamburger-menu');
+      const btn = document.getElementById('hamburger-btn');
+      if (menu) menu.classList.remove('show');
+      if (btn) btn.setAttribute('aria-expanded', 'false');
+    }
+    function hamburgerGo(view) {
+      closeHamburger();
       switchView(view);
     }
     function toggleMoreMenu() {
@@ -3373,8 +3477,8 @@
       if (on) {
         currentAgent = 'doc';
         document.documentElement.style.setProperty('--bottom-nav-h', '0px');
-        // Settings + Board still allowed (opened from Settings); hide other chrome views
-        const allowed = { chat: 1, user: 1, stickers: 1 };
+        // Every view stays reachable — the hamburger menu is the universal nav
+        const allowed = { chat: 1, user: 1, stickers: 1, history: 1, feedback: 1, getstarted: 1, admin: 1 };
         if (currentView && !allowed[currentView]) {
           switchView('chat');
         }
@@ -5189,10 +5293,12 @@
         const dropdown = document.getElementById('notif-dropdown');
         if (dropdown) dropdown.classList.remove('show');
       }
+      if (!e.target.closest('.hamburger-wrap')) closeHamburger();
     });
     document.addEventListener('keydown', (e) => {
       if (e.key !== 'Escape') return;
       closeMoreMenu();
+      closeHamburger();
       closeStickerPicker();
       const auth = document.getElementById('auth-popup');
       if (auth && auth.classList.contains('show')) hideAuthPopup();
