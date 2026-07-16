@@ -142,17 +142,18 @@
       flex-shrink: 0;
     }
     .hamburger-btn:hover { background: rgba(255,255,255,0.14); color: #fff; }
+    /* Menu is portaled to #gd-portals; JS sets top/right from the button rect */
     .hamburger-menu {
-      position: absolute;
-      top: calc(100% + 8px);
-      right: 0;
+      position: fixed;
+      top: 56px;
+      right: 12px;
       width: 250px;
       max-width: calc(100vw - 16px);
       background: #2a2a4e;
       border-radius: 12px;
       box-shadow: 0 12px 48px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.08);
       display: none;
-      z-index: 2100;
+      z-index: 3;
       padding: 8px;
       max-height: min(85dvh, 640px);
       overflow-y: auto;
@@ -252,15 +253,38 @@
       align-items: center;
       justify-content: center;
     }
-    /* Bell wrapper — stacking context for the dropdown */
+    /* Bell button lives in the header; the dropdown is portaled to #gd-portals
+       so theme backdrop-filter on .header cannot clip or re-contain it. */
     .user-area > div[style*="relative"],
     .notif-bell-wrap {
       position: relative;
       z-index: 20;
     }
+    /* Body-level portal — must beat theme `body > * { position: relative; z-index: 1 }` */
+    body > #gd-portals {
+      position: fixed !important;
+      inset: 0;
+      z-index: 3200 !important;
+      pointer-events: none;
+      isolation: isolate;
+    }
+    #gd-portals > * { pointer-events: auto; }
+    .notif-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.45);
+      z-index: 1;
+      border: none;
+      padding: 0;
+      margin: 0;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .notif-backdrop.show { display: block; }
     .notification-dropdown {
-      position: absolute;
-      top: calc(100% + 6px);
+      position: fixed;
+      top: 0;
       right: 0;
       width: 360px;
       max-width: min(360px, calc(100vw - 16px));
@@ -268,11 +292,12 @@
       border-radius: 12px;
       box-shadow: 0 12px 48px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.08);
       display: none;
-      z-index: 2000;
+      z-index: 2;
       overflow: hidden;
       max-height: min(85vh, 640px);
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
+      box-sizing: border-box;
     }
     .notification-dropdown.show { display: block; }
     .notification-header {
@@ -1517,20 +1542,21 @@
       /* Hide developer JSON panel on phones */
       #profile-json-panel { display: none; }
 
-      /* Full-bleed notification sheet under header */
+      /* Full-bleed notification bottom sheet (lives in #gd-portals, not header) */
       .notification-dropdown {
-        position: fixed;
-        top: auto;
-        left: 0;
-        right: 0;
-        bottom: var(--bottom-nav-h);
-        width: 100%;
-        max-width: 100%;
+        top: auto !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: var(--bottom-nav-h) !important;
+        width: 100% !important;
+        max-width: 100% !important;
         max-height: min(70dvh, 520px);
         border-radius: 16px 16px 0 0;
-        z-index: 1550;
       }
       .notif-bell-wrap { position: static; }
+      .hamburger-menu {
+        max-height: min(75dvh, 560px);
+      }
 
       .sb-area-label { font-size: 12px; padding-right: 10px; }
       .sb-cell, .sb-dot { width: 44px; height: 44px; }
@@ -1846,7 +1872,8 @@
     /* Notification sheet sits at the very bottom in easy-mobile (no bottom nav):
        pad past the iOS home indicator so the last item stays tappable */
     body.easy-mobile .notification-dropdown {
-      padding-bottom: env(safe-area-inset-bottom, 0px);
+      padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+      bottom: 0 !important;
     }
     body.easy-mobile .main {
       padding-bottom: var(--kb) !important;
@@ -1922,10 +1949,6 @@
       <div class="user-area" id="user-area">
         <div class="notif-bell-wrap">
           <button class="notification-bell" onclick="toggleNotifications()" type="button" aria-haspopup="true" aria-expanded="false" id="notif-bell-btn">🔔<span class="notification-badge" id="notif-badge" style="display:none">0</span></button>
-          <div class="notification-dropdown" id="notif-dropdown" role="menu">
-            <div class="notification-header" data-i18n="app.notif.header">Notifications from Doc</div>
-            <div class="notification-list" id="notif-list"><div class="notification-empty" data-i18n="app.notif.empty">No notifications</div></div>
-          </div>
         </div>
         <button class="btn btn-secondary btn-sm" onclick="showDonateModal()" title="Support GreenDial"><span data-i18n="app.donate">💚 Donate</span></button>
         <span class="user-badge" data-i18n="app.guest">Guest</span>
@@ -1933,28 +1956,52 @@
       </div>
       <div class="hamburger-wrap" id="hamburger-wrap">
         <button type="button" class="hamburger-btn" id="hamburger-btn" aria-label="Menu" aria-haspopup="true" aria-expanded="false" onclick="toggleHamburger()">☰</button>
-        <div class="hamburger-menu" id="hamburger-menu" role="menu">
-          <button type="button" class="hamburger-item" data-hview="chat" onclick="hamburgerGo('chat')"><span data-i18n="app.nav.chat">💬 Chat</span></button>
-          <button type="button" class="hamburger-item" data-hview="stickers" onclick="hamburgerGo('stickers')"><span data-i18n="app.nav.board">🏷️ Board</span></button>
-          <button type="button" class="hamburger-item" data-hview="history" onclick="hamburgerGo('history')"><span data-i18n="app.nav.history">📜 History</span></button>
-          <button type="button" class="hamburger-item" data-hview="feedback" onclick="hamburgerGo('feedback')"><span data-i18n="app.nav.feedback">📣 Feedback</span></button>
-          <button type="button" class="hamburger-item" data-hview="getstarted" onclick="hamburgerGo('getstarted')"><span data-i18n="app.nav.getstarted">🚀 Get Started</span></button>
-          <button type="button" class="hamburger-item" data-hview="user" onclick="hamburgerGo('user')"><span aria-hidden="true">👤</span><span data-i18n="app.mbn.me">Me</span></button>
-          <button type="button" class="hamburger-item" id="hamburger-admin" data-hview="admin" style="display:none" onclick="hamburgerGo('admin')">🛡️ Admin/Stats</button>
-          <div class="hamburger-divider"></div>
-          <button type="button" class="hamburger-item" onclick="closeHamburger();showDonateModal()" data-i18n="app.donate">💚 Donate</button>
-          <a class="hamburger-item" href="/about" target="_blank" onclick="closeHamburger()" data-i18n="app.nav.about">ℹ️ About</a>
-          <a class="hamburger-item" href="/docs" target="_blank" onclick="closeHamburger()" data-i18n="app.nav.docs">📄 Docs</a>
-          <a class="hamburger-item" href="/arazzo" target="_blank" onclick="closeHamburger()"><span aria-hidden="true">🧭</span><span data-i18n="common.nav.how_it_works">How It Works</span></a>
-          <a class="hamburger-item" href="/sponsor" target="_blank" onclick="closeHamburger()">💚 Sponsor</a>
-          <a class="hamburger-item" href="/privacy" target="_blank" onclick="closeHamburger()" data-i18n="app.mbn.privacy">🔒 Privacy</a>
-          <div class="hamburger-divider"></div>
-          <div class="hamburger-lang" role="group" aria-label="Language">
-            <button type="button" class="lang-btn" data-lang="en" onclick="setLanguage('en');closeHamburger()" title="English">T</button>
-            <button type="button" class="lang-btn" data-lang="zh" onclick="setLanguage('zh');closeHamburger()" title="中文">中</button>
-            <button type="button" class="lang-btn" data-lang="ja" onclick="setLanguage('ja');closeHamburger()" title="日本語">日</button>
-          </div>
-        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Overlays outside .header so theme backdrop-filter cannot clip them -->
+  <div id="gd-portals" aria-live="polite">
+    <button type="button" class="notif-backdrop" id="notif-backdrop" aria-label="Close notifications" onclick="closeNotifications()"></button>
+    <div class="notification-dropdown" id="notif-dropdown" role="menu" aria-labelledby="notif-bell-btn">
+      <div class="notification-header" data-i18n="app.notif.header">Notifications from Doc</div>
+      <div class="notif-section">
+        <div class="notif-section-label" data-i18n="app.ub_activities">Universal Bounty</div>
+        <div id="today-activities-list"><div class="notif-empty-sm" data-i18n="app.signin_activities">Sign in to see activities</div></div>
+      </div>
+      <div class="notif-section">
+        <div class="notif-section-label" data-i18n="app.suggestions">Suggestions</div>
+        <div id="today-suggestions-list"><div class="notif-empty-sm" data-i18n="app.signin_suggestions">Sign in to see suggestions</div></div>
+      </div>
+      <div class="notif-section">
+        <div class="notif-section-label" data-i18n="app.checkins">Check-ins</div>
+        <div id="today-checkins-list"><div class="notif-empty-sm" data-i18n="app.signin_checkins">Sign in to see check-ins</div></div>
+      </div>
+      <div class="notif-section" id="tips-section" style="display:none">
+        <div class="notif-section-label notif-section-toggle" onclick="toggleTipsSection()"><span data-i18n="app.tips_reminders">Tips & Reminders</span> <span id="tips-toggle">▶</span></div>
+        <div id="today-tips-list" style="display:none"></div>
+      </div>
+    </div>
+    <div class="hamburger-menu" id="hamburger-menu" role="menu">
+      <button type="button" class="hamburger-item" data-hview="chat" onclick="hamburgerGo('chat')"><span data-i18n="app.nav.chat">💬 Chat</span></button>
+      <button type="button" class="hamburger-item" data-hview="stickers" onclick="hamburgerGo('stickers')"><span data-i18n="app.nav.board">🏷️ Board</span></button>
+      <button type="button" class="hamburger-item" data-hview="history" onclick="hamburgerGo('history')"><span data-i18n="app.nav.history">📜 History</span></button>
+      <button type="button" class="hamburger-item" data-hview="feedback" onclick="hamburgerGo('feedback')"><span data-i18n="app.nav.feedback">📣 Feedback</span></button>
+      <button type="button" class="hamburger-item" data-hview="getstarted" onclick="hamburgerGo('getstarted')"><span data-i18n="app.nav.getstarted">🚀 Get Started</span></button>
+      <button type="button" class="hamburger-item" data-hview="user" onclick="hamburgerGo('user')"><span aria-hidden="true">👤</span><span data-i18n="app.mbn.me">Me</span></button>
+      <button type="button" class="hamburger-item" id="hamburger-admin" data-hview="admin" style="display:none" onclick="hamburgerGo('admin')">🛡️ Admin/Stats</button>
+      <div class="hamburger-divider"></div>
+      <button type="button" class="hamburger-item" onclick="closeHamburger();showDonateModal()" data-i18n="app.donate">💚 Donate</button>
+      <a class="hamburger-item" href="/about" target="_blank" onclick="closeHamburger()" data-i18n="app.nav.about">ℹ️ About</a>
+      <a class="hamburger-item" href="/docs" target="_blank" onclick="closeHamburger()" data-i18n="app.nav.docs">📄 Docs</a>
+      <a class="hamburger-item" href="/arazzo" target="_blank" onclick="closeHamburger()"><span aria-hidden="true">🧭</span><span data-i18n="common.nav.how_it_works">How It Works</span></a>
+      <a class="hamburger-item" href="/sponsor" target="_blank" onclick="closeHamburger()">💚 Sponsor</a>
+      <a class="hamburger-item" href="/privacy" target="_blank" onclick="closeHamburger()" data-i18n="app.mbn.privacy">🔒 Privacy</a>
+      <div class="hamburger-divider"></div>
+      <div class="hamburger-lang" role="group" aria-label="Language">
+        <button type="button" class="lang-btn" data-lang="en" onclick="setLanguage('en');closeHamburger()" title="English">T</button>
+        <button type="button" class="lang-btn" data-lang="zh" onclick="setLanguage('zh');closeHamburger()" title="中文">中</button>
+        <button type="button" class="lang-btn" data-lang="ja" onclick="setLanguage('ja');closeHamburger()" title="日本語">日</button>
       </div>
     </div>
   </div>
@@ -2414,11 +2461,30 @@
     // ── CONSTANTS ────────────────────────────────────────────────────────────
     const API = window.location.origin;
 
-    // Inject session token on every API request (server requires it for user-scoped routes)
+    // Inject session token on every same-origin API request (user-scoped routes require it).
+    // Must handle relative paths AND Headers instances (spread of Headers is empty).
     const _origFetch = window.fetch.bind(window);
     window.fetch = (url, opts = {}) => {
-      if (typeof url === 'string' && url.startsWith(API) && currentUser && currentUser.token) {
-        opts.headers = { ...(opts.headers || {}), 'X-Session-Token': currentUser.token };
+      if (currentUser && currentUser.token) {
+        let path = '';
+        if (typeof url === 'string') path = url;
+        else if (url && typeof url.url === 'string') path = url.url;
+        const external = /^https?:\/\//i.test(path) && !path.startsWith(API);
+        const sameOrigin = !external && (
+          path.startsWith(API)
+          || path.startsWith('/')
+          || path.startsWith('./')
+          || !/^https?:\/\//i.test(path)
+        );
+        if (sameOrigin && path) {
+          opts = opts || {};
+          const h = opts.headers;
+          if (h && typeof h.set === 'function' && typeof h.has === 'function') {
+            if (!h.has('X-Session-Token')) h.set('X-Session-Token', currentUser.token);
+          } else {
+            opts.headers = { ...(h || {}), 'X-Session-Token': currentUser.token };
+          }
+        }
       }
       return _origFetch(url, opts);
     };
@@ -3105,7 +3171,22 @@
     async function loadAgentChats(userId) {
       try {
         const res = await fetch(`${API}/conversations/${userId}/agents`);
+        if (!res.ok) {
+          console.error('loadAgentChats HTTP', res.status);
+          // Session may have expired — surface a clear chat state rather than a blank UI
+          if (res.status === 401 || res.status === 403) {
+            clearSession();
+            currentUser = null;
+            updateUserUI();
+            applyChatOnlyMode(true);
+          }
+          return;
+        }
         const data = await res.json();
+        if (data.error) {
+          console.error('loadAgentChats', data.error);
+          return;
+        }
         if (data.doc_transcript) agentChats['doc'] = parseTranscript(data.doc_transcript, 'doc');
         // Initialise all agent chats (empty if no history yet)
         const allIds = ['diet','exercise','protect','sleep','mental_health','relationships','environment','custom','cross_ai'];
@@ -3114,6 +3195,7 @@
           agentChats[aid] = t ? parseTranscript(t, aid) : [];
         }
         renderMessages();
+        updateChatCompactChrome();
       } catch (e) { console.error('loadAgentChats', e); }
     }
 
@@ -3259,18 +3341,43 @@
     }
     
     function goToSettings() {
+      closeNotifications();
+      closeHamburger();
       switchView('user');
     }
+    window.goToSettings = goToSettings;
 
     function moreGo(view) {
       closeMoreMenu();
       switchView(view);
     }
+    function positionHamburgerMenu() {
+      const menu = document.getElementById('hamburger-menu');
+      const btn = document.getElementById('hamburger-btn');
+      if (!menu || !btn) return;
+      const r = btn.getBoundingClientRect();
+      const w = Math.min(250, window.innerWidth - 16);
+      let right = Math.max(8, Math.round(window.innerWidth - r.right));
+      right = Math.min(right, window.innerWidth - w - 8);
+      let top = Math.round(r.bottom + 8);
+      // Keep the panel on-screen if the header is tall / keyboard is open
+      const maxTop = Math.max(8, window.innerHeight - 120);
+      if (top > maxTop) top = Math.max(8, maxTop);
+      menu.style.top = top + 'px';
+      menu.style.right = right + 'px';
+      menu.style.left = 'auto';
+      menu.style.width = w + 'px';
+    }
+
     function toggleHamburger() {
       const menu = document.getElementById('hamburger-menu');
       const btn = document.getElementById('hamburger-btn');
       if (!menu) return;
       const open = !menu.classList.contains('show');
+      if (open) {
+        closeNotifications();
+        positionHamburgerMenu();
+      }
       menu.classList.toggle('show', open);
       if (btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false');
       const adm = document.getElementById('hamburger-admin');
@@ -3286,6 +3393,9 @@
       closeHamburger();
       switchView(view);
     }
+    window.toggleHamburger = toggleHamburger;
+    window.closeHamburger = closeHamburger;
+    window.hamburgerGo = hamburgerGo;
     function toggleMoreMenu() {
       const sheet = document.getElementById('mobile-more-sheet');
       if (!sheet) return;
@@ -4393,7 +4503,7 @@
         return `<div class="sugg-item" id="bact-${a.id}">
           <div class="sugg-item-header">
             <span>${meta.emoji} ${meta.name}${priceTag}</span>
-            <button class="sugg-accept" onclick="completeActivity('${a.id}');document.getElementById('notif-dropdown')?.classList.remove('show')">${t('app.mark_complete','Mark Complete')}</button>
+            <button class="sugg-accept" onclick="completeActivity('${a.id}');closeNotifications()">${t('app.mark_complete','Mark Complete')}</button>
           </div>
           <div class="sugg-item-text">${escapeHtml(a.text || '')}</div>
         </div>`;
@@ -4547,7 +4657,7 @@
           try { await loadAgentChats(currentUser.user_id); } catch (e) {}
         }
       } catch (e) {}
-      document.getElementById('notif-dropdown')?.classList.remove('show');
+      closeNotifications();
       switchView('chat');
       // Free suggestions + meta/profile nudges open the relevant conversation
       if (dest === 'chat' || !isUB) {
@@ -5108,18 +5218,66 @@
     }
     window.saveBountyBlurb = saveBountyBlurb;
     
+    function positionNotifDropdown() {
+      const dropdown = document.getElementById('notif-dropdown');
+      const btn = document.getElementById('notif-bell-btn');
+      if (!dropdown) return;
+      const mobile = window.matchMedia('(max-width: 700px)').matches;
+      if (mobile) {
+        // CSS bottom-sheet rules apply; clear desktop coords
+        dropdown.style.top = '';
+        dropdown.style.right = '';
+        dropdown.style.left = '';
+        dropdown.style.bottom = '';
+        dropdown.style.width = '';
+        dropdown.style.maxWidth = '';
+        return;
+      }
+      if (!btn) return;
+      const r = btn.getBoundingClientRect();
+      const width = Math.min(360, window.innerWidth - 16);
+      let right = Math.max(8, Math.round(window.innerWidth - r.right));
+      right = Math.min(right, window.innerWidth - width - 8);
+      dropdown.style.top = Math.round(r.bottom + 6) + 'px';
+      dropdown.style.right = right + 'px';
+      dropdown.style.left = 'auto';
+      dropdown.style.bottom = 'auto';
+      dropdown.style.width = width + 'px';
+      dropdown.style.maxWidth = width + 'px';
+    }
+
+    function closeNotifications() {
+      const dropdown = document.getElementById('notif-dropdown');
+      const backdrop = document.getElementById('notif-backdrop');
+      const btn = document.getElementById('notif-bell-btn');
+      if (dropdown) dropdown.classList.remove('show');
+      if (backdrop) backdrop.classList.remove('show');
+      if (btn) btn.setAttribute('aria-expanded', 'false');
+    }
+
     function toggleNotifications() {
       const dropdown = document.getElementById('notif-dropdown');
       if (!dropdown) return;
-      dropdown.classList.toggle('show');
-      const open = dropdown.classList.contains('show');
-      const btn = document.getElementById('notif-bell-btn');
-      if (btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-      if (open) fetchToday();
+      const willOpen = !dropdown.classList.contains('show');
+      if (willOpen) {
+        closeHamburger();
+        positionNotifDropdown();
+        dropdown.classList.add('show');
+        const backdrop = document.getElementById('notif-backdrop');
+        // Backdrop on all sizes so outside-tap closes reliably (portaled overlays)
+        if (backdrop) backdrop.classList.add('show');
+        const btn = document.getElementById('notif-bell-btn');
+        if (btn) btn.setAttribute('aria-expanded', 'true');
+        fetchToday();
+      } else {
+        closeNotifications();
+      }
     }
+    window.closeNotifications = closeNotifications;
+    window.toggleNotifications = toggleNotifications;
 
     async function openNotificationInChat(notifId, message, agentId) {
-      document.getElementById('notif-dropdown')?.classList.remove('show');
+      closeNotifications();
       switchView('chat');
       dismissNotification(notifId);
       if (agentId && agentId !== 'doc' && AGENT_META[agentId]) {
@@ -5290,21 +5448,32 @@
     }
     
     document.addEventListener('click', (e) => {
-      if (!e.target.closest('.notif-bell-wrap') && !e.target.closest('.notification-bell') && !e.target.closest('.notification-dropdown')) {
-        const dropdown = document.getElementById('notif-dropdown');
-        if (dropdown) dropdown.classList.remove('show');
+      const inNotif = e.target.closest('#notif-dropdown')
+        || e.target.closest('.notif-bell-wrap')
+        || e.target.closest('.notification-bell')
+        || e.target.closest('#notif-backdrop');
+      if (!inNotif) closeNotifications();
+      // Hamburger is portaled; also treat clicks on the button wrap as inside
+      if (!e.target.closest('.hamburger-wrap') && !e.target.closest('#hamburger-menu') && !e.target.closest('#hamburger-btn')) {
+        closeHamburger();
       }
-      if (!e.target.closest('.hamburger-wrap')) closeHamburger();
     });
     document.addEventListener('keydown', (e) => {
       if (e.key !== 'Escape') return;
       closeMoreMenu();
       closeHamburger();
+      closeNotifications();
       closeStickerPicker();
       const auth = document.getElementById('auth-popup');
       if (auth && auth.classList.contains('show')) hideAuthPopup();
       const donate = document.getElementById('donate-popup');
       if (donate && donate.classList.contains('show')) hideDonateModal();
+    });
+    window.addEventListener('resize', () => {
+      const dd = document.getElementById('notif-dropdown');
+      if (dd && dd.classList.contains('show')) positionNotifDropdown();
+      const hm = document.getElementById('hamburger-menu');
+      if (hm && hm.classList.contains('show')) positionHamburgerMenu();
     });
     
     function setModalOpen(open) {
@@ -5481,50 +5650,43 @@
       applyChatOnlyMode(true);
     }
     
+    function bellButtonHtml() {
+      // Dropdown lives in #gd-portals (stable DOM); only the header button is rebuilt
+      return `<div class="notif-bell-wrap">
+          <button class="notification-bell" type="button" onclick="toggleNotifications()" aria-haspopup="true" aria-expanded="false" id="notif-bell-btn">🔔<span class="notification-badge" id="notif-badge" style="display:none">0</span></button>
+        </div>`;
+    }
+
+    function updateNotifHeaderLabel(signedIn) {
+      const hdr = document.querySelector('#notif-dropdown .notification-header');
+      if (hdr) hdr.textContent = signedIn ? t('app.today', 'Today') : t('app.notif.header', 'Notifications from Doc');
+    }
+
     function updateUserUI() {
       const userArea = document.getElementById('user-area');
+      if (!userArea) return;
       const chatOnly = isChatOnly();
-
-      const todayDropdownHtml = (signedIn) => `
-        <div class="notif-bell-wrap">
-          <button class="notification-bell" type="button" onclick="toggleNotifications()" aria-haspopup="true" aria-expanded="false" id="notif-bell-btn">🔔<span class="notification-badge" id="notif-badge" style="display:none">0</span></button>
-          <div class="notification-dropdown" id="notif-dropdown" role="menu">
-            <div class="notification-header">${t('app.today','Today')}</div>
-            <div class="notif-section">
-              <div class="notif-section-label">${t('app.ub_activities','Universal Bounty')}</div>
-              <div id="today-activities-list"><div class="notif-empty-sm">${signedIn ? t('app.loading','Loading…') : t('app.signin_activities','Sign in to see activities')}</div></div>
-            </div>
-            <div class="notif-section">
-              <div class="notif-section-label">${t('app.suggestions','Suggestions')}</div>
-              <div id="today-suggestions-list"><div class="notif-empty-sm">${signedIn ? t('app.loading','Loading…') : t('app.signin_suggestions','Sign in to see suggestions')}</div></div>
-            </div>
-            <div class="notif-section">
-              <div class="notif-section-label">${t('app.checkins','Check-ins')}</div>
-              <div id="today-checkins-list"><div class="notif-empty-sm">${signedIn ? t('app.loading','Loading…') : t('app.signin_checkins','Sign in to see check-ins')}</div></div>
-            </div>
-            <div class="notif-section" id="tips-section" style="display:none">
-              <div class="notif-section-label notif-section-toggle" onclick="toggleTipsSection()">${t('app.tips_reminders','Tips & Reminders')} <span id="tips-toggle">▶</span></div>
-              <div id="today-tips-list" style="display:none"></div>
-            </div>
-          </div>
-        </div>`;
+      // Keep overlays closed when the header chrome is rebuilt
+      closeNotifications();
+      closeHamburger();
 
       if (currentUser) {
         // Admin/Stats: mickey only (user_id user_mickey), always visible even in chat-only
         setAdminTabVisible(isAdminUser());
+        updateNotifHeaderLabel(true);
 
         if (chatOnly) {
           userArea.innerHTML = `
-            ${todayDropdownHtml(true)}
-            <span class="user-badge" onclick="goToSettings()" style="display:flex;align-items:center;gap:6px;cursor:pointer" title="Open settings">
+            ${bellButtonHtml()}
+            <span class="user-badge" onclick="goToSettings()" style="display:flex;align-items:center;gap:6px;cursor:pointer" title="${t('app.settings.heading','⚙️ Settings')}">
               <span style="font-size:16px">${getUserAvatar()}</span>${escapeHtml(currentUser.username)}
             </span>
           `;
         } else {
           userArea.innerHTML = `
-            ${todayDropdownHtml(true)}
+            ${bellButtonHtml()}
             <button class="btn btn-secondary btn-sm" onclick="showDonateModal()" title="Support GreenDial">💚 ${t('app.donate_plain','Donate')}</button>
-            <span class="user-badge" onclick="goToSettings()" style="display:flex;align-items:center;gap:6px"><span style="font-size:16px">${getUserAvatar()}</span>${escapeHtml(currentUser.username)}</span>
+            <span class="user-badge" onclick="goToSettings()" style="display:flex;align-items:center;gap:6px;cursor:pointer" title="${t('app.settings.heading','⚙️ Settings')}"><span style="font-size:16px">${getUserAvatar()}</span>${escapeHtml(currentUser.username)}</span>
             <button class="btn btn-secondary btn-sm" onclick="logout()">${t('app.signout','Sign Out')}</button>
           `;
         }
@@ -5535,12 +5697,18 @@
         const toggleBtn = document.getElementById('task-toggle-btn');
         if (toggleBtn) { toggleBtn.style.display = 'none'; toggleBtn.classList.remove('on'); }
         setAdminTabVisible(false);
+        updateNotifHeaderLabel(false);
+        renderToday(null);
 
         if (chatOnly) {
-          userArea.innerHTML = `<button class="btn btn-primary btn-sm" onclick="showAuthPopup()">${t('app.signin','Sign In')}</button>`;
+          // Keep the bell reachable on mobile so guests can still open the sheet (prompts sign-in)
+          userArea.innerHTML = `
+            ${bellButtonHtml()}
+            <button class="btn btn-primary btn-sm" onclick="showAuthPopup()">${t('app.signin','Sign In')}</button>
+          `;
         } else {
           userArea.innerHTML = `
-            ${todayDropdownHtml(false)}
+            ${bellButtonHtml()}
             <button class="btn btn-secondary btn-sm" onclick="showDonateModal()" title="Support GreenDial">💚 ${t('app.donate_plain','Donate')}</button>
             <span class="user-badge" onclick="goToSettings()" style="cursor:pointer" title="${t('app.settings.heading','⚙️ Settings')}">${t('app.guest','Guest')}</span>
             <button class="btn btn-primary btn-sm" onclick="showAuthPopup()">${t('app.signin','Sign In')}</button>
