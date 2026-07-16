@@ -1836,13 +1836,17 @@
     body.easy-mobile #task-toggle-btn,
     body.easy-mobile .pwa-install-banner,
     body.easy-mobile .msg-model,
-    body.easy-mobile .notif-bell-wrap,
     body.easy-mobile .user-area button[onclick*="showDonateModal"],
     body.easy-mobile .user-area button[onclick*="logout"] {
       display: none !important;
     }
     body.easy-mobile {
       --bottom-nav-h: 0px !important;
+    }
+    /* Notification sheet sits at the very bottom in easy-mobile (no bottom nav):
+       pad past the iOS home indicator so the last item stays tappable */
+    body.easy-mobile .notification-dropdown {
+      padding-bottom: env(safe-area-inset-bottom, 0px);
     }
     body.easy-mobile .main {
       padding-bottom: var(--kb) !important;
