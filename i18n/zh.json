@@ -6,6 +6,8 @@
   "about.bounty.step2": "目标用户会在其每日建议中看到 UB — 显示其价格 — 优先于 GreenDial 的常规 AI 生成建议。",
   "about.bounty.step3": "用户接受建议，该建议成为跟踪的活动，用户可以按自己的时间完成。",
   "about.bounty.step4": "完成后，GreenDial 会快照用户的关联钱包地址，并将活动的付款标记为待处理。",
+  "about.bounty.video_caption": "观看一段简短的演示视频，了解 Universal Bounty (UB) 的运作方式 —— 从赞助一项健康行动，到受赠者完成该行动。",
+  "about.bounty.video_fallback": "您的浏览器不支持嵌入式视频。",
   "about.ethos.heading": "我们的理念",
   "about.ethos.p1": "GreenDial 旨在通过提供一种简单的对话界面方式让人们获得人工智能的好处 — 无需表格、无需预约、无需术语。你只需与 Doc 交谈，你的健康档案就会自动建立。",
   "about.ethos.p2": "GreenDial 是一个免费系统，旨在关心人们的健康，帮助普遍分配基本的健康和生活福利。我们相信优秀 AI 的优势 — 个性化指导、耐心倾听、不懈跟进 — 不应该被成本或复杂性所限制。每个人都应该能够获得这样的支持，涵盖睡眠、饮食、运动、压力和日常生活的其他方面。",

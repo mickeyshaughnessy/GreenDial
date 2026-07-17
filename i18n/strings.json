@@ -6,6 +6,8 @@
   "about.bounty.step2": "Targeted users see the UB surface as one of their daily Suggestions — shown with its price — ahead of GreenDial's regular AI-generated suggestions.",
   "about.bounty.step3": "The user accepts the suggestion, which becomes a tracked Activity, and completes it in their own time.",
   "about.bounty.step4": "On completion, GreenDial snapshots the user's linked wallet address and marks the activity's payment as pending.",
+  "about.bounty.video_caption": "Watch a short walkthrough of how Universal Bounties work — from sponsoring a healthy action to the recipient completing it.",
+  "about.bounty.video_fallback": "Your browser does not support embedded video.",
   "about.ethos.heading": "Our Ethos",
   "about.ethos.p1": "GreenDial is designed to give people access to the benefits of artificial intelligence by providing a simple way to interact with it through a conversational interface — no forms, no appointments, no jargon. You just talk to Doc, and your health profile builds itself.",
   "about.ethos.p2": "GreenDial is a free system, created to care about people's well-being and help distribute basic health and life benefits, universally. We believe the advantages of good AI — personalized guidance, patient listening, tireless follow-up — shouldn't be locked behind cost or complexity. Everyone should be able to get that kind of support for sleep, diet, exercise, stress, and the rest of daily life.",
