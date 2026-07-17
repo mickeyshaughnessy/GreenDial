@@ -34,6 +34,7 @@
   // [href, default label, data-i18n key (label includes emoji), extra emoji prefix]
   var LINKS = [
     ['/', '💬 Chat', 'app.nav.chat'],
+    ['/?view=activities', '✅ Do', 'app.nav.activities'],
     ['/?view=stickers', '🏷️ Board', 'app.nav.board'],
     ['/?view=history', '📜 History', 'app.nav.history'],
     ['/?view=feedback', '📣 Feedback', 'app.nav.feedback'],
