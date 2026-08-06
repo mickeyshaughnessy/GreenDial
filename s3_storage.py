@@ -361,3 +361,75 @@ def save_bounties(bounties):
         Body=json.dumps(bounties, indent=2),
         ContentType='application/json'
     )
+
+
+# ============ FITNESS LEAGUES / CHALLENGE GROUPS ============
+
+def get_challenges():
+    """List all fitness stake leagues (challenge groups)."""
+    _check_client()
+    try:
+        resp = s3_client.get_object(
+            Bucket=config.DO_SPACES_BUCKET,
+            Key=_key("challenges/challenges.json")
+        )
+        return json.loads(resp['Body'].read().decode('utf-8'))
+    except ClientError as e:
+        if e.response['Error']['Code'] == 'NoSuchKey':
+            return []
+        raise
+
+
+def save_challenges(challenges):
+    """Persist challenge league list."""
+    _check_client()
+    s3_client.put_object(
+        Bucket=config.DO_SPACES_BUCKET,
+        Key=_key("challenges/challenges.json"),
+        Body=json.dumps(challenges, indent=2),
+        ContentType='application/json'
+    )
+
+
+def get_challenge(challenge_id):
+    """Load a single challenge by id (from the index list)."""
+    if not challenge_id:
+        return None
+    for c in get_challenges():
+        if c.get('id') == challenge_id:
+            return c
+    return None
+
+
+def get_feed_events(limit=50):
+    """Social / leaderboard feed events (newest first)."""
+    _check_client()
+    try:
+        resp = s3_client.get_object(
+            Bucket=config.DO_SPACES_BUCKET,
+            Key=_key("challenges/feed.json")
+        )
+        events = json.loads(resp['Body'].read().decode('utf-8'))
+        if not isinstance(events, list):
+            return []
+        return events[: max(1, min(int(limit or 50), 100))]
+    except ClientError as e:
+        if e.response['Error']['Code'] == 'NoSuchKey':
+            return []
+        raise
+    except (TypeError, ValueError):
+        return []
+
+
+def save_feed_events(events):
+    """Persist feed (capped)."""
+    _check_client()
+    if not isinstance(events, list):
+        events = []
+    events = events[:200]
+    s3_client.put_object(
+        Bucket=config.DO_SPACES_BUCKET,
+        Key=_key("challenges/feed.json"),
+        Body=json.dumps(events, indent=2),
+        ContentType='application/json'
+    )

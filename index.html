@@ -4,12 +4,15 @@
   <script>(function(){try{var l=localStorage.getItem('gd_lang');if(l&&l!=='en')document.documentElement.classList.add('i18n-loading');var p=localStorage.getItem('gd_ui_style');var r=localStorage.getItem('gd_ui_style_resolved');if(p&&p!=='page_default')document.documentElement.setAttribute('data-gd-theme',p);else if(r)document.documentElement.setAttribute('data-gd-theme',r);}catch(e){}})();</script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title data-i18n="app.doc_title">GreenDial - Health Assistant</title>
+  <title data-i18n="app.doc_title">GreenDial — Skin in the Game</title>
   <link rel="stylesheet" href="/themes/skins.css">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'><text y='32' font-size='32'>🌿</text></svg>">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'><text y='32' font-size='32'>🏆</text></svg>">
+  <!-- Map / activity tracker (Mapbox when token set; Leaflet+OSM fallback) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
   <!-- PWA / mobile app -->
-  <meta name="theme-color" content="#1a1a2e">
-  <meta name="description" data-i18n-attr-content="app.meta_description" content="GreenDial is a free AI health companion. Chat with Doc for personalized guidance on sleep, diet, exercise, and stress.">
+  <meta name="theme-color" content="#0a0f0d">
+  <meta name="description" data-i18n-attr-content="app.meta_description" content="GreenDial is a fitness stake app — put money on the line, hit your daily miles, climb the leaderboard. Top half get stake back. Demand partners pay CPAA on top.">
   <link rel="manifest" href="/manifest.json">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
@@ -2081,11 +2084,224 @@
     }
 
     body.modal-open { overflow: hidden !important; }
+
+    /* ========== PLAY MODE — fitness stake leagues ========== */
+    body.play-mode {
+      --gd-neon: #39ff14;
+      --gd-neon-dim: rgba(57,255,20,0.15);
+      --gd-gold: #f5c542;
+      --gd-danger: #ff4d6d;
+      --gd-surface: #121a17;
+      --gd-card: rgba(18, 32, 28, 0.92);
+      background: radial-gradient(1200px 600px at 10% -10%, rgba(57,255,20,0.08), transparent 50%),
+                  radial-gradient(800px 400px at 100% 0%, rgba(245,197,66,0.06), transparent 45%),
+                  #0a0f0d;
+    }
+    body.play-mode .logo { color: var(--gd-neon); text-shadow: 0 0 18px rgba(57,255,20,0.35); }
+    body.play-mode .logo .logo-sub {
+      display: block; font-size: 10px; font-weight: 600; letter-spacing: 0.12em;
+      text-transform: uppercase; color: rgba(255,255,255,0.45); text-shadow: none; margin-top: -2px;
+    }
+    body.play-mode .header {
+      background: linear-gradient(180deg, rgba(10,15,13,0.98), rgba(10,15,13,0.85));
+      border-bottom: 1px solid rgba(57,255,20,0.12);
+    }
+    body.play-mode .btn-primary {
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      border: none; box-shadow: 0 0 16px rgba(34,197,94,0.25);
+    }
+    body.play-mode .btn-primary:hover { filter: brightness(1.08); }
+    body.play-mode .mobile-bottom-nav {
+      background: rgba(8,12,10,0.96);
+      border-top: 1px solid rgba(57,255,20,0.12);
+      backdrop-filter: blur(12px);
+    }
+    body.play-mode .mbn-item.active { color: var(--gd-neon); }
+    body.play-mode .mbn-item.active .mbn-icon { filter: drop-shadow(0 0 6px rgba(57,255,20,0.5)); }
+
+    .play-view { max-width: 520px; width: 100%; margin: 0 auto; padding: 12px 14px 28px; }
+    .play-hero {
+      border-radius: 18px; padding: 18px 16px 16px;
+      background: linear-gradient(145deg, rgba(57,255,20,0.12), rgba(18,32,28,0.9) 40%, rgba(245,197,66,0.08));
+      border: 1px solid rgba(57,255,20,0.18);
+      margin-bottom: 14px; position: relative; overflow: hidden;
+    }
+    .play-hero::after {
+      content: ''; position: absolute; right: -20px; top: -20px; width: 120px; height: 120px;
+      background: radial-gradient(circle, rgba(57,255,20,0.2), transparent 70%); pointer-events: none;
+    }
+    .play-hero h1 {
+      font-size: 1.35rem; font-weight: 800; letter-spacing: -0.02em; line-height: 1.2;
+      margin-bottom: 6px;
+    }
+    .play-hero h1 span { color: var(--gd-neon, #39ff14); }
+    .play-hero p { font-size: 13px; color: rgba(255,255,255,0.55); line-height: 1.45; max-width: 34em; }
+    .play-balance-row {
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      margin-top: 14px; flex-wrap: wrap;
+    }
+    .play-balance {
+      background: rgba(0,0,0,0.35); border: 1px solid rgba(245,197,66,0.35);
+      border-radius: 12px; padding: 10px 14px; min-width: 120px;
+    }
+    .play-balance .lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(255,255,255,0.45); }
+    .play-balance .amt { font-size: 1.4rem; font-weight: 800; color: var(--gd-gold, #f5c542); font-variant-numeric: tabular-nums; }
+    .play-section-title {
+      font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;
+      color: rgba(255,255,255,0.4); margin: 18px 0 10px; display: flex; align-items: center; gap: 8px;
+    }
+    .play-section-title::after { content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.08); }
+
+    .league-card {
+      background: var(--gd-card, rgba(18,32,28,0.92));
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px; padding: 14px; margin-bottom: 10px;
+      transition: border-color 0.2s, transform 0.15s;
+      cursor: pointer;
+    }
+    .league-card:active { transform: scale(0.99); }
+    .league-card.mine { border-color: rgba(57,255,20,0.35); box-shadow: 0 0 0 1px rgba(57,255,20,0.08); }
+    .league-card-top { display: flex; gap: 12px; align-items: flex-start; }
+    .league-emoji {
+      width: 48px; height: 48px; border-radius: 14px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center; font-size: 26px;
+      background: rgba(57,255,20,0.1); border: 1px solid rgba(57,255,20,0.15);
+    }
+    .league-meta { flex: 1; min-width: 0; }
+    .league-meta h3 { font-size: 16px; font-weight: 700; margin-bottom: 2px; }
+    .league-meta .tagline { font-size: 12px; color: rgba(255,255,255,0.5); line-height: 1.35; }
+    .league-stats {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px;
+    }
+    .league-stat {
+      background: rgba(0,0,0,0.25); border-radius: 10px; padding: 8px 6px; text-align: center;
+    }
+    .league-stat .v { font-size: 14px; font-weight: 700; color: #fff; font-variant-numeric: tabular-nums; }
+    .league-stat .k { font-size: 10px; color: rgba(255,255,255,0.4); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.04em; }
+    .league-actions { display: flex; gap: 8px; margin-top: 12px; }
+    .league-actions .btn { flex: 1; min-height: 42px; font-weight: 700; font-size: 13px; }
+    .btn-stake {
+      background: linear-gradient(135deg, #f5c542, #eab308) !important;
+      color: #1a1200 !important; border: none !important;
+      box-shadow: 0 0 14px rgba(245,197,66,0.3);
+    }
+    .btn-ghost-play {
+      background: rgba(255,255,255,0.06) !important;
+      border: 1px solid rgba(255,255,255,0.12) !important;
+      color: #fff !important;
+    }
+    .pill {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
+      padding: 3px 8px; border-radius: 999px;
+      background: rgba(57,255,20,0.12); color: var(--gd-neon, #39ff14);
+    }
+    .pill.gold { background: rgba(245,197,66,0.15); color: var(--gd-gold, #f5c542); }
+    .pill.muted { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.5); }
+
+    .lb-row {
+      display: flex; align-items: center; gap: 10px; padding: 10px 8px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .lb-row:last-child { border-bottom: none; }
+    .lb-rank {
+      width: 28px; height: 28px; border-radius: 8px; font-weight: 800; font-size: 13px;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.7);
+    }
+    .lb-row.top .lb-rank { background: rgba(245,197,66,0.2); color: var(--gd-gold, #f5c542); }
+    .lb-row.me { background: rgba(57,255,20,0.06); border-radius: 10px; }
+    .lb-name { flex: 1; font-weight: 600; font-size: 14px; min-width: 0;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .lb-score { font-variant-numeric: tabular-nums; font-weight: 700; font-size: 13px; color: rgba(255,255,255,0.85); }
+    .lb-sub { font-size: 11px; color: rgba(255,255,255,0.4); }
+
+    .feed-item {
+      display: flex; gap: 10px; padding: 12px 4px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .feed-avatar {
+      width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0;
+      background: rgba(57,255,20,0.12); display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+    .feed-body { flex: 1; min-width: 0; }
+    .feed-body .who { font-weight: 700; font-size: 13px; }
+    .feed-body .what { font-size: 13px; color: rgba(255,255,255,0.65); margin-top: 2px; line-height: 1.35; }
+    .feed-body .when { font-size: 11px; color: rgba(255,255,255,0.35); margin-top: 4px; }
+
+    .track-map {
+      width: 100%; height: min(52vh, 420px); border-radius: 16px;
+      border: 1px solid rgba(57,255,20,0.2); overflow: hidden;
+      background: #0d1512; z-index: 0;
+    }
+    .track-stats {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 12px 0;
+    }
+    .track-stat {
+      text-align: center; padding: 12px 6px; border-radius: 14px;
+      background: rgba(18,32,28,0.9); border: 1px solid rgba(255,255,255,0.08);
+    }
+    .track-stat .v { font-size: 1.35rem; font-weight: 800; color: var(--gd-neon, #39ff14); font-variant-numeric: tabular-nums; }
+    .track-stat .k { font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: rgba(255,255,255,0.4); margin-top: 2px; }
+    .track-controls { display: flex; gap: 8px; flex-wrap: wrap; }
+    .track-controls .btn { flex: 1; min-width: 100px; min-height: 48px; font-weight: 700; }
+    .btn-rec { background: linear-gradient(135deg, #ff4d6d, #c9184a) !important; border: none !important; color: #fff !important; }
+    .btn-rec.live { animation: pulse-rec 1.2s ease-in-out infinite; }
+    @keyframes pulse-rec {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(255,77,109,0.45); }
+      50% { box-shadow: 0 0 0 10px rgba(255,77,109,0); }
+    }
+    .kind-pills { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+    .kind-pill {
+      padding: 8px 14px; border-radius: 999px; font-size: 13px; font-weight: 600;
+      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+      color: rgba(255,255,255,0.7); cursor: pointer;
+    }
+    .kind-pill.active {
+      background: rgba(57,255,20,0.15); border-color: rgba(57,255,20,0.4); color: var(--gd-neon, #39ff14);
+    }
+    .invite-card {
+      background: rgba(18,32,28,0.8); border: 1px dashed rgba(57,255,20,0.25);
+      border-radius: 14px; padding: 12px; margin-bottom: 8px; font-size: 13px;
+    }
+    .invite-card .why { color: rgba(255,255,255,0.5); font-size: 12px; margin-top: 4px; }
+    .play-empty {
+      text-align: center; padding: 28px 16px; color: rgba(255,255,255,0.45); font-size: 14px;
+    }
+    .detail-back {
+      background: none; border: none; color: rgba(255,255,255,0.6); font-size: 14px;
+      cursor: pointer; padding: 4px 0 12px; font-weight: 600;
+    }
+    .detail-back:hover { color: #fff; }
+    #play-detail { display: none; }
+    #play-detail.show { display: block; }
+    #play-list.hide { display: none; }
+
+    /* Primary gaming nav always on; hide chat-first chrome when in play-mode on mobile */
+    body.play-mode .home-icons { display: none !important; }
+    body.play-mode #view-chat .starter-prompts { display: none; }
+    @media (max-width: 700px) {
+      body.play-mode .app-prefs-bar { display: none; }
+      body.play-mode {
+        --prefs-h: 0px;
+        --bottom-nav-h: 58px;
+        --chrome-h: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px));
+      }
+    }
+    /* Easy-mobile was Doc-only — play mode wins */
+    body.play-mode.easy-mobile .hamburger-wrap,
+    body.play-mode.easy-mobile #mbn-more-btn,
+    body.play-mode.easy-mobile .mobile-bottom-nav { display: flex !important; }
+    body.play-mode.easy-mobile .hamburger-wrap { display: block !important; }
   </style>
 </head>
-<body>
+<body class="play-mode">
   <div class="header">
-    <div class="logo" onclick="switchView('chat')" style="cursor:pointer" title="Home"><span>🌿</span><span>GreenDial</span></div>
+    <div class="logo" onclick="switchView('play')" style="cursor:pointer" title="Play">
+      <span>🏆</span>
+      <span>GreenDial<span class="logo-sub">Stake · Move · Cash</span></span>
+    </div>
     <!-- Hidden legacy tab strip (switchView still toggles .active for a11y/tests) -->
     <div class="nav-tabs" aria-hidden="true">
       <button class="nav-tab active" id="nav-chat-tab" onclick="switchView('chat')"><span data-i18n="app.nav.chat">💬 Chat</span></button>
@@ -2112,21 +2328,24 @@
   <!-- Overlays outside .header so theme backdrop-filter cannot clip them -->
   <div id="gd-portals" aria-live="polite">
     <div class="hamburger-menu" id="hamburger-menu" role="menu">
-      <button type="button" class="hamburger-item" data-hview="chat" onclick="hamburgerGo('chat')"><span data-i18n="app.nav.chat">💬 Chat</span></button>
-      <button type="button" class="hamburger-item" data-hview="activities" onclick="hamburgerGo('activities')"><span data-i18n="app.nav.activities">✅ Do</span></button>
-      <button type="button" class="hamburger-item" data-hview="user" onclick="hamburgerGo('user')"><span aria-hidden="true">👤</span><span data-i18n="app.mbn.me">Me</span></button>
+      <button type="button" class="hamburger-item" data-hview="play" onclick="hamburgerGo('play')">🏆 Leagues</button>
+      <button type="button" class="hamburger-item" data-hview="track" onclick="hamburgerGo('track')">📍 Track</button>
+      <button type="button" class="hamburger-item" data-hview="feed" onclick="hamburgerGo('feed')">⚡ Feed</button>
       <div class="hamburger-divider"></div>
-      <button type="button" class="hamburger-item" data-hview="stickers" onclick="hamburgerGo('stickers')"><span data-i18n="app.nav.board">🏷️ Board</span></button>
-      <button type="button" class="hamburger-item" data-hview="history" onclick="hamburgerGo('history')"><span data-i18n="app.nav.history">📜 History</span></button>
+      <button type="button" class="hamburger-item" data-hview="chat" onclick="hamburgerGo('chat')"><span data-i18n="app.nav.chat">💬 Doc (AI coach)</span></button>
+      <button type="button" class="hamburger-item" data-hview="activities" onclick="hamburgerGo('activities')"><span data-i18n="app.nav.activities">✅ Check-ins &amp; bounties</span></button>
+      <button type="button" class="hamburger-item" data-hview="user" onclick="hamburgerGo('user')"><span aria-hidden="true">👤</span><span data-i18n="app.mbn.me">Profile &amp; wallet</span></button>
+      <button type="button" class="hamburger-item" data-hview="stickers" onclick="hamburgerGo('stickers')"><span data-i18n="app.nav.board">🏷️ Health board</span></button>
+      <button type="button" class="hamburger-item" data-hview="history" onclick="hamburgerGo('history')"><span data-i18n="app.nav.history">📜 Chat history</span></button>
       <button type="button" class="hamburger-item" data-hview="feedback" onclick="hamburgerGo('feedback')"><span data-i18n="app.nav.feedback">📣 Feedback</span></button>
-      <button type="button" class="hamburger-item" data-hview="getstarted" onclick="hamburgerGo('getstarted')"><span data-i18n="app.nav.getstarted">🚀 Get Started</span></button>
+      <button type="button" class="hamburger-item" data-hview="getstarted" onclick="hamburgerGo('getstarted')"><span data-i18n="app.nav.getstarted">🚀 How it works</span></button>
       <button type="button" class="hamburger-item" id="hamburger-admin" data-hview="admin" style="display:none" onclick="hamburgerGo('admin')">🛡️ Admin/Stats</button>
       <div class="hamburger-divider"></div>
       <button type="button" class="hamburger-item" onclick="closeHamburger();showDonateModal()" data-i18n="app.donate">💚 Donate</button>
       <a class="hamburger-item" href="/about" target="_blank" onclick="closeHamburger()" data-i18n="app.nav.about">ℹ️ About</a>
-      <a class="hamburger-item" href="/docs" target="_blank" onclick="closeHamburger()" data-i18n="app.nav.docs">📄 Docs</a>
+      <a class="hamburger-item" href="/docs" target="_blank" onclick="closeHamburger()" data-i18n="app.nav.docs">📄 API Docs</a>
       <a class="hamburger-item" href="/arazzo" target="_blank" onclick="closeHamburger()"><span aria-hidden="true">🧭</span><span data-i18n="common.nav.how_it_works">How It Works</span></a>
-      <a class="hamburger-item" href="/sponsor" target="_blank" onclick="closeHamburger()">💚 Sponsor</a>
+      <a class="hamburger-item" href="/sponsor" target="_blank" onclick="closeHamburger()">💰 Demand / CPAA</a>
       <a class="hamburger-item" href="/privacy" target="_blank" onclick="closeHamburger()" data-i18n="app.mbn.privacy">🔒 Privacy</a>
     </div>
   </div>
@@ -2148,7 +2367,75 @@
   </div>
 
   <div class="main">
-    <div class="view active" id="view-chat">
+    <!-- ===== PLAY: stake leagues (primary) ===== -->
+    <div class="view active" id="view-play">
+      <div class="play-view" id="play-list">
+        <div class="play-hero">
+          <h1>Put <span>skin</span> in the game.</h1>
+          <p>Stake a little, move every day, climb the board. <strong>Top half of each league get their money back</strong> — demand-side partners pay extra per action (CPAA) when you're locked in.</p>
+          <div class="play-balance-row">
+            <div class="play-balance">
+              <div class="lbl">Your stake balance</div>
+              <div class="amt" id="play-balance-amt">—</div>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button type="button" class="btn btn-sm btn-ghost-play" onclick="topUpLedger()">+ Demo $50</button>
+              <button type="button" class="btn btn-sm btn-primary" onclick="showCreateLeague()">New league</button>
+            </div>
+          </div>
+        </div>
+        <div class="play-section-title">For you</div>
+        <div id="play-invites"><div class="play-empty">Sign in to get leagues matched to your profile &amp; Doc chats</div></div>
+        <div class="play-section-title">Open leagues</div>
+        <div id="play-leagues"><div class="play-empty">Loading leagues…</div></div>
+      </div>
+      <div class="play-view" id="play-detail">
+        <button type="button" class="detail-back" onclick="closeLeagueDetail()">← All leagues</button>
+        <div id="play-detail-body"></div>
+      </div>
+    </div>
+
+    <!-- ===== TRACK: GPS activity ===== -->
+    <div class="view" id="view-track">
+      <div class="play-view">
+        <div class="play-section-title" style="margin-top:4px">Activity tracker</div>
+        <div class="kind-pills" id="track-kind-pills">
+          <button type="button" class="kind-pill active" data-kind="run" onclick="setTrackKind('run')">🏃 Run</button>
+          <button type="button" class="kind-pill" data-kind="bike" onclick="setTrackKind('bike')">🚴 Bike</button>
+          <button type="button" class="kind-pill" data-kind="walk" onclick="setTrackKind('walk')">👟 Walk</button>
+        </div>
+        <div id="track-map" class="track-map" role="application" aria-label="Activity map"></div>
+        <div class="track-stats">
+          <div class="track-stat"><div class="v" id="track-miles">0.00</div><div class="k">Miles</div></div>
+          <div class="track-stat"><div class="v" id="track-time">0:00</div><div class="k">Time</div></div>
+          <div class="track-stat"><div class="v" id="track-pace">—</div><div class="k">Pace</div></div>
+        </div>
+        <label style="font-size:12px;color:rgba(255,255,255,0.45);display:block;margin-bottom:6px">Log to league</label>
+        <select id="track-league-select" class="settings-select" style="width:100%;margin-bottom:12px;padding:10px;font-size:14px;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:#fff">
+          <option value="">— Select a league you're in —</option>
+        </select>
+        <div class="track-controls">
+          <button type="button" class="btn btn-rec" id="track-start-btn" onclick="toggleTracking()">● Start</button>
+          <button type="button" class="btn btn-primary" id="track-finish-btn" onclick="finishTracking()" disabled>Finish &amp; log</button>
+        </div>
+        <p style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:12px;line-height:1.4">
+          Uses your phone GPS. Map tiles via Mapbox when configured, otherwise OpenStreetMap. Stay safe — don't stare at the screen while moving.
+        </p>
+      </div>
+    </div>
+
+    <!-- ===== FEED: social / leaderboard stream ===== -->
+    <div class="view" id="view-feed">
+      <div class="play-view">
+        <div class="play-hero" style="padding:14px">
+          <h1 style="font-size:1.15rem">Live <span>feed</span></h1>
+          <p>Stakes, day-hits, and finishes from the community.</p>
+        </div>
+        <div id="feed-list"><div class="play-empty">Loading feed…</div></div>
+      </div>
+    </div>
+
+    <div class="view" id="view-chat">
       <!-- Homepage mode icons: open check-ins / suggestions / UB activities -->
       <div class="home-icons" id="home-icons" role="navigation" aria-label="Suggested activities">
         <button type="button" class="home-icon-btn" id="home-icon-checkins" onclick="openActivities('checkins')">
@@ -2287,28 +2574,28 @@
           <div class="panel-content">
             <div class="gs-step">
               <div class="gs-num">1</div>
-              <div><h4 data-i18n="app.gs.step1_title">Just start talking</h4><p data-i18n="app.gs.step1_desc">No forms, no setup. Type a message to Doc — try "Help me sleep better" or tell it what's going on with your health today.</p></div>
+              <div><h4>Stake a league</h4><p>Put money on the line in a group challenge — run a mile a day, bike 3, walk 3. New players start with $50 demo credit.</p></div>
             </div>
             <div class="gs-step">
               <div class="gs-num">2</div>
-              <div><h4 data-i18n="app.gs.step2_title">Your profile builds itself</h4><p data-i18n="app.gs.step2_desc">As you chat, Doc quietly saves the relevant details — goals, conditions, preferences — into your health profile. Nothing to fill out by hand.</p></div>
+              <div><h4>Track on the map</h4><p>Hit Track, start GPS, finish the miles. Days you hit the goal stack your leaderboard score.</p></div>
             </div>
             <div class="gs-step">
               <div class="gs-num">3</div>
-              <div><h4 data-i18n="app.gs.step3_title">Tap ✅ Do for daily check-ins</h4><p data-i18n="app.gs.step3_desc">Quick one-tap check-ins for how you're doing — also on the home icons above chat.</p></div>
+              <div><h4>Top half get stake back</h4><p>When the league settles, the top half of the board get their money back. Stay consistent — that's the whole game.</p></div>
             </div>
             <div class="gs-step">
               <div class="gs-num">4</div>
-              <div><h4 data-i18n="app.gs.step4_title">Ideas &amp; activities</h4><p data-i18n="app.gs.step4_desc">Suggestions and Universal Bounty activities live under Do. Accept one to track it, or open chat to talk it through.</p></div>
+              <div><h4>CPAA stacks on top</h4><p>Demand-side partners (insurers, employers, sponsors) pay per completed fitness action. That extra pay is how you can end up ahead of your stake.</p></div>
             </div>
             <div class="gs-step">
               <div class="gs-num">5</div>
-              <div><h4 data-i18n="app.gs.step5_title">It's free — here's why</h4><p data-i18n-html="app.gs.step5_desc">GreenDial is a free system built to make good AI guidance available to everyone. <a href="/about" target="_blank">Read the ethos, FAQ, and Universal Bounty (UB) →</a></p></div>
+              <div><h4>Doc + health tools in the menu</h4><p>Chat with Doc, sticker board, check-ins, and profile live under ☰ More — the app is built for Play first.</p></div>
             </div>
           </div>
         </div>
         <div style="text-align:center;padding:8px 0 20px">
-          <button class="btn btn-primary" onclick="switchView('chat')" data-i18n="app.gs.cta">Start chatting with Doc →</button>
+          <button class="btn btn-primary" onclick="switchView('play')">Enter a league →</button>
         </div>
       </div>
     </div>
@@ -2445,21 +2732,24 @@
       </label>
     </div>
     <nav class="mobile-bottom-nav" id="mobile-bottom-nav" aria-label="Primary">
-      <button type="button" class="mbn-item active" data-view="chat" onclick="switchView('chat')">
+      <button type="button" class="mbn-item active" data-view="play" onclick="if(typeof closeLeagueDetail==='function'){try{_activeLeagueId=null;document.getElementById('play-detail')?.classList.remove('show');document.getElementById('play-list')?.classList.remove('hide');}catch(e){}}switchView('play')">
+        <span class="mbn-icon" aria-hidden="true">🏆</span>
+        <span>Play</span>
+      </button>
+      <button type="button" class="mbn-item" data-view="track" onclick="switchView('track')">
+        <span class="mbn-icon" aria-hidden="true">📍</span>
+        <span>Track</span>
+      </button>
+      <button type="button" class="mbn-item" data-view="feed" onclick="switchView('feed')">
+        <span class="mbn-icon" aria-hidden="true">⚡</span>
+        <span>Feed</span>
+      </button>
+      <button type="button" class="mbn-item" data-view="chat" onclick="switchView('chat')">
         <span class="mbn-icon" aria-hidden="true">💬</span>
-        <span data-i18n="app.mbn.chat">Chat</span>
+        <span data-i18n="app.mbn.chat">Doc</span>
       </button>
-      <button type="button" class="mbn-item" data-view="activities" onclick="openActivities()">
-        <span class="mbn-icon" aria-hidden="true">✅</span>
-        <span data-i18n="app.mbn.do">Do</span>
-        <span class="mbn-badge" id="mbn-badge-activities" style="display:none">0</span>
-      </button>
-      <button type="button" class="mbn-item" data-view="user" onclick="switchView('user')">
-        <span class="mbn-icon" aria-hidden="true">👤</span>
-        <span data-i18n="app.mbn.me">Me</span>
-      </button>
-      <button type="button" class="mbn-item" id="mbn-more-btn" onclick="toggleMoreMenu()">
-        <span class="mbn-icon" aria-hidden="true">⋯</span>
+      <button type="button" class="mbn-item" id="mbn-more-btn" onclick="toggleHamburger()">
+        <span class="mbn-icon" aria-hidden="true">☰</span>
         <span data-i18n="app.mbn.more">More</span>
       </button>
     </nav>
@@ -2693,7 +2983,7 @@
     let taskMode = false; // task mode uses agentic Gemini Flash loop for Doc
 
     let isLoading = false;
-    let currentView = 'chat';
+    let currentView = 'play';
     let userData = {};
     
     // ── AVATAR ───────────────────────────────────────────────────────────────
@@ -3449,7 +3739,7 @@
       applyEasyMobile();
       updateChatCompactChrome();
       updateBoardNudge();
-      // Deep link: /?view=activities&section=checkins (push, shared links)
+      // Deep link: /?view=play|track|feed|activities&section=…
       try {
         const params = new URLSearchParams(window.location.search);
         const view = params.get('view');
@@ -3458,8 +3748,12 @@
           openActivities(section || 'checkins');
         } else if (view && document.getElementById('view-' + view)) {
           switchView(view);
+        } else {
+          switchView('play');
         }
-      } catch (e) {}
+      } catch (e) {
+        try { switchView('play'); } catch (e2) {}
+      }
       // PWA banner suppressed in easy-mobile CSS; still ok to schedule for full layout
       if (!isEasyMobile()) setTimeout(maybeShowPwaBanner, 1200);
       syncStickerStyleButtons();
@@ -3495,7 +3789,7 @@
       }
       // Admin is mickey-only (UI + API both enforce this)
       if (view === 'admin' && !isAdminUser()) {
-        view = 'chat';
+        view = 'play';
       }
       currentView = view;
       document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
@@ -3512,7 +3806,7 @@
       });
       const moreBtn = document.getElementById('mbn-more-btn');
       if (moreBtn) {
-        const secondary = ['history', 'feedback', 'getstarted', 'admin', 'stickers'].includes(view);
+        const secondary = ['history', 'feedback', 'getstarted', 'admin', 'stickers', 'user', 'activities'].includes(view);
         moreBtn.classList.toggle('active', secondary);
       }
       document.querySelectorAll('.hamburger-item[data-hview]').forEach(btn => {
@@ -3527,6 +3821,15 @@
       if (view === 'admin') loadAdminStats();
       if (view === 'stickers') loadStickerBoard();
       if (view === 'activities') fetchToday();
+      if (view === 'play') {
+        if (_activeLeagueId && !_openingLeague) {
+          openLeagueDetail(_activeLeagueId);
+        } else if (!_activeLeagueId) {
+          loadPlayHome();
+        }
+      }
+      if (view === 'feed') loadFeed();
+      if (view === 'track') initTrackMap();
     }
     
     function goToSettings() {
@@ -3756,11 +4059,15 @@
     const TYPING_MIN_MS = 550;
 
     function isEasyMobile() {
+      // Play-mode gaming shell is the default product — easy-mobile Doc-only is opt-in
       try {
+        if (document.body.classList.contains('play-mode') && localStorage.getItem('gd_easy_mobile') !== '1') {
+          return false;
+        }
         return window.matchMedia('(max-width: 700px)').matches
-          && localStorage.getItem('gd_easy_mobile') !== '0';
+          && localStorage.getItem('gd_easy_mobile') === '1';
       } catch (e) {
-        return window.matchMedia('(max-width: 700px)').matches;
+        return false;
       }
     }
 
@@ -3769,10 +4076,9 @@
       document.body.classList.toggle('easy-mobile', on);
       if (on) {
         currentAgent = 'doc';
-        // Keep Chat | Do | Me + prefs; hide More/hamburger via CSS
-        const allowed = { chat: 1, activities: 1, user: 1, stickers: 1, history: 1, feedback: 1, getstarted: 1, admin: 1 };
+        const allowed = { chat: 1, activities: 1, user: 1, stickers: 1, history: 1, feedback: 1, getstarted: 1, admin: 1, play: 1, track: 1, feed: 1 };
         if (currentView && !allowed[currentView]) {
-          switchView('chat');
+          switchView('play');
         }
         updateAgentTabs();
       }
@@ -6159,6 +6465,581 @@
       // If session already restored settings with ui_style, prefer server value later via hydrate
     }
 
+    // ═══════════════════════════════════════════════════════════════
+    // PLAY MODE — stake leagues, GPS tracker, social feed
+    // ═══════════════════════════════════════════════════════════════
+    let _playChallenges = [];
+    let _playBalance = null;
+    let _activeLeagueId = null;
+    let _openingLeague = false;
+    let _mapboxToken = null;
+    let _trackMap = null;
+    let _trackPolyline = null;
+    let _trackMarker = null;
+    let _trackPath = [];
+    let _trackWatchId = null;
+    let _trackStartTs = null;
+    let _trackTimer = null;
+    let _trackKind = 'run';
+    let _trackMiles = 0;
+    let _tracking = false;
+
+    function fmtMoney(n) {
+      const v = Number(n);
+      if (!isFinite(v)) return '—';
+      return '$' + v.toFixed(v % 1 ? 2 : 0);
+    }
+    function fmtMiles(n) {
+      return (Number(n) || 0).toFixed(2);
+    }
+    function haversineMiles(a, b) {
+      const R = 3958.7613;
+      const toR = d => d * Math.PI / 180;
+      const dLat = toR(b.lat - a.lat);
+      const dLon = toR(b.lng - a.lng);
+      const lat1 = toR(a.lat), lat2 = toR(b.lat);
+      const h = Math.sin(dLat/2)**2 + Math.cos(lat1)*Math.cos(lat2)*Math.sin(dLon/2)**2;
+      return 2 * R * Math.asin(Math.min(1, Math.sqrt(h)));
+    }
+    function relativeTime(iso) {
+      if (!iso) return '';
+      const t = new Date(iso).getTime();
+      if (!isFinite(t)) return '';
+      const s = Math.max(0, (Date.now() - t) / 1000);
+      if (s < 60) return 'just now';
+      if (s < 3600) return Math.floor(s/60) + 'm ago';
+      if (s < 86400) return Math.floor(s/3600) + 'h ago';
+      return Math.floor(s/86400) + 'd ago';
+    }
+    function playAuthQ() {
+      return currentUser ? `?user_id=${encodeURIComponent(currentUser.user_id)}` : '';
+    }
+
+    async function loadPublicConfig() {
+      try {
+        const res = await fetch(`${API}/config/public`);
+        if (res.ok) {
+          const d = await res.json();
+          _mapboxToken = d.mapbox_token || null;
+        }
+      } catch (e) {}
+    }
+
+    function setBalanceUI(bal) {
+      _playBalance = bal;
+      const el = document.getElementById('play-balance-amt');
+      if (el) el.textContent = bal == null ? (currentUser ? '…' : 'Sign in') : fmtMoney(bal);
+    }
+
+    async function loadPlayHome() {
+      document.getElementById('play-list')?.classList.remove('hide');
+      document.getElementById('play-detail')?.classList.remove('show');
+      _activeLeagueId = null;
+      const list = document.getElementById('play-leagues');
+      if (!list) return;
+      try {
+        const res = await fetch(`${API}/challenges${playAuthQ()}`);
+        const data = await res.json();
+        _playChallenges = data.challenges || [];
+        if (data.ledger_balance != null) setBalanceUI(data.ledger_balance);
+        else if (currentUser) {
+          try {
+            const lr = await fetch(`${API}/ledger/${currentUser.user_id}`);
+            if (lr.ok) {
+              const ld = await lr.json();
+              setBalanceUI(ld.ledger_balance);
+            }
+          } catch (e) {}
+        } else {
+          setBalanceUI(null);
+        }
+        renderLeagueCards(_playChallenges);
+        loadPlayInvites();
+        populateTrackLeagueSelect();
+      } catch (e) {
+        list.innerHTML = `<div class="play-empty">Could not load leagues. Pull to refresh or try again.</div>`;
+      }
+    }
+
+    function renderLeagueCards(challenges) {
+      const list = document.getElementById('play-leagues');
+      if (!list) return;
+      if (!challenges.length) {
+        list.innerHTML = `<div class="play-empty">No open leagues yet — create one.</div>`;
+        return;
+      }
+      list.innerHTML = challenges.map(c => {
+        const mine = c.is_member ? 'mine' : '';
+        const statusPill = c.is_member
+          ? `<span class="pill">In · #${c.my_rank || '—'}</span>`
+          : `<span class="pill muted">${c.status || 'open'}</span>`;
+        return `
+          <div class="league-card ${mine}" onclick="openLeagueDetail('${c.id}')">
+            <div class="league-card-top">
+              <div class="league-emoji">${c.emoji || '🏆'}</div>
+              <div class="league-meta">
+                <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start">
+                  <h3>${escapeHtmlPlay(c.name || 'League')}</h3>
+                  ${statusPill}
+                </div>
+                <div class="tagline">${escapeHtmlPlay(c.tagline || '')}</div>
+              </div>
+            </div>
+            <div class="league-stats">
+              <div class="league-stat"><div class="v">${fmtMoney(c.stake)}</div><div class="k">Stake</div></div>
+              <div class="league-stat"><div class="v">${c.member_count || 0}/${c.max_members || '—'}</div><div class="k">Players</div></div>
+              <div class="league-stat"><div class="v">${fmtMoney(c.pot)}</div><div class="k">Pot</div></div>
+            </div>
+            <div class="league-actions" onclick="event.stopPropagation()">
+              ${c.is_member
+                ? `<button type="button" class="btn btn-primary" onclick="openLeagueDetail('${c.id}')">Leaderboard</button>
+                   <button type="button" class="btn btn-ghost-play" onclick="switchView('track');selectTrackLeague('${c.id}')">Track</button>`
+                : `<button type="button" class="btn btn-stake" onclick="joinLeague('${c.id}')">Stake ${fmtMoney(c.stake)}</button>
+                   <button type="button" class="btn btn-ghost-play" onclick="openLeagueDetail('${c.id}')">Details</button>`}
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    async function loadPlayInvites() {
+      const box = document.getElementById('play-invites');
+      if (!box) return;
+      if (!currentUser) {
+        box.innerHTML = `<div class="invite-card">
+          <strong>New here?</strong> Sign in — new players get <span class="pill gold">$50 credit</span> to join a league.
+          <div class="why">Talk to Doc about running or biking and we'll match you to the right group.</div>
+          <div style="margin-top:10px"><button type="button" class="btn btn-primary btn-sm" onclick="showAuthPopup()">Sign in to play</button></div>
+        </div>`;
+        return;
+      }
+      try {
+        const res = await fetch(`${API}/challenges/invites?user_id=${encodeURIComponent(currentUser.user_id)}`);
+        if (!res.ok) throw new Error('invites');
+        const data = await res.json();
+        const sug = data.suggested_leagues || [];
+        if (!sug.length) {
+          box.innerHTML = `<div class="invite-card">Chat with Doc about your fitness goals — we'll surface leagues that fit.</div>`;
+          return;
+        }
+        box.innerHTML = sug.map(s => {
+          const c = s.challenge || {};
+          return `<div class="invite-card" onclick="openLeagueDetail('${c.id}')" style="cursor:pointer">
+            <div style="display:flex;justify-content:space-between;gap:8px">
+              <strong>${c.emoji || '🏆'} ${escapeHtmlPlay(c.name || '')}</strong>
+              <span class="pill gold">${fmtMoney(c.stake)} stake</span>
+            </div>
+            <div class="why">${escapeHtmlPlay(s.reason || '')}</div>
+          </div>`;
+        }).join('');
+      } catch (e) {
+        box.innerHTML = `<div class="play-empty" style="padding:12px">Invite matching unavailable right now.</div>`;
+      }
+    }
+
+    async function openLeagueDetail(id) {
+      if (!id) return;
+      if (_openingLeague) return;
+      _openingLeague = true;
+      _activeLeagueId = id;
+      // Ensure play view is visible without recursing through switchView→openLeagueDetail
+      if (currentView !== 'play') {
+        currentView = 'play';
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        document.getElementById('view-play')?.classList.add('active');
+        document.querySelectorAll('.mbn-item[data-view]').forEach(btn => {
+          btn.classList.toggle('active', btn.getAttribute('data-view') === 'play');
+        });
+      }
+      document.getElementById('play-list')?.classList.add('hide');
+      const det = document.getElementById('play-detail');
+      const body = document.getElementById('play-detail-body');
+      if (det) det.classList.add('show');
+      if (body) body.innerHTML = `<div class="play-empty">Loading…</div>`;
+      try {
+        const q = currentUser ? `?user_id=${encodeURIComponent(currentUser.user_id)}` : '';
+        const res = await fetch(`${API}/challenges/${encodeURIComponent(id)}${q}`);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'failed');
+        renderLeagueDetail(data.challenge);
+      } catch (e) {
+        if (body) body.innerHTML = `<div class="play-empty">${escapeHtmlPlay(e.message || 'Error')}</div>`;
+      } finally {
+        _openingLeague = false;
+      }
+    }
+
+    function closeLeagueDetail() {
+      _activeLeagueId = null;
+      document.getElementById('play-detail')?.classList.remove('show');
+      document.getElementById('play-list')?.classList.remove('hide');
+      loadPlayHome();
+    }
+
+    function renderLeagueDetail(c) {
+      const body = document.getElementById('play-detail-body');
+      if (!body || !c) return;
+      const lb = c.leaderboard || [];
+      const n = lb.length;
+      const winN = Math.max(1, Math.ceil(n / 2));
+      const rows = lb.map((m, i) => {
+        const top = (m.rank || i+1) <= winN;
+        const me = currentUser && m.user_id === currentUser.user_id;
+        return `<div class="lb-row ${top ? 'top' : ''} ${me ? 'me' : ''}">
+          <div class="lb-rank">${m.rank || i+1}</div>
+          <div style="flex:1;min-width:0">
+            <div class="lb-name">${escapeHtmlPlay(m.username || m.user_id)}${me ? ' · you' : ''}</div>
+            <div class="lb-sub">${m.days_hit || 0} days · ${fmtMiles(m.total_miles)} mi</div>
+          </div>
+          <div class="lb-score">${Math.round(m.score || 0)}</div>
+        </div>`;
+      }).join('') || `<div class="play-empty">No players yet — be first.</div>`;
+
+      body.innerHTML = `
+        <div class="league-card mine" style="cursor:default">
+          <div class="league-card-top">
+            <div class="league-emoji">${c.emoji || '🏆'}</div>
+            <div class="league-meta">
+              <h3>${escapeHtmlPlay(c.name)}</h3>
+              <div class="tagline">${escapeHtmlPlay(c.tagline || '')}</div>
+              <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">
+                <span class="pill gold">${fmtMoney(c.stake)} stake</span>
+                <span class="pill">${c.daily_goal_miles || 1} mi / day · ${c.activity_kind || 'run'}</span>
+                <span class="pill muted">Top ½ get stake back</span>
+              </div>
+            </div>
+          </div>
+          <div class="league-stats">
+            <div class="league-stat"><div class="v">${c.member_count || 0}</div><div class="k">Players</div></div>
+            <div class="league-stat"><div class="v">${fmtMoney(c.pot)}</div><div class="k">In pot</div></div>
+            <div class="league-stat"><div class="v">${(c.end_date || '').slice(5) || '—'}</div><div class="k">Ends</div></div>
+          </div>
+          <p style="font-size:12px;color:rgba(255,255,255,0.45);margin-top:12px;line-height:1.4">
+            ${(c.rules && c.rules.payout) || 'Top half of the leaderboard get their stake refunded at settle.'}
+          </p>
+          <div class="league-actions">
+            ${c.is_member
+              ? `<button type="button" class="btn btn-primary" onclick="switchView('track');selectTrackLeague('${c.id}')">Track activity</button>
+                 ${c.status === 'ended' || c.status === 'active' ? `<button type="button" class="btn btn-ghost-play" onclick="settleLeague('${c.id}')">Settle</button>` : ''}`
+              : `<button type="button" class="btn btn-stake" onclick="joinLeague('${c.id}')">Stake ${fmtMoney(c.stake)} &amp; join</button>`}
+          </div>
+        </div>
+        <div class="play-section-title">Leaderboard</div>
+        <div class="league-card" style="cursor:default;padding:6px 8px">${rows}</div>
+      `;
+    }
+
+    async function joinLeague(id) {
+      if (!currentUser) { showAuthPopup(); return; }
+      if (!confirm('Stake from your balance to join this league? Top half get it back at the end.')) return;
+      try {
+        const res = await fetch(`${API}/challenges/${encodeURIComponent(id)}/join`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: currentUser.user_id }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          alert(data.error || 'Could not join');
+          if (res.status === 402) topUpLedger(true);
+          return;
+        }
+        if (data.ledger_balance != null) setBalanceUI(data.ledger_balance);
+        openLeagueDetail(id);
+      } catch (e) {
+        alert('Network error joining league');
+      }
+    }
+
+    async function settleLeague(id) {
+      if (!currentUser) return;
+      if (!confirm('Settle this league? Top half receive stake refunds to their balance.')) return;
+      try {
+        const res = await fetch(`${API}/challenges/${encodeURIComponent(id)}/settle`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: currentUser.user_id }),
+        });
+        const data = await res.json();
+        if (!res.ok) { alert(data.error || 'Settle failed'); return; }
+        alert(`Settled — ${data.winner_count || 0} winners got stakes back.`);
+        openLeagueDetail(id);
+        loadPlayHome();
+      } catch (e) {
+        alert('Network error');
+      }
+    }
+
+    async function topUpLedger(quiet) {
+      if (!currentUser) { showAuthPopup(); return; }
+      try {
+        const res = await fetch(`${API}/ledger/${currentUser.user_id}/topup`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ amount: 50 }),
+        });
+        const data = await res.json();
+        if (!res.ok) { alert(data.error || 'Top-up failed'); return; }
+        setBalanceUI(data.ledger_balance);
+        if (!quiet) alert(`Added ${fmtMoney(data.added)} demo credit. Balance ${fmtMoney(data.ledger_balance)}.`);
+      } catch (e) {
+        alert('Network error');
+      }
+    }
+
+    function showCreateLeague() {
+      if (!currentUser) { showAuthPopup(); return; }
+      const name = prompt('League name', 'Crew Run Club');
+      if (!name) return;
+      const stake = parseFloat(prompt('Stake amount ($)', '50') || '50');
+      const miles = parseFloat(prompt('Daily goal (miles)', '1') || '1');
+      const kind = (prompt('Activity: run, bike, or walk', 'run') || 'run').toLowerCase();
+      createLeague({ name, stake, daily_goal_miles: miles, activity_kind: kind });
+    }
+
+    async function createLeague(opts) {
+      try {
+        const res = await fetch(`${API}/challenges`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: currentUser.user_id, ...opts }),
+        });
+        const data = await res.json();
+        if (!res.ok) { alert(data.error || 'Create failed'); return; }
+        if (data.challenge && data.challenge.id) openLeagueDetail(data.challenge.id);
+        else loadPlayHome();
+      } catch (e) {
+        alert('Network error');
+      }
+    }
+
+    async function loadFeed() {
+      const box = document.getElementById('feed-list');
+      if (!box) return;
+      try {
+        const q = playAuthQ();
+        const url = q ? `${API}/feed${q}&limit=40` : `${API}/feed?limit=40`;
+        const res = await fetch(url);
+        const data = await res.json();
+        const events = data.events || [];
+        if (!events.length) {
+          box.innerHTML = `<div class="play-empty">Quiet for now. Stake a league or log a run — show up on the feed.</div>`;
+          return;
+        }
+        const icon = { join: '💰', day_hit: '🔥', activity: '📍', settle: '🏆', league_created: '✨' };
+        box.innerHTML = events.map(ev => `
+          <div class="feed-item">
+            <div class="feed-avatar">${icon[ev.type] || '⚡'}</div>
+            <div class="feed-body">
+              <div class="who">${escapeHtmlPlay(ev.username || 'Player')}</div>
+              <div class="what">${escapeHtmlPlay(ev.text || ev.type || '')}</div>
+              <div class="when">${relativeTime(ev.ts)}</div>
+            </div>
+          </div>`).join('');
+      } catch (e) {
+        box.innerHTML = `<div class="play-empty">Feed unavailable.</div>`;
+      }
+    }
+
+    // ---- GPS tracker ----
+    function setTrackKind(kind) {
+      _trackKind = kind || 'run';
+      document.querySelectorAll('#track-kind-pills .kind-pill').forEach(b => {
+        b.classList.toggle('active', b.getAttribute('data-kind') === _trackKind);
+      });
+    }
+
+    function selectTrackLeague(id) {
+      const sel = document.getElementById('track-league-select');
+      if (sel && id) sel.value = id;
+    }
+
+    function populateTrackLeagueSelect() {
+      const sel = document.getElementById('track-league-select');
+      if (!sel) return;
+      const mine = (_playChallenges || []).filter(c => c.is_member);
+      const cur = sel.value;
+      sel.innerHTML = `<option value="">— Select a league you're in —</option>` +
+        mine.map(c => `<option value="${c.id}">${c.emoji || ''} ${escapeHtmlPlay(c.name)} (${c.daily_goal_miles || 1} mi)</option>`).join('');
+      if (cur) sel.value = cur;
+    }
+
+    function initTrackMap() {
+      loadPublicConfig();
+      populateTrackLeagueSelect();
+      const el = document.getElementById('track-map');
+      if (!el || typeof L === 'undefined') return;
+      if (_trackMap) {
+        setTimeout(() => _trackMap.invalidateSize(), 200);
+        return;
+      }
+      _trackMap = L.map('track-map', { zoomControl: false, attributionControl: true }).setView([37.77, -122.42], 13);
+      // Mapbox streets if token present; else OSM (same tracker UX)
+      if (_mapboxToken) {
+        L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/dark-v11/tiles/{z}/{x}/{y}?access_token=' + encodeURIComponent(_mapboxToken), {
+          tileSize: 512, zoomOffset: -1, maxZoom: 20,
+          attribution: '© Mapbox © OpenStreetMap',
+        }).addTo(_trackMap);
+      } else {
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+          maxZoom: 20,
+          attribution: '© OpenStreetMap © CARTO',
+        }).addTo(_trackMap);
+      }
+      L.control.zoom({ position: 'bottomright' }).addTo(_trackMap);
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(pos => {
+          const ll = [pos.coords.latitude, pos.coords.longitude];
+          _trackMap.setView(ll, 15);
+          if (!_trackMarker) {
+            _trackMarker = L.circleMarker(ll, { radius: 8, color: '#39ff14', fillColor: '#39ff14', fillOpacity: 0.9, weight: 2 }).addTo(_trackMap);
+          }
+        }, () => {}, { enableHighAccuracy: true, timeout: 8000 });
+      }
+      setTimeout(() => _trackMap.invalidateSize(), 250);
+    }
+
+    function toggleTracking() {
+      if (_tracking) { pauseTracking(); return; }
+      startTracking();
+    }
+
+    function startTracking() {
+      if (!navigator.geolocation) { alert('GPS not available on this device.'); return; }
+      if (!_trackMap) initTrackMap();
+      _tracking = true;
+      _trackPath = [];
+      _trackMiles = 0;
+      _trackStartTs = Date.now();
+      updateTrackUI();
+      const btn = document.getElementById('track-start-btn');
+      if (btn) { btn.textContent = '■ Stop'; btn.classList.add('live'); }
+      const fin = document.getElementById('track-finish-btn');
+      if (fin) fin.disabled = false;
+      if (_trackPolyline) { _trackMap.removeLayer(_trackPolyline); _trackPolyline = null; }
+      _trackWatchId = navigator.geolocation.watchPosition(onTrackPos, err => {
+        console.warn('GPS', err);
+      }, { enableHighAccuracy: true, maximumAge: 1000, timeout: 15000 });
+      _trackTimer = setInterval(updateTrackUI, 1000);
+    }
+
+    function pauseTracking() {
+      _tracking = false;
+      if (_trackWatchId != null) {
+        navigator.geolocation.clearWatch(_trackWatchId);
+        _trackWatchId = null;
+      }
+      if (_trackTimer) { clearInterval(_trackTimer); _trackTimer = null; }
+      const btn = document.getElementById('track-start-btn');
+      if (btn) { btn.textContent = '● Resume'; btn.classList.remove('live'); }
+    }
+
+    function onTrackPos(pos) {
+      const pt = { lat: pos.coords.latitude, lng: pos.coords.longitude, t: Date.now() };
+      if (_trackPath.length) {
+        const d = haversineMiles(_trackPath[_trackPath.length - 1], pt);
+        // Filter GPS jumps (>0.15 mi between samples is noise when walking/running)
+        if (d > 0 && d < 0.15) _trackMiles += d;
+      }
+      _trackPath.push(pt);
+      const ll = [pt.lat, pt.lng];
+      if (_trackMarker) _trackMarker.setLatLng(ll);
+      else _trackMarker = L.circleMarker(ll, { radius: 8, color: '#39ff14', fillColor: '#39ff14', fillOpacity: 0.9, weight: 2 }).addTo(_trackMap);
+      const latlngs = _trackPath.map(p => [p.lat, p.lng]);
+      if (!_trackPolyline) {
+        _trackPolyline = L.polyline(latlngs, { color: '#39ff14', weight: 4, opacity: 0.85 }).addTo(_trackMap);
+      } else {
+        _trackPolyline.setLatLngs(latlngs);
+      }
+      _trackMap.panTo(ll, { animate: true, duration: 0.4 });
+      updateTrackUI();
+    }
+
+    function updateTrackUI() {
+      const milesEl = document.getElementById('track-miles');
+      const timeEl = document.getElementById('track-time');
+      const paceEl = document.getElementById('track-pace');
+      if (milesEl) milesEl.textContent = fmtMiles(_trackMiles);
+      let sec = 0;
+      if (_trackStartTs) sec = Math.floor((Date.now() - _trackStartTs) / 1000);
+      const m = Math.floor(sec / 60), s = sec % 60;
+      if (timeEl) timeEl.textContent = m + ':' + String(s).padStart(2, '0');
+      if (paceEl) {
+        if (_trackMiles > 0.05 && sec > 0) {
+          const paceSec = sec / _trackMiles;
+          const pm = Math.floor(paceSec / 60), ps = Math.floor(paceSec % 60);
+          paceEl.textContent = pm + ':' + String(ps).padStart(2, '0');
+        } else paceEl.textContent = '—';
+      }
+    }
+
+    async function finishTracking() {
+      pauseTracking();
+      const btn = document.getElementById('track-start-btn');
+      if (btn) { btn.textContent = '● Start'; btn.classList.remove('live'); }
+      if (_trackMiles < 0.05) {
+        alert('Move a bit more before logging — need at least ~0.05 mi.');
+        return;
+      }
+      if (!currentUser) { showAuthPopup(); return; }
+      const sel = document.getElementById('track-league-select');
+      const leagueId = sel && sel.value;
+      if (!leagueId) {
+        alert('Pick a league to credit this activity toward.');
+        return;
+      }
+      const duration_sec = _trackStartTs ? Math.floor((Date.now() - _trackStartTs) / 1000) : 0;
+      const path = _trackPath.filter((_, i) => i % 3 === 0).slice(0, 400).map(p => ({ lat: p.lat, lng: p.lng }));
+      try {
+        const res = await fetch(`${API}/challenges/${encodeURIComponent(leagueId)}/log`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_id: currentUser.user_id,
+            miles: _trackMiles,
+            activity_kind: _trackKind,
+            duration_sec,
+            path,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) { alert(data.error || 'Log failed'); return; }
+        let msg = `Logged ${fmtMiles(_trackMiles)} mi.`;
+        if (data.newly_hit) msg += ' Day goal hit 🔥';
+        if (data.cpaa_credit) msg += ` CPAA +${fmtMoney(data.cpaa_credit)}`;
+        if (data.ledger_balance != null) setBalanceUI(data.ledger_balance);
+        alert(msg);
+        _trackMiles = 0;
+        _trackPath = [];
+        _trackStartTs = null;
+        updateTrackUI();
+        const fin = document.getElementById('track-finish-btn');
+        if (fin) fin.disabled = true;
+      } catch (e) {
+        alert('Network error logging activity');
+      }
+    }
+
+    function escapeHtmlPlay(s) {
+      return String(s == null ? '' : s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    window.loadPlayHome = loadPlayHome;
+    window.openLeagueDetail = openLeagueDetail;
+    window.closeLeagueDetail = closeLeagueDetail;
+    window.joinLeague = joinLeague;
+    window.settleLeague = settleLeague;
+    window.topUpLedger = topUpLedger;
+    window.showCreateLeague = showCreateLeague;
+    window.setTrackKind = setTrackKind;
+    window.selectTrackLeague = selectTrackLeague;
+    window.toggleTracking = toggleTracking;
+    window.finishTracking = finishTracking;
+    window.initTrackMap = initTrackMap;
+    window.loadFeed = loadFeed;
+
+    loadPublicConfig();
     init();
   </script>
 </body>

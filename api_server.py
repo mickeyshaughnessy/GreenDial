@@ -927,6 +927,149 @@ def admin_bounties():
     return Response(result, mimetype='application/json')
 
 
+# ============ PUBLIC CLIENT CONFIG ============
+
+@app.route("/config/public", methods=['GET', 'OPTIONS'])
+def public_config():
+    """Non-secret client config (Mapbox token, product flags)."""
+    if request.method == 'OPTIONS':
+        return Response('', status=200)
+    return Response(handlers.handle_public_config(), mimetype='application/json')
+
+
+# ============ FITNESS LEAGUES (stake groups + leaderboard) ============
+
+@app.route("/challenges", methods=['GET', 'POST', 'OPTIONS'])
+def challenges():
+    if request.method == 'OPTIONS':
+        return Response('', status=200)
+    if request.method == 'GET':
+        user_id = request.args.get('user_id', '')
+        result = handlers.handle_list_challenges(user_id=user_id or None, token=_session_token() or None)
+        if isinstance(result, tuple):
+            return Response(result[0], status=result[1], mimetype='application/json')
+        return Response(result, mimetype='application/json')
+    # POST create
+    req = request.get_json() or {}
+    user_id = req.get('user_id') or request.args.get('user_id', '')
+    denied = _require_session(user_id)
+    if denied:
+        return denied
+    result = handlers.handle_create_challenge(user_id, _session_token(), req)
+    if isinstance(result, tuple):
+        return Response(result[0], status=result[1], mimetype='application/json')
+    return Response(result, mimetype='application/json')
+
+
+@app.route("/challenges/invites", methods=['GET', 'OPTIONS'])
+def challenge_invites():
+    if request.method == 'OPTIONS':
+        return Response('', status=200)
+    user_id = request.args.get('user_id', '')
+    denied = _require_session(user_id)
+    if denied:
+        return denied
+    result = handlers.handle_challenge_invites(user_id, _session_token())
+    if isinstance(result, tuple):
+        return Response(result[0], status=result[1], mimetype='application/json')
+    return Response(result, mimetype='application/json')
+
+
+@app.route("/challenges/<challenge_id>", methods=['GET', 'OPTIONS'])
+def get_challenge(challenge_id):
+    if request.method == 'OPTIONS':
+        return Response('', status=200)
+    user_id = request.args.get('user_id', '')
+    result = handlers.handle_get_challenge(challenge_id, user_id=user_id or None, token=_session_token() or None)
+    if isinstance(result, tuple):
+        return Response(result[0], status=result[1], mimetype='application/json')
+    return Response(result, mimetype='application/json')
+
+
+@app.route("/challenges/<challenge_id>/join", methods=['POST', 'OPTIONS'])
+def join_challenge(challenge_id):
+    if request.method == 'OPTIONS':
+        return Response('', status=200)
+    req = request.get_json() or {}
+    user_id = req.get('user_id') or request.args.get('user_id', '')
+    denied = _require_session(user_id)
+    if denied:
+        return denied
+    result = handlers.handle_join_challenge(challenge_id, user_id, _session_token(), req)
+    if isinstance(result, tuple):
+        return Response(result[0], status=result[1], mimetype='application/json')
+    return Response(result, mimetype='application/json')
+
+
+@app.route("/challenges/<challenge_id>/log", methods=['POST', 'OPTIONS'])
+def log_challenge(challenge_id):
+    if request.method == 'OPTIONS':
+        return Response('', status=200)
+    req = request.get_json() or {}
+    user_id = req.get('user_id') or request.args.get('user_id', '')
+    denied = _require_session(user_id)
+    if denied:
+        return denied
+    result = handlers.handle_log_challenge_activity(challenge_id, user_id, _session_token(), req)
+    if isinstance(result, tuple):
+        return Response(result[0], status=result[1], mimetype='application/json')
+    return Response(result, mimetype='application/json')
+
+
+@app.route("/challenges/<challenge_id>/settle", methods=['POST', 'OPTIONS'])
+def settle_challenge(challenge_id):
+    if request.method == 'OPTIONS':
+        return Response('', status=200)
+    req = request.get_json(silent=True) or {}
+    user_id = req.get('user_id') or request.args.get('user_id', '')
+    denied = _require_session(user_id)
+    if denied:
+        return denied
+    result = handlers.handle_settle_challenge(challenge_id, user_id, _session_token())
+    if isinstance(result, tuple):
+        return Response(result[0], status=result[1], mimetype='application/json')
+    return Response(result, mimetype='application/json')
+
+
+@app.route("/feed", methods=['GET', 'OPTIONS'])
+def social_feed():
+    if request.method == 'OPTIONS':
+        return Response('', status=200)
+    user_id = request.args.get('user_id', '')
+    limit = request.args.get('limit', 40)
+    result = handlers.handle_get_feed(user_id=user_id or None, token=_session_token() or None, limit=limit)
+    if isinstance(result, tuple):
+        return Response(result[0], status=result[1], mimetype='application/json')
+    return Response(result, mimetype='application/json')
+
+
+@app.route("/ledger/<user_id>", methods=['GET', 'OPTIONS'])
+def get_ledger(user_id):
+    if request.method == 'OPTIONS':
+        return Response('', status=200)
+    denied = _require_session(user_id)
+    if denied:
+        return denied
+    result = handlers.handle_get_ledger(user_id, _session_token())
+    if isinstance(result, tuple):
+        return Response(result[0], status=result[1], mimetype='application/json')
+    return Response(result, mimetype='application/json')
+
+
+@app.route("/ledger/<user_id>/topup", methods=['POST', 'OPTIONS'])
+def ledger_topup(user_id):
+    if request.method == 'OPTIONS':
+        return Response('', status=200)
+    denied = _require_session(user_id)
+    if denied:
+        return denied
+    req = request.get_json() or {}
+    result = handlers.handle_ledger_topup(user_id, _session_token(), req)
+    if isinstance(result, tuple):
+        return Response(result[0], status=result[1], mimetype='application/json')
+    return Response(result, mimetype='application/json')
+
+
 # ============ MAIN ============
 
 if __name__ == '__main__':

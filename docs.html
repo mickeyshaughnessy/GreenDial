@@ -737,6 +737,47 @@ POST /chat/agent/protect
   <h3><span data-i18n="docs.sab.bounties_heading">Bounties</span> <span class="badge">Demand-side</span></h3>
   <p>Anyone can sponsor a Universal Bounty — friends and family (signed-in session on <a href="/sponsor">/sponsor</a>), or insurers, employers, and government programs with <code>X-API-Key: &lt;DEMAND_API_KEY&gt;</code>. A UB targets an explicit list of <code>user_ids</code>; matching users see it as a priced Suggestion. Supports <code>recurrence</code>: <code>once</code> | <code>weekly</code> | <code>monthly</code>.</p>
 
+  <h4 style="font-size:14px;color:rgba(255,255,255,0.85);margin:16px 0 8px">CPAA — cost per action (fitness)</h4>
+  <p>Demand-side buyers can pay members <strong>per verified fitness action</strong> instead of (or in addition to) a one-shot fixed price. Set <code>pricing_model: "cpaa"</code> with a per-action rate. When a member logs GPS miles in a stake league that matches the action type, GreenDial credits their ledger and flags admin settlement.</p>
+  <div class="code-block"># CPAA: pay $2 each time user_abc completes a 1-mile run (budget-capped)
+curl -X POST https://greendial.org/bounty \
+  -H "X-API-Key: $DEMAND_API_KEY" -H "Content-Type: application/json" \
+  -d '{
+    "activity": "Run 1 mile today",
+    "health_area": "exercise",
+    "pricing_model": "cpaa",
+    "action_type": "run_1mi",
+    "cpaa_rate": 2.00,
+    "price": 2.00,
+    "currency": "USD",
+    "user_ids": ["user_abc"],
+    "max_actions": 100,
+    "budget_total": 200,
+    "recurrence": "weekly",
+    "expires": "2026-12-31"
+  }'
+
+# Preview CPAA payload
+curl -X POST https://greendial.org/generate \
+  -H "X-API-Key: $DEMAND_API_KEY" -H "Content-Type: application/json" \
+  -d '{"user_id":"user_abc","health_area":"exercise","pricing_model":"cpaa",
+       "action_type":"bike_3mi","cpaa_rate":3,"description":"Bike 3 miles"}'</div>
+  <p style="font-size:13px;color:rgba(255,255,255,0.55)"><code>action_type</code> values: <code>run_1mi</code>, <code>run_3mi</code>, <code>bike_3mi</code>, <code>bike_10mi</code>, <code>walk_1mi</code>, <code>walk_3mi</code>, <code>steps_5k</code>, <code>steps_10k</code>, <code>workout_30min</code>, <code>any_fitness</code>.</p>
+
+  <h4 style="font-size:14px;color:rgba(255,255,255,0.85);margin:16px 0 8px">Stake leagues (member app)</h4>
+  <p>Members join fitness groups with a stake. Scoring is consistency (days the distance goal is hit). <strong>Top half of the leaderboard get their stake refunded</strong> at settle. CPAA payouts stack on top so active players can earn more than they wager once demand partners are live.</p>
+  <div class="code-block">GET  /challenges
+POST /challenges
+GET  /challenges/{id}
+POST /challenges/{id}/join
+POST /challenges/{id}/log      # { miles, activity_kind, duration_sec, path? }
+POST /challenges/{id}/settle
+GET  /challenges/invites       # profile + Doc-aware league matching
+GET  /feed
+GET  /ledger/{user_id}
+POST /ledger/{user_id}/topup   # demo credit only
+GET  /config/public            # map provider / Mapbox token if set</div>
+
   <h4 style="font-size:14px;color:rgba(255,255,255,0.85);margin:16px 0 8px">Demand-side account model</h4>
   <ul style="margin:0 0 16px 18px;color:rgba(255,255,255,0.7);font-size:13.5px;line-height:1.65">
     <li><strong>Friends/family:</strong> normal GreenDial login + <code>X-Session-Token</code> (or the Sponsor UI). No demand API key required.</li>

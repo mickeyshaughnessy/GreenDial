@@ -160,7 +160,10 @@
 
   <div class="wrap">
     <h2>How a demand-side account works</h2>
-    <p>On GreenDial, the <strong>supply side</strong> is the person chatting with Doc and checking in. The <strong>demand side</strong> is anyone who sponsors a priced activity for them — a Universal Bounty (UB).</p>
+    <p>On GreenDial, the <strong>supply side</strong> is the member who stakes leagues, tracks miles, and chats with Doc. The <strong>demand side</strong> is anyone who sponsors priced actions — fixed Universal Bounties or <strong>CPAA</strong> (cost per action) fitness payouts.</p>
+    <div class="note" style="margin-bottom:16px">
+      <strong>CPAA:</strong> set <code>pricing_model: "cpaa"</code>, <code>action_type</code> (e.g. <code>run_1mi</code>, <code>bike_3mi</code>), and <code>cpaa_rate</code>. Members who complete matching GPS-tracked activities get paid per action — stack that on top of stake-league refunds so active players can earn more than they wager. See <a href="/docs">API docs</a>.
+    </div>
     <div class="cards">
       <div class="card">
         <h3>Friends &amp; family</h3>

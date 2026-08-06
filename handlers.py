@@ -135,7 +135,8 @@ def handle_auth(request):
                     "username": user.get('username', username),
                     "settings": user.get('settings', {}),
                     "profile": user.get('profile', {}),
-                    "token": token
+                    "token": token,
+                    "ledger_balance": user.get('ledger_balance'),
                 })
             return json.dumps({"error": "Invalid passphrase"}), 401
         return json.dumps({"error": "User not found"}), 404
@@ -163,7 +164,17 @@ def handle_auth(request):
             "notifications_enabled": True
         },
         "profile": profile,
-        "notifications": []
+        "notifications": [],
+        # Play ledger for stake leagues / CPAA payouts (USD display units)
+        "ledger_balance": 50.0,  # welcome stake credit so new players can join a league
+        "ledger_currency": "USD",
+        "fitness_stats": {
+            "total_miles": 0.0,
+            "total_activities": 0,
+            "current_streak_days": 0,
+            "best_streak_days": 0,
+            "last_activity_date": None,
+        },
     }
     
     try:
@@ -182,7 +193,8 @@ def handle_auth(request):
         "new_user": True,
         "settings": new_user["settings"],
         "profile": new_user["profile"],
-        "token": signup_token
+        "token": signup_token,
+        "ledger_balance": new_user.get("ledger_balance", 50.0),
     })
 
 
@@ -3328,6 +3340,42 @@ def handle_create_bounty(req, api_key=None, session_token=None):
     note = (req.get("sponsor_note") or req.get("note") or "").strip()[:300]
     title = (req.get("title") or "").strip()[:120]
 
+    # CPAA (cost-per-action): demand pays members per completed fitness action.
+    # pricing_model: "fixed" (legacy one-shot price) | "cpaa" (per verified action)
+    pricing_model = (req.get("pricing_model") or req.get("model") or "fixed").strip().lower()
+    if pricing_model not in ("fixed", "cpaa"):
+        pricing_model = "fixed"
+    action_type = (req.get("action_type") or "").strip().lower() or None
+    # Canonical fitness action types for demand-side CPAA
+    _CPAA_ACTIONS = {
+        "run_1mi", "run_3mi", "bike_3mi", "bike_10mi", "walk_1mi", "walk_3mi",
+        "steps_5k", "steps_10k", "workout_30min", "any_fitness",
+    }
+    if action_type and action_type not in _CPAA_ACTIONS:
+        # Allow custom labels but keep them short
+        action_type = re.sub(r'[^a-z0-9_]', '', action_type)[:40] or None
+    try:
+        cpaa_rate = float(req.get("cpaa_rate") if req.get("cpaa_rate") is not None else (
+            price if pricing_model == "cpaa" else 0
+        ))
+    except (TypeError, ValueError):
+        cpaa_rate = float(price) if pricing_model == "cpaa" else 0.0
+    try:
+        max_actions = int(req.get("max_actions") or 0)
+    except (TypeError, ValueError):
+        max_actions = 0
+    max_actions = max(0, min(max_actions, 10000))  # 0 = unlimited
+    try:
+        budget_total = float(req.get("budget_total") or 0)
+    except (TypeError, ValueError):
+        budget_total = 0.0
+    budget_total = max(0.0, budget_total)
+    if pricing_model == "cpaa" and cpaa_rate <= 0:
+        cpaa_rate = float(DEFAULT_BOUNTY_PRICE)
+    # For CPAA, surface price as the per-action rate in the member UI
+    if pricing_model == "cpaa":
+        price = cpaa_rate
+
     try:
         bounties = s3_storage.get_bounties()
         bounty = {
@@ -3345,6 +3393,14 @@ def handle_create_bounty(req, api_key=None, session_token=None):
             "title": title,
             "created": datetime.utcnow().isoformat(),
             "status": "active",
+            # CPAA fields
+            "pricing_model": pricing_model,
+            "action_type": action_type or ("any_fitness" if pricing_model == "cpaa" else None),
+            "cpaa_rate": cpaa_rate if pricing_model == "cpaa" else None,
+            "max_actions": max_actions if pricing_model == "cpaa" else None,
+            "budget_total": budget_total if pricing_model == "cpaa" else None,
+            "actions_completed": 0,
+            "spend_total": 0.0,
         }
         bounties.append(bounty)
         s3_storage.save_bounties(bounties)
@@ -3356,6 +3412,11 @@ def handle_create_bounty(req, api_key=None, session_token=None):
             "price": price,
             "currency": currency,
             "user_ids": user_ids,
+            "pricing_model": pricing_model,
+            "action_type": bounty.get("action_type"),
+            "cpaa_rate": bounty.get("cpaa_rate"),
+            "max_actions": bounty.get("max_actions"),
+            "budget_total": bounty.get("budget_total"),
         })
     except Exception as e:
         return (json.dumps({"error": str(e)}), 500)
@@ -3752,6 +3813,7 @@ def generate_suggestions(user_id, max_free=2, include_meta=True, include_profile
     }
     for b in bounties[:3]:
         area = b.get('health_area', 'exercise')
+        pricing_model = b.get('pricing_model') or 'fixed'
         suggestions.append({
             "id": f"sug_{uuid.uuid4().hex[:12]}",
             "type": area,
@@ -3761,6 +3823,9 @@ def generate_suggestions(user_id, max_free=2, include_meta=True, include_profile
             "price": b.get('price'),
             "currency": b.get('currency'),
             "recurrence": b.get('recurrence') or 'once',
+            "pricing_model": pricing_model,
+            "action_type": b.get('action_type'),
+            "cpaa_rate": b.get('cpaa_rate') if pricing_model == 'cpaa' else None,
             "destination": "activity",  # accept → trackable UB activity
             "created": datetime.utcnow().isoformat(),
             "status": "pending",
@@ -3933,6 +3998,9 @@ def handle_accept_suggestion(user_id, suggestion_id):
             "bounty_id": suggestion.get('bounty_id'),
             "price": suggestion.get('price'),
             "currency": suggestion.get('currency'),
+            "pricing_model": suggestion.get('pricing_model') or 'fixed',
+            "action_type": suggestion.get('action_type'),
+            "cpaa_rate": suggestion.get('cpaa_rate'),
             "accepted_at": datetime.utcnow().isoformat(),
             "status": "active",
             "completed_at": None,
@@ -4003,8 +4071,30 @@ def handle_update_activity(user_id, activity_id, req):
         activity['completed_at'] = datetime.utcnow().isoformat()
         wallets = user.get('wallets', {})
         activity['wallet_snapshot'] = wallets.get('eth') or wallets.get('sol') or None
-        if activity.get('price'):
+        # Optional GPS proof from tracker
+        if isinstance(req.get('proof'), dict):
+            proof = req['proof']
+            activity['proof'] = {
+                "miles": float(proof.get('miles') or 0),
+                "meters": float(proof.get('meters') or 0),
+                "duration_sec": int(proof.get('duration_sec') or 0),
+                "activity_kind": (proof.get('activity_kind') or 'run')[:32],
+                "points": min(len(proof.get('path') or []), 500),
+            }
+        payout = 0.0
+        pricing_model = activity.get('pricing_model') or 'fixed'
+        if activity.get('price') or activity.get('cpaa_rate'):
             activity['payment_pending'] = True
+            if pricing_model == 'cpaa':
+                payout = float(activity.get('cpaa_rate') or activity.get('price') or 0)
+                # Advance bounty spend counters when possible
+                _cpaa_record_action(activity.get('bounty_id'), payout)
+            else:
+                payout = float(activity.get('price') or 0)
+            if payout > 0:
+                user['ledger_balance'] = float(user.get('ledger_balance') or 0) + payout
+                activity['ledger_credited'] = payout
+        _touch_fitness_stats(user, miles=(activity.get('proof') or {}).get('miles') or 0)
     elif req.get('status') == 'abandoned':
         if activity.get('status') != 'active':
             return (json.dumps({"error": "Only active activities can be abandoned"}), 400)
@@ -4016,7 +4106,7 @@ def handle_update_activity(user_id, activity_id, req):
         s3_storage.save_user(user_id, user)
     except Exception as e:
         return (json.dumps({"error": str(e)}), 500)
-    return json.dumps({"activity": activity})
+    return json.dumps({"activity": activity, "ledger_balance": user.get('ledger_balance')})
 
 
 # ============ DEMAND-SIDE /generate ============
@@ -4092,14 +4182,33 @@ def handle_generate_demand(req, api_key=None, session_token=None):
     except (TypeError, ValueError):
         price = float(DEFAULT_BOUNTY_PRICE)
 
+    pricing_model = (req.get("pricing_model") or req.get("model") or "fixed").strip().lower()
+    if pricing_model not in ("fixed", "cpaa"):
+        pricing_model = "fixed"
+    action_type = (req.get("action_type") or "").strip().lower() or None
+    if pricing_model == "cpaa" and not action_type:
+        action_type = "any_fitness"
+    try:
+        cpaa_rate = float(req.get("cpaa_rate") if req.get("cpaa_rate") is not None else price)
+    except (TypeError, ValueError):
+        cpaa_rate = float(price)
+
     bounty_payload = {
         "activity": text,
         "health_area": health_area,
-        "price": price,
+        "price": price if pricing_model == "fixed" else cpaa_rate,
         "currency": currency,
         "user_ids": [user_id],
         "recurrence": recurrence,
+        "pricing_model": pricing_model,
     }
+    if pricing_model == "cpaa":
+        bounty_payload["action_type"] = action_type
+        bounty_payload["cpaa_rate"] = cpaa_rate
+        if req.get("max_actions") is not None:
+            bounty_payload["max_actions"] = req.get("max_actions")
+        if req.get("budget_total") is not None:
+            bounty_payload["budget_total"] = req.get("budget_total")
     if mode == "session" and sponsor:
         bounty_payload["sponsor_user_id"] = sponsor
 
@@ -4111,6 +4220,11 @@ def handle_generate_demand(req, api_key=None, session_token=None):
             "activity": DEFAULT_BOUNTY_ACTIVITY,
             "price": DEFAULT_BOUNTY_PRICE,
             "currency": DEFAULT_BOUNTY_CURRENCY,
+            "pricing_model": "fixed",
+            "action_types": [
+                "run_1mi", "run_3mi", "bike_3mi", "bike_10mi", "walk_1mi", "walk_3mi",
+                "steps_5k", "steps_10k", "workout_30min", "any_fitness",
+            ],
         },
     })
 
@@ -4173,3 +4287,970 @@ def handle_admin_mark_paid(requesting_user_id, token, target_user_id, activity_i
     except Exception as e:
         return (json.dumps({"error": str(e)}), 500)
     return json.dumps({"ok": True, "activity": activity})
+
+
+# ============ CPAA HELPERS + FITNESS STAKE LEAGUES ============
+
+_CHALLENGE_TEMPLATES = [
+    {
+        "slug": "daily-run-1",
+        "name": "Daily Mile Club",
+        "tagline": "Run 1 mile every day. Top half keep their stake.",
+        "challenge_type": "run_1mi_daily",
+        "activity_kind": "run",
+        "daily_goal_miles": 1.0,
+        "stake": 50.0,
+        "emoji": "🏃",
+        "duration_days": 30,
+        "max_members": 24,
+    },
+    {
+        "slug": "daily-bike-3",
+        "name": "Bike 3 Challenge",
+        "tagline": "Ride 3 miles a day. Consistency wins the pot.",
+        "challenge_type": "bike_3mi_daily",
+        "activity_kind": "bike",
+        "daily_goal_miles": 3.0,
+        "stake": 50.0,
+        "emoji": "🚴",
+        "duration_days": 30,
+        "max_members": 24,
+    },
+    {
+        "slug": "walk-3-grind",
+        "name": "Walk It Off",
+        "tagline": "Walk 3 miles daily. Skin in the game.",
+        "challenge_type": "walk_3mi_daily",
+        "activity_kind": "walk",
+        "daily_goal_miles": 3.0,
+        "stake": 25.0,
+        "emoji": "👟",
+        "duration_days": 21,
+        "max_members": 32,
+    },
+    {
+        "slug": "weekend-warriors",
+        "name": "Weekend Warriors",
+        "tagline": "Hit 5 miles every Sat+Sun. Top half cashes stake back.",
+        "challenge_type": "weekend_5mi",
+        "activity_kind": "run",
+        "daily_goal_miles": 5.0,
+        "stake": 40.0,
+        "emoji": "🔥",
+        "duration_days": 56,
+        "max_members": 20,
+        "days_of_week": [5, 6],  # Sat/Sun if using weekday checks; score still by logged miles
+    },
+]
+
+
+def _cpaa_record_action(bounty_id, payout):
+    """Increment CPAA spend on the bounty; auto-close if budget/max hit."""
+    if not bounty_id or payout <= 0:
+        return
+    try:
+        bounties = s3_storage.get_bounties()
+    except Exception:
+        return
+    changed = False
+    for b in bounties:
+        if b.get('id') != bounty_id:
+            continue
+        if (b.get('pricing_model') or 'fixed') != 'cpaa':
+            break
+        b['actions_completed'] = int(b.get('actions_completed') or 0) + 1
+        b['spend_total'] = float(b.get('spend_total') or 0) + float(payout)
+        max_a = int(b.get('max_actions') or 0)
+        budget = float(b.get('budget_total') or 0)
+        if max_a and b['actions_completed'] >= max_a:
+            b['status'] = 'exhausted'
+        if budget and b['spend_total'] >= budget:
+            b['status'] = 'exhausted'
+        changed = True
+        break
+    if changed:
+        try:
+            s3_storage.save_bounties(bounties)
+        except Exception as e:
+            print(f"[CPAA] Failed to update bounty spend: {e}")
+
+
+def _touch_fitness_stats(user, miles=0):
+    """Update streak / totals on a user after a completed fitness action."""
+    stats = user.setdefault('fitness_stats', {
+        "total_miles": 0.0,
+        "total_activities": 0,
+        "current_streak_days": 0,
+        "best_streak_days": 0,
+        "last_activity_date": None,
+    })
+    today = datetime.utcnow().strftime('%Y-%m-%d')
+    last = stats.get('last_activity_date')
+    stats['total_miles'] = float(stats.get('total_miles') or 0) + float(miles or 0)
+    stats['total_activities'] = int(stats.get('total_activities') or 0) + 1
+    if last == today:
+        pass  # already counted streak today
+    else:
+        from datetime import timedelta
+        yday = (datetime.utcnow() - timedelta(days=1)).strftime('%Y-%m-%d')
+        if last == yday:
+            stats['current_streak_days'] = int(stats.get('current_streak_days') or 0) + 1
+        else:
+            stats['current_streak_days'] = 1
+        stats['best_streak_days'] = max(
+            int(stats.get('best_streak_days') or 0),
+            int(stats.get('current_streak_days') or 0),
+        )
+        stats['last_activity_date'] = today
+
+
+def _ensure_ledger(user):
+    if user.get('ledger_balance') is None:
+        # First touch for pre-play accounts: one-time $50 welcome stake credit
+        if not user.get('ledger_initialized'):
+            user['ledger_balance'] = 50.0
+            user['ledger_initialized'] = True
+        else:
+            user['ledger_balance'] = 0.0
+    if not user.get('ledger_currency'):
+        user['ledger_currency'] = 'USD'
+    return float(user.get('ledger_balance') or 0)
+
+
+def _append_feed(event):
+    try:
+        events = s3_storage.get_feed_events(limit=200)
+    except Exception:
+        events = []
+    event = dict(event)
+    event.setdefault('id', f"evt_{uuid.uuid4().hex[:10]}")
+    event.setdefault('ts', datetime.utcnow().isoformat())
+    events.insert(0, event)
+    try:
+        s3_storage.save_feed_events(events[:200])
+    except Exception as e:
+        print(f"[Feed] save failed: {e}")
+
+
+def _public_member(m):
+    return {
+        "user_id": m.get("user_id"),
+        "username": m.get("username"),
+        "joined_at": m.get("joined_at"),
+        "stake": m.get("stake"),
+        "days_hit": m.get("days_hit", 0),
+        "total_miles": round(float(m.get("total_miles") or 0), 2),
+        "score": m.get("score", 0),
+        "last_log_date": m.get("last_log_date"),
+        "status": m.get("status", "active"),
+        "rank": m.get("rank"),
+        "payout": m.get("payout"),
+    }
+
+
+def _score_members(challenge):
+    """Score = days_hit * 100 + total_miles (consistency first). Rank in place."""
+    members = challenge.get('members') or []
+    for m in members:
+        if m.get('status') == 'left':
+            m['score'] = -1
+            continue
+        days = int(m.get('days_hit') or 0)
+        miles = float(m.get('total_miles') or 0)
+        m['score'] = days * 100 + miles
+    active = [m for m in members if m.get('status') != 'left']
+    active.sort(key=lambda x: (-float(x.get('score') or 0), x.get('joined_at') or ''))
+    for i, m in enumerate(active):
+        m['rank'] = i + 1
+    # left members keep no rank
+    for m in members:
+        if m.get('status') == 'left':
+            m['rank'] = None
+    return active
+
+
+def _challenge_public(challenge, viewer_id=None):
+    members = challenge.get('members') or []
+    active = [m for m in members if m.get('status') != 'left']
+    pot = sum(float(m.get('stake') or 0) for m in active)
+    me = None
+    if viewer_id:
+        me = next((m for m in members if m.get('user_id') == viewer_id), None)
+    return {
+        "id": challenge.get("id"),
+        "name": challenge.get("name"),
+        "tagline": challenge.get("tagline"),
+        "emoji": challenge.get("emoji") or "🏆",
+        "challenge_type": challenge.get("challenge_type"),
+        "activity_kind": challenge.get("activity_kind") or "run",
+        "daily_goal_miles": challenge.get("daily_goal_miles"),
+        "stake": challenge.get("stake"),
+        "currency": challenge.get("currency") or "USD",
+        "payout_rule": challenge.get("payout_rule") or "top_half_refund",
+        "start_date": challenge.get("start_date"),
+        "end_date": challenge.get("end_date"),
+        "status": challenge.get("status"),
+        "max_members": challenge.get("max_members"),
+        "member_count": len(active),
+        "pot": round(pot, 2),
+        "is_member": bool(me and me.get('status') != 'left'),
+        "my_rank": (me or {}).get('rank'),
+        "my_score": (me or {}).get('score'),
+        "invite_only": bool(challenge.get('invite_only')),
+        "created": challenge.get("created"),
+    }
+
+
+def _seed_default_challenges():
+    """Create open public leagues if none exist."""
+    try:
+        existing = s3_storage.get_challenges()
+    except Exception:
+        existing = []
+    if existing:
+        return existing
+    from datetime import timedelta
+    today = datetime.utcnow().date()
+    challenges = []
+    for t in _CHALLENGE_TEMPLATES:
+        start = today.isoformat()
+        end = (today + timedelta(days=int(t.get('duration_days') or 30))).isoformat()
+        challenges.append({
+            "id": f"lg_{uuid.uuid4().hex[:10]}",
+            "slug": t["slug"],
+            "name": t["name"],
+            "tagline": t["tagline"],
+            "emoji": t.get("emoji") or "🏆",
+            "challenge_type": t["challenge_type"],
+            "activity_kind": t.get("activity_kind") or "run",
+            "daily_goal_miles": float(t.get("daily_goal_miles") or 1),
+            "stake": float(t.get("stake") or 50),
+            "currency": "USD",
+            "payout_rule": "top_half_refund",
+            "start_date": start,
+            "end_date": end,
+            "status": "open",  # open | active | settled
+            "max_members": int(t.get("max_members") or 24),
+            "invite_only": False,
+            "members": [],
+            "logs": [],  # recent check-ins (capped)
+            "created": datetime.utcnow().isoformat(),
+            "created_by": "system",
+        })
+    try:
+        s3_storage.save_challenges(challenges)
+    except Exception as e:
+        print(f"[Leagues] seed failed: {e}")
+    return challenges
+
+
+def handle_public_config():
+    """Non-secret client config (Mapbox token if configured)."""
+    token = getattr(config, 'MAPBOX_ACCESS_TOKEN', None) or getattr(config, 'MAPBOX_TOKEN', None) or ''
+    return json.dumps({
+        "mapbox_token": token or None,
+        "map_provider": "mapbox" if token else "osm",
+        "product": {
+            "name": "GreenDial",
+            "tagline": "Skin in the game. Get paid to move.",
+            "payout_rule": "top_half_refund",
+        },
+    })
+
+
+def handle_list_challenges(user_id=None, token=None):
+    """List open/active leagues. Optional auth for membership flags + invites."""
+    if user_id and token and not session_ok(user_id, token):
+        return (json.dumps({"error": "Unauthorized"}), 401)
+    try:
+        challenges = _seed_default_challenges()
+    except Exception as e:
+        return (json.dumps({"error": str(e), "challenges": []}), 500)
+
+    # Expire / activate by date
+    today = datetime.utcnow().strftime('%Y-%m-%d')
+    dirty = False
+    for c in challenges:
+        if c.get('status') in ('open', 'active'):
+            if c.get('end_date') and c['end_date'] < today and c.get('status') != 'settled':
+                # leave as active until someone settles; mark ended
+                c['status'] = 'ended'
+                dirty = True
+            elif c.get('start_date') and c['start_date'] <= today and c.get('status') == 'open' and len(c.get('members') or []) >= 2:
+                c['status'] = 'active'
+                dirty = True
+    if dirty:
+        try:
+            s3_storage.save_challenges(challenges)
+        except Exception:
+            pass
+
+    public = [_challenge_public(c, user_id) for c in challenges
+              if c.get('status') not in ('archived',)]
+    # Sort: member leagues first, then open, then by pot
+    public.sort(key=lambda x: (
+        0 if x.get('is_member') else 1,
+        0 if x.get('status') in ('open', 'active') else 1,
+        -float(x.get('pot') or 0),
+    ))
+    balance = None
+    if user_id:
+        u = get_user_data(user_id)
+        if u:
+            balance = _ensure_ledger(u)
+    return json.dumps({
+        "challenges": public,
+        "ledger_balance": balance,
+        "ledger_currency": "USD",
+    })
+
+
+def handle_get_challenge(challenge_id, user_id=None, token=None):
+    if user_id and token and not session_ok(user_id, token):
+        return (json.dumps({"error": "Unauthorized"}), 401)
+    challenges = _seed_default_challenges()
+    challenge = next((c for c in challenges if c.get('id') == challenge_id), None)
+    if not challenge:
+        return (json.dumps({"error": "Not found"}), 404)
+    _score_members(challenge)
+    leaderboard = [_public_member(m) for m in (challenge.get('members') or [])
+                   if m.get('status') != 'left']
+    leaderboard.sort(key=lambda x: (x.get('rank') or 9999))
+    detail = _challenge_public(challenge, user_id)
+    detail['leaderboard'] = leaderboard
+    detail['recent_logs'] = (challenge.get('logs') or [])[:30]
+    detail['rules'] = {
+        "payout": "Top half of the leaderboard get their stake back when the league settles. "
+                  "Bottom half fund the prize culture — demand-side CPAA partners stack extra pay on fitness actions.",
+        "scoring": "1 point per day you hit the distance goal (+ miles as tie-break).",
+        "daily_goal_miles": challenge.get('daily_goal_miles'),
+        "activity_kind": challenge.get('activity_kind'),
+    }
+    return json.dumps({"challenge": detail})
+
+
+def handle_create_challenge(user_id, token, req):
+    """Create a custom stake league (session required)."""
+    if not session_ok(user_id, token):
+        return (json.dumps({"error": "Unauthorized"}), 401)
+    user = get_user_data(user_id)
+    if not user:
+        return (json.dumps({"error": "User not found"}), 404)
+
+    name = (req.get('name') or '').strip()[:80]
+    if not name:
+        return (json.dumps({"error": "name required"}), 400)
+    try:
+        stake = float(req.get('stake') if req.get('stake') is not None else 50)
+    except (TypeError, ValueError):
+        stake = 50.0
+    stake = max(5.0, min(stake, 500.0))
+    try:
+        daily_goal = float(req.get('daily_goal_miles') if req.get('daily_goal_miles') is not None else 1)
+    except (TypeError, ValueError):
+        daily_goal = 1.0
+    daily_goal = max(0.25, min(daily_goal, 50.0))
+    activity_kind = (req.get('activity_kind') or 'run').strip().lower()
+    if activity_kind not in ('run', 'bike', 'walk', 'any'):
+        activity_kind = 'run'
+    try:
+        duration_days = int(req.get('duration_days') or 30)
+    except (TypeError, ValueError):
+        duration_days = 30
+    duration_days = max(7, min(duration_days, 365))
+    try:
+        max_members = int(req.get('max_members') or 20)
+    except (TypeError, ValueError):
+        max_members = 20
+    max_members = max(2, min(max_members, 100))
+    invite_only = bool(req.get('invite_only'))
+
+    from datetime import timedelta
+    today = datetime.utcnow().date()
+    start = (req.get('start_date') or today.isoformat())[:10]
+    end = (req.get('end_date') or (today + timedelta(days=duration_days)).isoformat())[:10]
+    emoji = (req.get('emoji') or '🏆')[:4]
+    tagline = (req.get('tagline') or f"Stake ${stake:.0f}. Hit {daily_goal:g} mi/day. Top half get stake back.")[:160]
+
+    challenge = {
+        "id": f"lg_{uuid.uuid4().hex[:10]}",
+        "slug": re.sub(r'[^a-z0-9]+', '-', name.lower())[:40],
+        "name": name,
+        "tagline": tagline,
+        "emoji": emoji,
+        "challenge_type": req.get('challenge_type') or f"{activity_kind}_{daily_goal:g}mi_daily",
+        "activity_kind": activity_kind,
+        "daily_goal_miles": daily_goal,
+        "stake": stake,
+        "currency": "USD",
+        "payout_rule": "top_half_refund",
+        "start_date": start,
+        "end_date": end,
+        "status": "open",
+        "max_members": max_members,
+        "invite_only": invite_only,
+        "members": [],
+        "logs": [],
+        "created": datetime.utcnow().isoformat(),
+        "created_by": user_id,
+    }
+
+    challenges = _seed_default_challenges()
+    challenges.append(challenge)
+    try:
+        s3_storage.save_challenges(challenges)
+    except Exception as e:
+        return (json.dumps({"error": str(e)}), 500)
+
+    _append_feed({
+        "type": "league_created",
+        "username": user.get('username') or user_id,
+        "user_id": user_id,
+        "challenge_id": challenge['id'],
+        "challenge_name": name,
+        "text": f"created {emoji} {name} — ${stake:.0f} stake",
+    })
+    return json.dumps({"challenge": _challenge_public(challenge, user_id)})
+
+
+def handle_join_challenge(challenge_id, user_id, token, req=None):
+    """Join a league: deduct stake from ledger into the pot."""
+    if not session_ok(user_id, token):
+        return (json.dumps({"error": "Unauthorized"}), 401)
+    user = get_user_data(user_id)
+    if not user:
+        return (json.dumps({"error": "User not found"}), 404)
+
+    challenges = _seed_default_challenges()
+    challenge = next((c for c in challenges if c.get('id') == challenge_id), None)
+    if not challenge:
+        return (json.dumps({"error": "Not found"}), 404)
+    if challenge.get('status') in ('settled', 'ended', 'archived'):
+        return (json.dumps({"error": "This league is closed"}), 400)
+
+    members = challenge.setdefault('members', [])
+    existing = next((m for m in members if m.get('user_id') == user_id), None)
+    if existing and existing.get('status') != 'left':
+        return (json.dumps({"error": "Already in this league", "challenge": _challenge_public(challenge, user_id)}), 409)
+
+    active = [m for m in members if m.get('status') != 'left']
+    if len(active) >= int(challenge.get('max_members') or 24):
+        return (json.dumps({"error": "League is full"}), 400)
+
+    if challenge.get('invite_only'):
+        invites = challenge.get('invites') or []
+        if user_id not in invites and challenge.get('created_by') != user_id:
+            return (json.dumps({"error": "Invite required"}), 403)
+
+    stake = float(challenge.get('stake') or 50)
+    bal = _ensure_ledger(user)
+    if bal < stake:
+        return (json.dumps({
+            "error": f"Need ${stake:.0f} stake — your balance is ${bal:.2f}. Complete CPAA activities or wait for a top-up.",
+            "ledger_balance": bal,
+            "stake": stake,
+        }), 402)
+
+    user['ledger_balance'] = bal - stake
+    member = {
+        "user_id": user_id,
+        "username": user.get('username') or user_id,
+        "joined_at": datetime.utcnow().isoformat(),
+        "stake": stake,
+        "days_hit": 0,
+        "total_miles": 0.0,
+        "score": 0,
+        "last_log_date": None,
+        "hit_dates": [],
+        "status": "active",
+    }
+    if existing:
+        # rejoin
+        existing.update(member)
+    else:
+        members.append(member)
+
+    if challenge.get('status') == 'open' and len([m for m in members if m.get('status') != 'left']) >= 2:
+        challenge['status'] = 'active'
+
+    try:
+        s3_storage.save_user(user_id, user)
+        _cache_user(user_id, user)
+        s3_storage.save_challenges(challenges)
+    except Exception as e:
+        return (json.dumps({"error": str(e)}), 500)
+
+    _append_feed({
+        "type": "join",
+        "username": user.get('username'),
+        "user_id": user_id,
+        "challenge_id": challenge_id,
+        "challenge_name": challenge.get('name'),
+        "text": f"staked ${stake:.0f} on {challenge.get('emoji', '🏆')} {challenge.get('name')}",
+    })
+    _score_members(challenge)
+    return json.dumps({
+        "ok": True,
+        "challenge": _challenge_public(challenge, user_id),
+        "ledger_balance": user['ledger_balance'],
+        "stake_paid": stake,
+    })
+
+
+def handle_log_challenge_activity(challenge_id, user_id, token, req):
+    """Log a GPS-tracked (or manual) fitness session toward a league day goal."""
+    if not session_ok(user_id, token):
+        return (json.dumps({"error": "Unauthorized"}), 401)
+    user = get_user_data(user_id)
+    if not user:
+        return (json.dumps({"error": "User not found"}), 404)
+
+    challenges = _seed_default_challenges()
+    challenge = next((c for c in challenges if c.get('id') == challenge_id), None)
+    if not challenge:
+        return (json.dumps({"error": "Not found"}), 404)
+    if challenge.get('status') in ('settled', 'archived'):
+        return (json.dumps({"error": "League is settled"}), 400)
+
+    members = challenge.get('members') or []
+    member = next((m for m in members if m.get('user_id') == user_id and m.get('status') != 'left'), None)
+    if not member:
+        return (json.dumps({"error": "Join this league first"}), 403)
+
+    try:
+        miles = float(req.get('miles') if req.get('miles') is not None else 0)
+    except (TypeError, ValueError):
+        miles = 0.0
+    if miles <= 0 and req.get('meters'):
+        try:
+            miles = float(req.get('meters')) / 1609.344
+        except (TypeError, ValueError):
+            miles = 0.0
+    if miles <= 0:
+        return (json.dumps({"error": "miles (or meters) required"}), 400)
+    miles = round(min(miles, 100.0), 3)  # sanity cap
+
+    activity_kind = (req.get('activity_kind') or challenge.get('activity_kind') or 'run')[:32]
+    duration_sec = 0
+    try:
+        duration_sec = max(0, int(req.get('duration_sec') or 0))
+    except (TypeError, ValueError):
+        duration_sec = 0
+
+    # Path samples optional (store count only to keep JSON small)
+    path = req.get('path') or []
+    path_points = min(len(path) if isinstance(path, list) else 0, 2000)
+
+    today = datetime.utcnow().strftime('%Y-%m-%d')
+    # Accumulate same-day miles
+    day_logs = member.setdefault('day_miles', {})
+    prev = float(day_logs.get(today) or 0)
+    day_logs[today] = round(prev + miles, 3)
+    member['total_miles'] = round(float(member.get('total_miles') or 0) + miles, 3)
+    member['last_log_date'] = today
+
+    goal = float(challenge.get('daily_goal_miles') or 1)
+    hit_dates = member.setdefault('hit_dates', [])
+    newly_hit = False
+    if day_logs[today] >= goal and today not in hit_dates:
+        hit_dates.append(today)
+        member['days_hit'] = len(hit_dates)
+        newly_hit = True
+
+    log_entry = {
+        "user_id": user_id,
+        "username": user.get('username'),
+        "miles": miles,
+        "day_total": day_logs[today],
+        "activity_kind": activity_kind,
+        "duration_sec": duration_sec,
+        "path_points": path_points,
+        "goal_hit": day_logs[today] >= goal,
+        "ts": datetime.utcnow().isoformat(),
+        "date": today,
+    }
+    logs = challenge.setdefault('logs', [])
+    logs.insert(0, log_entry)
+    challenge['logs'] = logs[:100]
+
+    # Also store on user fitness log
+    flogs = user.setdefault('fitness_logs', [])
+    flogs.insert(0, {
+        "id": f"flog_{uuid.uuid4().hex[:10]}",
+        "challenge_id": challenge_id,
+        "miles": miles,
+        "activity_kind": activity_kind,
+        "duration_sec": duration_sec,
+        "ts": log_entry['ts'],
+        "date": today,
+    })
+    user['fitness_logs'] = flogs[:100]
+    _touch_fitness_stats(user, miles=miles)
+
+    # CPAA: if demand-side CPAA bounties target this user for matching action, credit once per day
+    cpaa_credit = _maybe_credit_cpaa_for_fitness(user, activity_kind, miles)
+
+    _score_members(challenge)
+    try:
+        s3_storage.save_user(user_id, user)
+        _cache_user(user_id, user)
+        s3_storage.save_challenges(challenges)
+    except Exception as e:
+        return (json.dumps({"error": str(e)}), 500)
+
+    if newly_hit:
+        _append_feed({
+            "type": "day_hit",
+            "username": user.get('username'),
+            "user_id": user_id,
+            "challenge_id": challenge_id,
+            "challenge_name": challenge.get('name'),
+            "text": f"hit day goal in {challenge.get('emoji', '🏆')} {challenge.get('name')} ({day_logs[today]:g} mi)",
+            "miles": day_logs[today],
+        })
+    else:
+        _append_feed({
+            "type": "activity",
+            "username": user.get('username'),
+            "user_id": user_id,
+            "challenge_id": challenge_id,
+            "challenge_name": challenge.get('name'),
+            "text": f"logged {miles:g} mi ({activity_kind}) — {challenge.get('name')}",
+            "miles": miles,
+        })
+
+    return json.dumps({
+        "ok": True,
+        "log": log_entry,
+        "member": _public_member(member),
+        "newly_hit": newly_hit,
+        "ledger_balance": user.get('ledger_balance'),
+        "cpaa_credit": cpaa_credit,
+        "challenge": _challenge_public(challenge, user_id),
+    })
+
+
+def _maybe_credit_cpaa_for_fitness(user, activity_kind, miles):
+    """Pay user from matching active CPAA bounties (max one credit per bounty per day)."""
+    user_id = user.get('user_id')
+    if not user_id:
+        return 0.0
+    try:
+        bounties = s3_storage.get_bounties()
+    except Exception:
+        return 0.0
+    today = datetime.utcnow().strftime('%Y-%m-%d')
+    credited = 0.0
+    for b in bounties:
+        if b.get('status') != 'active':
+            continue
+        if (b.get('pricing_model') or 'fixed') != 'cpaa':
+            continue
+        if user_id not in (b.get('user_ids') or []):
+            continue
+        expires = b.get('expires') or ''
+        if expires and expires < today:
+            continue
+        # Action type match (loose)
+        at = (b.get('action_type') or 'any_fitness')
+        kind = (activity_kind or '').lower()
+        if at != 'any_fitness':
+            if 'run' in at and kind not in ('run', 'jog'):
+                continue
+            if 'bike' in at and kind not in ('bike', 'cycle', 'cycling'):
+                continue
+            if 'walk' in at and kind not in ('walk', 'hike'):
+                continue
+            # Distance thresholds encoded in action_type like run_1mi
+            m = re.search(r'(\d+(?:\.\d+)?)mi', at)
+            if m and miles < float(m.group(1)) * 0.9:  # 10% GPS tolerance
+                continue
+        # Budget / max
+        rate = float(b.get('cpaa_rate') or b.get('price') or 0)
+        if rate <= 0:
+            continue
+        max_a = int(b.get('max_actions') or 0)
+        if max_a and int(b.get('actions_completed') or 0) >= max_a:
+            continue
+        budget = float(b.get('budget_total') or 0)
+        if budget and float(b.get('spend_total') or 0) + rate > budget + 0.001:
+            continue
+        # Once per bounty per day
+        cpaa_days = user.setdefault('cpaa_credit_days', {})
+        key = b.get('id')
+        if cpaa_days.get(key) == today:
+            continue
+        cpaa_days[key] = today
+        user['ledger_balance'] = float(user.get('ledger_balance') or 0) + rate
+        credited += rate
+        # Track as payment_pending activity for admin settlement
+        user.setdefault('activities', []).append({
+            "id": f"act_{uuid.uuid4().hex[:12]}",
+            "type": "exercise",
+            "text": b.get('activity') or f"CPAA {at}",
+            "bounty_id": b.get('id'),
+            "price": rate,
+            "currency": b.get('currency') or 'USD',
+            "pricing_model": "cpaa",
+            "action_type": at,
+            "cpaa_rate": rate,
+            "accepted_at": datetime.utcnow().isoformat(),
+            "completed_at": datetime.utcnow().isoformat(),
+            "status": "completed",
+            "payment_pending": True,
+            "ledger_credited": rate,
+            "auto_from": "fitness_log",
+        })
+        _cpaa_record_action(b.get('id'), rate)
+    return credited
+
+
+def handle_settle_challenge(challenge_id, user_id, token):
+    """Settle league: top half get stake refunded to ledger."""
+    if not session_ok(user_id, token):
+        return (json.dumps({"error": "Unauthorized"}), 401)
+    challenges = _seed_default_challenges()
+    challenge = next((c for c in challenges if c.get('id') == challenge_id), None)
+    if not challenge:
+        return (json.dumps({"error": "Not found"}), 404)
+    if challenge.get('status') == 'settled':
+        return json.dumps({"ok": True, "challenge": _challenge_public(challenge, user_id), "already": True})
+
+    # Creator or admin can settle; also allow any member after end_date
+    today = datetime.utcnow().strftime('%Y-%m-%d')
+    is_creator = challenge.get('created_by') == user_id
+    is_admin = _admin_ok(user_id, token)
+    ended = (challenge.get('end_date') or '') <= today
+    member = next((m for m in (challenge.get('members') or [])
+                   if m.get('user_id') == user_id and m.get('status') != 'left'), None)
+    if not (is_creator or is_admin or (ended and member)):
+        return (json.dumps({"error": "Only creator/admin, or members after end date, can settle"}), 403)
+
+    ranked = _score_members(challenge)
+    n = len(ranked)
+    if n == 0:
+        challenge['status'] = 'settled'
+        challenge['settled_at'] = datetime.utcnow().isoformat()
+        try:
+            s3_storage.save_challenges(challenges)
+        except Exception as e:
+            return (json.dumps({"error": str(e)}), 500)
+        return json.dumps({"ok": True, "winners": [], "challenge": _challenge_public(challenge, user_id)})
+
+    # Top half (ceil): e.g. 5 members → top 3; 4 → top 2
+    import math
+    winner_count = max(1, math.ceil(n / 2.0))
+    winners = ranked[:winner_count]
+    winner_ids = {m['user_id'] for m in winners}
+
+    for m in challenge.get('members') or []:
+        if m.get('status') == 'left':
+            continue
+        uid = m.get('user_id')
+        stake = float(m.get('stake') or 0)
+        if uid in winner_ids:
+            m['payout'] = stake  # get money back
+            m['result'] = 'win'
+            u = get_user_data(uid)
+            if u:
+                u['ledger_balance'] = float(u.get('ledger_balance') or 0) + stake
+                try:
+                    s3_storage.save_user(uid, u)
+                    _cache_user(uid, u)
+                except Exception as e:
+                    print(f"[Settle] credit {uid}: {e}")
+        else:
+            m['payout'] = 0
+            m['result'] = 'lose'
+
+    challenge['status'] = 'settled'
+    challenge['settled_at'] = datetime.utcnow().isoformat()
+    challenge['winner_count'] = winner_count
+    try:
+        s3_storage.save_challenges(challenges)
+    except Exception as e:
+        return (json.dumps({"error": str(e)}), 500)
+
+    _append_feed({
+        "type": "settle",
+        "challenge_id": challenge_id,
+        "challenge_name": challenge.get('name'),
+        "text": f"{challenge.get('emoji', '🏆')} {challenge.get('name')} settled — top {winner_count} got stakes back",
+    })
+    return json.dumps({
+        "ok": True,
+        "winner_count": winner_count,
+        "winners": [_public_member(m) for m in winners],
+        "challenge": _challenge_public(challenge, user_id),
+    })
+
+
+def handle_challenge_invites(user_id, token):
+    """Suggest leagues + people to invite based on profile + Doc chat signals."""
+    if not session_ok(user_id, token):
+        return (json.dumps({"error": "Unauthorized"}), 401)
+    user = get_user_data(user_id)
+    if not user:
+        return (json.dumps({"error": "User not found"}), 404)
+
+    profile = user.get('profile') or {}
+    transcript = (user.get('transcript') or '') + ' ' + ' '.join(
+        (user.get('agent_transcripts') or {}).values()
+    )
+    blob = (json.dumps(profile) + ' ' + transcript).lower()
+
+    scores = {
+        "run_1mi_daily": 1,
+        "bike_3mi_daily": 1,
+        "walk_3mi_daily": 1,
+        "weekend_5mi": 1,
+    }
+    if any(w in blob for w in ('run', 'running', 'jog', '5k', 'marathon', 'mile')):
+        scores['run_1mi_daily'] += 5
+        scores['weekend_5mi'] += 3
+    if any(w in blob for w in ('bike', 'cycling', 'cycle', 'peloton')):
+        scores['bike_3mi_daily'] += 5
+    if any(w in blob for w in ('walk', 'steps', 'hike', 'outdoors')):
+        scores['walk_3mi_daily'] += 4
+    if any(w in blob for w in ('weight', 'lose', 'fat', 'cardio', 'fitness')):
+        scores['run_1mi_daily'] += 2
+        scores['walk_3mi_daily'] += 2
+    if any(w in blob for w in ('weekend', 'busy', 'schedule')):
+        scores['weekend_5mi'] += 3
+
+    challenges = _seed_default_challenges()
+    ranked_types = sorted(scores.keys(), key=lambda k: -scores[k])
+    suggestions = []
+    for ctype in ranked_types:
+        match = next((c for c in challenges
+                      if c.get('challenge_type') == ctype
+                      and c.get('status') in ('open', 'active')), None)
+        if match:
+            suggestions.append({
+                "reason": _invite_reason(ctype, blob),
+                "challenge": _challenge_public(match, user_id),
+                "affinity": scores[ctype],
+            })
+
+    # Peer invites: users with overlapping fitness goals who are discoverable
+    peers = []
+    try:
+        for uid in s3_storage.list_users()[:80]:
+            if uid == user_id:
+                continue
+            try:
+                ou = get_user_data(uid)
+            except Exception:
+                continue
+            if not ou:
+                continue
+            settings = ou.get('settings') or {}
+            if not settings.get('bounty_discoverable') and not (ou.get('fitness_stats') or {}).get('total_activities'):
+                continue
+            oblob = json.dumps(ou.get('profile') or {}).lower()
+            overlap = 0
+            for w in ('run', 'bike', 'walk', 'exercise', 'fitness', 'weight'):
+                if w in blob and w in oblob:
+                    overlap += 1
+            if overlap or (ou.get('fitness_stats') or {}).get('total_activities'):
+                peers.append({
+                    "user_id": uid,
+                    "username": ou.get('username'),
+                    "blurb": (settings.get('bounty_public_blurb') or '')[:120],
+                    "overlap": overlap,
+                    "miles": (ou.get('fitness_stats') or {}).get('total_miles') or 0,
+                })
+            if len(peers) >= 8:
+                break
+    except Exception:
+        pass
+    peers.sort(key=lambda p: (-p.get('overlap', 0), -float(p.get('miles') or 0)))
+
+    return json.dumps({
+        "suggested_leagues": suggestions[:4],
+        "suggested_peers": peers[:6],
+        "profile_signals": {
+            "run": 'run' in blob or 'jog' in blob,
+            "bike": 'bike' in blob or 'cycl' in blob,
+            "walk": 'walk' in blob or 'steps' in blob,
+        },
+    })
+
+
+def _invite_reason(ctype, blob):
+    if ctype.startswith('run') and ('run' in blob or 'jog' in blob):
+        return "Doc chats + profile point to running — this league fits."
+    if ctype.startswith('bike') and ('bike' in blob or 'cycl' in blob):
+        return "You've talked about cycling — stake a Bike 3 group."
+    if ctype.startswith('walk') and ('walk' in blob or 'steps' in blob):
+        return "Walking goals show up in your profile — join a walk league."
+    if 'weekend' in ctype:
+        return "Good for packed weeks — only weekends count."
+    return "Popular open league — put skin in the game."
+
+
+def handle_get_feed(user_id=None, token=None, limit=40):
+    if user_id and token and not session_ok(user_id, token):
+        return (json.dumps({"error": "Unauthorized"}), 401)
+    try:
+        limit = max(1, min(int(limit or 40), 100))
+    except (TypeError, ValueError):
+        limit = 40
+    try:
+        events = s3_storage.get_feed_events(limit=limit)
+    except Exception as e:
+        return json.dumps({"events": [], "error": str(e)})
+    return json.dumps({"events": events})
+
+
+def handle_get_ledger(user_id, token):
+    if not session_ok(user_id, token):
+        return (json.dumps({"error": "Unauthorized"}), 401)
+    user = get_user_data(user_id)
+    if not user:
+        return (json.dumps({"error": "User not found"}), 404)
+    bal = _ensure_ledger(user)
+    # Persist if we had to default
+    try:
+        s3_storage.save_user(user_id, user)
+        _cache_user(user_id, user)
+    except Exception:
+        pass
+    return json.dumps({
+        "ledger_balance": bal,
+        "ledger_currency": user.get('ledger_currency') or 'USD',
+        "fitness_stats": user.get('fitness_stats') or {},
+        "welcome_note": "New players start with $50 play credit to join a league. "
+                        "CPAA sponsors pay you per completed fitness action — stack that on top of stake refunds.",
+    })
+
+
+def handle_ledger_topup(user_id, token, req):
+    """Demo top-up (no real payment rail yet). Caps abuse."""
+    if not session_ok(user_id, token):
+        return (json.dumps({"error": "Unauthorized"}), 401)
+    user = get_user_data(user_id)
+    if not user:
+        return (json.dumps({"error": "User not found"}), 404)
+    try:
+        amount = float(req.get('amount') or 50)
+    except (TypeError, ValueError):
+        amount = 50.0
+    amount = max(5.0, min(amount, 100.0))
+    # Soft rate limit: at most +$200 total demo topups
+    topped = float(user.get('demo_topups') or 0)
+    if topped + amount > 200:
+        return (json.dumps({"error": "Demo top-up limit reached ($200). Real payouts come via demand partners."}), 400)
+    user['demo_topups'] = topped + amount
+    user['ledger_balance'] = _ensure_ledger(user) + amount
+    try:
+        s3_storage.save_user(user_id, user)
+        _cache_user(user_id, user)
+    except Exception as e:
+        return (json.dumps({"error": str(e)}), 500)
+    return json.dumps({
+        "ok": True,
+        "ledger_balance": user['ledger_balance'],
+        "added": amount,
+        "note": "Demo credit only — not a real card charge.",
+    })
