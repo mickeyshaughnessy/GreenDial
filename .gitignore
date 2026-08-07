@@ -20,3 +20,6 @@ mobile/android/.idea/
 *.jks
 *.keystore
 mobile/dist/
+# Built Android APK (deployed via scp in deploy.sh, not git)
+downloads/*.apk
+downloads/*.aab

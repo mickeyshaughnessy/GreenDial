@@ -83,6 +83,35 @@ def privacy():
     return send_from_directory('.', 'privacy.html')
 
 
+@app.route("/download/android", methods=['GET'])
+def download_android_apk():
+    """Android APK for the landing-page download CTA (optional file on disk)."""
+    import os
+    candidates = [
+        os.path.join('downloads', 'GreenDial.apk'),
+        os.path.join('mobile', 'dist', 'GreenDial-1.0.0.apk'),
+        os.path.join('mobile', 'dist', 'GreenDial.apk'),
+    ]
+    for path in candidates:
+        if os.path.isfile(path):
+            directory, filename = os.path.split(path)
+            return send_from_directory(
+                directory or '.',
+                filename,
+                as_attachment=True,
+                download_name='GreenDial.apk',
+                mimetype='application/vnd.android.package-archive',
+            )
+    return Response(
+        json.dumps({
+            "error": "Android APK not published on this host yet",
+            "hint": "Use the web app on mobile, or Install to Home Screen.",
+        }),
+        status=404,
+        mimetype='application/json',
+    )
+
+
 @app.route("/sponsor", methods=['GET'])
 def sponsor_page():
     """Demand-side Universal Bounty UI — tucked away from main chat flow."""

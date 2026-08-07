@@ -2152,6 +2152,72 @@
       font-size: 12px; color: rgba(255,255,255,0.55); line-height: 1.45;
     }
     .how-to-log strong { color: rgba(255,255,255,0.85); }
+
+    /* Guest landing — sign up + app download first */
+    .landing-gate {
+      border-radius: 20px; padding: 22px 18px 18px;
+      background: linear-gradient(155deg, rgba(57,255,20,0.16), rgba(18,32,28,0.95) 42%, rgba(245,197,66,0.1));
+      border: 1px solid rgba(57,255,20,0.28);
+      margin-bottom: 16px; text-align: center;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.35);
+    }
+    .landing-gate.hide { display: none !important; }
+    .landing-gate h1 {
+      font-size: 1.55rem; font-weight: 800; letter-spacing: -0.03em; line-height: 1.15;
+      margin: 0 0 8px;
+    }
+    .landing-gate h1 span { color: var(--gd-neon, #39ff14); }
+    .landing-gate .landing-lead {
+      font-size: 14px; color: rgba(255,255,255,0.62); line-height: 1.45;
+      max-width: 28em; margin: 0 auto 16px;
+    }
+    .landing-actions {
+      display: flex; flex-direction: column; gap: 10px; max-width: 320px; margin: 0 auto;
+    }
+    .landing-actions .btn {
+      min-height: 52px; font-size: 16px; font-weight: 800; border-radius: 14px;
+      width: 100%;
+    }
+    .landing-actions .btn-secondary-land {
+      background: rgba(255,255,255,0.08) !important;
+      border: 1px solid rgba(255,255,255,0.18) !important;
+      color: #fff !important;
+    }
+    .landing-app {
+      display: none;
+      margin-top: 16px; padding: 14px 12px;
+      border-radius: 14px;
+      background: rgba(0,0,0,0.35);
+      border: 1px solid rgba(245,197,66,0.35);
+      text-align: left;
+    }
+    .landing-app.show { display: block; }
+    .landing-app .app-title {
+      font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;
+      color: var(--gd-gold, #f5c542); margin-bottom: 8px;
+    }
+    .landing-app .app-btns { display: flex; flex-direction: column; gap: 8px; }
+    .landing-app .app-btns .btn {
+      min-height: 48px; font-weight: 700; font-size: 14px; border-radius: 12px; width: 100%;
+      text-decoration: none; display: flex; align-items: center; justify-content: center;
+    }
+    .landing-app .app-note {
+      font-size: 11px; color: rgba(255,255,255,0.42); margin-top: 10px; line-height: 1.4;
+    }
+    .landing-scroll {
+      margin: 14px 0 0; font-size: 12px; color: rgba(255,255,255,0.4);
+    }
+    .play-rest-label {
+      font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;
+      color: rgba(255,255,255,0.35); text-align: center; margin: 4px 0 12px;
+    }
+    body.logged-in .landing-gate { display: none !important; }
+    body.logged-in .play-rest-label { display: none !important; }
+    body:not(.logged-in) .play-hero-member { display: none !important; }
+    @media (max-width: 700px) {
+      .landing-gate h1 { font-size: 1.7rem; }
+      .landing-actions .btn { min-height: 54px; font-size: 17px; }
+    }
     .league-rules {
       margin-top: 12px; padding: 10px 12px; border-radius: 12px;
       background: rgba(0,0,0,0.22); border: 1px solid rgba(255,255,255,0.08);
@@ -2383,7 +2449,35 @@
     <!-- ===== PLAY: stake leagues (primary) ===== -->
     <div class="view active" id="view-play">
       <div class="play-view" id="play-list">
-        <div class="play-hero">
+        <!-- Guest landing: sign up + app download first; everything else below -->
+        <div class="landing-gate" id="landing-gate">
+          <h1>Put <span>skin</span> in the game.</h1>
+          <p class="landing-lead">
+            Stake a little, move with your phone, climb the board.
+            <strong style="color:rgba(255,255,255,0.85)">Top half get their stake back.</strong>
+            Missing days never knocks you out.
+          </p>
+          <div class="landing-actions">
+            <button type="button" class="btn btn-primary" onclick="openSignup()">1. Create free account</button>
+            <button type="button" class="btn btn-secondary-land" onclick="showAuthPopup()">Already have one? Sign in</button>
+          </div>
+          <div class="landing-app" id="landing-app">
+            <div class="app-title">2. Get the mobile app</div>
+            <div class="app-btns">
+              <a class="btn btn-stake" id="landing-android-btn" href="/download/android" style="display:none">⬇ Download Android app</a>
+              <button type="button" class="btn btn-primary" id="landing-pwa-btn" onclick="landingInstallApp()" style="display:none">Install app on this phone</button>
+              <button type="button" class="btn btn-secondary-land" id="landing-ios-btn" onclick="landingShowIosTip()" style="display:none">Add to iPhone Home Screen</button>
+            </div>
+            <p class="app-note" id="landing-app-note">
+              Use the app on your phone with location on — then Record → Stop → Save while you walk, run, or bike.
+            </p>
+          </div>
+          <p class="landing-scroll">Or browse open leagues below ↓</p>
+        </div>
+
+        <div class="play-rest-label" id="play-rest-label">Leagues &amp; details</div>
+
+        <div class="play-hero play-hero-member" id="play-hero-member">
           <h1>Put <span>skin</span> in the game.</h1>
           <p>Pick a challenge, stake a little from your balance, then log miles on your phone. <strong>Missing days never knocks you out</strong> — top half of the board get their stake back when it ends.</p>
           <div class="play-balance-row">
@@ -3761,6 +3855,7 @@
       applyEasyMobile();
       updateChatCompactChrome();
       updateBoardNudge();
+      try { updateLandingGate(); } catch (e) {}
       // Deep link: /?view=play|track|feed|activities&section=…
       try {
         const params = new URLSearchParams(window.location.search);
@@ -4063,6 +4158,7 @@
       e.preventDefault();
       _deferredPwaPrompt = e;
       maybeShowPwaBanner();
+      try { updateLandingGate(); } catch (err) {}
     });
     window.dismissPwaInstall = dismissPwaInstall;
     window.acceptPwaInstall = acceptPwaInstall;
@@ -6120,6 +6216,91 @@
       applyChatOnlyMode(true);
     }
     
+    function isNativeCapacitorApp() {
+      try {
+        return !!(window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function'
+          && window.Capacitor.isNativePlatform());
+      } catch (e) {
+        return false;
+      }
+    }
+    function isMobileDevice() {
+      if (window.matchMedia('(max-width: 700px)').matches) return true;
+      return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || '');
+    }
+    function isAndroidDevice() {
+      return /Android/i.test(navigator.userAgent || '');
+    }
+    function isIosDevice() {
+      return /iPad|iPhone|iPod/.test(navigator.userAgent || '')
+        || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    }
+
+    function updateLandingGate() {
+      const loggedIn = !!currentUser;
+      document.body.classList.toggle('logged-in', loggedIn);
+      const gate = document.getElementById('landing-gate');
+      if (gate) gate.classList.toggle('hide', loggedIn);
+      if (loggedIn) return;
+
+      const appBox = document.getElementById('landing-app');
+      const androidBtn = document.getElementById('landing-android-btn');
+      const pwaBtn = document.getElementById('landing-pwa-btn');
+      const iosBtn = document.getElementById('landing-ios-btn');
+      const note = document.getElementById('landing-app-note');
+
+      // Hide app download when already inside native app or installed PWA
+      const alreadyApp = isNativeCapacitorApp() || isStandalonePwa();
+      const showMobileApp = isMobileDevice() && !alreadyApp;
+      if (appBox) appBox.classList.toggle('show', showMobileApp);
+      if (!showMobileApp) return;
+
+      if (androidBtn) {
+        // Android: direct APK; also show on desktop-width Android tablets
+        androidBtn.style.display = isAndroidDevice() ? '' : 'none';
+        androidBtn.href = '/download/android';
+      }
+      if (iosBtn) {
+        iosBtn.style.display = isIosDevice() ? '' : 'none';
+      }
+      if (pwaBtn) {
+        // Chrome/Android install prompt, or generic install tip
+        pwaBtn.style.display = (_deferredPwaPrompt || (!isIosDevice() && isAndroidDevice())) ? '' : 'none';
+        pwaBtn.textContent = _deferredPwaPrompt
+          ? 'Install app on this phone'
+          : 'Install web app (Home Screen)';
+      }
+      // If nothing else matched (e.g. mobile Firefox), still offer Android if Android UA
+      if (androidBtn && isAndroidDevice()) androidBtn.style.display = '';
+      if (note) {
+        if (isIosDevice()) {
+          note.textContent = 'On iPhone: Safari → Share → Add to Home Screen. Then open GreenDial from your home screen with location on.';
+        } else if (isAndroidDevice()) {
+          note.textContent = 'Download the Android app, or install the web app. Enable location, then Record → Stop → Save while you move.';
+        } else {
+          note.textContent = 'On your phone with location on: Record → Stop → Save while you walk, run, or bike.';
+        }
+      }
+    }
+
+    function landingInstallApp() {
+      if (_deferredPwaPrompt) {
+        acceptPwaInstall();
+        return;
+      }
+      if (isAndroidDevice()) {
+        window.location.href = '/download/android';
+        return;
+      }
+      alert('Install from your browser menu: “Add to Home Screen” or “Install app”.');
+    }
+    function landingShowIosTip() {
+      alert('On iPhone/iPad:\n\n1. Open this site in Safari\n2. Tap the Share button\n3. Tap “Add to Home Screen”\n4. Open GreenDial from your home screen and allow Location');
+    }
+    window.landingInstallApp = landingInstallApp;
+    window.landingShowIosTip = landingShowIosTip;
+    window.updateLandingGate = updateLandingGate;
+
     function updateUserUI() {
       const userArea = document.getElementById('user-area');
       if (!userArea) return;
@@ -6142,9 +6323,11 @@
         setAdminTabVisible(false);
         renderToday(null);
         userArea.innerHTML = `
-          <button class="btn btn-primary btn-sm" onclick="showAuthPopup()">${t('app.signin','Sign In')}</button>
+          <button class="btn btn-primary btn-sm" onclick="openSignup()">${t('app.create_account_cap','Create Account')}</button>
+          <button class="btn btn-sm btn-secondary-land" onclick="showAuthPopup()" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.18);color:#fff">${t('app.signin','Sign In')}</button>
         `;
       }
+      updateLandingGate();
     }
     
     // ---- Donate modal ----

@@ -64,6 +64,12 @@ cp -r stickers/cartoon/* /var/www/greendial/stickers/cartoon/
 # UI style themes (also served via Flask /themes/ from /root/GreenDial)
 mkdir -p /var/www/greendial/themes
 cp -r themes/* /var/www/greendial/themes/
+# Android APK download (if present on server from scp below)
+mkdir -p /var/www/greendial/downloads /root/GreenDial/downloads
+if [ -f /root/GreenDial/downloads/GreenDial.apk ]; then
+  cp /root/GreenDial/downloads/GreenDial.apk /var/www/greendial/downloads/GreenDial.apk
+  echo "Android APK available at /downloads/GreenDial.apk"
+fi
 echo "Static files synced to /var/www/greendial/"
 ENDSSH
 
@@ -71,6 +77,25 @@ ENDSSH
 if [ -f "config.py" ]; then
     echo "Syncing config.py..."
     scp -i "$SSH_KEY" config.py "$SERVER:$DEPLOY_PATH/config.py"
+fi
+
+# 2b. Sync Android APK for landing-page download (gitignored binary)
+APK_SRC=""
+if [ -f "downloads/GreenDial.apk" ]; then
+  APK_SRC="downloads/GreenDial.apk"
+elif [ -f "mobile/dist/GreenDial-1.0.0.apk" ]; then
+  APK_SRC="mobile/dist/GreenDial-1.0.0.apk"
+elif [ -f "mobile/dist/GreenDial.apk" ]; then
+  APK_SRC="mobile/dist/GreenDial.apk"
+fi
+if [ -n "$APK_SRC" ]; then
+  echo "Syncing Android APK ($APK_SRC)..."
+  ssh -i "$SSH_KEY" "$SERVER" "mkdir -p $DEPLOY_PATH/downloads /var/www/greendial/downloads"
+  scp -i "$SSH_KEY" "$APK_SRC" "$SERVER:$DEPLOY_PATH/downloads/GreenDial.apk"
+  scp -i "$SSH_KEY" "$APK_SRC" "$SERVER:/var/www/greendial/downloads/GreenDial.apk"
+  echo "APK published at https://greendial.org/download/android"
+else
+  echo "No local APK found — skipping Android download sync"
 fi
 
 # 3. Restart service
