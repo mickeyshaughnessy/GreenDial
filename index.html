@@ -2310,9 +2310,15 @@
     .feed-body .when { font-size: 11px; color: rgba(255,255,255,0.35); margin-top: 4px; }
 
     .track-map {
-      width: 100%; height: min(52vh, 420px); border-radius: 16px;
+      width: 100%; height: min(36vh, 280px); border-radius: 16px;
       border: 1px solid rgba(57,255,20,0.2); overflow: hidden;
-      background: #0d1512; z-index: 0;
+      background: #0d1512; z-index: 0; position: relative;
+    }
+    .track-map-status {
+      position: absolute; left: 10px; right: 10px; top: 10px; z-index: 500;
+      font-size: 11px; padding: 6px 10px; border-radius: 10px;
+      background: rgba(0,0,0,0.65); color: rgba(255,255,255,0.75);
+      pointer-events: none;
     }
     .track-stats {
       display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 12px 0;
@@ -2323,10 +2329,25 @@
     }
     .track-stat .v { font-size: 1.35rem; font-weight: 800; color: var(--gd-neon, #39ff14); font-variant-numeric: tabular-nums; }
     .track-stat .k { font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: rgba(255,255,255,0.4); margin-top: 2px; }
-    .track-controls { display: flex; gap: 8px; flex-wrap: wrap; }
-    .track-controls .btn { flex: 1; min-width: 100px; min-height: 48px; font-weight: 700; }
+    .track-controls {
+      display: flex; gap: 8px; flex-wrap: wrap;
+      position: sticky; bottom: 0; z-index: 20;
+      padding: 10px 0 calc(10px + env(safe-area-inset-bottom, 0px));
+      margin-top: 4px;
+      background: linear-gradient(180deg, transparent, rgba(10,15,13,0.96) 18%);
+    }
+    .track-controls .btn { flex: 1; min-width: 100px; min-height: 52px; font-weight: 800; font-size: 15px; }
     .btn-rec { background: linear-gradient(135deg, #ff4d6d, #c9184a) !important; border: none !important; color: #fff !important; }
     .btn-rec.live { animation: pulse-rec 1.2s ease-in-out infinite; }
+    @media (max-width: 700px) {
+      .track-map { height: min(32vh, 240px); }
+      #view-track .play-view { padding-bottom: 8px; }
+      .track-controls {
+        /* Sit above bottom nav */
+        bottom: 0;
+        padding-bottom: 8px;
+      }
+    }
     @keyframes pulse-rec {
       0%, 100% { box-shadow: 0 0 0 0 rgba(255,77,109,0.45); }
       50% { box-shadow: 0 0 0 10px rgba(255,77,109,0); }
@@ -2495,6 +2516,8 @@
             <strong>How to log:</strong> On mobile, allow location → open <em>Track</em> → hit <strong>Record</strong> while you move → <strong>Stop</strong> when done → <strong>Save</strong> to your league.
           </div>
         </div>
+        <div class="play-section-title" id="play-mine-title" style="display:none">Your leagues</div>
+        <div id="play-leagues-mine"></div>
         <div class="play-section-title">For you</div>
         <div id="play-invites"><div class="play-empty">Sign in to get leagues matched to your profile &amp; Doc chats</div></div>
         <div class="play-section-title">Open leagues</div>
@@ -2510,32 +2533,34 @@
     <div class="view" id="view-track">
       <div class="play-view">
         <div class="play-section-title" style="margin-top:4px">Record activity</div>
-        <p style="font-size:13px;color:rgba(255,255,255,0.55);line-height:1.45;margin:0 0 12px">
-          <strong style="color:rgba(255,255,255,0.85)">1.</strong> Allow location on your phone &nbsp;·&nbsp;
-          <strong style="color:rgba(255,255,255,0.85)">2.</strong> Pick activity + league &nbsp;·&nbsp;
-          <strong style="color:rgba(255,255,255,0.85)">3.</strong> <em>Record</em> while moving → <em>Stop</em> → <em>Save</em>
+        <div class="track-controls" id="track-controls-top" style="position:relative;background:none;padding:0 0 10px;margin:0">
+          <button type="button" class="btn btn-rec" id="track-start-btn" onclick="toggleTracking()">● Record</button>
+          <button type="button" class="btn btn-primary" id="track-finish-btn" onclick="finishTracking()" disabled>Save activity</button>
+        </div>
+        <p style="font-size:13px;color:rgba(255,255,255,0.55);line-height:1.45;margin:0 0 10px">
+          Allow <strong style="color:rgba(255,255,255,0.85)">location</strong>, pick a league, then
+          <strong style="color:rgba(255,255,255,0.85)">Record → Stop → Save</strong>.
         </p>
         <div class="kind-pills" id="track-kind-pills">
           <button type="button" class="kind-pill active" data-kind="run" onclick="setTrackKind('run')">🏃 Run</button>
           <button type="button" class="kind-pill" data-kind="bike" onclick="setTrackKind('bike')">🚴 Bike</button>
           <button type="button" class="kind-pill" data-kind="walk" onclick="setTrackKind('walk')">👟 Walk</button>
         </div>
-        <div id="track-map" class="track-map" role="application" aria-label="Activity map"></div>
+        <label style="font-size:12px;color:rgba(255,255,255,0.45);display:block;margin:4px 0 6px">Save to league</label>
+        <select id="track-league-select" class="settings-select" style="width:100%;margin-bottom:10px;padding:10px;font-size:14px;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:#fff">
+          <option value="">— Select a league you're in —</option>
+        </select>
+        <div id="track-map-wrap" style="position:relative">
+          <div id="track-map" class="track-map" role="application" aria-label="Activity map"></div>
+          <div class="track-map-status" id="track-map-status">Finding your location…</div>
+        </div>
         <div class="track-stats">
           <div class="track-stat"><div class="v" id="track-miles">0.00</div><div class="k">Miles</div></div>
           <div class="track-stat"><div class="v" id="track-time">0:00</div><div class="k">Time</div></div>
           <div class="track-stat"><div class="v" id="track-pace">—</div><div class="k">Pace</div></div>
         </div>
-        <label style="font-size:12px;color:rgba(255,255,255,0.45);display:block;margin-bottom:6px">Save to league</label>
-        <select id="track-league-select" class="settings-select" style="width:100%;margin-bottom:12px;padding:10px;font-size:14px;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:#fff">
-          <option value="">— Select a league you're in —</option>
-        </select>
-        <div class="track-controls">
-          <button type="button" class="btn btn-rec" id="track-start-btn" onclick="toggleTracking()">● Record</button>
-          <button type="button" class="btn btn-primary" id="track-finish-btn" onclick="finishTracking()" disabled>Save activity</button>
-        </div>
-        <p style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:12px;line-height:1.4">
-          Uses phone GPS (enable location for GreenDial). Stay safe — don't stare at the screen while moving. Missing a day never eliminates you from a league.
+        <p style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:4px;line-height:1.4">
+          Uses phone GPS. If the map stays wrong, open phone Settings → Apps → GreenDial → Permissions → Location → Allow.
         </p>
       </div>
     </div>
@@ -3695,8 +3720,7 @@
           if (window.GDThemes) GDThemes.hydrateFromSettings(userSettings);
           saveSession();
           hideAuthPopup();
-          updateUserUI();
-          updateAllProfileDisplays();
+          await afterAuthSuccess();
           agentChats = { doc: [] };
           agentSessionIds = {};
           currentAgent = 'doc';
@@ -3708,6 +3732,7 @@
           renderMessages();
           startBackgroundPolls();
           applyChatOnlyMode(isChatOnly());
+          try { switchView('play'); } catch (e) {}
         }
       } catch (e) {
         errorEl.textContent = 'Connection error.';
@@ -3744,13 +3769,8 @@
         const res = await fetch(`${API}/conversations/${userId}/agents`);
         if (!res.ok) {
           console.error('loadAgentChats HTTP', res.status);
-          // Session may have expired — surface a clear chat state rather than a blank UI
-          if (res.status === 401 || res.status === 403) {
-            clearSession();
-            currentUser = null;
-            updateUserUI();
-            applyChatOnlyMode(true);
-          }
+          // Do NOT clear session here — chat history is optional. A 401 from a
+          // race or multi-worker cache must not kick the user out of Play mode.
           return;
         }
         const data = await res.json();
@@ -3769,6 +3789,25 @@
         updateChatCompactChrome();
       } catch (e) { console.error('loadAgentChats', e); }
     }
+
+    /** Shared post-login / post-restore: refresh chrome + play leagues. */
+    async function afterAuthSuccess() {
+      updateUserUI();
+      updateLandingGate();
+      updateAllProfileDisplays();
+      try {
+        // Always land on Play with fresh memberships after auth
+        if (typeof currentView === 'undefined' || currentView === 'play' || !currentView) {
+          await loadPlayHome();
+        } else {
+          // Prefetch memberships even if on another tab
+          loadPlayHome().catch(() => {});
+        }
+      } catch (e) {
+        console.warn('afterAuthSuccess play load', e);
+      }
+    }
+    window.afterAuthSuccess = afterAuthSuccess;
 
     // ── CHAT CORE ────────────────────────────────────────────────────────────
     function startFreshChat(welcomeMessage) {
@@ -3807,8 +3846,7 @@
         userProfile = data.profile || {};
         userSettings = data.settings || userSettings;
         if (window.GDThemes) GDThemes.hydrateFromSettings(userSettings);
-        updateUserUI();
-        updateAllProfileDisplays();
+        await afterAuthSuccess();
         agentChats = { doc: [] };
         agentSessionIds = {};
         currentAgent = 'doc';
@@ -6117,8 +6155,7 @@
           saveSession();
 
           hideAuthPopup();
-          updateUserUI();
-          updateAllProfileDisplays();
+          await afterAuthSuccess();
 
           // Reset chats then load saved transcripts
           agentChats = { doc: [] };
@@ -6126,7 +6163,7 @@
           currentAgent = 'doc';
           updateAgentTabs();
 
-          // Load saved transcripts
+          // Load saved transcripts (never logs you out on failure)
           await loadAgentChats(data.user_id);
           // If Doc has no loaded history, show welcome
           if (!agentChats.doc || agentChats.doc.length === 0) {
@@ -6136,6 +6173,7 @@
 
           startBackgroundPolls();
           applyChatOnlyMode(isChatOnly());
+          try { switchView('play'); } catch (e) {}
         }
       } catch (error) {
         errorEl.textContent = t('app.connection_error','Connection error.');
@@ -6180,8 +6218,8 @@
           userSettings = { ...userSettings, ...(data.settings || {}) };
           if (window.GDThemes) GDThemes.hydrateFromSettings(userSettings);
           hideAuthPopup();
-          updateUserUI();
-          updateAllProfileDisplays();
+          await afterAuthSuccess();
+          try { switchView('play'); } catch (e) {}
           startFreshChat(`${t('app.welcome_new','Welcome')}, ${data.username}! ${t('app.welcome_new_rest',"I'm Doc. I'll help you build your health profile. What's your main health focus right now?")}`);
 
           startBackgroundPolls();
@@ -6199,6 +6237,7 @@
       clearSession();
       currentUser = null;
       userProfile = {};
+      try { updateLandingGate(); } catch (e) {}
       userSettings = { doc_style: 'questioning', notifications_enabled: true, chat_only_mode: true, ui_style: 'page_default' };
       currentAgent = 'doc';
       currentHistoryAgent = 'doc';
@@ -6208,12 +6247,15 @@
       _activities = [];
       _todayData = null;
       userData = {};
+      _playChallenges = [];
 
       updateUserUI();
+      updateLandingGate();
       updateAllProfileDisplays();
       startFreshChat("Signed out. Sign in below to save your health profile.");
-      switchView('chat');
+      switchView('play');
       applyChatOnlyMode(true);
+      try { loadPlayHome(); } catch (e) {}
     }
     
     function isNativeCapacitorApp() {
@@ -6767,8 +6809,13 @@
       const list = document.getElementById('play-leagues');
       if (!list) return;
       try {
+        updateLandingGate();
         const res = await fetch(`${API}/challenges${playAuthQ()}`);
-        const data = await res.json();
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok && !(data.challenges || []).length) {
+          list.innerHTML = `<div class="play-empty">${escapeHtmlPlay(data.error || 'Could not load leagues.')}</div>`;
+          return;
+        }
         _playChallenges = data.challenges || [];
         if (data.how_to_log) {
           const how = document.getElementById('play-how-to-log');
@@ -6794,49 +6841,70 @@
       }
     }
 
+    function leagueCardHtml(c) {
+      const mine = c.is_member ? 'mine' : '';
+      const statusPill = c.is_member
+        ? `<span class="pill">In · #${c.my_rank || '—'}</span>`
+        : `<span class="pill muted">${c.status || 'open'}</span>`;
+      const soft = c.soft_target_days
+        ? `Soft target ~${c.soft_target_days} hits — misses OK`
+        : 'Misses OK · never eliminated';
+      return `
+        <div class="league-card ${mine}" onclick="openLeagueDetail('${c.id}')">
+          <div class="league-card-top">
+            <div class="league-emoji">${c.emoji || '🏆'}</div>
+            <div class="league-meta">
+              <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start">
+                <h3>${escapeHtmlPlay(c.name || 'League')}</h3>
+                ${statusPill}
+              </div>
+              <div class="tagline">${escapeHtmlPlay(c.tagline || c.description || '')}</div>
+              <div class="tagline" style="margin-top:4px;color:rgba(57,255,20,0.65)">${escapeHtmlPlay(goalLine(c))} · ${escapeHtmlPlay(fmtWindow(c))}</div>
+              <div class="tagline" style="margin-top:2px;font-size:11px">${escapeHtmlPlay(soft)}${c.partner_encouraged ? ' · buddy-friendly' : ''}</div>
+            </div>
+          </div>
+          <div class="league-stats">
+            <div class="league-stat"><div class="v">${fmtMoney(c.stake)}</div><div class="k">Stake</div></div>
+            <div class="league-stat"><div class="v">${c.member_count || 0}/${c.max_members || '—'}</div><div class="k">Players</div></div>
+            <div class="league-stat"><div class="v">${fmtMoney(c.pot)}</div><div class="k">Pot</div></div>
+          </div>
+          <div class="league-actions" onclick="event.stopPropagation()">
+            ${c.is_member
+              ? `<button type="button" class="btn btn-primary" onclick="openLeagueDetail('${c.id}')">Leaderboard</button>
+                 <button type="button" class="btn btn-ghost-play" onclick="switchView('track');selectTrackLeague('${c.id}')">Record</button>`
+              : `<button type="button" class="btn btn-stake" onclick="joinLeague('${c.id}')">Stake ${fmtMoney(c.stake)}</button>
+                 <button type="button" class="btn btn-ghost-play" onclick="openLeagueDetail('${c.id}')">Rules</button>`}
+          </div>
+        </div>`;
+    }
+
     function renderLeagueCards(challenges) {
       const list = document.getElementById('play-leagues');
+      const mineBox = document.getElementById('play-leagues-mine');
+      const mineTitle = document.getElementById('play-mine-title');
       if (!list) return;
-      if (!challenges.length) {
+      const mine = (challenges || []).filter(c => c.is_member);
+      const rest = (challenges || []).filter(c => !c.is_member);
+
+      if (mineBox && mineTitle) {
+        if (mine.length && currentUser) {
+          mineTitle.style.display = '';
+          mineBox.innerHTML = mine.map(leagueCardHtml).join('');
+        } else {
+          mineTitle.style.display = 'none';
+          mineBox.innerHTML = '';
+        }
+      }
+
+      if (!rest.length && !mine.length) {
         list.innerHTML = `<div class="play-empty">No open leagues yet — create one.</div>`;
         return;
       }
-      list.innerHTML = challenges.map(c => {
-        const mine = c.is_member ? 'mine' : '';
-        const statusPill = c.is_member
-          ? `<span class="pill">In · #${c.my_rank || '—'}</span>`
-          : `<span class="pill muted">${c.status || 'open'}</span>`;
-        const soft = c.soft_target_days
-          ? `Soft target ~${c.soft_target_days} hits — misses OK`
-          : 'Misses OK · never eliminated';
-        return `
-          <div class="league-card ${mine}" onclick="openLeagueDetail('${c.id}')">
-            <div class="league-card-top">
-              <div class="league-emoji">${c.emoji || '🏆'}</div>
-              <div class="league-meta">
-                <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start">
-                  <h3>${escapeHtmlPlay(c.name || 'League')}</h3>
-                  ${statusPill}
-                </div>
-                <div class="tagline">${escapeHtmlPlay(c.tagline || c.description || '')}</div>
-                <div class="tagline" style="margin-top:4px;color:rgba(57,255,20,0.65)">${escapeHtmlPlay(goalLine(c))} · ${escapeHtmlPlay(fmtWindow(c))}</div>
-                <div class="tagline" style="margin-top:2px;font-size:11px">${escapeHtmlPlay(soft)}${c.partner_encouraged ? ' · buddy-friendly' : ''}</div>
-              </div>
-            </div>
-            <div class="league-stats">
-              <div class="league-stat"><div class="v">${fmtMoney(c.stake)}</div><div class="k">Stake</div></div>
-              <div class="league-stat"><div class="v">${c.member_count || 0}/${c.max_members || '—'}</div><div class="k">Players</div></div>
-              <div class="league-stat"><div class="v">${fmtMoney(c.pot)}</div><div class="k">Pot</div></div>
-            </div>
-            <div class="league-actions" onclick="event.stopPropagation()">
-              ${c.is_member
-                ? `<button type="button" class="btn btn-primary" onclick="openLeagueDetail('${c.id}')">Leaderboard</button>
-                   <button type="button" class="btn btn-ghost-play" onclick="switchView('track');selectTrackLeague('${c.id}')">Record</button>`
-                : `<button type="button" class="btn btn-stake" onclick="joinLeague('${c.id}')">Stake ${fmtMoney(c.stake)}</button>
-                   <button type="button" class="btn btn-ghost-play" onclick="openLeagueDetail('${c.id}')">Rules</button>`}
-            </div>
-          </div>`;
-      }).join('');
+      if (!rest.length) {
+        list.innerHTML = `<div class="play-empty">You're in every open league, or none left to join.</div>`;
+        return;
+      }
+      list.innerHTML = rest.map(leagueCardHtml).join('');
     }
 
     async function loadPlayInvites() {
@@ -7141,17 +7209,98 @@
       if (cur) sel.value = cur;
     }
 
+    function setTrackMapStatus(msg) {
+      const el = document.getElementById('track-map-status');
+      if (el) {
+        el.textContent = msg || '';
+        el.style.display = msg ? '' : 'none';
+      }
+    }
+
+    function readCachedLatLng() {
+      try {
+        const raw = localStorage.getItem('gd_last_latlng');
+        if (!raw) return null;
+        const o = JSON.parse(raw);
+        if (o && isFinite(o.lat) && isFinite(o.lng)) return [o.lat, o.lng];
+      } catch (e) {}
+      return null;
+    }
+    function cacheLatLng(lat, lng) {
+      try {
+        localStorage.setItem('gd_last_latlng', JSON.stringify({ lat, lng, t: Date.now() }));
+      } catch (e) {}
+    }
+
+    function centerTrackMap(ll, zoom) {
+      if (!_trackMap || !ll) return;
+      _trackMap.setView(ll, zoom || 15);
+      if (_trackMarker) _trackMarker.setLatLng(ll);
+      else {
+        _trackMarker = L.circleMarker(ll, {
+          radius: 8, color: '#39ff14', fillColor: '#39ff14', fillOpacity: 0.9, weight: 2,
+        }).addTo(_trackMap);
+      }
+    }
+
+    function locateUserOnMap(opts) {
+      opts = opts || {};
+      if (!navigator.geolocation) {
+        setTrackMapStatus('Location unavailable on this device. Enable GPS in phone settings.');
+        return;
+      }
+      setTrackMapStatus(opts.quiet ? '' : 'Finding your location…');
+      const apply = (pos) => {
+        const ll = [pos.coords.latitude, pos.coords.longitude];
+        cacheLatLng(ll[0], ll[1]);
+        centerTrackMap(ll, 15);
+        setTrackMapStatus('');
+      };
+      const fail = (err) => {
+        console.warn('GPS locate', err);
+        const cached = readCachedLatLng();
+        if (cached) {
+          centerTrackMap(cached, 13);
+          setTrackMapStatus('Using last known place — tap Record to refresh GPS.');
+          return;
+        }
+        const code = err && err.code;
+        if (code === 1) {
+          setTrackMapStatus('Location denied. Settings → Apps → GreenDial → Location → Allow, then reopen Track.');
+        } else if (code === 2) {
+          setTrackMapStatus('Location unavailable. Turn on GPS / Location Services.');
+        } else {
+          setTrackMapStatus('Still waiting for GPS… try Record, or check Location permission.');
+        }
+      };
+      // Fast first fix (network/wifi), then high-accuracy refine
+      navigator.geolocation.getCurrentPosition(apply, () => {
+        navigator.geolocation.getCurrentPosition(apply, fail, {
+          enableHighAccuracy: true, timeout: 20000, maximumAge: 0,
+        });
+      }, { enableHighAccuracy: false, timeout: 8000, maximumAge: 60000 });
+    }
+
     function initTrackMap() {
       loadPublicConfig();
       populateTrackLeagueSelect();
       const el = document.getElementById('track-map');
-      if (!el || typeof L === 'undefined') return;
-      if (_trackMap) {
-        setTimeout(() => _trackMap.invalidateSize(), 200);
+      if (!el || typeof L === 'undefined') {
+        setTrackMapStatus('Map library failed to load. Check your connection.');
         return;
       }
-      _trackMap = L.map('track-map', { zoomControl: false, attributionControl: true }).setView([37.77, -122.42], 13);
-      // Mapbox streets if token present; else OSM (same tracker UX)
+      if (_trackMap) {
+        setTimeout(() => {
+          _trackMap.invalidateSize();
+          locateUserOnMap({ quiet: true });
+        }, 200);
+        return;
+      }
+      // Prefer last known GPS; never default to SF
+      const cached = readCachedLatLng();
+      const start = cached || [39.7047, -105.0814]; // continental US fallback (Lakewood, CO area)
+      const startZoom = cached ? 13 : 10;
+      _trackMap = L.map('track-map', { zoomControl: false, attributionControl: true }).setView(start, startZoom);
       if (_mapboxToken) {
         L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/dark-v11/tiles/{z}/{x}/{y}?access_token=' + encodeURIComponent(_mapboxToken), {
           tileSize: 512, zoomOffset: -1, maxZoom: 20,
@@ -7164,15 +7313,12 @@
         }).addTo(_trackMap);
       }
       L.control.zoom({ position: 'bottomright' }).addTo(_trackMap);
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(pos => {
-          const ll = [pos.coords.latitude, pos.coords.longitude];
-          _trackMap.setView(ll, 15);
-          if (!_trackMarker) {
-            _trackMarker = L.circleMarker(ll, { radius: 8, color: '#39ff14', fillColor: '#39ff14', fillOpacity: 0.9, weight: 2 }).addTo(_trackMap);
-          }
-        }, () => {}, { enableHighAccuracy: true, timeout: 8000 });
+      if (cached) {
+        _trackMarker = L.circleMarker(cached, {
+          radius: 8, color: '#39ff14', fillColor: '#39ff14', fillOpacity: 0.9, weight: 2,
+        }).addTo(_trackMap);
       }
+      locateUserOnMap();
       setTimeout(() => _trackMap.invalidateSize(), 250);
     }
 
@@ -7196,14 +7342,20 @@
       if (btn) { btn.textContent = '■ Stop'; btn.classList.add('live'); }
       const fin = document.getElementById('track-finish-btn');
       if (fin) fin.disabled = false;
-      if (_trackPolyline) { _trackMap.removeLayer(_trackPolyline); _trackPolyline = null; }
+      if (_trackPolyline && _trackMap) { _trackMap.removeLayer(_trackPolyline); _trackPolyline = null; }
+      setTrackMapStatus('Recording… keep the app open.');
       _trackWatchId = navigator.geolocation.watchPosition(onTrackPos, err => {
         console.warn('GPS', err);
         if (err && err.code === 1) {
           alert('Location permission denied. Enable location for GreenDial in your phone settings, then hit Record again.');
+          setTrackMapStatus('Location denied — enable permission and try again.');
           pauseTracking();
+        } else if (err && err.code === 2) {
+          setTrackMapStatus('GPS unavailable — turn on Location Services.');
+        } else {
+          setTrackMapStatus('Waiting for GPS fix…');
         }
-      }, { enableHighAccuracy: true, maximumAge: 1000, timeout: 15000 });
+      }, { enableHighAccuracy: true, maximumAge: 1000, timeout: 20000 });
       _trackTimer = setInterval(updateTrackUI, 1000);
     }
 
@@ -7220,6 +7372,7 @@
 
     function onTrackPos(pos) {
       const pt = { lat: pos.coords.latitude, lng: pos.coords.longitude, t: Date.now() };
+      cacheLatLng(pt.lat, pt.lng);
       if (_trackPath.length) {
         const d = haversineMiles(_trackPath[_trackPath.length - 1], pt);
         // Filter GPS jumps (>0.15 mi between samples is noise when walking/running)
@@ -7227,15 +7380,18 @@
       }
       _trackPath.push(pt);
       const ll = [pt.lat, pt.lng];
-      if (_trackMarker) _trackMarker.setLatLng(ll);
-      else _trackMarker = L.circleMarker(ll, { radius: 8, color: '#39ff14', fillColor: '#39ff14', fillOpacity: 0.9, weight: 2 }).addTo(_trackMap);
-      const latlngs = _trackPath.map(p => [p.lat, p.lng]);
-      if (!_trackPolyline) {
-        _trackPolyline = L.polyline(latlngs, { color: '#39ff14', weight: 4, opacity: 0.85 }).addTo(_trackMap);
-      } else {
-        _trackPolyline.setLatLngs(latlngs);
+      if (_trackMap) {
+        if (_trackMarker) _trackMarker.setLatLng(ll);
+        else _trackMarker = L.circleMarker(ll, { radius: 8, color: '#39ff14', fillColor: '#39ff14', fillOpacity: 0.9, weight: 2 }).addTo(_trackMap);
+        const latlngs = _trackPath.map(p => [p.lat, p.lng]);
+        if (!_trackPolyline) {
+          _trackPolyline = L.polyline(latlngs, { color: '#39ff14', weight: 4, opacity: 0.85 }).addTo(_trackMap);
+        } else {
+          _trackPolyline.setLatLngs(latlngs);
+        }
+        _trackMap.panTo(ll, { animate: true, duration: 0.4 });
       }
-      _trackMap.panTo(ll, { animate: true, duration: 0.4 });
+      if (_trackPath.length === 1) setTrackMapStatus('Recording… keep the app open.');
       updateTrackUI();
     }
 

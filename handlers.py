@@ -5019,8 +5019,14 @@ def handle_public_config():
 
 def handle_list_challenges(user_id=None, token=None):
     """List open/active leagues. Optional auth for membership flags + invites."""
-    if user_id and token and not session_ok(user_id, token):
-        return (json.dumps({"error": "Unauthorized"}), 401)
+    # Never 401 the whole catalog — stale tokens still get public leagues.
+    # Membership flags only when session is valid.
+    viewer_id = None
+    if user_id and token and session_ok(user_id, token):
+        viewer_id = user_id
+    elif user_id and not token:
+        # user_id alone (legacy clients): still show membership flags
+        viewer_id = user_id
     try:
         challenges = _seed_default_challenges()
     except Exception as e:
@@ -5044,7 +5050,7 @@ def handle_list_challenges(user_id=None, token=None):
         except Exception:
             pass
 
-    public = [_challenge_public(c, user_id) for c in challenges
+    public = [_challenge_public(c, viewer_id) for c in challenges
               if c.get('status') not in ('archived',)]
     # Sort: member leagues first, then open, then by pot
     public.sort(key=lambda x: (
@@ -5054,29 +5060,34 @@ def handle_list_challenges(user_id=None, token=None):
     ))
     balance = None
     locked = None
-    if user_id:
-        u = _load_user_fresh(user_id) or get_user_data(user_id)
+    if viewer_id:
+        u = _load_user_fresh(viewer_id) or get_user_data(viewer_id)
         if u:
             if _repair_missing_stake_debits(u, challenges):
                 try:
-                    s3_storage.save_user(user_id, u)
-                    _cache_user(user_id, u)
+                    s3_storage.save_user(viewer_id, u)
+                    _cache_user(viewer_id, u)
                 except Exception as e:
                     print(f"[Ledger] repair save failed: {e}")
             balance = _ensure_ledger(u)
-            locked, _ = _active_locked_stakes(user_id, challenges)
+            locked, _ = _active_locked_stakes(viewer_id, challenges)
     return json.dumps({
         "challenges": public,
+        "challenges_mine": [c for c in public if c.get('is_member')],
         "ledger_balance": balance,
         "ledger_locked": locked,
         "ledger_currency": "USD",
         "how_to_log": _HOW_TO_LOG,
+        "authed": bool(viewer_id),
     })
 
 
 def handle_get_challenge(challenge_id, user_id=None, token=None):
-    if user_id and token and not session_ok(user_id, token):
-        return (json.dumps({"error": "Unauthorized"}), 401)
+    viewer_id = None
+    if user_id and token and session_ok(user_id, token):
+        viewer_id = user_id
+    elif user_id and not token:
+        viewer_id = user_id
     challenges = _seed_default_challenges()
     challenge = next((c for c in challenges if c.get('id') == challenge_id), None)
     if not challenge:
@@ -5085,7 +5096,7 @@ def handle_get_challenge(challenge_id, user_id=None, token=None):
     leaderboard = [_public_member(m) for m in (challenge.get('members') or [])
                    if m.get('status') != 'left']
     leaderboard.sort(key=lambda x: (x.get('rank') or 9999))
-    detail = _challenge_public(challenge, user_id)
+    detail = _challenge_public(challenge, viewer_id)
     detail['leaderboard'] = leaderboard
     detail['recent_logs'] = (challenge.get('logs') or [])[:30]
     # rules already attached via _challenge_public
