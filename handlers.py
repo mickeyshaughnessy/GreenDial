@@ -167,7 +167,16 @@ def handle_auth(request):
         "notifications": [],
         # Play ledger for stake leagues / CPAA payouts (USD display units)
         "ledger_balance": 50.0,  # welcome stake credit so new players can join a league
+        "ledger_initialized": True,
         "ledger_currency": "USD",
+        "ledger_entries": [{
+            "id": "le_welcome",
+            "type": "welcome_credit",
+            "amount": 50.0,
+            "ts": datetime.utcnow().isoformat(),
+            "balance_after": 50.0,
+            "note": "Welcome play credit",
+        }],
         "fitness_stats": {
             "total_miles": 0.0,
             "total_activities": 0,
@@ -4291,55 +4300,244 @@ def handle_admin_mark_paid(requesting_user_id, token, target_user_id, activity_i
 
 # ============ CPAA HELPERS + FITNESS STAKE LEAGUES ============
 
+# How to log (shown in app for every league)
+_HOW_TO_LOG = (
+    "On your phone: open GreenDial → Track. Allow location. "
+    "Tap Record when you start moving, Stop when you're done, then Save to credit the league. "
+    "Missing a day does not knock you out — you only lose rank vs. other players."
+)
+
 _CHALLENGE_TEMPLATES = [
+    # —— Walking ——
     {
-        "slug": "daily-run-1",
-        "name": "Daily Mile Club",
-        "tagline": "Run 1 mile every day. Top half keep their stake.",
-        "challenge_type": "run_1mi_daily",
-        "activity_kind": "run",
-        "daily_goal_miles": 1.0,
-        "stake": 50.0,
-        "emoji": "🏃",
-        "duration_days": 30,
-        "max_members": 24,
-    },
-    {
-        "slug": "daily-bike-3",
-        "name": "Bike 3 Challenge",
-        "tagline": "Ride 3 miles a day. Consistency wins the pot.",
-        "challenge_type": "bike_3mi_daily",
-        "activity_kind": "bike",
-        "daily_goal_miles": 3.0,
-        "stake": 50.0,
-        "emoji": "🚴",
-        "duration_days": 30,
-        "max_members": 24,
-    },
-    {
-        "slug": "walk-3-grind",
-        "name": "Walk It Off",
-        "tagline": "Walk 3 miles daily. Skin in the game.",
-        "challenge_type": "walk_3mi_daily",
+        "slug": "walk-daily-2",
+        "name": "Daily Walker",
+        "tagline": "Walk 2 miles most days. Miss a few — still fine.",
+        "description": (
+            "For 21 days, walk about 2 miles whenever you can. "
+            "Aim for most days, not perfection. Rank is by days you hit 2+ miles; "
+            "skipping a day never eliminates you."
+        ),
+        "challenge_type": "walk_2mi_daily",
         "activity_kind": "walk",
-        "daily_goal_miles": 3.0,
+        "goal_mode": "daily",
+        "daily_goal_miles": 2.0,
+        "soft_target_days": 15,  # of 21 — guidance only
         "stake": 25.0,
         "emoji": "👟",
         "duration_days": 21,
         "max_members": 32,
     },
     {
+        "slug": "walk-3-grind",
+        "name": "Walk It Off",
+        "tagline": "Walk 3 miles on as many days as you can.",
+        "description": (
+            "21-day walk league. Goal each active day: 3 miles. "
+            "Hit ~14 of 21 days to be competitive — missing days only affects score, not eligibility."
+        ),
+        "challenge_type": "walk_3mi_daily",
+        "activity_kind": "walk",
+        "goal_mode": "daily",
+        "daily_goal_miles": 3.0,
+        "soft_target_days": 14,
+        "stake": 25.0,
+        "emoji": "🚶",
+        "duration_days": 21,
+        "max_members": 32,
+    },
+    {
+        "slug": "lunch-walk",
+        "name": "Lunch Loop",
+        "tagline": "One short walk most workdays — 1 mile is enough.",
+        "description": (
+            "30 days. Log a 1-mile walk whenever you can (lunch, evening, weekend). "
+            "Soft target: 20 days. Perfect streaks are optional."
+        ),
+        "challenge_type": "walk_1mi_daily",
+        "activity_kind": "walk",
+        "goal_mode": "daily",
+        "daily_goal_miles": 1.0,
+        "soft_target_days": 20,
+        "stake": 15.0,
+        "emoji": "☀️",
+        "duration_days": 30,
+        "max_members": 40,
+    },
+    # —— Running ——
+    {
+        "slug": "daily-run-1",
+        "name": "Daily Mile Club",
+        "tagline": "Run ~1 mile most days for a month.",
+        "description": (
+            "30-day run league. Day goal: 1 mile. "
+            "Soft target: 20 of 30 days. Miss sick days or travel — you stay in; top half of the board get stake back."
+        ),
+        "challenge_type": "run_1mi_daily",
+        "activity_kind": "run",
+        "goal_mode": "daily",
+        "daily_goal_miles": 1.0,
+        "soft_target_days": 20,
+        "stake": 50.0,
+        "emoji": "🏃",
+        "duration_days": 30,
+        "max_members": 24,
+    },
+    {
+        "slug": "run-every-3",
+        "name": "Every-Third-Day Run",
+        "tagline": "Run 2 miles about every third day — built-in rest days.",
+        "description": (
+            "30 days. Cadence: roughly one quality run every 3 days (about 10 runs). "
+            "Each day you log 2+ run miles counts as a hit. Rest days are expected; "
+            "you are never eliminated for skipping."
+        ),
+        "challenge_type": "run_2mi_every3",
+        "activity_kind": "run",
+        "goal_mode": "every_n_days",
+        "period_days": 3,
+        "daily_goal_miles": 2.0,
+        "soft_target_days": 10,
+        "stake": 40.0,
+        "emoji": "⏱️",
+        "duration_days": 30,
+        "max_members": 24,
+    },
+    {
         "slug": "weekend-warriors",
         "name": "Weekend Warriors",
-        "tagline": "Hit 5 miles every Sat+Sun. Top half cashes stake back.",
+        "tagline": "Bigger miles on Sat/Sun only — weekdays off.",
+        "description": (
+            "8 weeks. Only Saturday and Sunday count. Day goal: 5 miles (run/walk mix ok if logged as run). "
+            "That's ~16 weekend days; soft target ~10 hits. Miss a weekend? You're still in."
+        ),
         "challenge_type": "weekend_5mi",
         "activity_kind": "run",
+        "goal_mode": "days_of_week",
+        "days_of_week": [5, 6],  # Mon=0 … Sun=6
         "daily_goal_miles": 5.0,
+        "soft_target_days": 10,
         "stake": 40.0,
         "emoji": "🔥",
         "duration_days": 56,
         "max_members": 20,
-        "days_of_week": [5, 6],  # Sat/Sun if using weekday checks; score still by logged miles
+    },
+    {
+        "slug": "easy-5k-weeks",
+        "name": "Easy 5K Weeks",
+        "tagline": "Accumulate ~3.1 run miles each week — your pace, your days.",
+        "description": (
+            "4 weeks. Weekly goal: 3.1 miles of running total (split across any days). "
+            "Hit the weekly total on as many weeks as you can. Miss a week → lower score only."
+        ),
+        "challenge_type": "run_5k_weekly",
+        "activity_kind": "run",
+        "goal_mode": "weekly_miles",
+        "weekly_goal_miles": 3.1,
+        "daily_goal_miles": 3.1,  # display fallback
+        "soft_target_days": 3,  # weeks
+        "stake": 30.0,
+        "emoji": "🎯",
+        "duration_days": 28,
+        "max_members": 28,
+    },
+    # —— Biking ——
+    {
+        "slug": "daily-bike-3",
+        "name": "Bike 3 Challenge",
+        "tagline": "Ride 3 miles most days — commute or fun ride.",
+        "description": (
+            "30 days. Day goal: 3 bike miles. Soft target: 18 days. "
+            "Rain day? Skip — you stay in the league."
+        ),
+        "challenge_type": "bike_3mi_daily",
+        "activity_kind": "bike",
+        "goal_mode": "daily",
+        "daily_goal_miles": 3.0,
+        "soft_target_days": 18,
+        "stake": 50.0,
+        "emoji": "🚴",
+        "duration_days": 30,
+        "max_members": 24,
+    },
+    {
+        "slug": "bike-100-week-duo",
+        "name": "Century Duo",
+        "tagline": "You + a partner: 100 bike miles per week, combined or solo race.",
+        "description": (
+            "4 weeks. Each player aims for 100 bike miles per calendar week (your own GPS logs). "
+            "Best with a friend in the same league (max 8 — grab a buddy). "
+            "Miss one week? Still ranked on weeks hit + total miles."
+        ),
+        "challenge_type": "bike_100mi_weekly_partner",
+        "activity_kind": "bike",
+        "goal_mode": "weekly_miles",
+        "weekly_goal_miles": 100.0,
+        "daily_goal_miles": 100.0,
+        "soft_target_days": 3,
+        "stake": 50.0,
+        "emoji": "🤝",
+        "duration_days": 28,
+        "max_members": 8,
+        "partner_encouraged": True,
+    },
+    {
+        "slug": "bike-commute",
+        "name": "Commute Club",
+        "tagline": "Bike 5 miles about 3× per week.",
+        "description": (
+            "30 days. Cadence: ~every third day, 5 bike miles (great for commute + home). "
+            "Soft target: ~10 rides. Built for real schedules."
+        ),
+        "challenge_type": "bike_5mi_every3",
+        "activity_kind": "bike",
+        "goal_mode": "every_n_days",
+        "period_days": 3,
+        "daily_goal_miles": 5.0,
+        "soft_target_days": 10,
+        "stake": 35.0,
+        "emoji": "🏙️",
+        "duration_days": 30,
+        "max_members": 24,
+    },
+    # —— Mixed / social ——
+    {
+        "slug": "move-any-20",
+        "name": "Just Move",
+        "tagline": "Any activity, 2 miles, most days — beginner friendly.",
+        "description": (
+            "21 days. Log run, walk, or bike. Day goal: 2 miles of any kind. "
+            "Soft target: 12 days. Lowest barrier league to build the habit."
+        ),
+        "challenge_type": "any_2mi_daily",
+        "activity_kind": "any",
+        "goal_mode": "daily",
+        "daily_goal_miles": 2.0,
+        "soft_target_days": 12,
+        "stake": 20.0,
+        "emoji": "💚",
+        "duration_days": 21,
+        "max_members": 40,
+    },
+    {
+        "slug": "pair-walk-streak",
+        "name": "Buddy Walk",
+        "tagline": "Small group: walk 1.5 miles most days with a friend.",
+        "description": (
+            "14 days. Small league (max 6) so you can join with a friend. "
+            "Day goal: 1.5 walk miles. Soft target: 10 days. "
+            "Accountability without all-or-nothing rules."
+        ),
+        "challenge_type": "walk_1_5mi_buddy",
+        "activity_kind": "walk",
+        "goal_mode": "daily",
+        "daily_goal_miles": 1.5,
+        "soft_target_days": 10,
+        "stake": 20.0,
+        "emoji": "👫",
+        "duration_days": 14,
+        "max_members": 6,
+        "partner_encouraged": True,
     },
 ]
 
@@ -4414,7 +4612,176 @@ def _ensure_ledger(user):
             user['ledger_balance'] = 0.0
     if not user.get('ledger_currency'):
         user['ledger_currency'] = 'USD'
+    if not isinstance(user.get('ledger_entries'), list):
+        user['ledger_entries'] = user.get('ledger_entries') or []
     return float(user.get('ledger_balance') or 0)
+
+
+def _load_user_fresh(user_id):
+    """Always read user from S3 for balance mutations (avoid multi-worker stale cache)."""
+    if not user_id:
+        return None
+    try:
+        user = s3_storage.get_user(user_id)
+        if user:
+            _cache_user(user_id, user)
+            return user
+    except Exception as e:
+        print(f"[User] fresh load failed: {e}")
+    return get_user_data(user_id) or None
+
+
+def _ledger_append(user, entry_type, amount, **extra):
+    """Record a ledger line; amount is signed (negative = debit)."""
+    entries = user.setdefault('ledger_entries', [])
+    row = {
+        "id": f"le_{uuid.uuid4().hex[:10]}",
+        "type": entry_type,
+        "amount": round(float(amount), 2),
+        "ts": datetime.utcnow().isoformat(),
+        "balance_after": round(float(user.get('ledger_balance') or 0), 2),
+    }
+    row.update({k: v for k, v in extra.items() if v is not None})
+    entries.insert(0, row)
+    user['ledger_entries'] = entries[:100]
+    return row
+
+
+def _active_locked_stakes(user_id, challenges=None):
+    """Sum of stakes the user currently has locked in open/active/ended (unsettled) leagues."""
+    if challenges is None:
+        try:
+            challenges = s3_storage.get_challenges()
+        except Exception:
+            challenges = []
+    locked = 0.0
+    locked_ids = []
+    for c in challenges or []:
+        if c.get('status') in ('settled', 'archived'):
+            continue
+        for m in c.get('members') or []:
+            if m.get('user_id') == user_id and m.get('status') != 'left':
+                stake = float(m.get('stake') or c.get('stake') or 0)
+                locked += stake
+                locked_ids.append(c.get('id'))
+    return locked, locked_ids
+
+
+def _repair_missing_stake_debits(user, challenges):
+    """
+    One-time repair: if user is a member of leagues but still sits on ~full credits
+    (welcome + demo top-ups), stake joins never debited — deduct locked stakes now.
+    """
+    if not user or user.get('stakes_ledger_repaired'):
+        return False
+    user_id = user.get('user_id')
+    if not user_id:
+        return False
+    locked, locked_ids = _active_locked_stakes(user_id, challenges)
+    if locked <= 0:
+        user['stakes_ledger_repaired'] = True
+        return True  # mark done; nothing to fix
+
+    bal = _ensure_ledger(user)
+    topups = float(user.get('demo_topups') or 0)
+    # Approximate "never debited" : balance still at least welcome($50) + topups,
+    # ignoring small CPAA noise by using a $1 tolerance under full credits.
+    full_credits = 50.0 + topups
+    already_debited = any(
+        e.get('type') == 'stake_join' for e in (user.get('ledger_entries') or [])
+    )
+    if already_debited:
+        user['stakes_ledger_repaired'] = True
+        return True
+
+    if bal + 0.01 >= full_credits and locked > 0:
+        # Floor at 0 for backfill (joins that wrongly skipped debit may exceed credits)
+        debited = min(locked, bal)
+        user['ledger_balance'] = round(bal - debited, 2)
+        _ledger_append(
+            user, 'stake_join_repair', -debited,
+            note=f"Backfill debit for {len(locked_ids)} league(s) (locked ${locked:.0f})",
+            challenge_ids=locked_ids,
+        )
+        user['stakes_ledger_repaired'] = True
+        return True
+
+    # Balance already reduced relative to credits — assume prior debits worked
+    user['stakes_ledger_repaired'] = True
+    return True
+
+
+def _goal_label(challenge):
+    """Human-readable goal line for cards and detail."""
+    kind = (challenge.get('activity_kind') or 'run')
+    kind_word = {'run': 'run', 'bike': 'bike', 'walk': 'walk', 'any': 'move'}.get(kind, kind)
+    mode = challenge.get('goal_mode') or 'daily'
+    if mode == 'weekly_miles':
+        w = float(challenge.get('weekly_goal_miles') or challenge.get('daily_goal_miles') or 0)
+        return f"{w:g} mi {kind_word} per week"
+    if mode == 'every_n_days':
+        n = int(challenge.get('period_days') or 3)
+        d = float(challenge.get('daily_goal_miles') or 1)
+        return f"{d:g} mi {kind_word} about every {n} days"
+    if mode == 'days_of_week':
+        d = float(challenge.get('daily_goal_miles') or 1)
+        return f"{d:g} mi {kind_word} on Sat & Sun"
+    d = float(challenge.get('daily_goal_miles') or 1)
+    return f"{d:g} mi {kind_word} / day (most days)"
+
+
+def _rules_block(challenge):
+    """Plain-language rules for API + UI."""
+    duration = ''
+    try:
+        from datetime import datetime as _dt
+        s = challenge.get('start_date') or ''
+        e = challenge.get('end_date') or ''
+        if s and e:
+            duration = f"Window: {s} → {e}."
+        elif e:
+            duration = f"Ends {e}."
+    except Exception:
+        duration = ''
+    soft = challenge.get('soft_target_days')
+    soft_line = (
+        f"Soft target: about {soft} successful days/weeks — not a hard cutoff."
+        if soft else
+        "There is no elimination for missed days."
+    )
+    mode = challenge.get('goal_mode') or 'daily'
+    if mode == 'weekly_miles':
+        scoring = (
+            "Score = weeks you hit the weekly mile goal × 100 + total miles. "
+            "Miss a week and you stay in — you just rank lower."
+        )
+    else:
+        scoring = (
+            "Score = days you hit the distance goal × 100 + total miles. "
+            "Miss days freely; only rank vs other players matters."
+        )
+    partner = ''
+    if challenge.get('partner_encouraged'):
+        partner = " Best with a friend in the same league (invite them to join)."
+    return {
+        "summary": challenge.get('description') or challenge.get('tagline') or '',
+        "goal": _goal_label(challenge),
+        "window": duration,
+        "scoring": scoring,
+        "misses": soft_line + " Missing activities never kicks you out.",
+        "payout": (
+            "When the league settles, the top half of the leaderboard get their stake refunded. "
+            "Bottom half fund the prize culture. CPAA sponsors can pay extra per logged activity."
+        ),
+        "how_to_log": _HOW_TO_LOG,
+        "partner": partner.strip(),
+        "daily_goal_miles": challenge.get('daily_goal_miles'),
+        "weekly_goal_miles": challenge.get('weekly_goal_miles'),
+        "goal_mode": mode,
+        "activity_kind": challenge.get('activity_kind'),
+        "soft_target_days": soft,
+        "period_days": challenge.get('period_days'),
+    }
 
 
 def _append_feed(event):
@@ -4439,6 +4806,7 @@ def _public_member(m):
         "joined_at": m.get("joined_at"),
         "stake": m.get("stake"),
         "days_hit": m.get("days_hit", 0),
+        "weeks_hit": m.get("weeks_hit", 0),
         "total_miles": round(float(m.get("total_miles") or 0), 2),
         "score": m.get("score", 0),
         "last_log_date": m.get("last_log_date"),
@@ -4449,20 +4817,25 @@ def _public_member(m):
 
 
 def _score_members(challenge):
-    """Score = days_hit * 100 + total_miles (consistency first). Rank in place."""
+    """Score = (days or weeks hit) * 100 + total_miles (consistency first). Rank in place."""
     members = challenge.get('members') or []
+    mode = challenge.get('goal_mode') or 'daily'
     for m in members:
         if m.get('status') == 'left':
             m['score'] = -1
             continue
-        days = int(m.get('days_hit') or 0)
+        if mode == 'weekly_miles':
+            hits = int(m.get('weeks_hit') or len(m.get('hit_weeks') or []) or 0)
+            m['weeks_hit'] = hits
+        else:
+            hits = int(m.get('days_hit') or len(m.get('hit_dates') or []) or 0)
+            m['days_hit'] = hits
         miles = float(m.get('total_miles') or 0)
-        m['score'] = days * 100 + miles
+        m['score'] = hits * 100 + miles
     active = [m for m in members if m.get('status') != 'left']
     active.sort(key=lambda x: (-float(x.get('score') or 0), x.get('joined_at') or ''))
     for i, m in enumerate(active):
         m['rank'] = i + 1
-    # left members keep no rank
     for m in members:
         if m.get('status') == 'left':
             m['rank'] = None
@@ -4476,14 +4849,23 @@ def _challenge_public(challenge, viewer_id=None):
     me = None
     if viewer_id:
         me = next((m for m in members if m.get('user_id') == viewer_id), None)
+    rules = _rules_block(challenge)
     return {
         "id": challenge.get("id"),
         "name": challenge.get("name"),
         "tagline": challenge.get("tagline"),
+        "description": challenge.get("description") or rules.get("summary"),
         "emoji": challenge.get("emoji") or "🏆",
         "challenge_type": challenge.get("challenge_type"),
         "activity_kind": challenge.get("activity_kind") or "run",
+        "goal_mode": challenge.get("goal_mode") or "daily",
         "daily_goal_miles": challenge.get("daily_goal_miles"),
+        "weekly_goal_miles": challenge.get("weekly_goal_miles"),
+        "period_days": challenge.get("period_days"),
+        "soft_target_days": challenge.get("soft_target_days"),
+        "goal_label": _goal_label(challenge),
+        "how_to_log": _HOW_TO_LOG,
+        "partner_encouraged": bool(challenge.get("partner_encouraged")),
         "stake": challenge.get("stake"),
         "currency": challenge.get("currency") or "USD",
         "payout_rule": challenge.get("payout_rule") or "top_half_refund",
@@ -4496,52 +4878,129 @@ def _challenge_public(challenge, viewer_id=None):
         "is_member": bool(me and me.get('status') != 'left'),
         "my_rank": (me or {}).get('rank'),
         "my_score": (me or {}).get('score'),
+        "my_days_hit": (me or {}).get('days_hit'),
         "invite_only": bool(challenge.get('invite_only')),
         "created": challenge.get("created"),
+        "rules": rules,
     }
 
 
+def _template_to_challenge(t, today=None):
+    from datetime import timedelta
+    if today is None:
+        today = datetime.utcnow().date()
+    start = today.isoformat()
+    end = (today + timedelta(days=int(t.get('duration_days') or 30))).isoformat()
+    return {
+        "id": f"lg_{uuid.uuid4().hex[:10]}",
+        "slug": t["slug"],
+        "name": t["name"],
+        "tagline": t["tagline"],
+        "description": t.get("description") or t.get("tagline"),
+        "emoji": t.get("emoji") or "🏆",
+        "challenge_type": t["challenge_type"],
+        "activity_kind": t.get("activity_kind") or "run",
+        "goal_mode": t.get("goal_mode") or "daily",
+        "daily_goal_miles": float(t.get("daily_goal_miles") or 1),
+        "weekly_goal_miles": t.get("weekly_goal_miles"),
+        "period_days": t.get("period_days"),
+        "days_of_week": t.get("days_of_week"),
+        "soft_target_days": t.get("soft_target_days"),
+        "partner_encouraged": bool(t.get("partner_encouraged")),
+        "stake": float(t.get("stake") or 50),
+        "currency": "USD",
+        "payout_rule": "top_half_refund",
+        "start_date": start,
+        "end_date": end,
+        "status": "open",
+        "max_members": int(t.get("max_members") or 24),
+        "invite_only": False,
+        "members": [],
+        "logs": [],
+        "created": datetime.utcnow().isoformat(),
+        "created_by": "system",
+        "template_slug": t["slug"],
+    }
+
+
+def _apply_template_copy(challenge, t, refresh_window=False):
+    """Update human-facing fields from template without wiping members/stakes."""
+    for key in (
+        'name', 'tagline', 'description', 'emoji', 'challenge_type', 'activity_kind',
+        'goal_mode', 'period_days', 'days_of_week', 'soft_target_days', 'partner_encouraged',
+    ):
+        if key in t and t[key] is not None:
+            challenge[key] = t[key]
+    if t.get('daily_goal_miles') is not None:
+        challenge['daily_goal_miles'] = float(t['daily_goal_miles'])
+    if t.get('weekly_goal_miles') is not None:
+        challenge['weekly_goal_miles'] = float(t['weekly_goal_miles'])
+    if t.get('max_members') is not None:
+        challenge['max_members'] = int(t['max_members'])
+    # Stake changes only if league has no members yet (don't change pot mid-flight)
+    if not (challenge.get('members') or []) and t.get('stake') is not None:
+        challenge['stake'] = float(t['stake'])
+    challenge['template_slug'] = t['slug']
+    if refresh_window and challenge.get('status') in ('open', 'active', 'ended'):
+        # Keep original start if already running with members; else refresh dates
+        if not (challenge.get('members') or []):
+            from datetime import timedelta
+            today = datetime.utcnow().date()
+            challenge['start_date'] = today.isoformat()
+            challenge['end_date'] = (
+                today + timedelta(days=int(t.get('duration_days') or 30))
+            ).isoformat()
+            if challenge.get('status') == 'ended':
+                challenge['status'] = 'open'
+
+
 def _seed_default_challenges():
-    """Create open public leagues if none exist."""
+    """Ensure catalog leagues exist; add new templates; refresh copy on system leagues."""
     try:
         existing = s3_storage.get_challenges()
     except Exception:
         existing = []
-    if existing:
-        return existing
-    from datetime import timedelta
+    if not isinstance(existing, list):
+        existing = []
+
+    by_slug = {}
+    for c in existing:
+        slug = c.get('template_slug') or c.get('slug')
+        if slug:
+            by_slug[slug] = c
+
+    dirty = False
     today = datetime.utcnow().date()
-    challenges = []
+    # Update copy on known system templates; add missing ones
     for t in _CHALLENGE_TEMPLATES:
-        start = today.isoformat()
-        end = (today + timedelta(days=int(t.get('duration_days') or 30))).isoformat()
-        challenges.append({
-            "id": f"lg_{uuid.uuid4().hex[:10]}",
-            "slug": t["slug"],
-            "name": t["name"],
-            "tagline": t["tagline"],
-            "emoji": t.get("emoji") or "🏆",
-            "challenge_type": t["challenge_type"],
-            "activity_kind": t.get("activity_kind") or "run",
-            "daily_goal_miles": float(t.get("daily_goal_miles") or 1),
-            "stake": float(t.get("stake") or 50),
-            "currency": "USD",
-            "payout_rule": "top_half_refund",
-            "start_date": start,
-            "end_date": end,
-            "status": "open",  # open | active | settled
-            "max_members": int(t.get("max_members") or 24),
-            "invite_only": False,
-            "members": [],
-            "logs": [],  # recent check-ins (capped)
-            "created": datetime.utcnow().isoformat(),
-            "created_by": "system",
-        })
-    try:
-        s3_storage.save_challenges(challenges)
-    except Exception as e:
-        print(f"[Leagues] seed failed: {e}")
-    return challenges
+        slug = t['slug']
+        if slug in by_slug:
+            c = by_slug[slug]
+            # Only rewrite system-created (or template-tagged) leagues
+            if c.get('created_by') in (None, 'system') or c.get('template_slug'):
+                before = json.dumps(c, sort_keys=True, default=str)
+                _apply_template_copy(c, t, refresh_window=False)
+                # If ended with no members, reopen with fresh window
+                if c.get('status') == 'ended' and not (c.get('members') or []):
+                    _apply_template_copy(c, t, refresh_window=True)
+                after = json.dumps(c, sort_keys=True, default=str)
+                if before != after:
+                    dirty = True
+        else:
+            existing.append(_template_to_challenge(t, today=today))
+            dirty = True
+
+    if not existing:
+        for t in _CHALLENGE_TEMPLATES:
+            existing.append(_template_to_challenge(t, today=today))
+        dirty = True
+
+    if dirty:
+        try:
+            s3_storage.save_challenges(existing)
+        except Exception as e:
+            print(f"[Leagues] seed/sync failed: {e}")
+    return existing
 
 
 def handle_public_config():
@@ -4594,14 +5053,24 @@ def handle_list_challenges(user_id=None, token=None):
         -float(x.get('pot') or 0),
     ))
     balance = None
+    locked = None
     if user_id:
-        u = get_user_data(user_id)
+        u = _load_user_fresh(user_id) or get_user_data(user_id)
         if u:
+            if _repair_missing_stake_debits(u, challenges):
+                try:
+                    s3_storage.save_user(user_id, u)
+                    _cache_user(user_id, u)
+                except Exception as e:
+                    print(f"[Ledger] repair save failed: {e}")
             balance = _ensure_ledger(u)
+            locked, _ = _active_locked_stakes(user_id, challenges)
     return json.dumps({
         "challenges": public,
         "ledger_balance": balance,
+        "ledger_locked": locked,
         "ledger_currency": "USD",
+        "how_to_log": _HOW_TO_LOG,
     })
 
 
@@ -4619,13 +5088,7 @@ def handle_get_challenge(challenge_id, user_id=None, token=None):
     detail = _challenge_public(challenge, user_id)
     detail['leaderboard'] = leaderboard
     detail['recent_logs'] = (challenge.get('logs') or [])[:30]
-    detail['rules'] = {
-        "payout": "Top half of the leaderboard get their stake back when the league settles. "
-                  "Bottom half fund the prize culture — demand-side CPAA partners stack extra pay on fitness actions.",
-        "scoring": "1 point per day you hit the distance goal (+ miles as tie-break).",
-        "daily_goal_miles": challenge.get('daily_goal_miles'),
-        "activity_kind": challenge.get('activity_kind'),
-    }
+    # rules already attached via _challenge_public
     return json.dumps({"challenge": detail})
 
 
@@ -4717,11 +5180,22 @@ def handle_join_challenge(challenge_id, user_id, token, req=None):
     """Join a league: deduct stake from ledger into the pot."""
     if not session_ok(user_id, token):
         return (json.dumps({"error": "Unauthorized"}), 401)
-    user = get_user_data(user_id)
+    # Fresh S3 read so multi-worker cache cannot skip a debit
+    user = _load_user_fresh(user_id)
     if not user:
         return (json.dumps({"error": "User not found"}), 404)
+    user['user_id'] = user.get('user_id') or user_id
 
     challenges = _seed_default_challenges()
+    # Repair any prior joins that never debited, before checking balance
+    if _repair_missing_stake_debits(user, challenges):
+        try:
+            s3_storage.save_user(user_id, user)
+            _cache_user(user_id, user)
+        except Exception:
+            pass
+        user = _load_user_fresh(user_id) or user
+
     challenge = next((c for c in challenges if c.get('id') == challenge_id), None)
     if not challenge:
         return (json.dumps({"error": "Not found"}), 404)
@@ -4731,7 +5205,12 @@ def handle_join_challenge(challenge_id, user_id, token, req=None):
     members = challenge.setdefault('members', [])
     existing = next((m for m in members if m.get('user_id') == user_id), None)
     if existing and existing.get('status') != 'left':
-        return (json.dumps({"error": "Already in this league", "challenge": _challenge_public(challenge, user_id)}), 409)
+        bal = _ensure_ledger(user)
+        return (json.dumps({
+            "error": "Already in this league",
+            "challenge": _challenge_public(challenge, user_id),
+            "ledger_balance": bal,
+        }), 409)
 
     active = [m for m in members if m.get('status') != 'left']
     if len(active) >= int(challenge.get('max_members') or 24):
@@ -4746,26 +5225,47 @@ def handle_join_challenge(challenge_id, user_id, token, req=None):
     bal = _ensure_ledger(user)
     if bal < stake:
         return (json.dumps({
-            "error": f"Need ${stake:.0f} stake — your balance is ${bal:.2f}. Complete CPAA activities or wait for a top-up.",
+            "error": (
+                f"Need ${stake:.0f} stake — your available balance is ${bal:.2f}. "
+                f"Use + Demo $50 for play credit, or settle/finish other leagues first."
+            ),
             "ledger_balance": bal,
             "stake": stake,
         }), 402)
 
-    user['ledger_balance'] = bal - stake
+    # Debit first, persist user, then add membership (refund if league save fails)
+    user['ledger_balance'] = round(bal - stake, 2)
+    user['ledger_initialized'] = True
+    _ledger_append(
+        user, 'stake_join', -stake,
+        challenge_id=challenge_id,
+        challenge_name=challenge.get('name'),
+        note=f"Joined {challenge.get('name')}",
+    )
+    try:
+        s3_storage.save_user(user_id, user)
+        _cache_user(user_id, user)
+    except Exception as e:
+        return (json.dumps({"error": f"Could not debit stake: {e}"}), 500)
+
     member = {
         "user_id": user_id,
         "username": user.get('username') or user_id,
         "joined_at": datetime.utcnow().isoformat(),
         "stake": stake,
         "days_hit": 0,
+        "weeks_hit": 0,
         "total_miles": 0.0,
         "score": 0,
         "last_log_date": None,
         "hit_dates": [],
+        "hit_weeks": [],
+        "day_miles": {},
+        "week_miles": {},
         "status": "active",
+        "stake_debited": True,
     }
     if existing:
-        # rejoin
         existing.update(member)
     else:
         members.append(member)
@@ -4774,10 +5274,21 @@ def handle_join_challenge(challenge_id, user_id, token, req=None):
         challenge['status'] = 'active'
 
     try:
-        s3_storage.save_user(user_id, user)
-        _cache_user(user_id, user)
         s3_storage.save_challenges(challenges)
     except Exception as e:
+        # Refund stake so the user is not charged without a seat
+        try:
+            user = _load_user_fresh(user_id) or user
+            user['ledger_balance'] = round(float(user.get('ledger_balance') or 0) + stake, 2)
+            _ledger_append(
+                user, 'stake_refund', stake,
+                challenge_id=challenge_id,
+                note='Refund — league save failed',
+            )
+            s3_storage.save_user(user_id, user)
+            _cache_user(user_id, user)
+        except Exception as re:
+            print(f"[Join] refund after failed league save: {re}")
         return (json.dumps({"error": str(e)}), 500)
 
     _append_feed({
@@ -4789,10 +5300,12 @@ def handle_join_challenge(challenge_id, user_id, token, req=None):
         "text": f"staked ${stake:.0f} on {challenge.get('emoji', '🏆')} {challenge.get('name')}",
     })
     _score_members(challenge)
+    locked, _ = _active_locked_stakes(user_id, challenges)
     return json.dumps({
         "ok": True,
         "challenge": _challenge_public(challenge, user_id),
         "ledger_balance": user['ledger_balance'],
+        "ledger_locked": locked,
         "stake_paid": stake,
     })
 
@@ -4842,32 +5355,83 @@ def handle_log_challenge_activity(challenge_id, user_id, token, req):
     path_points = min(len(path) if isinstance(path, list) else 0, 2000)
 
     today = datetime.utcnow().strftime('%Y-%m-%d')
-    # Accumulate same-day miles
+    now = datetime.utcnow()
+    iso_week = now.strftime('%G-W%V')  # e.g. 2026-W14
+
+    # Accumulate same-day and same-week miles
     day_logs = member.setdefault('day_miles', {})
     prev = float(day_logs.get(today) or 0)
     day_logs[today] = round(prev + miles, 3)
+    week_logs = member.setdefault('week_miles', {})
+    wprev = float(week_logs.get(iso_week) or 0)
+    week_logs[iso_week] = round(wprev + miles, 3)
     member['total_miles'] = round(float(member.get('total_miles') or 0) + miles, 3)
     member['last_log_date'] = today
 
-    goal = float(challenge.get('daily_goal_miles') or 1)
+    goal_mode = challenge.get('goal_mode') or 'daily'
+    daily_goal = float(challenge.get('daily_goal_miles') or 1)
+    weekly_goal = float(challenge.get('weekly_goal_miles') or daily_goal or 1)
     hit_dates = member.setdefault('hit_dates', [])
+    hit_weeks = member.setdefault('hit_weeks', [])
     newly_hit = False
-    if day_logs[today] >= goal and today not in hit_dates:
-        hit_dates.append(today)
-        member['days_hit'] = len(hit_dates)
-        newly_hit = True
+    goal_hit = False
+
+    if goal_mode == 'weekly_miles':
+        goal_hit = week_logs[iso_week] >= weekly_goal
+        if goal_hit and iso_week not in hit_weeks:
+            hit_weeks.append(iso_week)
+            member['weeks_hit'] = len(hit_weeks)
+            newly_hit = True
+        # days_hit mirrors weeks for display consistency on weekly leagues
+        member['days_hit'] = len(hit_weeks)
+    else:
+        # days_of_week: only count hits on allowed weekdays (still log miles always)
+        weekday_ok = True
+        if goal_mode == 'days_of_week':
+            allowed = challenge.get('days_of_week') or [5, 6]
+            try:
+                weekday_ok = now.weekday() in [int(x) for x in allowed]
+            except (TypeError, ValueError):
+                weekday_ok = True
+        # every_n_days and daily: any day you hit distance counts (soft cadence in rules only)
+        if weekday_ok and day_logs[today] >= daily_goal:
+            goal_hit = True
+            if today not in hit_dates:
+                hit_dates.append(today)
+                member['days_hit'] = len(hit_dates)
+                newly_hit = True
+        else:
+            goal_hit = False
+            member['days_hit'] = len(hit_dates)
+
+    # Activity kind must roughly match league (allow "any")
+    league_kind = (challenge.get('activity_kind') or 'any').lower()
+    if league_kind not in ('any', '') and activity_kind:
+        ak = activity_kind.lower()
+        ok_map = {
+            'run': ('run', 'jog'),
+            'bike': ('bike', 'cycle', 'cycling'),
+            'walk': ('walk', 'hike'),
+        }
+        allowed_kinds = ok_map.get(league_kind, (league_kind,))
+        if ak not in allowed_kinds and ak != league_kind:
+            # Still accept log but note mismatch — keep friction low for beginners
+            pass
 
     log_entry = {
         "user_id": user_id,
         "username": user.get('username'),
         "miles": miles,
         "day_total": day_logs[today],
+        "week_total": week_logs.get(iso_week),
         "activity_kind": activity_kind,
         "duration_sec": duration_sec,
         "path_points": path_points,
-        "goal_hit": day_logs[today] >= goal,
+        "goal_hit": goal_hit,
+        "goal_mode": goal_mode,
         "ts": datetime.utcnow().isoformat(),
         "date": today,
+        "iso_week": iso_week,
     }
     logs = challenge.setdefault('logs', [])
     logs.insert(0, log_entry)
@@ -4899,13 +5463,18 @@ def handle_log_challenge_activity(challenge_id, user_id, token, req):
         return (json.dumps({"error": str(e)}), 500)
 
     if newly_hit:
+        hit_label = (
+            f"week goal ({week_logs[iso_week]:g} mi)"
+            if goal_mode == 'weekly_miles'
+            else f"day goal ({day_logs[today]:g} mi)"
+        )
         _append_feed({
             "type": "day_hit",
             "username": user.get('username'),
             "user_id": user_id,
             "challenge_id": challenge_id,
             "challenge_name": challenge.get('name'),
-            "text": f"hit day goal in {challenge.get('emoji', '🏆')} {challenge.get('name')} ({day_logs[today]:g} mi)",
+            "text": f"hit {hit_label} in {challenge.get('emoji', '🏆')} {challenge.get('name')}",
             "miles": day_logs[today],
         })
     else:
@@ -4981,7 +5550,8 @@ def _maybe_credit_cpaa_for_fitness(user, activity_kind, miles):
         if cpaa_days.get(key) == today:
             continue
         cpaa_days[key] = today
-        user['ledger_balance'] = float(user.get('ledger_balance') or 0) + rate
+        user['ledger_balance'] = round(float(user.get('ledger_balance') or 0) + rate, 2)
+        _ledger_append(user, 'cpaa_credit', rate, bounty_id=b.get('id'), note=b.get('activity') or at)
         credited += rate
         # Track as payment_pending activity for admin settlement
         user.setdefault('activities', []).append({
@@ -5051,9 +5621,15 @@ def handle_settle_challenge(challenge_id, user_id, token):
         if uid in winner_ids:
             m['payout'] = stake  # get money back
             m['result'] = 'win'
-            u = get_user_data(uid)
+            u = _load_user_fresh(uid) or get_user_data(uid)
             if u:
-                u['ledger_balance'] = float(u.get('ledger_balance') or 0) + stake
+                u['ledger_balance'] = round(float(u.get('ledger_balance') or 0) + stake, 2)
+                _ledger_append(
+                    u, 'stake_refund', stake,
+                    challenge_id=challenge_id,
+                    challenge_name=challenge.get('name'),
+                    note='Top-half settle refund',
+                )
                 try:
                     s3_storage.save_user(uid, u)
                     _cache_user(uid, u)
@@ -5101,22 +5677,43 @@ def handle_challenge_invites(user_id, token):
 
     scores = {
         "run_1mi_daily": 1,
+        "run_2mi_every3": 1,
+        "run_5k_weekly": 1,
         "bike_3mi_daily": 1,
+        "bike_5mi_every3": 1,
+        "bike_100mi_weekly_partner": 1,
         "walk_3mi_daily": 1,
+        "walk_2mi_daily": 1,
+        "walk_1mi_daily": 1,
+        "walk_1_5mi_buddy": 1,
         "weekend_5mi": 1,
+        "any_2mi_daily": 2,
     }
     if any(w in blob for w in ('run', 'running', 'jog', '5k', 'marathon', 'mile')):
         scores['run_1mi_daily'] += 5
+        scores['run_2mi_every3'] += 4
+        scores['run_5k_weekly'] += 3
         scores['weekend_5mi'] += 3
     if any(w in blob for w in ('bike', 'cycling', 'cycle', 'peloton')):
         scores['bike_3mi_daily'] += 5
+        scores['bike_5mi_every3'] += 4
+        scores['bike_100mi_weekly_partner'] += 3
     if any(w in blob for w in ('walk', 'steps', 'hike', 'outdoors')):
         scores['walk_3mi_daily'] += 4
-    if any(w in blob for w in ('weight', 'lose', 'fat', 'cardio', 'fitness')):
+        scores['walk_2mi_daily'] += 5
+        scores['walk_1mi_daily'] += 3
+        scores['walk_1_5mi_buddy'] += 3
+    if any(w in blob for w in ('weight', 'lose', 'fat', 'cardio', 'fitness', 'beginner')):
         scores['run_1mi_daily'] += 2
-        scores['walk_3mi_daily'] += 2
+        scores['walk_2mi_daily'] += 2
+        scores['any_2mi_daily'] += 3
     if any(w in blob for w in ('weekend', 'busy', 'schedule')):
         scores['weekend_5mi'] += 3
+        scores['run_2mi_every3'] += 2
+        scores['bike_5mi_every3'] += 2
+    if any(w in blob for w in ('friend', 'partner', 'buddy', 'together')):
+        scores['walk_1_5mi_buddy'] += 4
+        scores['bike_100mi_weekly_partner'] += 4
 
     challenges = _seed_default_challenges()
     ranked_types = sorted(scores.keys(), key=lambda k: -scores[k])
@@ -5206,11 +5803,17 @@ def handle_get_feed(user_id=None, token=None, limit=40):
 def handle_get_ledger(user_id, token):
     if not session_ok(user_id, token):
         return (json.dumps({"error": "Unauthorized"}), 401)
-    user = get_user_data(user_id)
+    user = _load_user_fresh(user_id)
     if not user:
         return (json.dumps({"error": "User not found"}), 404)
+    try:
+        challenges = s3_storage.get_challenges()
+    except Exception:
+        challenges = []
+    if _repair_missing_stake_debits(user, challenges):
+        pass  # will save below
     bal = _ensure_ledger(user)
-    # Persist if we had to default
+    locked, locked_ids = _active_locked_stakes(user_id, challenges)
     try:
         s3_storage.save_user(user_id, user)
         _cache_user(user_id, user)
@@ -5218,10 +5821,16 @@ def handle_get_ledger(user_id, token):
         pass
     return json.dumps({
         "ledger_balance": bal,
+        "ledger_locked": locked,
+        "locked_challenge_ids": locked_ids,
         "ledger_currency": user.get('ledger_currency') or 'USD',
+        "ledger_entries": (user.get('ledger_entries') or [])[:20],
         "fitness_stats": user.get('fitness_stats') or {},
-        "welcome_note": "New players start with $50 play credit to join a league. "
-                        "CPAA sponsors pay you per completed fitness action — stack that on top of stake refunds.",
+        "how_to_log": _HOW_TO_LOG,
+        "welcome_note": (
+            "New players start with $50 play credit. Staking a league deducts that stake from this balance. "
+            "Top half get it back when the league settles. CPAA sponsors can pay extra per activity."
+        ),
     })
 
 
@@ -5229,7 +5838,7 @@ def handle_ledger_topup(user_id, token, req):
     """Demo top-up (no real payment rail yet). Caps abuse."""
     if not session_ok(user_id, token):
         return (json.dumps({"error": "Unauthorized"}), 401)
-    user = get_user_data(user_id)
+    user = _load_user_fresh(user_id)
     if not user:
         return (json.dumps({"error": "User not found"}), 404)
     try:
@@ -5242,7 +5851,9 @@ def handle_ledger_topup(user_id, token, req):
     if topped + amount > 200:
         return (json.dumps({"error": "Demo top-up limit reached ($200). Real payouts come via demand partners."}), 400)
     user['demo_topups'] = topped + amount
-    user['ledger_balance'] = _ensure_ledger(user) + amount
+    user['ledger_balance'] = round(_ensure_ledger(user) + amount, 2)
+    user['ledger_initialized'] = True
+    _ledger_append(user, 'demo_topup', amount, note='Demo play credit')
     try:
         s3_storage.save_user(user_id, user)
         _cache_user(user_id, user)

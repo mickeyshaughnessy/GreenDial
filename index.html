@@ -2146,6 +2146,19 @@
     }
     .play-balance .lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(255,255,255,0.45); }
     .play-balance .amt { font-size: 1.4rem; font-weight: 800; color: var(--gd-gold, #f5c542); font-variant-numeric: tabular-nums; }
+    .how-to-log {
+      margin-top: 12px; padding: 10px 12px; border-radius: 12px;
+      background: rgba(0,0,0,0.28); border: 1px solid rgba(57,255,20,0.15);
+      font-size: 12px; color: rgba(255,255,255,0.55); line-height: 1.45;
+    }
+    .how-to-log strong { color: rgba(255,255,255,0.85); }
+    .league-rules {
+      margin-top: 12px; padding: 10px 12px; border-radius: 12px;
+      background: rgba(0,0,0,0.22); border: 1px solid rgba(255,255,255,0.08);
+      font-size: 12px; color: rgba(255,255,255,0.55); line-height: 1.5;
+    }
+    .league-rules li { margin: 4px 0 4px 1.1em; }
+    .league-rules .rules-title { font-weight: 700; color: rgba(255,255,255,0.8); margin-bottom: 4px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; }
     .play-section-title {
       font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;
       color: rgba(255,255,255,0.4); margin: 18px 0 10px; display: flex; align-items: center; gap: 8px;
@@ -2372,16 +2385,20 @@
       <div class="play-view" id="play-list">
         <div class="play-hero">
           <h1>Put <span>skin</span> in the game.</h1>
-          <p>Stake a little, move every day, climb the board. <strong>Top half of each league get their money back</strong> — demand-side partners pay extra per action (CPAA) when you're locked in.</p>
+          <p>Pick a challenge, stake a little from your balance, then log miles on your phone. <strong>Missing days never knocks you out</strong> — top half of the board get their stake back when it ends.</p>
           <div class="play-balance-row">
             <div class="play-balance">
-              <div class="lbl">Your stake balance</div>
+              <div class="lbl">Available balance</div>
               <div class="amt" id="play-balance-amt">—</div>
+              <div class="sub" id="play-balance-locked" style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px"></div>
             </div>
             <div style="display:flex;gap:8px;flex-wrap:wrap">
               <button type="button" class="btn btn-sm btn-ghost-play" onclick="topUpLedger()">+ Demo $50</button>
               <button type="button" class="btn btn-sm btn-primary" onclick="showCreateLeague()">New league</button>
             </div>
+          </div>
+          <div class="how-to-log" id="play-how-to-log">
+            <strong>How to log:</strong> On mobile, allow location → open <em>Track</em> → hit <strong>Record</strong> while you move → <strong>Stop</strong> when done → <strong>Save</strong> to your league.
           </div>
         </div>
         <div class="play-section-title">For you</div>
@@ -2398,7 +2415,12 @@
     <!-- ===== TRACK: GPS activity ===== -->
     <div class="view" id="view-track">
       <div class="play-view">
-        <div class="play-section-title" style="margin-top:4px">Activity tracker</div>
+        <div class="play-section-title" style="margin-top:4px">Record activity</div>
+        <p style="font-size:13px;color:rgba(255,255,255,0.55);line-height:1.45;margin:0 0 12px">
+          <strong style="color:rgba(255,255,255,0.85)">1.</strong> Allow location on your phone &nbsp;·&nbsp;
+          <strong style="color:rgba(255,255,255,0.85)">2.</strong> Pick activity + league &nbsp;·&nbsp;
+          <strong style="color:rgba(255,255,255,0.85)">3.</strong> <em>Record</em> while moving → <em>Stop</em> → <em>Save</em>
+        </p>
         <div class="kind-pills" id="track-kind-pills">
           <button type="button" class="kind-pill active" data-kind="run" onclick="setTrackKind('run')">🏃 Run</button>
           <button type="button" class="kind-pill" data-kind="bike" onclick="setTrackKind('bike')">🚴 Bike</button>
@@ -2410,16 +2432,16 @@
           <div class="track-stat"><div class="v" id="track-time">0:00</div><div class="k">Time</div></div>
           <div class="track-stat"><div class="v" id="track-pace">—</div><div class="k">Pace</div></div>
         </div>
-        <label style="font-size:12px;color:rgba(255,255,255,0.45);display:block;margin-bottom:6px">Log to league</label>
+        <label style="font-size:12px;color:rgba(255,255,255,0.45);display:block;margin-bottom:6px">Save to league</label>
         <select id="track-league-select" class="settings-select" style="width:100%;margin-bottom:12px;padding:10px;font-size:14px;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:#fff">
           <option value="">— Select a league you're in —</option>
         </select>
         <div class="track-controls">
-          <button type="button" class="btn btn-rec" id="track-start-btn" onclick="toggleTracking()">● Start</button>
-          <button type="button" class="btn btn-primary" id="track-finish-btn" onclick="finishTracking()" disabled>Finish &amp; log</button>
+          <button type="button" class="btn btn-rec" id="track-start-btn" onclick="toggleTracking()">● Record</button>
+          <button type="button" class="btn btn-primary" id="track-finish-btn" onclick="finishTracking()" disabled>Save activity</button>
         </div>
         <p style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:12px;line-height:1.4">
-          Uses your phone GPS. Map tiles via Mapbox when configured, otherwise OpenStreetMap. Stay safe — don't stare at the screen while moving.
+          Uses phone GPS (enable location for GreenDial). Stay safe — don't stare at the screen while moving. Missing a day never eliminates you from a league.
         </p>
       </div>
     </div>
@@ -2574,15 +2596,15 @@
           <div class="panel-content">
             <div class="gs-step">
               <div class="gs-num">1</div>
-              <div><h4>Stake a league</h4><p>Put money on the line in a group challenge — run a mile a day, bike 3, walk 3. New players start with $50 demo credit.</p></div>
+              <div><h4>Stake a league</h4><p>Join a challenge — the stake comes out of your available balance right away. New players start with $50 demo credit. Missing days never knocks you out.</p></div>
             </div>
             <div class="gs-step">
               <div class="gs-num">2</div>
-              <div><h4>Track on the map</h4><p>Hit Track, start GPS, finish the miles. Days you hit the goal stack your leaderboard score.</p></div>
+              <div><h4>Record → Stop → Save</h4><p>On your phone: enable location, open Track, hit <strong>Record</strong> while you move, <strong>Stop</strong> when done, then <strong>Save</strong> to credit your league.</p></div>
             </div>
             <div class="gs-step">
               <div class="gs-num">3</div>
-              <div><h4>Top half get stake back</h4><p>When the league settles, the top half of the board get their money back. Stay consistent — that's the whole game.</p></div>
+              <div><h4>Top half get stake back</h4><p>When the league ends, the top half of the leaderboard get their stake refunded. Soft targets, not perfection — consistency ranks you higher.</p></div>
             </div>
             <div class="gs-step">
               <div class="gs-num">4</div>
@@ -6525,10 +6547,34 @@
       } catch (e) {}
     }
 
-    function setBalanceUI(bal) {
+    function setBalanceUI(bal, locked) {
       _playBalance = bal;
       const el = document.getElementById('play-balance-amt');
       if (el) el.textContent = bal == null ? (currentUser ? '…' : 'Sign in') : fmtMoney(bal);
+      const lk = document.getElementById('play-balance-locked');
+      if (lk) {
+        if (locked != null && locked > 0) {
+          lk.textContent = `${fmtMoney(locked)} currently staked in leagues`;
+        } else {
+          lk.textContent = currentUser ? 'Stake is deducted when you join' : '';
+        }
+      }
+    }
+
+    function fmtWindow(c) {
+      const s = (c.start_date || '').slice(5);
+      const e = (c.end_date || '').slice(5);
+      if (s && e) return `${s} → ${e}`;
+      if (e) return `Ends ${e}`;
+      return 'Open window';
+    }
+
+    function goalLine(c) {
+      return c.goal_label || (
+        c.goal_mode === 'weekly_miles'
+          ? `${c.weekly_goal_miles || c.daily_goal_miles || '?'} mi / week · ${c.activity_kind || 'move'}`
+          : `${c.daily_goal_miles || 1} mi · ${c.activity_kind || 'run'}`
+      );
     }
 
     async function loadPlayHome() {
@@ -6541,13 +6587,17 @@
         const res = await fetch(`${API}/challenges${playAuthQ()}`);
         const data = await res.json();
         _playChallenges = data.challenges || [];
-        if (data.ledger_balance != null) setBalanceUI(data.ledger_balance);
+        if (data.how_to_log) {
+          const how = document.getElementById('play-how-to-log');
+          if (how) how.innerHTML = `<strong>How to log:</strong> ${escapeHtmlPlay(data.how_to_log)}`;
+        }
+        if (data.ledger_balance != null) setBalanceUI(data.ledger_balance, data.ledger_locked);
         else if (currentUser) {
           try {
             const lr = await fetch(`${API}/ledger/${currentUser.user_id}`);
             if (lr.ok) {
               const ld = await lr.json();
-              setBalanceUI(ld.ledger_balance);
+              setBalanceUI(ld.ledger_balance, ld.ledger_locked);
             }
           } catch (e) {}
         } else {
@@ -6573,6 +6623,9 @@
         const statusPill = c.is_member
           ? `<span class="pill">In · #${c.my_rank || '—'}</span>`
           : `<span class="pill muted">${c.status || 'open'}</span>`;
+        const soft = c.soft_target_days
+          ? `Soft target ~${c.soft_target_days} hits — misses OK`
+          : 'Misses OK · never eliminated';
         return `
           <div class="league-card ${mine}" onclick="openLeagueDetail('${c.id}')">
             <div class="league-card-top">
@@ -6582,7 +6635,9 @@
                   <h3>${escapeHtmlPlay(c.name || 'League')}</h3>
                   ${statusPill}
                 </div>
-                <div class="tagline">${escapeHtmlPlay(c.tagline || '')}</div>
+                <div class="tagline">${escapeHtmlPlay(c.tagline || c.description || '')}</div>
+                <div class="tagline" style="margin-top:4px;color:rgba(57,255,20,0.65)">${escapeHtmlPlay(goalLine(c))} · ${escapeHtmlPlay(fmtWindow(c))}</div>
+                <div class="tagline" style="margin-top:2px;font-size:11px">${escapeHtmlPlay(soft)}${c.partner_encouraged ? ' · buddy-friendly' : ''}</div>
               </div>
             </div>
             <div class="league-stats">
@@ -6593,9 +6648,9 @@
             <div class="league-actions" onclick="event.stopPropagation()">
               ${c.is_member
                 ? `<button type="button" class="btn btn-primary" onclick="openLeagueDetail('${c.id}')">Leaderboard</button>
-                   <button type="button" class="btn btn-ghost-play" onclick="switchView('track');selectTrackLeague('${c.id}')">Track</button>`
+                   <button type="button" class="btn btn-ghost-play" onclick="switchView('track');selectTrackLeague('${c.id}')">Record</button>`
                 : `<button type="button" class="btn btn-stake" onclick="joinLeague('${c.id}')">Stake ${fmtMoney(c.stake)}</button>
-                   <button type="button" class="btn btn-ghost-play" onclick="openLeagueDetail('${c.id}')">Details</button>`}
+                   <button type="button" class="btn btn-ghost-play" onclick="openLeagueDetail('${c.id}')">Rules</button>`}
             </div>
           </div>`;
       }).join('');
@@ -6681,18 +6736,39 @@
       const lb = c.leaderboard || [];
       const n = lb.length;
       const winN = Math.max(1, Math.ceil(n / 2));
+      const weekly = (c.goal_mode || (c.rules && c.rules.goal_mode)) === 'weekly_miles';
       const rows = lb.map((m, i) => {
         const top = (m.rank || i+1) <= winN;
         const me = currentUser && m.user_id === currentUser.user_id;
+        const hits = weekly
+          ? `${m.weeks_hit || m.days_hit || 0} weeks`
+          : `${m.days_hit || 0} days`;
         return `<div class="lb-row ${top ? 'top' : ''} ${me ? 'me' : ''}">
           <div class="lb-rank">${m.rank || i+1}</div>
           <div style="flex:1;min-width:0">
             <div class="lb-name">${escapeHtmlPlay(m.username || m.user_id)}${me ? ' · you' : ''}</div>
-            <div class="lb-sub">${m.days_hit || 0} days · ${fmtMiles(m.total_miles)} mi</div>
+            <div class="lb-sub">${hits} · ${fmtMiles(m.total_miles)} mi</div>
           </div>
           <div class="lb-score">${Math.round(m.score || 0)}</div>
         </div>`;
       }).join('') || `<div class="play-empty">No players yet — be first.</div>`;
+
+      const r = c.rules || {};
+      const desc = c.description || r.summary || c.tagline || '';
+      const rulesHtml = `
+        <div class="league-rules">
+          <div class="rules-title">How this challenge works</div>
+          <p style="margin:0 0 8px">${escapeHtmlPlay(desc)}</p>
+          <ul style="margin:0;padding:0;list-style:disc">
+            <li><strong>Goal:</strong> ${escapeHtmlPlay(r.goal || goalLine(c))}</li>
+            <li><strong>When:</strong> ${escapeHtmlPlay(r.window || fmtWindow(c) || 'See start/end dates')}</li>
+            <li><strong>Scoring:</strong> ${escapeHtmlPlay(r.scoring || 'Days (or weeks) hit rank you higher. Miles break ties.')}</li>
+            <li><strong>Misses:</strong> ${escapeHtmlPlay(r.misses || 'Missing days never knocks you out — only rank matters.')}</li>
+            <li><strong>Payout:</strong> ${escapeHtmlPlay(r.payout || 'Top half get stake refunded at settle.')}</li>
+            <li><strong>How to log:</strong> ${escapeHtmlPlay(r.how_to_log || c.how_to_log || 'Track → Record → Stop → Save on your phone with location on.')}</li>
+            ${c.partner_encouraged || r.partner ? `<li><strong>Partner:</strong> ${escapeHtmlPlay(r.partner || 'Grab a friend in this league for accountability.')}</li>` : ''}
+          </ul>
+        </div>`;
 
       body.innerHTML = `
         <div class="league-card mine" style="cursor:default">
@@ -6703,22 +6779,21 @@
               <div class="tagline">${escapeHtmlPlay(c.tagline || '')}</div>
               <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">
                 <span class="pill gold">${fmtMoney(c.stake)} stake</span>
-                <span class="pill">${c.daily_goal_miles || 1} mi / day · ${c.activity_kind || 'run'}</span>
+                <span class="pill">${escapeHtmlPlay(goalLine(c))}</span>
                 <span class="pill muted">Top ½ get stake back</span>
+                <span class="pill muted">Misses OK</span>
               </div>
             </div>
           </div>
           <div class="league-stats">
             <div class="league-stat"><div class="v">${c.member_count || 0}</div><div class="k">Players</div></div>
             <div class="league-stat"><div class="v">${fmtMoney(c.pot)}</div><div class="k">In pot</div></div>
-            <div class="league-stat"><div class="v">${(c.end_date || '').slice(5) || '—'}</div><div class="k">Ends</div></div>
+            <div class="league-stat"><div class="v">${escapeHtmlPlay(fmtWindow(c))}</div><div class="k">Window</div></div>
           </div>
-          <p style="font-size:12px;color:rgba(255,255,255,0.45);margin-top:12px;line-height:1.4">
-            ${(c.rules && c.rules.payout) || 'Top half of the leaderboard get their stake refunded at settle.'}
-          </p>
+          ${rulesHtml}
           <div class="league-actions">
             ${c.is_member
-              ? `<button type="button" class="btn btn-primary" onclick="switchView('track');selectTrackLeague('${c.id}')">Track activity</button>
+              ? `<button type="button" class="btn btn-primary" onclick="switchView('track');selectTrackLeague('${c.id}')">Record activity</button>
                  ${c.status === 'ended' || c.status === 'active' ? `<button type="button" class="btn btn-ghost-play" onclick="settleLeague('${c.id}')">Settle</button>` : ''}`
               : `<button type="button" class="btn btn-stake" onclick="joinLeague('${c.id}')">Stake ${fmtMoney(c.stake)} &amp; join</button>`}
           </div>
@@ -6730,7 +6805,12 @@
 
     async function joinLeague(id) {
       if (!currentUser) { showAuthPopup(); return; }
-      if (!confirm('Stake from your balance to join this league? Top half get it back at the end.')) return;
+      const card = (_playChallenges || []).find(x => x.id === id);
+      const stakeLabel = card ? fmtMoney(card.stake) : 'the stake';
+      if (!confirm(
+        `Join this league? ${stakeLabel} will be deducted from your available balance now.\n\n` +
+        `Missing days never knocks you out. Top half get their stake back when the league settles.`
+      )) return;
       try {
         const res = await fetch(`${API}/challenges/${encodeURIComponent(id)}/join`, {
           method: 'POST',
@@ -6740,10 +6820,25 @@
         const data = await res.json();
         if (!res.ok) {
           alert(data.error || 'Could not join');
-          if (res.status === 402) topUpLedger(true);
+          if (data.ledger_balance != null) setBalanceUI(data.ledger_balance, data.ledger_locked);
+          if (res.status === 402) {
+            // Offer top-up but do not auto-credit (that hid the debit bug before)
+            if (confirm('Not enough balance. Add $50 demo credit?')) topUpLedger(false);
+          }
           return;
         }
-        if (data.ledger_balance != null) setBalanceUI(data.ledger_balance);
+        if (data.ledger_balance != null) setBalanceUI(data.ledger_balance, data.ledger_locked);
+        alert(`Joined! ${fmtMoney(data.stake_paid)} deducted. New balance: ${fmtMoney(data.ledger_balance)}.`);
+        // Refresh membership flags without leaving detail (avoid loadPlayHome which closes it)
+        try {
+          const lr = await fetch(`${API}/challenges${playAuthQ()}`);
+          if (lr.ok) {
+            const ld = await lr.json();
+            _playChallenges = ld.challenges || _playChallenges;
+            if (ld.ledger_balance != null) setBalanceUI(ld.ledger_balance, ld.ledger_locked);
+            populateTrackLeagueSelect();
+          }
+        } catch (e) {}
         openLeagueDetail(id);
       } catch (e) {
         alert('Network error joining league');
@@ -6779,7 +6874,7 @@
         });
         const data = await res.json();
         if (!res.ok) { alert(data.error || 'Top-up failed'); return; }
-        setBalanceUI(data.ledger_balance);
+        setBalanceUI(data.ledger_balance, data.ledger_locked);
         if (!quiet) alert(`Added ${fmtMoney(data.added)} demo credit. Balance ${fmtMoney(data.ledger_balance)}.`);
       } catch (e) {
         alert('Network error');
@@ -6904,7 +6999,10 @@
     }
 
     function startTracking() {
-      if (!navigator.geolocation) { alert('GPS not available on this device.'); return; }
+      if (!navigator.geolocation) {
+        alert('Location is not available. On your phone, enable location for GreenDial, then try Record again.');
+        return;
+      }
       if (!_trackMap) initTrackMap();
       _tracking = true;
       _trackPath = [];
@@ -6918,6 +7016,10 @@
       if (_trackPolyline) { _trackMap.removeLayer(_trackPolyline); _trackPolyline = null; }
       _trackWatchId = navigator.geolocation.watchPosition(onTrackPos, err => {
         console.warn('GPS', err);
+        if (err && err.code === 1) {
+          alert('Location permission denied. Enable location for GreenDial in your phone settings, then hit Record again.');
+          pauseTracking();
+        }
       }, { enableHighAccuracy: true, maximumAge: 1000, timeout: 15000 });
       _trackTimer = setInterval(updateTrackUI, 1000);
     }
@@ -6930,7 +7032,7 @@
       }
       if (_trackTimer) { clearInterval(_trackTimer); _trackTimer = null; }
       const btn = document.getElementById('track-start-btn');
-      if (btn) { btn.textContent = '● Resume'; btn.classList.remove('live'); }
+      if (btn) { btn.textContent = '● Record'; btn.classList.remove('live'); }
     }
 
     function onTrackPos(pos) {
@@ -6975,16 +7077,16 @@
     async function finishTracking() {
       pauseTracking();
       const btn = document.getElementById('track-start-btn');
-      if (btn) { btn.textContent = '● Start'; btn.classList.remove('live'); }
+      if (btn) { btn.textContent = '● Record'; btn.classList.remove('live'); }
       if (_trackMiles < 0.05) {
-        alert('Move a bit more before logging — need at least ~0.05 mi.');
+        alert('Move a bit more before saving — need at least ~0.05 mi of GPS distance.');
         return;
       }
       if (!currentUser) { showAuthPopup(); return; }
       const sel = document.getElementById('track-league-select');
       const leagueId = sel && sel.value;
       if (!leagueId) {
-        alert('Pick a league to credit this activity toward.');
+        alert('Pick a league to Save this activity to (join a challenge first from Play).');
         return;
       }
       const duration_sec = _trackStartTs ? Math.floor((Date.now() - _trackStartTs) / 1000) : 0;
@@ -7002,11 +7104,11 @@
           }),
         });
         const data = await res.json();
-        if (!res.ok) { alert(data.error || 'Log failed'); return; }
-        let msg = `Logged ${fmtMiles(_trackMiles)} mi.`;
-        if (data.newly_hit) msg += ' Day goal hit 🔥';
+        if (!res.ok) { alert(data.error || 'Save failed'); return; }
+        let msg = `Saved ${fmtMiles(_trackMiles)} mi to your league.`;
+        if (data.newly_hit) msg += ' Goal hit for this period 🔥';
         if (data.cpaa_credit) msg += ` CPAA +${fmtMoney(data.cpaa_credit)}`;
-        if (data.ledger_balance != null) setBalanceUI(data.ledger_balance);
+        if (data.ledger_balance != null) setBalanceUI(data.ledger_balance, data.ledger_locked);
         alert(msg);
         _trackMiles = 0;
         _trackPath = [];
@@ -7015,7 +7117,7 @@
         const fin = document.getElementById('track-finish-btn');
         if (fin) fin.disabled = true;
       } catch (e) {
-        alert('Network error logging activity');
+        alert('Network error saving activity');
       }
     }
 
