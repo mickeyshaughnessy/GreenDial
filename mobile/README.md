@@ -59,6 +59,18 @@ keyPassword=YOUR_KEY_PASSWORD
 
 > If you use the default local password from the first scaffold (`greendial-upload-change-me`), change it before production and re-sign only if you have not yet uploaded that key to Play.
 
+## In-app updates
+
+The Android shell can update itself without opening the website:
+
+1. Bump `versionCode` / `versionName` in `android/app/build.gradle`
+2. Match those values in `downloads/version.json` (served at `/app/version`)
+3. Build the release APK and copy to `downloads/GreenDial.apk`
+4. `bash deploy.sh` — publishes APK + version.json
+
+Installed apps check `/app/version` on launch and show **Update now** (also under ☰ menu).
+Site HTML/JS already updates live (Capacitor loads greendial.org) — only native APK changes need this flow.
+
 ## Build release AAB
 
 ```bash

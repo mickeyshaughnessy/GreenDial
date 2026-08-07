@@ -112,6 +112,44 @@ def download_android_apk():
     )
 
 
+@app.route("/app/version", methods=['GET'])
+@app.route("/download/version", methods=['GET'])
+def app_version_info():
+    """Latest native app version for in-app update checks."""
+    import os
+    from datetime import datetime
+    path = os.path.join('downloads', 'version.json')
+    data = {
+        "android": {
+            "versionCode": 3,
+            "versionName": "1.0.2",
+            "downloadUrl": "https://greendial.org/download/android",
+            "releaseNotes": "In-app updates and Track location",
+            "minVersionCode": 1,
+        },
+        "webAlwaysCurrent": True,
+        "note": "The site UI updates automatically. This endpoint is for the Android APK shell only.",
+    }
+    if os.path.isfile(path):
+        try:
+            with open(path, 'r', encoding='utf-8') as f:
+                disk = json.load(f)
+            if isinstance(disk, dict):
+                data.update(disk)
+        except Exception as e:
+            data["load_error"] = str(e)
+    # Prefer absolute download URL on this host
+    try:
+        host = request.host_url.rstrip('/')
+        andr = data.setdefault('android', {})
+        if isinstance(andr, dict):
+            andr['downloadUrl'] = host + '/download/android'
+    except Exception:
+        pass
+    data['serverTime'] = datetime.utcnow().isoformat() + 'Z'
+    return Response(json.dumps(data), mimetype='application/json')
+
+
 @app.route("/sponsor", methods=['GET'])
 def sponsor_page():
     """Demand-side Universal Bounty UI — tucked away from main chat flow."""

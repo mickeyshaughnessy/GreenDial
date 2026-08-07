@@ -98,6 +98,14 @@ else
   echo "No local APK found — skipping Android download sync"
 fi
 
+# Always sync version.json for in-app update checks (committed in repo)
+if [ -f "downloads/version.json" ]; then
+  echo "Syncing downloads/version.json..."
+  ssh -i "$SSH_KEY" "$SERVER" "mkdir -p $DEPLOY_PATH/downloads /var/www/greendial/downloads"
+  scp -i "$SSH_KEY" "downloads/version.json" "$SERVER:$DEPLOY_PATH/downloads/version.json"
+  scp -i "$SSH_KEY" "downloads/version.json" "$SERVER:/var/www/greendial/downloads/version.json"
+fi
+
 # 3. Restart service
 echo "Restarting $SERVICE_NAME..."
 ssh -i "$SSH_KEY" "$SERVER" "systemctl restart $SERVICE_NAME && sleep 2 && systemctl is-active $SERVICE_NAME"

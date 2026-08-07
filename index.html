@@ -2218,6 +2218,32 @@
       .landing-gate h1 { font-size: 1.7rem; }
       .landing-actions .btn { min-height: 54px; font-size: 17px; }
     }
+
+    /* In-app Android update banner */
+    .app-update-banner {
+      display: none;
+      position: sticky; top: 0; z-index: 40;
+      margin: 0 0 12px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(245,197,66,0.22), rgba(18,32,28,0.95));
+      border: 1px solid rgba(245,197,66,0.45);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+    }
+    .app-update-banner.show { display: block; }
+    .app-update-banner .upd-title {
+      font-weight: 800; font-size: 14px; color: var(--gd-gold, #f5c542); margin-bottom: 4px;
+    }
+    .app-update-banner .upd-notes {
+      font-size: 12px; color: rgba(255,255,255,0.65); line-height: 1.4; margin-bottom: 10px;
+    }
+    .app-update-banner .upd-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .app-update-banner .upd-actions .btn {
+      flex: 1; min-width: 120px; min-height: 44px; font-weight: 800; font-size: 14px;
+    }
+    .app-update-banner .upd-status {
+      font-size: 11px; color: rgba(255,255,255,0.45); margin-top: 8px; min-height: 1.2em;
+    }
     .league-rules {
       margin-top: 12px; padding: 10px 12px; border-radius: 12px;
       background: rgba(0,0,0,0.22); border: 1px solid rgba(255,255,255,0.08);
@@ -2440,6 +2466,7 @@
       <button type="button" class="hamburger-item" data-hview="feedback" onclick="hamburgerGo('feedback')"><span data-i18n="app.nav.feedback">📣 Feedback</span></button>
       <button type="button" class="hamburger-item" data-hview="getstarted" onclick="hamburgerGo('getstarted')"><span data-i18n="app.nav.getstarted">🚀 How it works</span></button>
       <button type="button" class="hamburger-item" id="hamburger-admin" data-hview="admin" style="display:none" onclick="hamburgerGo('admin')">🛡️ Admin/Stats</button>
+      <button type="button" class="hamburger-item" id="hamburger-update-app" style="display:none" onclick="closeHamburger();startAppUpdate(true)">⬇️ Update app</button>
       <div class="hamburger-divider"></div>
       <button type="button" class="hamburger-item" onclick="closeHamburger();showDonateModal()" data-i18n="app.donate">💚 Donate</button>
       <a class="hamburger-item" href="/about" target="_blank" onclick="closeHamburger()" data-i18n="app.nav.about">ℹ️ About</a>
@@ -2470,6 +2497,15 @@
     <!-- ===== PLAY: stake leagues (primary) ===== -->
     <div class="view active" id="view-play">
       <div class="play-view" id="play-list">
+        <div class="app-update-banner" id="app-update-banner" role="status">
+          <div class="upd-title" id="app-update-title">Update available</div>
+          <div class="upd-notes" id="app-update-notes"></div>
+          <div class="upd-actions">
+            <button type="button" class="btn btn-stake" id="app-update-btn" onclick="startAppUpdate(false)">Update now</button>
+            <button type="button" class="btn btn-ghost-play" onclick="dismissAppUpdate()">Later</button>
+          </div>
+          <div class="upd-status" id="app-update-status"></div>
+        </div>
         <!-- Guest landing: sign up + app download first; everything else below -->
         <div class="landing-gate" id="landing-gate">
           <h1>Put <span>skin</span> in the game.</h1>
@@ -3911,6 +3947,8 @@
       }
       // PWA banner suppressed in easy-mobile CSS; still ok to schedule for full layout
       if (!isEasyMobile()) setTimeout(maybeShowPwaBanner, 1200);
+      // Native Android: check for newer APK (site content always auto-updates)
+      setTimeout(() => { try { checkAppUpdate(); } catch (e) {} }, 900);
       syncStickerStyleButtons();
       // Warm pixel catalog + reverse emoji map in background
       ensurePixelCatalog().catch(() => {});
@@ -6277,6 +6315,192 @@
       return /iPad|iPhone|iPod/.test(navigator.userAgent || '')
         || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     }
+
+    // ── In-app Android APK updates (Capacitor shell) ───────────────────────
+    let _appUpdateInfo = null;   // { local, remote, downloadUrl, releaseNotes }
+    let _appUpdateBusy = false;
+
+    function getAppUpdatePlugin() {
+      try {
+        if (!window.Capacitor || !window.Capacitor.Plugins) return null;
+        return window.Capacitor.Plugins.AppUpdate || null;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function setAppUpdateStatus(msg) {
+      const el = document.getElementById('app-update-status');
+      if (el) el.textContent = msg || '';
+    }
+
+    function showAppUpdateBanner(show, title, notes) {
+      const ban = document.getElementById('app-update-banner');
+      if (!ban) return;
+      ban.classList.toggle('show', !!show);
+      if (title) {
+        const t = document.getElementById('app-update-title');
+        if (t) t.textContent = title;
+      }
+      if (notes != null) {
+        const n = document.getElementById('app-update-notes');
+        if (n) n.textContent = notes;
+      }
+      const menu = document.getElementById('hamburger-update-app');
+      // Keep menu item visible on native Android so users can re-check anytime
+      if (menu) {
+        menu.style.display = isNativeCapacitorApp() && isAndroidDevice() ? '' : 'none';
+        if (show) menu.textContent = '⬇️ Update app (new version)';
+        else menu.textContent = '⬇️ Check for app update';
+      }
+    }
+
+    function dismissAppUpdate() {
+      try { sessionStorage.setItem('gd_upd_dismiss', '1'); } catch (e) {}
+      showAppUpdateBanner(false);
+    }
+
+    async function checkAppUpdate(opts) {
+      opts = opts || {};
+      const force = !!opts.force;
+      if (!isNativeCapacitorApp() || !isAndroidDevice()) {
+        if (force) alert('In-app updates are for the Android app. This browser already loads the latest site.');
+        showAppUpdateBanner(false);
+        const menu = document.getElementById('hamburger-update-app');
+        if (menu) menu.style.display = 'none';
+        return null;
+      }
+      const plugin = getAppUpdatePlugin();
+      // Always show menu entry on native Android
+      const menu = document.getElementById('hamburger-update-app');
+      if (menu) menu.style.display = '';
+
+      try {
+        let localCode = 0;
+        let localName = '?';
+        if (plugin && typeof plugin.getVersion === 'function') {
+          const v = await plugin.getVersion();
+          localCode = Number(v.versionCode) || 0;
+          localName = v.versionName || String(localCode);
+        } else {
+          // Plugin missing (old APK) — still offer download of latest
+          localCode = 0;
+          localName = 'older build';
+        }
+
+        const res = await fetch(`${API}/app/version?_=${Date.now()}`);
+        if (!res.ok) throw new Error('version check failed');
+        const data = await res.json();
+        const remote = (data && data.android) || {};
+        const remoteCode = Number(remote.versionCode) || 0;
+        const remoteName = remote.versionName || String(remoteCode);
+        const downloadUrl = remote.downloadUrl || `${API}/download/android`;
+        const notes = remote.releaseNotes || 'Bug fixes and improvements.';
+
+        _appUpdateInfo = {
+          localCode, localName, remoteCode, remoteName, downloadUrl, notes,
+        };
+
+        const needs = remoteCode > localCode || localCode === 0;
+        if (needs) {
+          const dismissed = !force && sessionStorage.getItem('gd_upd_dismiss') === '1';
+          if (!dismissed) {
+            showAppUpdateBanner(
+              true,
+              `Update to v${remoteName}`,
+              `You have v${localName}. ${notes}`
+            );
+            setAppUpdateStatus('');
+          } else {
+            showAppUpdateBanner(false);
+          }
+          if (force && dismissed) {
+            showAppUpdateBanner(
+              true,
+              `Update to v${remoteName}`,
+              `You have v${localName}. ${notes}`
+            );
+          }
+        } else {
+          showAppUpdateBanner(false);
+          if (force) {
+            alert(`You're on the latest app (v${localName}). Site content always updates automatically.`);
+          }
+        }
+        return _appUpdateInfo;
+      } catch (e) {
+        console.warn('checkAppUpdate', e);
+        if (force) alert('Could not check for updates. Try again with a network connection.');
+        return null;
+      }
+    }
+
+    async function startAppUpdate(fromMenu) {
+      if (_appUpdateBusy) return;
+      // Menu "Check for update" when already current should re-check
+      if (fromMenu && (!_appUpdateInfo || !(_appUpdateInfo.remoteCode > _appUpdateInfo.localCode || _appUpdateInfo.localCode === 0))) {
+        await checkAppUpdate({ force: true });
+        if (!_appUpdateInfo || !(_appUpdateInfo.remoteCode > _appUpdateInfo.localCode || _appUpdateInfo.localCode === 0)) {
+          return;
+        }
+      }
+      if (!_appUpdateInfo) {
+        await checkAppUpdate({ force: true });
+      }
+      if (!_appUpdateInfo) return;
+
+      const plugin = getAppUpdatePlugin();
+      const url = _appUpdateInfo.downloadUrl || `${API}/download/android`;
+      const btn = document.getElementById('app-update-btn');
+
+      // Old APK without plugin: open download URL (system install flow)
+      if (!plugin || typeof plugin.downloadAndInstall !== 'function') {
+        setAppUpdateStatus('Opening download… install when prompted, then reopen GreenDial.');
+        window.location.href = url;
+        return;
+      }
+
+      _appUpdateBusy = true;
+      if (btn) { btn.disabled = true; btn.textContent = 'Downloading…'; }
+      setAppUpdateStatus('Downloading update… keep the app open.');
+
+      try {
+        // Permission to install unknown apps
+        if (typeof plugin.canInstallPackages === 'function') {
+          const can = await plugin.canInstallPackages();
+          if (can && can.allowed === false) {
+            setAppUpdateStatus('Allow “Install unknown apps” for GreenDial, then tap Update again.');
+            if (typeof plugin.openInstallSettings === 'function') {
+              await plugin.openInstallSettings();
+            }
+            alert('To update in-app: enable Install unknown apps for GreenDial, then tap Update now again.');
+            return;
+          }
+        }
+
+        const result = await plugin.downloadAndInstall({ url });
+        if (result && result.needsPermission) {
+          setAppUpdateStatus(result.message || 'Enable install permission, then try again.');
+          if (typeof plugin.openInstallSettings === 'function') await plugin.openInstallSettings();
+          return;
+        }
+        setAppUpdateStatus('Install prompt opened — confirm to update, then reopen the app.');
+        if (btn) btn.textContent = 'Install started';
+      } catch (e) {
+        console.error('startAppUpdate', e);
+        setAppUpdateStatus('Update failed — falling back to download.');
+        // Fallback: browser/system download
+        try { window.location.href = url; } catch (e2) {}
+        alert((e && e.message) || 'Update failed. Try again, or download from greendial.org/download/android');
+      } finally {
+        _appUpdateBusy = false;
+        if (btn) { btn.disabled = false; btn.textContent = 'Update now'; }
+      }
+    }
+
+    window.checkAppUpdate = checkAppUpdate;
+    window.startAppUpdate = startAppUpdate;
+    window.dismissAppUpdate = dismissAppUpdate;
 
     function updateLandingGate() {
       const loggedIn = !!currentUser;

@@ -1,0 +1,10 @@
+{
+  "android": {
+    "versionCode": 3,
+    "versionName": "1.0.2",
+    "downloadUrl": "https://greendial.org/download/android",
+    "releaseNotes": "In-app updates, location for Track, stake & league fixes",
+    "minVersionCode": 1
+  },
+  "updatedAt": "2026-08-07T00:00:00Z"
+}
