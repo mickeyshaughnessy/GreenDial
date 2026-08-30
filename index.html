@@ -129,22 +129,40 @@
       position: relative;
       z-index: 21;
       order: 99; /* rightmost header control at every breakpoint */
+      display: block !important;
+      flex: 0 0 auto;
+      margin-left: 6px;
     }
     .hamburger-btn {
       width: 40px;
       height: 40px;
       padding: 0;
-      border: 1px solid rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.28);
       border-radius: 10px;
-      background: rgba(255,255,255,0.06);
-      color: rgba(255,255,255,0.85);
-      font-size: 18px;
-      line-height: 1;
+      background: rgba(255,255,255,0.12);
+      color: #fff;
+      font-size: 0;
+      line-height: 0;
       cursor: pointer;
       transition: background 0.2s;
       flex-shrink: 0;
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
     }
-    .hamburger-btn:hover { background: rgba(255,255,255,0.14); color: #fff; }
+    .hamburger-btn::before,
+    .hamburger-btn::after,
+    .hamburger-btn i {
+      content: '';
+      display: block;
+      width: 18px;
+      height: 2px;
+      background: #fff;
+      border-radius: 1px;
+    }
+    .hamburger-btn:hover { background: rgba(255,255,255,0.2); color: #fff; }
     /* Menu is portaled to #gd-portals; JS sets top/right from the button rect */
     .hamburger-menu {
       position: fixed;
@@ -391,8 +409,8 @@
       color: #eee;
       padding: 4px 8px;
     }
-    /* Header no longer hosts style/lang */
-    .header .gd-style-toolbar,
+    /* Style picker stays in the prefs bar; language is in the header in play-mode */
+    .header .gd-style-toolbar { display: none !important; }
     .header .lang-switch { display: none !important; }
     /* Body-level portal — must beat theme `body > * { position: relative; z-index: 1 }` */
     body > #gd-portals {
@@ -1482,7 +1500,9 @@
         box-sizing: border-box;
       }
       .mbn-item {
-        flex: 0 1 120px;
+        flex: 1 1 0;
+        min-width: 0;
+        max-width: 140px;
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -1495,7 +1515,7 @@
         font-weight: 600;
         cursor: pointer;
         min-height: 48px;
-        padding: 6px 12px;
+        padding: 6px 8px;
         font-family: inherit;
         border-radius: 10px;
       }
@@ -2033,8 +2053,7 @@
     body.easy-mobile .msg-model,
     body.easy-mobile .user-area button[onclick*="showDonateModal"],
     body.easy-mobile .user-area button[onclick*="logout"],
-    body.easy-mobile #mbn-more-btn,
-    body.easy-mobile .hamburger-wrap {
+    body.easy-mobile #mbn-more-btn {
       display: none !important;
     }
     /* Keep chrome (prefs + Chat/Do/Me) so activities stay reachable */
@@ -2118,6 +2137,14 @@
     }
     body.play-mode .mbn-item.active { color: var(--gd-neon); }
     body.play-mode .mbn-item.active .mbn-icon { filter: drop-shadow(0 0 6px rgba(57,255,20,0.5)); }
+    body.play-mode .header .lang-switch {
+      display: flex !important;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+    body.play-mode .header .lang-btn {
+      min-width: 32px; min-height: 32px; padding: 4px 8px;
+    }
 
     .play-view { max-width: 520px; width: 100%; margin: 0 auto; padding: 12px 14px 28px; }
     .play-hero {
@@ -2161,6 +2188,12 @@
       margin-bottom: 16px; text-align: center;
       box-shadow: 0 12px 40px rgba(0,0,0,0.35);
     }
+    .landing-lang {
+      display: none;
+      justify-content: center;
+      gap: 6px;
+      margin: 0 0 12px;
+    }
     .landing-gate.hide { display: none !important; }
     .landing-gate h1 {
       font-size: 1.55rem; font-weight: 800; letter-spacing: -0.03em; line-height: 1.15;
@@ -2171,6 +2204,39 @@
       font-size: 14px; color: rgba(255,255,255,0.62); line-height: 1.45;
       max-width: 28em; margin: 0 auto 16px;
     }
+    .landing-steps {
+      list-style: none; padding: 0; margin: 0 auto 16px;
+      display: flex; flex-direction: column; gap: 8px;
+      max-width: 340px; text-align: left;
+    }
+    .landing-step {
+      display: flex; gap: 10px; align-items: flex-start;
+      background: rgba(0,0,0,0.28);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 13px; color: rgba(255,255,255,0.68); line-height: 1.4;
+    }
+    .landing-step .n {
+      width: 22px; height: 22px; border-radius: 50%;
+      background: rgba(57,255,20,0.2); color: var(--gd-neon, #39ff14);
+      font-size: 12px; font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; margin-top: 1px;
+    }
+    .landing-step strong { color: #fff; font-weight: 700; }
+    .landing-doc {
+      margin: 12px auto 0; font-size: 12.5px; color: rgba(255,255,255,0.48);
+      max-width: 32em; line-height: 1.45;
+    }
+    .landing-doc a {
+      color: var(--gd-neon, #39ff14); cursor: pointer; text-decoration: underline;
+    }
+    .play-see-all {
+      display: none; width: 100%; margin: 8px 0 4px;
+      min-height: 44px; font-weight: 700;
+    }
+    .play-see-all.show { display: block; }
     .landing-actions {
       display: flex; flex-direction: column; gap: 10px; max-width: 320px; margin: 0 auto;
     }
@@ -2416,10 +2482,36 @@
       }
     }
     /* Easy-mobile was Doc-only — play mode wins */
-    body.play-mode.easy-mobile .hamburger-wrap,
     body.play-mode.easy-mobile #mbn-more-btn,
     body.play-mode.easy-mobile .mobile-bottom-nav { display: flex !important; }
-    body.play-mode.easy-mobile .hamburger-wrap { display: block !important; }
+
+    /* Guest vs member chrome — last so it wins over easy-mobile !important */
+    body.play-mode .app-prefs-bar { display: none !important; }
+    body.play-mode {
+      --prefs-h: 0px;
+      --chrome-h: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px));
+    }
+    body:not(.logged-in) .play-member-only,
+    body:not(.logged-in) [data-auth="member"],
+    body:not(.logged-in) .mbn-member { display: none !important; }
+    body.logged-in [data-auth="guest"],
+    body.logged-in .mbn-guest { display: none !important; }
+    body:not(.logged-in) .mbn-guest { display: flex !important; }
+    @media (max-width: 700px) {
+      body:not(.logged-in) .header .header-actions { display: none; }
+      body:not(.logged-in) .landing-lang { display: flex; }
+      body.play-mode .logo .logo-sub { display: none; }
+      .header { flex-wrap: nowrap; }
+      #hamburger-wrap {
+        position: fixed;
+        right: calc(10px + env(safe-area-inset-right, 0px));
+        top: calc(8px + env(safe-area-inset-top, 0px));
+        z-index: 4000;
+        margin: 0;
+        transform: none;
+      }
+      #mbn-signin-btn { display: none !important; } /* landing CTAs cover sign-in on phones */
+    }
   </style>
 </head>
 <body class="play-mode">
@@ -2441,13 +2533,17 @@
       <a class="nav-tab" id="nav-docs-tab" href="/docs" target="_blank" style="text-decoration:none"><span data-i18n="app.nav.docs">📄 Docs</span></a>
     </div>
     <div class="header-actions">
+      <div class="lang-switch" id="header-lang-switch" role="group" aria-label="Language">
+        <button class="lang-btn" data-lang="en" onclick="setLanguage('en')" title="English">T</button>
+        <button class="lang-btn" data-lang="zh" onclick="setLanguage('zh')" title="中文">中</button>
+        <button class="lang-btn" data-lang="ja" onclick="setLanguage('ja')" title="日本語">日</button>
+      </div>
       <div class="user-area" id="user-area">
-        <span class="user-badge" data-i18n="app.guest">Guest</span>
         <button class="btn btn-primary btn-sm" onclick="showAuthPopup()" data-i18n="app.signin">Sign In</button>
       </div>
-      <div class="hamburger-wrap" id="hamburger-wrap">
-        <button type="button" class="hamburger-btn" id="hamburger-btn" aria-label="Menu" aria-haspopup="true" aria-expanded="false" onclick="toggleHamburger()">☰</button>
-      </div>
+    </div>
+    <div class="hamburger-wrap" id="hamburger-wrap">
+      <button type="button" class="hamburger-btn" id="hamburger-btn" aria-label="Menu" aria-haspopup="true" aria-expanded="false" onclick="toggleHamburger()"><i></i></button>
     </div>
   </div>
 
@@ -2455,24 +2551,24 @@
   <div id="gd-portals" aria-live="polite">
     <div class="hamburger-menu" id="hamburger-menu" role="menu">
       <button type="button" class="hamburger-item" data-hview="play" onclick="hamburgerGo('play')">🏆 Leagues</button>
-      <button type="button" class="hamburger-item" data-hview="track" onclick="hamburgerGo('track')">📍 Track</button>
-      <button type="button" class="hamburger-item" data-hview="feed" onclick="hamburgerGo('feed')">⚡ Feed</button>
-      <div class="hamburger-divider"></div>
+      <button type="button" class="hamburger-item" data-auth="member" data-hview="track" onclick="hamburgerGo('track')">📍 Track</button>
+      <button type="button" class="hamburger-item" data-auth="member" data-hview="feed" onclick="hamburgerGo('feed')">⚡ Feed</button>
+      <div class="hamburger-divider" data-auth="member"></div>
       <button type="button" class="hamburger-item" data-hview="chat" onclick="hamburgerGo('chat')"><span data-i18n="app.nav.chat">💬 Doc (AI coach)</span></button>
-      <button type="button" class="hamburger-item" data-hview="activities" onclick="hamburgerGo('activities')"><span data-i18n="app.nav.activities">✅ Check-ins &amp; bounties</span></button>
-      <button type="button" class="hamburger-item" data-hview="user" onclick="hamburgerGo('user')"><span aria-hidden="true">👤</span><span data-i18n="app.mbn.me">Profile &amp; wallet</span></button>
-      <button type="button" class="hamburger-item" data-hview="stickers" onclick="hamburgerGo('stickers')"><span data-i18n="app.nav.board">🏷️ Health board</span></button>
-      <button type="button" class="hamburger-item" data-hview="history" onclick="hamburgerGo('history')"><span data-i18n="app.nav.history">📜 Chat history</span></button>
-      <button type="button" class="hamburger-item" data-hview="feedback" onclick="hamburgerGo('feedback')"><span data-i18n="app.nav.feedback">📣 Feedback</span></button>
       <button type="button" class="hamburger-item" data-hview="getstarted" onclick="hamburgerGo('getstarted')"><span data-i18n="app.nav.getstarted">🚀 How it works</span></button>
-      <button type="button" class="hamburger-item" id="hamburger-admin" data-hview="admin" style="display:none" onclick="hamburgerGo('admin')">🛡️ Admin/Stats</button>
-      <button type="button" class="hamburger-item" id="hamburger-update-app" style="display:none" onclick="closeHamburger();startAppUpdate(true)">⬇️ Update app</button>
+      <button type="button" class="hamburger-item" data-auth="member" data-hview="activities" onclick="hamburgerGo('activities')"><span data-i18n="app.nav.activities">✅ Check-ins &amp; bounties</span></button>
+      <button type="button" class="hamburger-item" data-auth="member" data-hview="user" onclick="hamburgerGo('user')"><span aria-hidden="true">👤</span><span data-i18n="app.mbn.me">Profile &amp; wallet</span></button>
+      <button type="button" class="hamburger-item" data-auth="member" data-hview="stickers" onclick="hamburgerGo('stickers')"><span data-i18n="app.nav.board">🏷️ Health board</span></button>
+      <button type="button" class="hamburger-item" data-auth="member" data-hview="history" onclick="hamburgerGo('history')"><span data-i18n="app.nav.history">📜 Chat history</span></button>
+      <button type="button" class="hamburger-item" data-auth="member" data-hview="feedback" onclick="hamburgerGo('feedback')"><span data-i18n="app.nav.feedback">📣 Feedback</span></button>
+      <button type="button" class="hamburger-item" id="hamburger-admin" data-auth="member" data-hview="admin" style="display:none" onclick="hamburgerGo('admin')">🛡️ Admin/Stats</button>
+      <button type="button" class="hamburger-item" id="hamburger-update-app" data-auth="member" style="display:none" onclick="closeHamburger();startAppUpdate(true)">⬇️ Update app</button>
       <div class="hamburger-divider"></div>
-      <button type="button" class="hamburger-item" onclick="closeHamburger();showDonateModal()" data-i18n="app.donate">💚 Donate</button>
+      <button type="button" class="hamburger-item" data-auth="member" onclick="closeHamburger();showDonateModal()" data-i18n="app.donate">💚 Donate</button>
       <a class="hamburger-item" href="/about" target="_blank" onclick="closeHamburger()" data-i18n="app.nav.about">ℹ️ About</a>
       <a class="hamburger-item" href="/docs" target="_blank" onclick="closeHamburger()" data-i18n="app.nav.docs">📄 API Docs</a>
-      <a class="hamburger-item" href="/arazzo" target="_blank" onclick="closeHamburger()"><span aria-hidden="true">🧭</span><span data-i18n="common.nav.how_it_works">How It Works</span></a>
-      <a class="hamburger-item" href="/sponsor" target="_blank" onclick="closeHamburger()">💰 Demand / CPAA</a>
+      <a class="hamburger-item" data-auth="member" href="/arazzo" target="_blank" onclick="closeHamburger()"><span aria-hidden="true">🧭</span><span data-i18n="common.nav.how_it_works">How It Works</span></a>
+      <a class="hamburger-item" data-auth="member" href="/sponsor" target="_blank" onclick="closeHamburger()">💰 Demand / CPAA</a>
       <a class="hamburger-item" href="/privacy" target="_blank" onclick="closeHamburger()" data-i18n="app.mbn.privacy">🔒 Privacy</a>
     </div>
   </div>
@@ -2508,18 +2604,45 @@
         </div>
         <!-- Guest landing: sign up + app download first; everything else below -->
         <div class="landing-gate" id="landing-gate">
-          <h1>Put <span>skin</span> in the game.</h1>
-          <p class="landing-lead">
-            Stake a little, move with your phone, climb the board.
+          <div class="lang-switch landing-lang" role="group" aria-label="Language">
+            <button class="lang-btn" data-lang="en" onclick="setLanguage('en')" title="English">T</button>
+            <button class="lang-btn" data-lang="zh" onclick="setLanguage('zh')" title="中文">中</button>
+            <button class="lang-btn" data-lang="ja" onclick="setLanguage('ja')" title="日本語">日</button>
+          </div>
+          <h1 data-i18n-html="app.landing.h1">Put <span>skin</span> in the game.</h1>
+          <p class="landing-lead" data-i18n-html="app.landing.lead">
+            Stake a little, record miles on your phone, and climb the board.
             <strong style="color:rgba(255,255,255,0.85)">Top half get their stake back.</strong>
             Missing days never knocks you out.
           </p>
+          <ol class="landing-steps">
+            <li class="landing-step">
+              <span class="n" aria-hidden="true">1</span>
+              <div data-i18n-html="app.landing.step1"><strong>Join a league</strong> — stake comes out of your demo balance when you join.</div>
+            </li>
+            <li class="landing-step">
+              <span class="n" aria-hidden="true">2</span>
+              <div data-i18n-html="app.landing.step2"><strong>Record → Stop → Save</strong> on your phone with location on.</div>
+            </li>
+            <li class="landing-step">
+              <span class="n" aria-hidden="true">3</span>
+              <div data-i18n-html="app.landing.step3"><strong>Top half refunded</strong> when the league ends. CPAA can stack on top later.</div>
+            </li>
+          </ol>
           <div class="landing-actions">
-            <button type="button" class="btn btn-primary" onclick="openSignup()">1. Create free account</button>
-            <button type="button" class="btn btn-secondary-land" onclick="showAuthPopup()">Already have one? Sign in</button>
+            <button type="button" class="btn btn-primary" onclick="openSignup()" data-i18n="app.landing.cta_create">Create free account</button>
+            <button type="button" class="btn btn-secondary-land" onclick="showAuthPopup()" data-i18n="app.landing.cta_signin">Already have one? Sign in</button>
           </div>
+          <p class="landing-doc" data-i18n-html="app.landing.doc">Doc is an optional AI coach — after you sign in. <a href="#" onclick="switchView('chat');return false;">Chat with Doc</a></p>
+          <p class="landing-doc" style="margin-top:8px">
+            <a href="/about" data-i18n="app.nav.about">ℹ️ About</a>
+            ·
+            <a href="/docs" data-i18n="app.nav.docs">📄 API Docs</a>
+            ·
+            <a href="/privacy" data-i18n="app.mbn.privacy">🔒 Privacy</a>
+          </p>
           <div class="landing-app" id="landing-app">
-            <div class="app-title">2. Get the mobile app</div>
+            <div class="app-title" data-i18n="app.landing.app_title">On your phone</div>
             <div class="app-btns">
               <a class="btn btn-stake" id="landing-android-btn" href="/download/android" style="display:none">⬇ Download Android app</a>
               <button type="button" class="btn btn-primary" id="landing-pwa-btn" onclick="landingInstallApp()" style="display:none">Install app on this phone</button>
@@ -2529,10 +2652,7 @@
               Use the app on your phone with location on — then Record → Stop → Save while you walk, run, or bike.
             </p>
           </div>
-          <p class="landing-scroll">Or browse open leagues below ↓</p>
         </div>
-
-        <div class="play-rest-label" id="play-rest-label">Leagues &amp; details</div>
 
         <div class="play-hero play-hero-member" id="play-hero-member">
           <h1>Put <span>skin</span> in the game.</h1>
@@ -2552,12 +2672,15 @@
             <strong>How to log:</strong> On mobile, allow location → open <em>Track</em> → hit <strong>Record</strong> while you move → <strong>Stop</strong> when done → <strong>Save</strong> to your league.
           </div>
         </div>
-        <div class="play-section-title" id="play-mine-title" style="display:none">Your leagues</div>
-        <div id="play-leagues-mine"></div>
-        <div class="play-section-title">For you</div>
-        <div id="play-invites"><div class="play-empty">Sign in to get leagues matched to your profile &amp; Doc chats</div></div>
-        <div class="play-section-title">Open leagues</div>
+        <div class="play-section-title play-member-only" id="play-mine-title" style="display:none">Your leagues</div>
+        <div class="play-member-only" id="play-leagues-mine"></div>
+        <div class="play-member-only" id="play-for-you-block">
+          <div class="play-section-title">For you</div>
+          <div id="play-invites"><div class="play-empty">Sign in to get leagues matched to your profile &amp; Doc chats</div></div>
+        </div>
+        <div class="play-section-title" id="play-open-title">Open leagues</div>
         <div id="play-leagues"><div class="play-empty">Loading leagues…</div></div>
+        <button type="button" class="btn btn-secondary-land play-see-all" id="play-see-all" onclick="showAllGuestLeagues()" data-i18n="app.landing.see_all">See all open leagues</button>
       </div>
       <div class="play-view" id="play-detail">
         <button type="button" class="detail-back" onclick="closeLeagueDetail()">← All leagues</button>
@@ -2913,19 +3036,27 @@
         <span class="mbn-icon" aria-hidden="true">🏆</span>
         <span>Play</span>
       </button>
-      <button type="button" class="mbn-item" data-view="track" onclick="switchView('track')">
+      <button type="button" class="mbn-item mbn-member" data-view="track" onclick="switchView('track')">
         <span class="mbn-icon" aria-hidden="true">📍</span>
         <span>Track</span>
       </button>
-      <button type="button" class="mbn-item" data-view="feed" onclick="switchView('feed')">
+      <button type="button" class="mbn-item mbn-member" data-view="feed" onclick="switchView('feed')">
         <span class="mbn-icon" aria-hidden="true">⚡</span>
         <span>Feed</span>
+      </button>
+      <button type="button" class="mbn-item mbn-guest" data-view="getstarted" onclick="switchView('getstarted')">
+        <span class="mbn-icon" aria-hidden="true">🚀</span>
+        <span data-i18n="app.mbn.how">How</span>
       </button>
       <button type="button" class="mbn-item" data-view="chat" onclick="switchView('chat')">
         <span class="mbn-icon" aria-hidden="true">💬</span>
         <span data-i18n="app.mbn.chat">Doc</span>
       </button>
-      <button type="button" class="mbn-item" id="mbn-more-btn" onclick="toggleHamburger()">
+      <button type="button" class="mbn-item mbn-guest" id="mbn-signin-btn" onclick="showAuthPopup()">
+        <span class="mbn-icon" aria-hidden="true">🔑</span>
+        <span data-i18n="app.signin">Sign In</span>
+      </button>
+      <button type="button" class="mbn-item mbn-member" id="mbn-more-btn" onclick="toggleHamburger()">
         <span class="mbn-icon" aria-hidden="true">☰</span>
         <span data-i18n="app.mbn.more">More</span>
       </button>
@@ -3983,6 +4114,11 @@
       // Admin is mickey-only (UI + API both enforce this)
       if (view === 'admin' && !isAdminUser()) {
         view = 'play';
+      }
+      // Track and Feed need an account — send guests to sign in
+      if (!currentUser && (view === 'track' || view === 'feed')) {
+        try { showAuthPopup(); } catch (e) {}
+        return;
       }
       currentView = view;
       document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
@@ -6502,9 +6638,12 @@
     window.startAppUpdate = startAppUpdate;
     window.dismissAppUpdate = dismissAppUpdate;
 
+    let _guestShowAllLeagues = false;
+
     function updateLandingGate() {
       const loggedIn = !!currentUser;
       document.body.classList.toggle('logged-in', loggedIn);
+      if (loggedIn) _guestShowAllLeagues = false;
       const gate = document.getElementById('landing-gate');
       if (gate) gate.classList.toggle('hide', loggedIn);
       if (loggedIn) return;
@@ -6589,8 +6728,7 @@
         setAdminTabVisible(false);
         renderToday(null);
         userArea.innerHTML = `
-          <button class="btn btn-primary btn-sm" onclick="openSignup()">${t('app.create_account_cap','Create Account')}</button>
-          <button class="btn btn-sm btn-secondary-land" onclick="showAuthPopup()" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.18);color:#fff">${t('app.signin','Sign In')}</button>
+          <button class="btn btn-primary btn-sm" onclick="showAuthPopup()">${t('app.signin','Sign In')}</button>
         `;
       }
       updateLandingGate();
@@ -7102,10 +7240,17 @@
         </div>`;
     }
 
+    function showAllGuestLeagues() {
+      _guestShowAllLeagues = true;
+      renderLeagueCards(_playChallenges);
+    }
+    window.showAllGuestLeagues = showAllGuestLeagues;
+
     function renderLeagueCards(challenges) {
       const list = document.getElementById('play-leagues');
       const mineBox = document.getElementById('play-leagues-mine');
       const mineTitle = document.getElementById('play-mine-title');
+      const seeAll = document.getElementById('play-see-all');
       if (!list) return;
       const mine = (challenges || []).filter(c => c.is_member);
       const rest = (challenges || []).filter(c => !c.is_member);
@@ -7122,13 +7267,18 @@
 
       if (!rest.length && !mine.length) {
         list.innerHTML = `<div class="play-empty">No open leagues yet — create one.</div>`;
+        if (seeAll) seeAll.classList.remove('show');
         return;
       }
       if (!rest.length) {
         list.innerHTML = `<div class="play-empty">You're in every open league, or none left to join.</div>`;
+        if (seeAll) seeAll.classList.remove('show');
         return;
       }
-      list.innerHTML = rest.map(leagueCardHtml).join('');
+      const guestTeaser = !currentUser && !_guestShowAllLeagues && rest.length > 3;
+      const shown = guestTeaser ? rest.slice(0, 3) : rest;
+      list.innerHTML = shown.map(leagueCardHtml).join('');
+      if (seeAll) seeAll.classList.toggle('show', guestTeaser);
     }
 
     async function loadPlayInvites() {
